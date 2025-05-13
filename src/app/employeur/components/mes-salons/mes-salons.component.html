@@ -1,0 +1,190 @@
+<div class="modal-container">
+  <div class="modal-header">
+    <h2>Gérer vos Salons</h2>
+    <button mat-icon-button (click)="closeModal()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+  
+  <div class="modal-content">
+    <div *ngIf="isLoading" class="loading">
+      <mat-spinner diameter="60"></mat-spinner>
+    </div>
+    
+    <div *ngIf="errorMessage" class="error-message">
+      <mat-icon>error</mat-icon> {{ errorMessage }}
+    </div>
+    
+    <div *ngIf="!isLoading && !errorMessage">
+      <!-- Liste des salons -->
+      <div class="salon-cards" *ngIf="salons.length > 0">
+        <div class="salon-card" *ngFor="let salon of salons" [@cardAnimation]>
+          <div class="salon-main-content">
+            <div class="salon-image">
+              <img [src]="salon.photoProfilUrl || 'src/assets/images/pexels-barik5ive-3355696-5282408.jpg'" alt="{{ salon.nom }}">
+              <!-- <button mat-mini-fab class="edit-photo-btn" (click)="changeProfilePhoto(salon.id)"> -->
+                <mat-icon (click)="changeProfilePhoto(salon.id)">edit</mat-icon>
+              <!-- </button> -->
+            </div>
+            <div class="salon-details">
+              <h3>{{ salon.nom }}</h3>
+              <p class="address"><i class="fas fa-map-marker-alt"></i> {{ salon.adresse }}</p>
+              <p class="rating" *ngIf="salon.note">
+                <span class="stars">
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star" *ngIf="salon.note >= 2"></i>
+                  <i class="fas fa-star" *ngIf="salon.note >= 3"></i>
+                  <i class="fas fa-star" *ngIf="salon.note >= 4"></i>
+                  <i class="fas fa-star-half-alt" *ngIf="(salon.note % 1) >= 0.5"></i>
+                </span>
+                {{ salon.note }} ({{ salon.nombreAvis || 0 }} avis)
+              </p>
+              <p class="price-range">{{ salon.gammeDePrice }}</p>
+              <div class="salon-services" *ngIf="salon.services?.length">
+                <span class="service-tag" *ngFor="let service of salon.services.slice(0, 3)">{{ service }}</span>
+                <span class="service-tag more" *ngIf="salon.services.length > 3">+{{ salon.services.length - 3 }}</span>
+              </div>
+            </div>
+            
+            <div class="salon-actions">
+              <button mat-icon-button class="action-btn" 
+                      matTooltip="Voir les options" (click)="toggleSalonExpansion(salon.id)">
+                <mat-icon>{{ expandedSalonId === salon.id ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}</mat-icon>
+              </button>
+            </div>
+          </div>
+          
+          <!-- Contenu expansible du salon -->
+          <div class="salon-expanded-content" *ngIf="expandedSalonId === salon.id" [@expandAnimation]>
+            <div class="action-tabs">
+              <button mat-button [class.active-tab]="activeTab[salon.id] === 'info'" 
+                      (click)="setActiveTab(salon.id, 'info')">
+                <mat-icon>info</mat-icon> Informations
+              </button>
+              <button mat-button [class.active-tab]="activeTab[salon.id] === 'services'" 
+                      (click)="setActiveTab(salon.id, 'services')">
+                <mat-icon>spa</mat-icon> Services
+              </button>
+              <button mat-button [class.active-tab]="activeTab[salon.id] === 'photos'" 
+                      (click)="setActiveTab(salon.id, 'photos')">
+                <mat-icon>photo_library</mat-icon> Photos
+              </button>
+            </div>
+            
+            <!-- Contenu de l'onglet Informations -->
+            <div class="tab-content" *ngIf="activeTab[salon.id] === 'info'" [@tabAnimation]>
+              <div class="info-content">
+                <h4>Détails du salon</h4>
+                <div class="salon-info-details">
+                  <p><strong>Adresse complète:</strong> {{ salon.adresse }}</p>
+                  <p><strong>Téléphone:</strong> {{ salon.telephone || 'Non renseigné' }}</p>
+                  <p><strong>Horaires:</strong> {{ salon.horaires || 'Non renseignés' }}</p>
+                  <p><strong>Description:</strong> {{ salon.description || 'Aucune description disponible' }}</p>
+                  <p><strong>Spécialités:</strong> {{ salon.specialites || 'Non renseignées' }}</p>
+                </div>
+                <button mat-raised-button (click)="editSalon(salon.id)">
+                  <mat-icon>edit</mat-icon> Modifier les informations
+                </button>
+              </div>
+            </div>
+            
+            <!-- Contenu de l'onglet Services -->
+            <div class="tab-content" *ngIf="activeTab[salon.id] === 'services'" [@tabAnimation]>
+              <div *ngIf="(services[salon.id] ?? []).length > 0" class="services-container">
+                <h4>Services proposés</h4>
+                
+                <div class="service-cards">
+                  <mat-card *ngFor="let service of services[salon.id]" class="service-card" [@serviceAnimation]>
+                    <mat-card-header>
+                      <mat-icon mat-card-avatar>spa</mat-icon>
+                      <mat-card-title>{{ service.nom }}</mat-card-title>
+                      <mat-card-subtitle>
+                        <strong>Prix :</strong> {{ service.prix }} CFA &nbsp; | &nbsp;
+                        <strong>Durée :</strong> {{ service.duree }}
+                      </mat-card-subtitle>
+                    </mat-card-header>
+                    
+                    <mat-card-actions align="end">
+                      <button mat-icon-button color="primary" (click)="editService(service.id, salon.id)" title="Modifier">
+                        <mat-icon>edit</mat-icon>
+                      </button>
+                      <button mat-icon-button color="warn" (click)="deleteService(service.id, salon.id)" title="Supprimer">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </mat-card-actions>
+                  </mat-card>
+                </div>
+                
+                <div class="add-service-btn-container">
+                  <button mat-raised-button (click)="addService(salon.id)">
+                    <mat-icon>add</mat-icon> Ajouter un service
+                  </button>
+                </div>
+              </div>
+              
+              <div *ngIf="services[salon.id]?.length === 0" class="empty-services">
+                <mat-icon>spa</mat-icon>
+                <p>Ce salon n'a pas encore de services.</p>
+                <button mat-raised-button (click)="addService(salon.id)">
+                  <mat-icon>add</mat-icon> Ajouter un service
+                </button>
+              </div>
+            </div>
+            
+            <!-- Contenu de l'onglet Photos -->
+            <div class="tab-content" *ngIf="activeTab[salon.id] === 'photos'" [@tabAnimation]>
+              <div class="photos-content">
+                <h4>Galerie photos</h4>
+                
+                <!-- Charger les photos lors de l'ouverture de l'onglet -->
+                <ng-container *ngIf="setActiveTab(salon.id, 'photos') && loadSalonPhotos(salon.id); then photosLoaded else photosLoading"></ng-container>
+                
+                <ng-template #photosLoading>
+                  <div class="loading">
+                    <mat-spinner diameter="40"></mat-spinner>
+                  </div>
+                </ng-template>
+                
+                <ng-template #photosLoaded>
+                  <!-- Affichage des photos existantes -->
+                  <div *ngIf="(salonPhotos[salon.id] ?? []).length > 0" class="photo-gallery">
+                    <div *ngFor="let photo of salonPhotos[salon.id]" class="photo-item" [@photoAnimation]>
+                      <img [src]="photo.url" alt="Photo du salon">
+                      <div class="photo-actions">
+                        <button mat-icon-button (click)="setAsProfilePhoto(photo.url, salon.id)" matTooltip="Définir comme photo de profil">
+                          <mat-icon>portrait</mat-icon>
+                        </button>
+                        <button mat-icon-button color="warn" (click)="deletePhoto(photo.id, salon.id)" matTooltip="Supprimer">
+                          <mat-icon>delete</mat-icon>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Message si aucune photo n'est disponible -->
+                  <div *ngIf="salonPhotos[salon.id]?.length === 0" class="photo-gallery-placeholder">
+                    <mat-icon>photo_library</mat-icon>
+                    <p>Ajoutez des photos pour illustrer votre salon</p>
+                  </div>
+                  
+                  <!-- Bouton pour ajouter des photos -->
+                  <button mat-raised-button (click)="openFileSelector(salon.id)">
+                    <mat-icon>add_photo_alternate</mat-icon> Ajouter des photos
+                  </button>
+                </ng-template>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div *ngIf="salons.length === 0" class="no-salons">
+        <mat-icon>store</mat-icon>
+        <p>Vous n'avez pas encore de salon.</p>
+        <button mat-raised-button (click)="closeModal()">
+          <mat-icon>add_business</mat-icon> Créer un salon
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

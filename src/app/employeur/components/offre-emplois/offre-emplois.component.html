@@ -1,0 +1,130 @@
+<div class="modal-overlay" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <span class="close" (click)="closeModal()">&times;</span>
+    <h2>Publier une Offre d'Emploi</h2>
+    <p>Remplissez les détails de l'offre pour attirer les meilleurs talents.</p>
+
+    <!-- Message de succès -->
+    <div class="success-message" *ngIf="submitSuccess">
+      <p>Votre offre a été publiée avec succès!</p>
+    </div>
+
+    <!-- Indicateurs d'étapes -->
+    <div class="step-indicators">
+      <div class="step" [class.active]="currentStep >= 1"></div>
+      <div class="step" [class.active]="currentStep >= 2"></div>
+      <div class="step" [class.active]="currentStep >= 3"></div>
+    </div>
+
+    <!-- Formulaire -->
+    <form [formGroup]="offreEmploiForm" (ngSubmit)="onSubmit()" *ngIf="!submitSuccess">
+      <!-- Message d'erreur -->
+      <div class="error-message" *ngIf="submitError">
+        {{ submitError }}
+      </div>
+
+      <!-- Étape 1 : Informations de base -->
+      <div class="step-content" *ngIf="currentStep === 1">
+        <div class="form-group">
+          <label>Titre du Poste</label>
+          <input type="text" formControlName="titre" placeholder="Ex: Formation en make up professionel" />
+          <small *ngIf="offreEmploiForm.get('titre')?.invalid && offreEmploiForm.get('titre')?.touched">
+            Le titre est obligatoire
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label>Description du Poste</label>
+          <textarea formControlName="description" placeholder="Décrivez les responsabilités et les missions"></textarea>
+          <small *ngIf="offreEmploiForm.get('description')?.invalid && offreEmploiForm.get('description')?.touched">
+            La description est obligatoire
+          </small>
+        </div>
+
+        <button type="button" class="btn-primary" (click)="nextStep()">
+          Suivant
+        </button>
+      </div>
+
+      <!-- Étape 2 : Compétences et lieu -->
+      <div class="step-content" *ngIf="currentStep === 2">
+        <div class="form-group">
+          <label>Compétences Requises</label>
+          <textarea formControlName="competences" placeholder="Ex: Maquillage Simple ou pro, pose ongle, pose cils, massage"></textarea>
+          <small *ngIf="offreEmploiForm.get('competences')?.invalid && offreEmploiForm.get('competences')?.touched">
+            Les compétences sont obligatoires
+          </small>
+        </div>
+        <div class="form-group">
+          <label>Expérience Requise</label>
+          <input type="text" formControlName="experienceRequise" placeholder="Ex: 2 ans minimum" />
+          <small *ngIf="offreEmploiForm.get('experienceRequise')?.invalid && offreEmploiForm.get('experienceRequise')?.touched">
+            L'expérience requise est obligatoire
+          </small>
+        </div>
+        <div class="form-group">
+          <label>Lieu</label>
+          <input type="text" formControlName="lieu" placeholder="Ex: zac mbao, Rufisque" />
+          <small *ngIf="offreEmploiForm.get('lieu')?.invalid && offreEmploiForm.get('lieu')?.touched">
+            Le lieu est obligatoire
+          </small>
+        </div>
+
+        <div class="button-group">
+          <button type="button" class="btn-secondary" (click)="previousStep()">
+            Retour
+          </button>
+          <button type="button" class="btn-primary" (click)="nextStep()">
+            Suivant
+          </button>
+        </div>
+      </div>
+
+      <!-- Étape 3 : Contrat, salaire et date limite -->
+      <div class="step-content" *ngIf="currentStep === 3">
+        <div class="form-group">
+          <label>Type de Contrat</label>
+          <select formControlName="typeContrat">
+            <option value="">Sélectionnez un type de contrat</option>
+            <option value="CDI">CDI</option>
+            <option value="CDD">CDD</option>
+            <option value="Freelance">Freelance</option>
+            <option value="Formation">Formation</option>
+          </select>
+          <small *ngIf="offreEmploiForm.get('typeContrat')?.invalid && offreEmploiForm.get('typeContrat')?.touched">
+            Le type de contrat est obligatoire
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label>Salaire</label>
+          <input type="text" formControlName="salaire" placeholder="Ex: 40k€ - 50k€" />
+          <small *ngIf="offreEmploiForm.get('salaire')?.invalid && offreEmploiForm.get('salaire')?.touched">
+            Le salaire est obligatoire
+          </small>
+        </div>
+        
+        <div class="form-group">
+          <label>Date Limite</label>
+          <input type="date" formControlName="dateLimite" />
+          <small *ngIf="offreEmploiForm.get('dateLimite')?.invalid && offreEmploiForm.get('dateLimite')?.touched">
+            La date limite est obligatoire
+          </small>
+        </div>
+
+        <div class="button-group">
+          <button type="button" class="btn-secondary" (click)="previousStep()">
+            Retour
+          </button>
+          <button type="submit" class="btn-primary" [disabled]="offreEmploiForm.invalid || isSubmitting">
+            <span *ngIf="!isSubmitting">Publier l'Offre</span>
+            <span *ngIf="isSubmitting">
+              Publication en cours...
+              <span class="spinner"></span>
+            </span>
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>

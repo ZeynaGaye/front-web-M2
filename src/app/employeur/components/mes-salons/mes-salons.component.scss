@@ -1,0 +1,502 @@
+// Variables de couleurs
+$primary-color: #F5A393; // Rose saumon
+$secondary-color: #A4B1BD; // Gris bleuté
+$primary-light: lighten($primary-color, 10%);
+$primary-dark: darken($primary-color, 10%);
+$secondary-light: lighten($secondary-color, 10%);
+$secondary-dark: darken($secondary-color, 10%);
+$white: #ffffff;
+$dark-text: #333333;
+
+.modal-container {
+  padding: 20px;
+  max-width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  background-color: #fefefe;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 3px solid $primary-color;
+
+  h2 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 600;
+    color: $primary-dark;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  button {
+    background-color: $secondary-color;
+    color: $white;
+    
+    &:hover {
+      background-color: $primary-color;
+    }
+  }
+}
+
+.modal-content {
+  padding: 10px;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 50px 0;
+  
+  mat-spinner::ng-deep circle {
+    stroke: $primary-color !important;
+  }
+}
+
+.error-message {
+  color: $white;
+  padding: 20px;
+  text-align: center;
+  background-color: #ff6b6b;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-weight: 500;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.salon-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.salon-card {
+  border: none;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  background-color: $white;
+  
+  &:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    transform: translateY(-3px);
+  }
+}
+
+.salon-main-content {
+  display: flex;
+  padding: 20px;
+  position: relative;
+  background: linear-gradient(to right, rgba($primary-light, 0.2), rgba($secondary-light, 0.2));
+}
+
+.salon-image {
+  width: 200px;
+  height: 200px;
+  min-width: 200px;
+  margin-right: 20px;
+  border: 3px solid $white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+  }
+}
+
+.salon-details {
+  flex-grow: 1;
+  
+  h3 {
+    margin: 0 0 10px;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: $primary-dark;
+    border-bottom: 2px dashed $primary-light;
+    padding-bottom: 5px;
+    display: inline-block;
+  }
+  
+  .address {
+    font-size: 1rem;
+    color: $dark-text;
+    margin: 0 0 8px;
+    display: flex;
+    align-items: center;
+    
+    i {
+      margin-right: 8px;
+      color: $primary-color;
+    }
+  }
+  
+  .rating {
+    display: flex;
+    align-items: center;
+    font-size: 1rem;
+    margin: 8px 0;
+    font-weight: 500;
+    
+    .stars {
+      color: #FFD700;
+      margin-right: 8px;
+    }
+  }
+  
+  .price-range {
+    font-size: 1rem;
+    color: $dark-text;
+    margin: 8px 0;
+    font-weight: 500;
+    background-color: rgba($secondary-color, 0.2);
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+  
+  .salon-services {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+    
+    .service-tag {
+      background-color: $primary-color;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      color: $white;
+      font-weight: 500;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      transition: all 0.2s ease;
+      
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+      }
+    }
+  }
+}
+
+.salon-actions {
+  display: flex;
+  align-items: center;
+  
+  .action-btn {
+    background-color: $secondary-color;
+    color: $white;
+    width: 40px;
+    height: 40px;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      transform: scale(1.1) rotate(180deg);
+      background-color: $primary-color;
+    }
+  }
+}
+
+.salon-expanded-content {
+  border-top: 2px solid $primary-light;
+  padding: 20px;
+  background-color: rgba($secondary-light, 0.1);
+}
+
+.action-tabs {
+  display: flex;
+  border-bottom: 2px solid $secondary-color;
+  margin-bottom: 20px;
+  gap: 5px;
+  
+  button {
+    padding: 10px 20px;
+    border-radius: 8px 8px 0 0;
+    color: $dark-text;
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    
+    mat-icon {
+      margin-right: 8px;
+      font-size: 20px;
+    }
+    
+    &:hover {
+      background-color: rgba($primary-color, 0.1);
+    }
+    
+    &.active-tab {
+      color: $white;
+      background-color: $primary-color;
+      font-weight: 600;
+      box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.1);
+      
+      mat-icon {
+        color: $white;
+      }
+    }
+  }
+}
+
+.tab-content {
+  padding: 15px 0;
+}
+
+.services-container, .info-content, .photos-content {
+  h4 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-weight: 600;
+    color: $primary-dark;
+    font-size: 1.3rem;
+    padding-bottom: 8px;
+    border-bottom: 2px solid $secondary-light;
+    display: inline-block;
+  }
+  
+  button[mat-raised-button] {
+    background-color: $primary-color;
+    color: $white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 5px 15px;
+    border-radius: 25px;
+    font-weight: 500;
+    
+    &:hover {
+      background-color: $primary-dark;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+      transform: translateY(-2px);
+    }
+    
+    mat-icon {
+      margin-right: 5px;
+    }
+  }
+}
+
+.service-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+.service-card {
+  background-color: $white;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  border-left: 4px solid $primary-color;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  }
+  
+  mat-card-header {
+    padding: 15px;
+    
+    mat-card-title {
+      color: $primary-dark;
+      font-weight: 600;
+      font-size: 1.2rem;
+    }
+    
+    mat-card-subtitle {
+      color: $dark-text;
+      font-weight: 500;
+    }
+    
+    mat-icon {
+      color: $primary-color !important;
+      font-size: 30px;
+      height: 30px;
+      width: 30px;
+    }
+  }
+  
+  mat-card-actions {
+    margin: 0;
+    padding: 10px;
+    border-top: 1px solid rgba($secondary-light, 0.5);
+    
+    button {
+      margin-left: 5px;
+      
+      &[color="primary"] {
+        color: $secondary-dark;
+        
+        &:hover {
+          color: $primary-dark;
+          background-color: rgba($primary-light, 0.1);
+        }
+      }
+      
+      &[color="warn"]:hover {
+        background-color: rgba(#ff6b6b, 0.1);
+      }
+    }
+  }
+}
+
+.add-service-btn-container {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.empty-services, .no-salons {
+  text-align: center;
+  padding: 40px 0;
+  color: $dark-text;
+  background-color: rgba($secondary-light, 0.1);
+  border-radius: 10px;
+  border: 2px dashed $secondary-light;
+  
+  p {
+    margin-bottom: 20px;
+    font-size: 1.1rem;
+  }
+  
+  button {
+    margin-top: 15px;
+    background-color: $primary-color;
+    color: $white;
+    padding: 8px 20px;
+    border-radius: 25px;
+    font-weight: 500;
+    
+    &:hover {
+      background-color: $primary-dark;
+      transform: translateY(-2px);
+    }
+  }
+}
+
+.book-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: $primary-color;
+  color: $white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  margin-top: 15px;
+  font-weight: 500;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  
+  i {
+    margin-right: 6px;
+  }
+  
+  &:hover {
+    background-color: $primary-dark;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+}
+.salon-image {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-right: 16px;
+  
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .edit-photo-btn {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    background-color: rgba(255, 255, 255, 0.7);
+    transform: scale(0.8);
+    
+    &:hover {
+      background-color: white;
+    }
+  }
+}
+
+.photo-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+  
+  .photo-item {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    height: 200px;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+    
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .photo-actions {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(transparent, rgba(0, 0, 0, 0.5));
+      padding: 8px;
+      display: flex;
+      justify-content: flex-end;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      
+      button {
+        color: white;
+      }
+    }
+    
+    &:hover .photo-actions {
+      opacity: 1;
+    }
+  }
+}
+
+.photo-gallery-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  
+  mat-icon {
+    font-size: 48px;
+    height: 48px;
+    width: 48px;
+    color: #bdbdbd;
+    margin-bottom: 16px;
+  }
+  
+  p {
+    color: #757575;
+    text-align: center;
+  }
+}

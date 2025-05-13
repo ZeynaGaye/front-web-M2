@@ -1,0 +1,55 @@
+<div class="freelance-section">
+  <!-- Carrousel à gauche -->
+  <div class="image-carousel">
+    <div class="carousel-inner">
+      <div class="carousel-item" [ngClass]="{'active': currentSlide === 0}" [style.backgroundImage]="'url(/assets/images/femme-noire-heureuse-fleurs-studio-pour-bien-etre-dorloter-produit-nature-fond-marron-modele-fille-souriante-couronne-fleurs-cosmetiques-pour-beaute-zen-esthetique-maquette_590464-116273.avif)'">
+        <div class="image-caption">
+          <h3>Créez votre portfolio</h3>
+          <p>Exposez vos plus belles réalisations</p>
+        </div>
+      </div>
+      
+      <div class="carousel-item" [ngClass]="{'active': currentSlide === 1}" [style.backgroundImage]="'url(/assets/images/pexels-rdne-7755238.jpg)'">
+        <div class="image-caption">
+          <h3>Gagnez en visibilité</h3>
+          <p>Apparaissez dans les recherches locales</p>
+        </div>
+      </div>
+      <div class="carousel-item" [ngClass]="{'active': currentSlide === 2}" [style.backgroundImage]="'url(/assets/images/pexels-barik5ive-3355696-5282408.jpg)'">
+        <div class="image-caption">
+          <h3>Recevez des demandes</h3>
+          <p>Clients et salons vous contactent directement</p>
+        </div>
+      </div>
+      <div class="carousel-item" [ngClass]="{'active': currentSlide === 3}" [style.backgroundImage]="'url(/assets/images/photo-1522335789203-aabd1fc54bc9.avif)'">
+        <div class="image-caption">
+          <h3>Développez votre clientèle</h3>
+          <p>Attirez plus de clients grâce à votre expertise</p>
+        </div>
+    </div>
+    </div>
+    <div class="carousel-dots">
+      <span *ngFor="let slide of slides; let i = index" 
+            [ngClass]="{'active': i === currentSlide}"
+            (click)="goToSlide(i)"></span>
+    </div>
+    <div class="carousel-controls">
+      <button class="control-btn prev" (click)="prevSlide()">&#10094;</button>
+      <button class="control-btn next" (click)="nextSlide()">&#10095;</button>
+    </div>
+  </div>
+
+  <!-- Texte original à droite -->
+  <div class="freelance-text-container" routerLink="/freelance-dashboard">
+    <p class="freelance-text">
+      Vous êtes un professionnel freelance de la beauté ? Rejoignez 
+      <span class="highlight">BeautyHub</span> et bénéficiez d'une visibilité unique.
+    </p>
+    <div class="additional-text">
+      Trouvez des missions près de chez vous, montrez votre portfolio, et soyez contacté par les salons à la recherche de vos talents.
+      <div class="cta-link">
+        Découvrir plus <span class="arrow">→</span>
+      </div>
+    </div>
+  </div>
+</div>

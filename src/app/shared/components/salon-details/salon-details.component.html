@@ -1,0 +1,175 @@
+<div class="salon-detail-dialog">
+  <!-- En-tête du dialogue -->
+  <div class="dialog-header">
+    <button mat-icon-button class="close-button" (click)="closeDialog()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- Contenu principal -->
+  <div class="dialog-content" *ngIf="salon; else loading">
+    <!-- Partie supérieure avec image et infos principales -->
+    <div class="salon-hero" @fadeIn>
+      <div class="salon-cover" [style.background-image]="'url(' + (salon.photoProfil || 'assets/images/salon-default.jpg') + ')'">
+        <div class="salon-overlay">
+          <h2 class="salon-name">{{ salon.nom }}</h2>
+          <div class="salon-rating">
+            <span class="stars">
+              <i class="fas fa-star" *ngFor="let star of getStarArray(salon.note || 0)"></i>
+              <i class="fas fa-star-half-alt" *ngIf="hasHalfStar(salon.note || 0)"></i>
+            </span>
+            <span class="rating-value">{{ salon.note || 0 }}</span>
+            <span class="review-count">({{ salon.nombreAvis || 0 }} avis)</span>
+          </div>
+          <p class="salon-address">
+            <mat-icon>location_on</mat-icon> {{ salon.adresse }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation avec les onglets -->
+    <div class="navigation-tabs">
+      <div class="tab" [class.active]="activeTab === 'presentation'" (click)="setActiveTab('presentation')">
+        <mat-icon>info</mat-icon>
+        <span>Présentation</span>
+      </div>
+      <div class="tab" [class.active]="activeTab === 'services'" (click)="setActiveTab('services')">
+        <mat-icon>spa</mat-icon>
+        <span>Services</span>
+      </div>
+      <div class="tab" [class.active]="activeTab === 'photos'" (click)="setActiveTab('photos')">
+        <mat-icon>photo_library</mat-icon>
+        <span>Photos</span>
+      </div>
+    </div>
+
+    <!-- Contenu des onglets -->
+    <div class="tab-content" @slideIn>
+      <!-- Onglet Présentation -->
+      <div *ngIf="activeTab === 'presentation'" class="presentation-tab">
+        <div class="info-section">
+          <h3>À propos de nous</h3>
+          <p class="salon-description">{{ salon.description || 'Ce salon n\'a pas encore ajouté de description.' }}</p>
+        </div>
+
+        <div class="info-section">
+          <h3>Informations pratiques</h3>
+          <div class="info-grid">
+            <div class="info-item">
+              <mat-icon>schedule</mat-icon>
+              <div class="info-text">
+                <h4>Horaires</h4>
+                <p>{{ formatHoraires(salon.heuresOuverture) }}</p>
+              </div>
+            </div>
+            <div class="info-item">
+              <mat-icon>phone</mat-icon>
+              <div class="info-text">
+                <h4>Contact</h4>
+                <p>{{ salon.telephone || 'Non disponible' }}</p>
+              </div>
+            </div>
+            <div class="info-item">
+              <mat-icon>payments</mat-icon>
+              <div class="info-text">
+                <h4>Gamme de prix</h4>
+                <p>{{ salon.gammeDePrice || 'Non spécifiée' }}</p>
+              </div>
+            </div>
+            <div class="info-item" *ngIf="salon.specialites">
+              <mat-icon>stars</mat-icon>
+              <div class="info-text">
+                <h4>Spécialités</h4>
+                <p>{{ salon.specialites }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Onglet Services -->
+      <div *ngIf="activeTab === 'services'" class="services-tab">
+        <h3>Nos services</h3>
+        
+        <div *ngIf="isLoadingServices" class="loading-spinner">
+          <mat-spinner diameter="40"></mat-spinner>
+          <p>Chargement des services...</p>
+        </div>
+        
+        <div *ngIf="!isLoadingServices && services.length === 0" class="empty-state">
+          <mat-icon>spa</mat-icon>
+          <p>Aucun service n'est disponible pour le moment.</p>
+        </div>
+        
+        <div *ngIf="!isLoadingServices && services.length > 0" class="services-grid">
+          <div class="service-card" *ngFor="let service of services" @serviceAnimation>
+            <div class="service-content">
+              <div class="service-header">
+                <h4 class="service-name">{{ service.nom }}</h4>
+              </div>
+              <div class="service-details">
+                <div class="service-duration">
+                  <mat-icon>schedule</mat-icon>
+                  <span>{{ service.duree }} min</span>
+                </div>
+                <div class="service-price">
+                  <span>{{ service.prix | currency:'XOF':'' }} CFA</span>
+                </div>
+              </div>
+              <p class="service-description" *ngIf="service.description">
+                {{ service.description }}
+              </p>
+              <div class="service-actions">
+                <button mat-raised-button color="primary" class="book-button" (click)="bookService(service)">
+                  <mat-icon>event_available</mat-icon>
+                  Réserver
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Onglet Galerie Photos -->
+      <div *ngIf="activeTab === 'photos'" class="photos-tab">
+        <h3>Galerie photos</h3>
+        
+        <div *ngIf="isLoadingPhotos" class="loading-spinner">
+          <mat-spinner diameter="40"></mat-spinner>
+          <p>Chargement des photos...</p>
+        </div>
+        
+        <div *ngIf="!isLoadingPhotos && photos.length === 0" class="empty-state">
+          <mat-icon>photo_library</mat-icon>
+          <p>Aucune photo n'est disponible pour le moment.</p>
+        </div>
+        
+        <div *ngIf="!isLoadingPhotos && photos.length > 0" class="photo-gallery">
+          <div class="gallery-grid">
+            <div class="photo-item" *ngFor="let photo of photos" @fadeIn>
+              <div class="photo-container">
+                <img [src]="photo.url" [alt]="salon.nom + ' - Photo'" class="gallery-image">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- État de chargement -->
+  <ng-template #loading>
+    <div class="loading-container">
+      <mat-spinner diameter="60"></mat-spinner>
+      <p>Chargement des informations du salon...</p>
+    </div>
+  </ng-template>
+  
+  <!-- Message d'erreur -->
+  <div *ngIf="errorMessage" class="error-message">
+    <mat-icon>error</mat-icon>
+    <p>{{ errorMessage }}</p>
+    <button mat-raised-button color="primary" (click)="closeDialog()">Fermer</button>
+  </div>
+</div>

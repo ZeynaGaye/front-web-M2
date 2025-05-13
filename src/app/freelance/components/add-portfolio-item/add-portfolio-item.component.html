@@ -1,0 +1,146 @@
+<div class="dialog-container">
+  <h1 mat-dialog-title>Ajouter une nouvelle réalisation</h1>
+  
+  <div mat-dialog-content>
+    <form [formGroup]="portfolioForm">
+      <!-- Titre Section -->
+      <div class="form-section">
+        <mat-form-field appearance="outline" class="custom-field">
+          <mat-label>Titre</mat-label>
+          <input matInput formControlName="titre" placeholder="Ex: Maquillage de mariage">
+          <mat-icon matPrefix class="form-icon">title</mat-icon>
+          <mat-error *ngIf="portfolioForm.get('titre')?.invalid">
+            <span *ngIf="portfolioForm.get('titre')?.errors?.['required']">Ce champ est requis</span>
+            <span *ngIf="portfolioForm.get('titre')?.errors?.['maxlength']">Max. 100 caractères</span>
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <!-- Description Section -->
+      <div class="form-section">
+        <mat-form-field appearance="outline" class="custom-field">
+          <mat-label>Description</mat-label>
+          <textarea matInput formControlName="description" rows="4" 
+            placeholder="Décrivez en détails votre réalisation..."></textarea>
+          <mat-icon matPrefix class="form-icon">description</mat-icon>
+          <mat-error *ngIf="portfolioForm.get('description')?.invalid">
+            <span *ngIf="portfolioForm.get('description')?.errors?.['required']">Ce champ est requis</span>
+            <span *ngIf="portfolioForm.get('description')?.errors?.['minlength']">Min. 30 caractères</span>
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <!-- Catégories Section -->
+      <div class="form-section card" formArrayName="categories">
+        <div class="section-header">
+          <mat-icon class="section-icon">category</mat-icon>
+          <h3>Catégories <span class="required-asterisk">*</span></h3>
+        </div>
+        <p class="section-hint">Ajoutez au moins une catégorie</p>
+        
+        <div class="chip-container">
+          <mat-chip-grid #chipGrid aria-label="Catégories">
+            <mat-chip-row *ngFor="let category of categoriesFormArray.controls; let i = index"
+              class="custom-chip" [removable]="true" (removed)="removeCategory(i)">
+              {{category.value}}
+              <button matChipRemove>
+                <mat-icon>close</mat-icon>
+              </button>
+            </mat-chip-row>
+            
+            <input placeholder="Ajouter une catégorie..."
+              [matChipInputFor]="chipGrid"
+              [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+              (matChipInputTokenEnd)="addCategory($event)">
+          </mat-chip-grid>
+        </div>
+        <mat-error *ngIf="categoriesFormArray.invalid" class="section-error">
+          Veuillez ajouter au moins une catégorie
+        </mat-error>
+      </div>
+
+      <!-- Tags Section -->
+      <div class="form-section card" formArrayName="tags">
+        <div class="section-header">
+          <mat-icon class="section-icon">tag</mat-icon>
+          <h3>Tags</h3>
+        </div>
+        <p class="section-hint">Ajoutez des mots-clés pertinents</p>
+        
+        <div class="chip-container">
+          <mat-chip-grid #tagChipGrid aria-label="Tags">
+            <mat-chip-row *ngFor="let tag of tagsFormArray.controls; let i = index"
+              class="custom-chip secondary" [removable]="true" (removed)="removeTag(i)">
+              #{{tag.value}}
+              <button matChipRemove>
+                <mat-icon>close</mat-icon>
+              </button>
+            </mat-chip-row>
+            
+            <input placeholder="Ajouter un tag..."
+              [matChipInputFor]="tagChipGrid"
+              [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+              (matChipInputTokenEnd)="addTag($event)">
+          </mat-chip-grid>
+        </div>
+      </div>
+
+      <!-- Images Section -->
+      <div class="form-section card">
+        <div class="section-header">
+          <mat-icon class="section-icon">image</mat-icon>
+          <h3>Images <span class="required-asterisk">*</span></h3>
+        </div>
+        <p class="section-hint">Ajoutez entre 1 et {{maxFiles}} images (max {{maxFileSizeMB}}MB par fichier)</p>
+        
+        <div class="upload-area" appDragDrop (fileDropped)="onFileDropped($event)"
+          [class.drag-over]="isDragging" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)">
+          
+          <div class="upload-content" *ngIf="selectedFiles.length === 0; else previewSection">
+            <mat-icon class="upload-icon">cloud_upload</mat-icon>
+            <p>Glissez-déposez vos images ici</p>
+            <span class="upload-or">ou</span>
+            <button mat-raised-button class="upload-button" (click)="fileInput.click()">
+              <mat-icon>upload</mat-icon>
+              Parcourir
+            </button>
+            <input type="file" #fileInput hidden multiple (change)="onFileSelected($event)" accept="image/*">
+          </div>
+
+          <ng-template #previewSection>
+            <div class="image-grid">
+              <div class="image-preview" *ngFor="let file of selectedFiles; let i = index">
+                <div class="image-container">
+                  <img [src]="filePreviews[i]" [alt]="'Preview ' + (i+1)">
+                  <button mat-icon-button class="delete-button" (click)="removeFile(i)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+                <mat-form-field appearance="outline" class="caption-field">
+                  <mat-label>Légende</mat-label>
+                  <input matInput [formControl]="fileCaptions[i]" placeholder="Description courte">
+                  <mat-hint align="end">{{fileCaptions[i].value?.length || 0}}/100</mat-hint>
+                </mat-form-field>
+              </div>
+              
+              <div class="add-more" *ngIf="selectedFiles.length < maxFiles" (click)="fileInput.nativeElement.click()">
+                <mat-icon>add</mat-icon>
+                <span>Ajouter</span>
+              </div>
+            </div>
+          </ng-template>
+        </div>
+      </div>
+    </form>
+  </div>
+  
+  <div mat-dialog-actions class="dialog-actions">
+    <button mat-stroked-button (click)="onCancel()">Annuler</button>
+    <button mat-raised-button color="primary" 
+      [disabled]="portfolioForm.invalid || isSubmitting || selectedFiles.length === 0" 
+      (click)="onSubmit()">
+      <mat-spinner diameter="20" *ngIf="isSubmitting"></mat-spinner>
+      <span *ngIf="!isSubmitting">Enregistrer</span>
+    </button>
+  </div>
+</div>

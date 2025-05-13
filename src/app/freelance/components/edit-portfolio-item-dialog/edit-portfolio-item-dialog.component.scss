@@ -1,0 +1,371 @@
+/* edit-portfolio-item-dialog.component.scss */
+:host {
+  display: block;
+}
+
+// Variables de couleurs
+$primary-main: #fb8f71;
+$primary-lighter: #ffd7cc;
+$primary-darker: #f36a4a;
+$primary-text: #ffffff;
+$secondary-main: #9ca3af;
+$secondary-lighter: #e5e7eb;
+$secondary-darker: #6b7280;
+$card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+$border-radius: 8px;
+$white: #ffffff;
+$text-dark: #333333;
+$text-light: #6c757d;
+
+// Styles pour le dialogue
+mat-dialog-content {
+  max-height: 65vh;
+  padding: 0 !important;
+  overflow: auto;
+  
+  .form-container {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 0 8px;
+  }
+}
+
+mat-dialog-title {
+  color: $primary-darker;
+  font-size: 1.5rem;
+  font-weight: 500;
+  text-align: center;
+  margin-bottom: 20px !important;
+  padding-bottom: 15px;
+  border-bottom: 1px solid $secondary-lighter;
+}
+
+mat-dialog-actions {
+  padding: 16px 0 !important;
+  margin-top: 16px;
+  border-top: 1px solid $secondary-lighter;
+  
+  button {
+    min-width: 120px;
+    border-radius: 24px;
+    
+    &[mat-raised-button] {
+      transition: all 0.3s ease;
+      
+      &:hover:not([disabled]) {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba($primary-main, 0.4);
+      }
+      
+      &:disabled {
+        background-color: rgba($primary-main, 0.4);
+      }
+    }
+  }
+}
+
+// Styles pour les sections du formulaire
+.form-section {
+  background-color: $white;
+  border-radius: $border-radius;
+  box-shadow: $card-shadow;
+  padding: 20px;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+  }
+  
+  .section-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+    
+    .section-icon {
+      color: $primary-main;
+      font-size: 24px;
+      margin-right: 10px;
+    }
+    
+    h3 {
+      color: $primary-darker;
+      font-size: 18px;
+      font-weight: 500;
+      margin: 0;
+    }
+  }
+}
+
+// Styles pour les champs de formulaire
+.full-width {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+// Styles pour les chips (catégories et tags)
+.chips-container {
+  margin-bottom: 16px;
+  min-height: 40px;
+  
+  mat-chip-listbox {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  ::ng-deep .mdc-evolution-chip {
+    border-radius: 16px !important;
+    height: 32px;
+    
+    .mdc-evolution-chip__text-label {
+      font-size: 14px;
+      font-weight: 400;
+    }
+    
+    .mdc-evolution-chip__icon--trailing {
+      color: inherit;
+      opacity: 0.7;
+      
+      &:hover {
+        opacity: 1;
+      }
+    }
+  }
+}
+
+.add-control {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  
+  mat-form-field {
+    flex: 1;
+  }
+  
+  button {
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      transform: scale(1.1);
+    }
+    
+    mat-icon {
+      font-size: 20px;
+    }
+  }
+}
+
+// Styles pour la gestion des images
+.image-management {
+  h4 {
+    color: $text-dark;
+    font-size: 16px;
+    font-weight: 500;
+    margin: 16px 0 12px;
+  }
+  
+  .existing-images, .new-images {
+    margin-bottom: 24px;
+  }
+  
+  .image-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    margin-top: 12px;
+  }
+  
+  .image-preview {
+    display: flex;
+    flex-direction: column;
+    border-radius: $border-radius;
+    overflow: hidden;
+    background-color: $secondary-lighter;
+    
+    .image-container {
+      position: relative;
+      height: 150px;
+      overflow: hidden;
+      
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+      }
+      
+      &:hover {
+        img {
+          transform: scale(1.05);
+        }
+        
+        .delete-button {
+          opacity: 1;
+        }
+      }
+      
+      .delete-button {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background-color: rgba(255, 255, 255, 0.9);
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: all 0.3s ease;
+        color: #f44336;
+        
+        &:hover {
+          background-color: #ffffff;
+          transform: scale(1.1);
+        }
+        
+        mat-icon {
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+        }
+      }
+    }
+    
+    .caption-field {
+      margin: 8px 0 0;
+      
+      ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+        display: none;
+      }
+    }
+  }
+  
+  .upload-area {
+    border: 2px dashed $secondary-main;
+    border-radius: $border-radius;
+    padding: 24px;
+    margin-top: 12px;
+    transition: all 0.3s ease;
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    &.drag-over {
+      border-color: $primary-main;
+      background-color: rgba($primary-lighter, 0.3);
+    }
+    
+    .upload-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      
+      .upload-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+        color: $secondary-main;
+        margin-bottom: 12px;
+      }
+      
+      p {
+        color: $text-dark;
+        font-size: 16px;
+        margin-bottom: 8px;
+      }
+      
+      .upload-or {
+        color: $text-light;
+        font-size: 14px;
+        margin: 8px 0;
+      }
+      
+      .upload-button {
+        background-color: $primary-main;
+        color: $white;
+        border-radius: 24px;
+        padding: 0 20px;
+        margin-top: 8px;
+        transition: all 0.3s ease;
+        
+        &:hover {
+          background-color: $primary-darker;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 10px rgba($primary-main, 0.4);
+        }
+        
+        mat-icon {
+          margin-right: 8px;
+        }
+      }
+    }
+    
+    .add-more {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-color: rgba($secondary-lighter, 0.5);
+      border: 2px dashed $secondary-main;
+      border-radius: $border-radius;
+      height: 150px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      
+      &:hover {
+        background-color: rgba($primary-lighter, 0.3);
+        border-color: $primary-main;
+        
+        mat-icon, span {
+          color: $primary-main;
+        }
+      }
+      
+      mat-icon {
+        font-size: 36px;
+        width: 36px;
+        height: 36px;
+        color: $secondary-main;
+        margin-bottom: 8px;
+      }
+      
+      span {
+        color: $text-light;
+        font-size: 14px;
+      }
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .image-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important;
+  }
+  
+  .upload-area {
+    padding: 16px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .image-grid {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .add-control {
+    flex-direction: column;
+    align-items: stretch;
+    
+    button {
+      align-self: flex-end;
+    }
+  }
+}
+

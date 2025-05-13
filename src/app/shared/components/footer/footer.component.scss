@@ -1,0 +1,287 @@
+// Variables
+$footer-bg: #A4B1BD;
+$footer-text: #ffffff;
+$footer-link: #f5f5f5;
+$footer-link-hover: #F5A393;
+$footer-divider: rgba(255, 255, 255, 0.1);
+$footer-bottom-bg: rgba(0, 0, 0, 0.1);
+$primary-color: #F5A393;
+$border-radius: 8px;
+
+.footer {
+  background-color: $footer-bg;
+  color: $footer-text;
+  padding: 0;
+  margin-top: 80px;
+  font-family: 'Poppins', sans-serif;
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 0;
+    width: 100%;
+    height: 10px;
+    background: linear-gradient(135deg, $primary-color, lighten($primary-color, 15%));
+    border-radius: 10px 10px 0 0;
+  }
+}
+
+.footer-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 60px 20px 40px;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 30px;
+    padding: 40px 20px 30px;
+  }
+}
+
+// Logo et description
+.footer-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  
+  .footer-logo {
+    height: 60px;
+    margin-bottom: 15px;
+    filter: brightness(0) invert(1);
+  }
+  
+  .brand-description {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.8);
+  }
+}
+
+// Liens rapides
+.footer-links {
+  h3 {
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+    font-weight: 600;
+    position: relative;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 0;
+      width: 40px;
+      height: 3px;
+      background-color: $primary-color;
+      border-radius: 2px;
+    }
+  }
+  
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    
+    li {
+      margin-bottom: 12px;
+      
+      a {
+        color: $footer-link;
+        text-decoration: none;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        position: relative;
+        
+        &:hover {
+          color: $footer-link-hover;
+          padding-left: 5px;
+        }
+        
+        &::before {
+          content: '›';
+          margin-right: 8px;
+          color: rgba(255, 255, 255, 0.5);
+        }
+      }
+    }
+  }
+}
+
+// Contact et réseaux sociaux
+.footer-contact {
+  h3 {
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+    font-weight: 600;
+    position: relative;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 0;
+      width: 40px;
+      height: 3px;
+      background-color: $primary-color;
+      border-radius: 2px;
+    }
+  }
+  
+  p {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    font-size: 0.95rem;
+    
+    i {
+      margin-right: 10px;
+      color: $primary-color;
+    }
+  }
+  
+  .social-icons {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+    
+    a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      color: $footer-text;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      
+      &:hover {
+        background-color: $primary-color;
+        transform: translateY(-3px);
+      }
+      
+      i {
+        font-size: 1.2rem;
+      }
+    }
+  }
+}
+
+// Téléchargement application
+.footer-download {
+  h3 {
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+    font-weight: 600;
+    position: relative;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 0;
+      width: 40px;
+      height: 3px;
+      background-color: $primary-color;
+      border-radius: 2px;
+    }
+  }
+  
+  p {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 20px;
+    color: rgba(255, 255, 255, 0.8);
+  }
+  
+  .app-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .app-button {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: $border-radius;
+    color: $footer-text;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+      transform: translateX(3px);
+    }
+    
+    i {
+      font-size: 1.8rem;
+      margin-right: 10px;
+    }
+    
+    span {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.2;
+      
+      small {
+        font-size: 0.7rem;
+        opacity: 0.8;
+      }
+    }
+  }
+}
+
+// Pied de page
+.footer-bottom {
+  background-color: $footer-bottom-bg;
+  padding: 20px 0;
+  
+  .footer-bottom-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
+    @media (max-width: 768px) {
+      flex-direction: column;
+      gap: 15px;
+    }
+  }
+  
+  .copyright {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+  }
+  
+  .legal-links {
+    display: flex;
+    gap: 20px;
+    
+    @media (max-width: 768px) {
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 15px;
+    }
+    
+    a {
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      transition: color 0.3s;
+      
+      &:hover {
+        color: $primary-color;
+      }
+    }
+  }
+}

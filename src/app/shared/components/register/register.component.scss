@@ -1,0 +1,201 @@
+/* register.component.scss */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 1000; /* Ensure the modal is above other elements */
+}
+
+.modal-content {
+  background: white;
+  border-radius: 1rem;
+  padding: 2rem;
+  width: 100%;
+  max-width: 600px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  z-index: 1001; /* Ensure the modal content is above the overlay */
+}
+
+h2 {
+  text-align: center;
+  font-size: 1.875rem;
+  font-weight: 600;
+  margin-bottom: 2rem;
+  color: #1a1a1a;
+}
+
+.step-indicators {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+
+  .step {
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+    background: #e5e7eb;
+    transition: background-color 0.3s;
+
+    &.active {
+      background: #fb8f71;
+    }
+  }
+}
+
+.step-content {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.input-group {
+  position: relative;
+  margin-bottom: 1rem;
+
+  i {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+  }
+
+  input,
+  select,
+  textarea {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.5rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    outline: none;
+    transition: all 0.3s;
+
+    &:focus {
+      border-color: #fb8f71;
+      box-shadow: 0 0 0 4px rgba(251, 113, 133, 0.1);
+    }
+  }
+
+  textarea {
+    min-height: 100px;
+    resize: vertical;
+  }
+
+  small {
+    color: #fb8f71;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    display: block;
+  }
+}
+
+.button-group {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.btn-primary,
+.btn-secondary {
+  flex: 1;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.3s;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: #fb8f71;
+  color: #e5e7eb;
+
+  &:hover {
+    background: #fb8f71;
+  }
+
+  &:disabled {
+    background: #e5e7eb;
+    cursor: not-allowed;
+  }
+}
+
+.btn-secondary {
+  background: white;
+  border: 1px solid#fb8f71;
+  color: #fb8f71;
+
+  &:hover {
+    background: #fff1f2;
+  }
+}
+
+/* Style pour le message d'erreur */
+.error-message {
+  background-color: #FEE2E2;
+  color: #EF4444;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+/* Style pour le lien de connexion */
+.login-link {
+  text-align: center;
+  margin-top: 1.5rem;
+  font-size: 0.875rem;
+  color: #6B7280;
+  
+  a {
+    color: #fb8f71;
+    cursor: pointer;
+    text-decoration: none;
+    font-weight: 500;
+    
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.close {
+  position: absolute;
+  top: 1rem;
+  right: 1.5rem;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #9CA3AF;
+  
+  &:hover {
+    color: #1F2937;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Add hover effect for images */
+img:hover {
+  filter: brightness(0.8); /* Adjust the brightness */
+  transition: filter 0.3s ease;
+}

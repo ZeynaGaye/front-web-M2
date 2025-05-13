@@ -1,0 +1,43 @@
+
+.services-container {
+    padding: 20px;
+    
+    h2 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+    
+    .loading, .error-message, .no-services {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 30px;
+      text-align: center;
+    }
+    
+    .error-message {
+      color: #f44336;
+    }
+    
+    .services-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    
+    .service-card {
+      height: 100%;
+      
+      .price {
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-top: 10px;
+      }
+      
+      mat-card-actions {
+        display: flex;
+        justify-content: space-between;
+      }
+    }
+  }

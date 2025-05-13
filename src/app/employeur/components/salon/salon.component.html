@@ -1,0 +1,176 @@
+<div class="modal-overlay" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <span class="close" (click)="closeModal()">&times;</span>
+    <h2>Créez votre Salon en Quelques Étapes</h2>
+    <p>Remplissez les informations de votre salon pour commencer à attirer des clients et des talents.</p>
+
+    <!-- Indicateurs d'étapes -->
+    <div class="step-indicators">
+      <div class="step" [class.active]="currentStep >= 1"></div>
+      <div class="step" [class.active]="currentStep >= 2"></div>
+      <div class="step" [class.active]="currentStep >= 3"></div>
+    </div>
+
+    <!-- Formulaire -->
+    <form [formGroup]="salonForm" (ngSubmit)="onSubmit()">
+      <!-- Étape 1 : Informations de base -->
+      <div class="step-content" *ngIf="currentStep === 1">
+        <div class="form-row">
+          <div class="input-group">
+            <i class="fas fa-store"></i>
+            <input type="text" formControlName="nom" placeholder="Nom du Salon" />
+            <small *ngIf="salonForm.get('nom')?.invalid && salonForm.get('nom')?.touched">
+              Le nom du salon est obligatoire
+            </small>
+          </div>
+
+          <div class="input-group">
+            <i class="fas fa-map-marker-alt"></i>
+            <input type="text" formControlName="adresse" placeholder="Adresse du Salon" />
+            <small *ngIf="salonForm.get('adresse')?.invalid && salonForm.get('adresse')?.touched">
+              L'adresse est obligatoire
+            </small>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <i class="fas fa-align-left"></i>
+          <textarea formControlName="description" placeholder="Description du Salon"></textarea>
+        </div>
+        <div class="input-group">
+            <i class="fas fa-cut"></i>
+          <input type="text" formControlName="specialites" placeholder="specialites du Salon" />
+          <small *ngIf="salonForm.get('specialites')?.invalid && salonForm.get('specialites')?.touched">
+            La specialite est obligatoire
+          </small>
+        </div>
+        
+        <button type="button" class="btn-primary" (click)="nextStep()">
+          Suivant
+        </button>
+      </div>
+
+      <!-- Étape 2 : Services et horaires -->
+      <div class="step-content" *ngIf="currentStep === 2">
+        <!-- Services prédéfinis -->
+        <div class="services-section">
+          <h3>Type de salon</h3>
+          <div class="service-options">
+            <div *ngFor="let salon of typeSalon" 
+                 class="service-chip" 
+                 [class.active]="isServiceActive(salon)"
+                 (click)="onServiceSelect(salon)">
+              {{ salon | titlecase }}
+            </div>
+          </div>
+          
+          <!-- Services personnalisés -->
+          <div class="custom-services">
+            <h4>Ajouter le type de salon que vous souhaitez creer</h4>
+            <div class="custom-service-input">
+              <input type="text" [(ngModel)]="newServiceInput" [ngModelOptions]="{standalone: true}" 
+                     placeholder="ajouter le type de salon souhaite" />
+              <button type="button" class="add-service-btn" (click)="addCustomService()">
+                <i class="fas fa-plus"></i>
+              </button>
+            </div>
+            
+            <!-- Liste des services personnalisés -->
+            <div class="custom-service-list" *ngIf="customServicesArray.length > 0">
+              <div *ngFor="let service of customServicesArray.controls; let i = index" class="custom-service-item">
+                {{ service.value | titlecase }}
+                <button type="button" class="remove-service-btn" (click)="removeCustomService(i)">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            </div>
+            
+            <small *ngIf="!isServiceSelected" class="error-message">
+              Veuillez sélectionner au moins un type de salon
+            </small>
+          </div>
+        </div>
+
+        <!-- Horaires d'ouverture -->
+        <div class="horaires-section">
+          <h3>Horaires d'Ouverture</h3>
+          <div class="horaires-grid">
+            <div *ngFor="let jour of joursSemaine" class="horaire-item">
+              <label>{{ jour | titlecase }}</label>
+              <input [formControlName]="jour" placeholder="HH:MM - HH:MM" />
+            </div>
+          </div>
+        </div>
+
+        <div class="button-group">
+          <button type="button" class="btn-secondary" (click)="previousStep()">
+            Retour
+          </button>
+          <button type="button" class="btn-primary" (click)="nextStep()">
+            Suivant
+          </button>
+        </div>
+      </div>
+
+      <!-- Étape 3 : Coordonnées et réseaux sociaux -->
+      <div class="step-content" *ngIf="currentStep === 3">
+        <div class="input-group">
+          <i class="fas fa-phone"></i>
+          <input type="tel" formControlName="telephone" placeholder="Téléphone" />
+          <small *ngIf="salonForm.get('telephone')?.invalid && salonForm.get('telephone')?.touched">
+            Format : 09 chiffres
+          </small>
+        </div>
+
+        <div class="input-group">
+          <i class="fas fa-envelope"></i>
+          <input type="email" formControlName="email" placeholder="Email" />
+          <small *ngIf="salonForm.get('email')?.invalid && salonForm.get('email')?.touched">
+            Email invalide
+          </small>
+        </div>
+
+        <!-- <div class="input-group">
+          <i class="fab fa-facebook"></i>
+          <input type="text" formControlName="facebook" placeholder="Lien Facebook" />
+        </div> -->
+
+        <!-- <div class="input-group">
+          <i class="fab fa-instagram"></i>
+          <input type="text" formControlName="instagram" placeholder="Lien Instagram" />
+        </div> -->
+
+        <!-- <div class="input-group">
+          <i class="fab fa-twitter"></i>
+          <input type="text" formControlName="twitter" placeholder="Lien Twitter" />
+        </div> -->
+       
+          
+          <div class="input-group">
+            <!-- <i class="fas fa-image"></i> -->
+            <label for="photoProfil">Photo de profil</label>
+            <input 
+              type="file" 
+              id="photoProfil" 
+              (change)="onFileSelected($event)"
+              accept="image/*"
+            />
+          </div>
+        </div>
+        
+        <div class="button-group">
+          <button type="button" class="btn-secondary" (click)="previousStep()">
+            Retour
+          </button>
+          <button type="button" class="btn-secondary" (click)="onSaveDraft()">
+            Enregistrer comme Brouillon
+          </button>
+
+          <button type="submit" class="btn-primary" [disabled]="!canSubmit">
+            Publier le Salon
+          </button>
+        </div>
+      
+    </form>
+  </div>
+</div>

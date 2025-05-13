@@ -1,0 +1,78 @@
+<div class="booking-dialog">
+    <h2 mat-dialog-title>Réserver un service</h2>
+    
+    <mat-dialog-content>
+      <div class="salon-info">
+        <h3>{{ data.salon.nom }}</h3>
+        <p class="address">
+          <mat-icon>location_on</mat-icon> {{ data.salon.adresse }}
+        </p>
+      </div>
+      
+      <div class="service-summary">
+        <h4>Service sélectionné</h4>
+        <div class="service-card">
+          <div class="service-name">{{ data.service.nom }}</div>
+          <div class="service-details">
+            <div class="price">{{ data.service.prix | currency:'XOF':'' }} CFA</div>
+            <div class="duration">
+              <mat-icon>schedule</mat-icon>
+              <span>{{ data.service.duree }} min</span>
+            </div>
+          </div>
+          <div class="service-description" *ngIf="data.service.description">
+            {{ data.service.description }}
+          </div>
+        </div>
+      </div>
+      
+      <div class="error-message" *ngIf="errorMessage">
+        <mat-icon color="warn">error</mat-icon>
+        <p>{{ errorMessage }}</p>
+      </div>
+      
+      <form [formGroup]="bookingForm" *ngIf="!isLoading && !errorMessage">
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Date</mat-label>
+            <input matInput [matDatepicker]="picker" formControlName="date" [min]="minDate">
+            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+            <mat-error *ngIf="bookingForm.get('date')?.hasError('required')">
+              La date est requise
+            </mat-error>
+          </mat-form-field>
+        </div>
+        
+        <div class="form-row">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Heure</mat-label>
+            <mat-select formControlName="timeSlot">
+              <mat-option *ngFor="let slot of availableTimeSlots" [value]="slot.value">
+                {{ slot.label }}
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="bookingForm.get('timeSlot')?.hasError('required')">
+              L'heure est requise
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </form>
+      
+      <div class="loading-container" *ngIf="isLoading">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Traitement de votre réservation...</p>
+      </div>
+    </mat-dialog-content>
+    
+    <mat-dialog-actions align="end">
+      <button mat-button (click)="closeDialog()">Annuler</button>
+      <button 
+        mat-raised-button 
+        color="primary" 
+        [disabled]="bookingForm.invalid || isLoading || !userId"
+        (click)="submitBooking()">
+        Confirmer la réservation
+      </button>
+    </mat-dialog-actions>
+  </div>

@@ -1,0 +1,145 @@
+<div class="modal-overlay" (click)="closeDetails()" *ngIf="offreExists">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <!-- En-tête du modal -->
+    <div class="modal-header">
+      <div class="modal-title">
+        <h2>{{ offre?.titre }}</h2>
+        <span class="status-badge" [ngClass]="getStatusClass(offre?.status)">{{ offre?.status }}</span>
+      </div>
+      <button mat-icon-button class="close-btn" (click)="closeDetails()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+    
+    <!-- Contenu principal -->
+    <div class="modal-body">
+      <!-- Informations principales -->
+      <div class="info-section">
+        <div class="info-grid">
+          <div class="info-item">
+            <mat-icon class="icon">location_on</mat-icon>
+            <div>
+              <h4>Localisation</h4>
+              <p>{{ offre?.lieu }}</p>
+            </div>
+          </div>
+          
+          <div class="info-item">
+            <mat-icon class="icon">description</mat-icon>
+            <div>
+              <h4>Type de contrat</h4>
+              <p>{{ offre?.typeContrat }}</p>
+            </div>
+          </div>
+          
+          <div class="info-item">
+            <mat-icon class="icon">euro_symbol</mat-icon>
+            <div>
+              <h4>Rémunération</h4>
+              <p>{{ offre?.salaire }}</p>
+            </div>
+          </div>
+          
+          <div class="info-item">
+            <mat-icon class="icon">school</mat-icon>
+            <div>
+              <h4>Expérience requise</h4>
+              <p>{{ offre?.experienceRequise }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Description -->
+      <div class="description-section">
+        <h3>Description du poste</h3>
+        <p>{{ offre?.description }}</p>
+      </div>
+      
+      <!-- Compétences -->
+      <div class="skills-section">
+        <h3>Compétences requises</h3>
+        <div class="skills-list">
+          <span class="skill-tag" *ngFor="let skill of getSkillsArray()">
+            {{ skill }}
+          </span>
+        </div>
+      </div>
+      
+     <!-- Section candidature -->
+     <div class="application-section" *ngIf="offre?.status === 'OUVERT' && !submitSuccess">
+      <!-- Bouton Postuler -->
+      <div *ngIf="!showForm">
+        <button mat-raised-button 
+                color="primary"
+                (click)="showForm = true"
+                [disabled]="aDejaPostule"
+                class="apply-button"
+                [ngClass]="{'disabled-button': aDejaPostule}">
+          {{ aDejaPostule ? 'Déjà postulé' : 'Postuler à cette offre' }}
+        </button>
+        
+        <!-- Message de candidature déjà envoyée - visible même sans cliquer sur le bouton -->
+        <div *ngIf="aDejaPostule" class="already-applied-message">
+          <mat-icon class="icon">check_circle</mat-icon>
+          <p>Votre candidature a déjà été soumise pour cette offre</p>
+        </div>
+      </div>
+
+  <!-- Formulaire affiché après clic -->
+  <form *ngIf="showForm && !aDejaPostule" [formGroup]="candidatureForm" (ngSubmit)="onSubmit()">
+    <!-- Champ titre en lecture seule -->
+    <div class="form-group">
+      <label>Titre de la candidature</label>
+      <input 
+        matInput
+        formControlName="titre" 
+        placeholder="Titre de la candidature"
+        [value]="offre?.titre"
+        readonly>
+    </div>
+    
+    <div class="form-group">
+      <label>Votre message</label>
+      <textarea 
+        matInput
+        formControlName="message" 
+        placeholder="Présentez-vous et expliquez pourquoi vous êtes parfait(e) pour cette mission"
+        rows="5"
+      ></textarea>
+      <mat-error *ngIf="candidatureForm.get('message')?.invalid && candidatureForm.get('message')?.touched">
+        Le message doit contenir au moins 10 caractères
+      </mat-error>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Date de disponibilité</label>
+        <input matInput type="date" formControlName="disponibilite">
+        <mat-error *ngIf="candidatureForm.get('disponibilite')?.invalid && candidatureForm.get('disponibilite')?.touched">
+          Ce champ est requis
+        </mat-error>
+      </div>
+      
+      <div class="form-group">
+        <label>Tarif proposé</label>
+        <input matInput type="number" formControlName="tarifPropose" placeholder="Votre tarif en €">
+        <mat-error *ngIf="candidatureForm.get('tarifPropose')?.invalid && candidatureForm.get('tarifPropose')?.touched">
+          Veuillez indiquer un tarif valide
+        </mat-error>
+      </div>
+    </div>
+
+    <div class="submit-section">
+      <button mat-raised-button 
+              color="primary" 
+              type="submit" 
+              [disabled]="candidatureForm.invalid || isSubmitting">
+        <span *ngIf="!isSubmitting">Envoyer ma candidature</span>
+        <span *ngIf="isSubmitting">
+          <mat-spinner diameter="20"></mat-spinner>
+        </span>
+      </button>
+    </div>
+  </form>
+</div>

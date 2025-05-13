@@ -1,0 +1,101 @@
+<div class="dashboard-container">
+    <h2>Tableau de Bord</h2>
+  
+    <!-- Indicateurs clés -->
+    <div class="stats-grid">
+      <!-- Candidatures -->
+      <mat-card class="stat-card">
+        <mat-card-title>Candidatures Reçues</mat-card-title>
+        <mat-card-content>
+          <p class="stat-value">{{ totalCandidatures }}</p>
+        </mat-card-content>
+      </mat-card>
+  
+      <mat-card class="stat-card">
+        <mat-card-title>Candidatures Validées</mat-card-title>
+        <mat-card-content>
+          <p class="stat-value">{{ candidaturesValidees }}</p>
+        </mat-card-content>
+      </mat-card>
+  
+      <mat-card class="stat-card">
+        <mat-card-title>Taux d'Acceptation</mat-card-title>
+        <mat-card-content>
+          <p class="stat-value">{{ tauxAcceptation }}%</p>
+        </mat-card-content>
+      </mat-card>
+  
+      <!-- Visites -->
+      <mat-card class="stat-card">
+        <mat-card-title>Visites Total</mat-card-title>
+        <mat-card-content>
+          <p class="stat-value">{{ totalVisites }}</p>
+        </mat-card-content>
+      </mat-card>
+  
+      <mat-card class="stat-card">
+        <mat-card-title>Taux de Conversion</mat-card-title>
+        <mat-card-content>
+          <p class="stat-value">{{ tauxConversion }}%</p>
+        </mat-card-content>
+      </mat-card>
+  
+      <!-- Réservations -->
+      <mat-card class="stat-card">
+        <mat-card-title>Réservations Total</mat-card-title>
+        <mat-card-content>
+          <p class="stat-value">{{ totalReservations }}</p>
+        </mat-card-content>
+      </mat-card>
+  
+      <mat-card class="stat-card">
+        <mat-card-title>Taux de Remplissage</mat-card-title>
+        <mat-card-content>
+          <p class="stat-value">{{ tauxRemplissage }}%</p>
+        </mat-card-content>
+      </mat-card>
+  
+      <!-- Revenus -->
+      <mat-card class="stat-card">
+        <mat-card-title>Revenus Totaux</mat-card-title>
+        <mat-card-content>
+          <p class="stat-value">{{ revenusTotaux }} €</p>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  
+    <!-- Graphiques -->
+    <div class="charts-grid">
+      <!-- Évolution des candidatures -->
+      <mat-card class="chart-card">
+        <mat-card-title>Évolution des Candidatures</mat-card-title>
+        <mat-card-content>
+          <canvas #candidaturesChart></canvas>
+        </mat-card-content>
+      </mat-card>
+  
+      <!-- Répartition des réservations par service -->
+      <mat-card class="chart-card">
+        <mat-card-title>Répartition des Réservations par Service</mat-card-title>
+        <mat-card-content>
+          <canvas #reservationsChart></canvas>
+        </mat-card-content>
+      </mat-card>
+  
+      <!-- Revenus mensuels -->
+      <mat-card class="chart-card">
+        <mat-card-title>Revenus Mensuels</mat-card-title>
+        <mat-card-content>
+          <canvas #revenusChart></canvas>
+        </mat-card-content>
+      </mat-card>
+  
+      <!-- Satisfaction client -->
+      <mat-card class="chart-card">
+        <mat-card-title>Satisfaction Client</mat-card-title>
+        <mat-card-content>
+          <canvas #satisfactionChart></canvas>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>

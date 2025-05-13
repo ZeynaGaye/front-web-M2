@@ -1,0 +1,73 @@
+<!-- En-tête -->
+<header class="header" style="background-color: #F5A393; color: white; text-align: center; padding: 80px 0;">
+    <div class="container" style="width: 90%; max-width: 1200px; margin: 0 auto;">
+        <h1 style="font-size: 2.5rem; margin-bottom: 20px;">Rejoignez notre communauté de professionnels</h1>
+        <p style="font-size: 1.2rem; margin-bottom: 30px;">Augmentez votre visibilité, trouvez des missions près de chez vous, et prenez votre carrière en main.</p>
+    </div>
+</header>
+
+<!-- Section Avantages -->
+<section class="advantages" style="background-color: #E8EDF1; padding: 60px 0;">
+    <div class="container" style="width: 90%; max-width: 1200px; margin: 0 auto;">
+        <h2 style="text-align: center; color: #333; font-size: 2rem; margin-bottom: 40px;">Pourquoi nous choisir ?</h2>
+        <div class="advantage-cards" style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
+            <div class="card" style="flex: 1; min-width: 300px; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                <i class="fas fa-chart-line" style="color: #F5A393; font-size: 2rem; margin-bottom: 15px;"></i>
+                <h3 style="color: #333; margin-bottom: 15px;">Visibilité accrue</h3>
+                <p style="color: #666;">Profitez d'une plateforme dédiée pour montrer vos talents à des milliers de clients.</p>
+            </div>
+            <div class="card" style="flex: 1; min-width: 300px; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                <i class="fas fa-search-location" style="color: #F5A393; font-size: 2rem; margin-bottom: 15px;"></i>
+                <h3 style="color: #333; margin-bottom: 15px;">Missions locales</h3>
+                <p style="color: #666;">Trouvez des missions près de chez vous et travaillez à votre rythme.</p>
+            </div>
+            <div class="card" style="flex: 1; min-width: 300px; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                <i class="fas fa-wallet" style="color: #F5A393; font-size: 2rem; margin-bottom: 15px;"></i>
+                <h3 style="color: #333; margin-bottom: 15px;">Paiements sécurisés</h3>
+                <p style="color: #666;">Recevez vos paiements rapidement et en toute sécurité.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Section Témoignages -->
+<section class="testimonials" style="padding: 60px 0;">
+    <div class="container" style="width: 90%; max-width: 1200px; margin: 0 auto;">
+        <h2 style="text-align: center; color: #333; font-size: 2rem; margin-bottom: 40px;">Ce que disent nos freelances</h2>
+        <div class="testimonial-cards" style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap;">
+            <div class="card" style="flex: 1; min-width: 300px; max-width: 500px; background: #E8EDF1; padding: 25px; border-radius: 10px;">
+                <p style="font-style: italic; color: #333; margin-bottom: 15px;">"Grâce à cette plateforme, j'ai pu doubler mon chiffre d'affaires en quelques mois !"</p>
+                <span style="color: #F5A393; font-weight: bold;">- Marie, Coiffeuse</span>
+            </div>
+            <div class="card" style="flex: 1; min-width: 300px; max-width: 500px; background: #E8EDF1; padding: 25px; border-radius: 10px;">
+                <p style="font-style: italic; color: #333; margin-bottom: 15px;">"Je trouve facilement des missions près de chez moi, c'est un vrai gain de temps."</p>
+                <span style="color: #F5A393; font-weight: bold;">- Jean, Esthéticien</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Section Inscription -->
+<section class="signup" style="background-color: #F5A393; padding: 60px 0; text-align: center;">
+    <div class="container" style="width: 90%; max-width: 1200px; margin: 0 auto;">
+        <h2 style="color: white; font-size: 2rem; margin-bottom: 20px;">Prêt à commencer ?</h2>
+        <p style="color: white; font-size: 1.2rem; margin-bottom: 30px;">Inscrivez-vous dès aujourd'hui et commencez à trouver des missions.</p>
+        <a *ngIf="!isLoggedIn" (click)="login()" class="signin-button" style="display: inline-block; background-color: white; color: #F5A393; text-decoration: none; padding: 15px 30px; border-radius: 25px; font-weight: bold; cursor: pointer;">S'inscrire maintenant</a>
+    </div>
+</section>
+
+<!-- Modal de connexion avec app-authent -->
+<div *ngIf="showLoginModal" class="modal-backdrop">
+    <div class="modal-container">
+        <button class="close-btn" (click)="closeLoginModal()">×</button>
+        <app-authent (switchToRegisterEvent)="switchToRegister()"></app-authent>
+    </div>
+</div>
+
+<!-- Modal d'inscription -->
+<div *ngIf="showRegisterModal" class="modal-backdrop">
+    <div class="modal-container">
+      <button class="close-btn" (click)="closeRegisterModal()">×</button>
+      <app-register (switchToLoginEvent)="switchToLogin()"></app-register>
+    </div>
+  </div>

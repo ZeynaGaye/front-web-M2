@@ -1,0 +1,243 @@
+<div class="portfolio-container">
+  <!-- En-tête avec statistiques - Visible uniquement si non clientMode -->
+  <div class="portfolio-header" *ngIf="!clientMode">
+    <h1>Mon Portfolio</h1>
+    <p class="subtitle">Découvrez mes créations et réalisations dans le domaine de la beauté</p>
+    
+    <!-- Statistiques - Visible seulement pour le propriétaire -->
+    <div class="stats-container">
+      <div class="stat-item">
+        <div class="stat-value">{{stats.totalItems || 0}}</div>
+        <div class="stat-label">Créations</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">{{stats.totalViews || 0}}</div>
+        <div class="stat-label">Vues</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">{{stats.totalLikes || 0}}</div>
+        <div class="stat-label">J'aime</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- En-tête alternative pour le mode client avec informations complètes du freelance -->
+  <div class="portfolio-header client-header" *ngIf="clientMode && freelanceInfo">
+    <div class="freelance-info">
+      <h1>Portfolio de {{freelanceInfo.prenom}} {{freelanceInfo.nom}}</h1>
+      
+      <div class="freelance-details">
+        <!-- Profession et notation -->
+        <div class="profession-rating">
+          <span class="profession" *ngIf="freelanceInfo.profession">{{freelanceInfo.profession}}</span>
+          <div class="rating" *ngIf="freelanceInfo.rating">
+            <span class="stars">
+              <i class="material-icons" *ngFor="let star of [1,2,3,4,5]">
+                {{star <= freelanceInfo.rating ? 'star' : (star - 0.5 <= freelanceInfo.rating ? 'star_half' : 'star_border')}}
+              </i>
+            </span>
+            <span class="rating-value">{{freelanceInfo.rating}}/5</span>
+            <span class="reviews-count" *ngIf="freelanceInfo.reviews">({{freelanceInfo.reviews}} avis)</span>
+          </div>
+        </div>
+        
+        <!-- Informations de contact -->
+        <div class="contact-details">
+          <div class="contact-item" *ngIf="freelanceInfo.telephone">
+            <i class="material-icons">phone</i>
+            <span>{{freelanceInfo.telephone}}</span>
+          </div>
+          <div class="contact-item" *ngIf="freelanceInfo.email">
+            <i class="material-icons">email</i>
+            <span>{{freelanceInfo.email}}</span>
+          </div>
+          <div class="contact-item" *ngIf="freelanceInfo.adresse || freelanceInfo.ville">
+            <i class="material-icons">location_on</i>
+            <span>
+              <ng-container *ngIf="freelanceInfo.adresse">{{freelanceInfo.adresse}}, </ng-container>
+              <ng-container *ngIf="freelanceInfo.codePostal">{{freelanceInfo.codePostal}} </ng-container>
+              <ng-container *ngIf="freelanceInfo.ville">{{freelanceInfo.ville}}</ng-container>
+            </span>
+          </div>
+        </div>
+        
+        <!-- Bouton de contact -->
+        <div class="contact-actions">
+          <button mat-raised-button color="primary" (click)="contactFreelance(freelanceInfo, $event)">
+            <mat-icon>message</mat-icon> Contacter
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtres -->
+  <div class="filters">
+    <button mat-button 
+            *ngFor="let filter of filters" 
+            [class.active]="activeFilter === filter.id"
+            (click)="filterByCategory(filter.id)">
+      {{filter.label}}
+    </button>
+    <!-- Bouton Ajouter - Visible seulement pour le propriétaire -->
+    <button mat-button class="add-button" (click)="openAddPortfolioDialog()" 
+            *ngIf="authManager.isAuthenticated() && (portfolioItems.length > 0 && portfolioItems[0].isOwner)">
+      <mat-icon>add</mat-icon> Ajouter
+    </button>
+  </div>
+
+  <!-- Loader -->
+  <div *ngIf="loading" class="loader">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Chargement en cours...</p>
+  </div>
+
+  <!-- Message d'erreur -->
+  <div *ngIf="error && !loading" class="error-message">
+    <mat-icon>error_outline</mat-icon>
+    <p>Une erreur est survenue lors du chargement du portfolio</p>
+    <button mat-raised-button color="primary" (click)="loadPortfolio()">
+      <mat-icon>refresh</mat-icon> Réessayer
+    </button>
+  </div>
+
+  <!-- Portfolio vide -->
+  <div *ngIf="!loading && !error && portfolioItems.length === 0" class="empty-portfolio">
+    <mat-icon>collections</mat-icon>
+    <h3>Aucune réalisation pour le moment</h3>
+    <!-- Différent selon le mode -->
+    <ng-container *ngIf="authManager.isAuthenticated() && portfolioItems.length > 0 && portfolioItems[0].isOwner">
+      <p>Commencez par ajouter vos premières créations</p>
+      <button mat-raised-button color="primary" (click)="openAddPortfolioDialog()">
+        <mat-icon>add</mat-icon> Ajouter une réalisation
+      </button>
+    </ng-container>
+    <ng-container *ngIf="clientMode || !authManager.isAuthenticated() || !(portfolioItems.length > 0 && portfolioItems[0].isOwner)">
+      <p>Ce professionnel n'a pas encore ajouté de réalisations à son portfolio</p>
+    </ng-container>
+  </div>
+
+  <!-- Filtre vide -->
+  <div *ngIf="!loading && !error && portfolioItems.length > 0 && filteredItems.length === 0" class="empty-filter">
+    <mat-icon>search_off</mat-icon>
+    <h3>Aucun résultat pour cette catégorie</h3>
+    <button mat-button (click)="filterByCategory('all')">
+      <mat-icon>arrow_back</mat-icon> Voir toutes les réalisations
+    </button>
+  </div>
+
+  <!-- Grille des réalisations -->
+  <div class="portfolio-grid" [@portfolioAnimation]="filteredItems.length" 
+       *ngIf="!loading && !error && filteredItems.length > 0">
+    <div class="portfolio-card" *ngFor="let item of filteredItems; trackBy: trackById" 
+         [class.deleting]="item['isDeleting']">
+      
+      <!-- Overlay de suppression -->
+      <div class="delete-overlay" *ngIf="item.isDeleting">
+        <mat-spinner diameter="40"></mat-spinner>
+        <span>Suppression en cours...</span>
+      </div>
+      
+      <!-- Actions - Visible uniquement pour le propriétaire -->
+      <div class="card-actions" *ngIf="item.isOwner">
+        <button mat-icon-button (click)="editItem(item)" matTooltip="Modifier">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button mat-icon-button (click)="deleteItem(item)" color="warn" matTooltip="Supprimer">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+      
+      <!-- Information du freelance - Visible uniquement en mode client et si on affiche plusieurs freelances -->
+      <div class="freelance-header" *ngIf="clientMode && item.freelance && !freelanceId">
+        <div class="freelance-profile">
+          <div class="profile-image" *ngIf="item.freelance.profileImage" 
+               [style.backgroundImage]="'url(' + item.freelance.profileImage + ')'">
+          </div>
+          <div class="profile-details">
+            <h4>{{item.freelance.prenom}} {{item.freelance.nom}}</h4>
+            <p *ngIf="item.freelance.profession">{{item.freelance.profession}}</p>
+          </div>
+        </div>
+        <button mat-icon-button (click)="contactFreelance(item.freelance, $event)" 
+                matTooltip="Contacter" class="contact-btn">
+          <mat-icon>phone</mat-icon>
+        </button>
+      </div>
+      
+      <!-- Carousel d'images avec Swiper -->
+      <div class="card-carousel">
+        <swiper-container [attr.data-item-id]="item.id" class="portfolio-carousel">
+          <swiper-slide *ngFor="let image of item.images">
+            <div class="carousel-image-container">
+              <img [src]="image.url" 
+                  [alt]="image.legende || item.titre" 
+                  (load)="onImageLoad()"
+                  (error)="onImageError($event)">
+              <div class="image-legend" *ngIf="image.legende">{{image.legende}}</div>
+            </div>
+          </swiper-slide>
+        </swiper-container>
+        
+        <!-- Contrôles du carousel -->
+        <!-- <div class="carousel-controls">
+          <button mat-icon-button (click)="toggleAutoplay(item.id, $event)" matTooltip="Play/Pause">
+            <mat-icon>{{ autoplayStatus[item.id] ? 'pause' : 'play_arrow' }}</mat-icon>
+          </button>
+        </div> -->
+      </div>
+
+      <!-- Badge de catégorie -->
+      <div class="category-badge" *ngIf="item.categories && item.categories.length > 0">
+        {{item.categories[0] | titlecase}}
+      </div>
+
+      <!-- Contenu -->
+      <div class="card-content">
+        <h3>{{item.titre}}</h3>
+        
+        <!-- Description avec possibilité d'expansion -->
+        <div class="description-container">
+          <p class="description" [class.truncated]="!item.isExpanded && shouldShowMore(item.description)">
+            {{item.description}}
+          </p>
+          <button 
+            *ngIf="shouldShowMore(item.description)" 
+            class="read-more-button" 
+            (click)="toggleExpand(item)"
+            mat-button
+            color="primary">
+            {{ item.isExpanded ? 'Voir moins' : 'Voir plus...' }}
+          </button>
+        </div>
+        
+        <!-- Tags -->
+        <div class="tags" *ngIf="item.tags && item.tags.length > 0">
+          <mat-chip-listbox>
+            <mat-chip *ngFor="let tag of item.tags">{{tag}}</mat-chip>
+          </mat-chip-listbox>
+        </div>
+
+        <!-- Statistiques -->
+        <div class="stats">
+          <!-- Vue - Visible uniquement pour le propriétaire -->
+          <div class="stat" *ngIf="item.isOwner">
+            <mat-icon>visibility</mat-icon>
+            <span>{{item.nombreVues || 0}}</span>
+          </div>
+          <!-- Like - Visible pour tous -->
+          <div class="stat like-stat" (click)="likeItem(item.id, $event)">
+            <mat-icon [class.liked]="isLikedByUser(item.id)" class="liked-icon"
+                  [attr.data-item-id]="item.id">favorite</mat-icon>
+            <span>{{item.nombreLikes || 0}}</span>
+          </div>
+          <!-- Date d'ajout - Informative -->
+          <div class="stat date-stat">
+            <mat-icon>calendar_today</mat-icon>
+            <span>{{item.dateCreation | date:'dd/MM/yyyy'}}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

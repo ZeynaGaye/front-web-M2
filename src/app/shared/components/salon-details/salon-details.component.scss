@@ -1,0 +1,423 @@
+.salon-detail-dialog {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  
+  .dialog-header {
+    display: flex;
+    justify-content: flex-end;
+    padding: 8px;
+    background-color: rgba(255, 255, 255, 0.9);
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 10;
+    
+    .close-button {
+      background-color: white;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+  }
+  
+  .dialog-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    
+    .salon-hero {
+      height: 280px;
+      width: 100%;
+      position: relative;
+      
+      .salon-cover {
+        width: 100%;
+        height: 100%;
+        background-size: cover;
+        background-position: center;
+        position: relative;
+        
+        .salon-overlay {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          width: 100%;
+          padding: 20px;
+          background: linear-gradient(transparent, rgba(0,0,0,0.8));
+          color: white;
+          
+          .salon-name {
+            font-size: 2rem;
+            margin: 0 0 8px 0;
+            font-weight: 600;
+          }
+          
+          .salon-rating {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            
+            .stars {
+              color: #FFD700;
+              margin-right: 8px;
+            }
+            
+            .rating-value {
+              font-weight: 600;
+              margin-right: 5px;
+            }
+            
+            .review-count {
+              opacity: 0.8;
+            }
+          }
+          
+          .salon-address {
+            display: flex;
+            align-items: center;
+            margin: 0;
+            font-size: 1rem;
+            
+            mat-icon {
+              margin-right: 5px;
+              font-size: 18px;
+              width: 18px;
+              height: 18px;
+            }
+          }
+        }
+      }
+    }
+
+    // Navigation par onglets
+    .navigation-tabs {
+      display: flex;
+      justify-content: space-around;
+      padding: 12px 20px;
+      background-color: white;
+      border-bottom: 1px solid #eee;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      z-index: 2;
+
+      .tab {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 8px 12px;
+        cursor: pointer;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        
+        mat-icon {
+          margin-bottom: 4px;
+          color: #666;
+        }
+        
+        span {
+          font-size: 0.9rem;
+          color: #666;
+        }
+        
+        &:hover {
+          background-color: #f9f9f9;
+          
+          mat-icon, span {
+            color: #ff5722;
+          }
+        }
+        
+        &.active {
+          background-color: #fff0eb;
+          
+          mat-icon, span {
+            color: #ff5722;
+            font-weight: 500;
+          }
+        }
+      }
+    }
+    
+    .tab-content {
+      padding: 24px;
+      flex: 1;
+      
+      h3 {
+        font-size: 1.3rem;
+        font-weight: 500;
+        margin-top: 0;
+        color: #333;
+        position: relative;
+        
+        &:after {
+          content: '';
+          display: block;
+          width: 50px;
+          height: 3px;
+          background-color: #ff5722;
+          margin-top: 8px;
+        }
+      }
+      
+      .info-section {
+        margin-bottom: 24px;
+        
+        .salon-description {
+          line-height: 1.6;
+          color: #555;
+        }
+      }
+      
+      .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 16px;
+        
+        .info-item {
+          display: flex;
+          padding: 16px;
+          background-color: #f9f9f9;
+          border-radius: 8px;
+          
+          mat-icon {
+            margin-right: 16px;
+            color: #ff5722;
+          }
+          
+          .info-text {
+            h4 {
+              margin: 0 0 4px 0;
+              font-weight: 500;
+            }
+            
+            p {
+              margin: 0;
+              color: #666;
+            }
+          }
+        }
+      }
+      
+      // Styles pour les services avec bouton de réservation
+      .services-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 16px;
+        
+        .service-card {
+          background-color: white;
+          border-radius: 8px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+          overflow: hidden;
+          transition: transform 0.2s, box-shadow 0.2s;
+          
+          &:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+          }
+          
+          .service-content {
+            padding: 16px;
+            
+            .service-header {
+              margin-bottom: 12px;
+              
+              .service-name {
+                font-size: 1.1rem;
+                font-weight: 500;
+                margin: 0;
+                color: #333;
+              }
+            }
+            
+            .service-details {
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 12px;
+              
+              .service-duration {
+                display: flex;
+                align-items: center;
+                color: #666;
+                
+                mat-icon {
+                  font-size: 18px;
+                  width: 18px;
+                  height: 18px;
+                  margin-right: 4px;
+                }
+              }
+              
+              .service-price {
+                font-weight: 600;
+                color: #ff5722;
+              }
+            }
+            
+            .service-description {
+              font-size: 0.9rem;
+              color: #666;
+              margin: 0 0 16px 0;
+              line-height: 1.4;
+            }
+            
+            .service-actions {
+              display: flex;
+              justify-content: center;
+              
+              .book-button {
+                width: 100%;
+                background-color: #ff5722;
+                color: white;
+                
+                mat-icon {
+                  margin-right: 8px;
+                }
+                
+                &:hover {
+                  background-color: darken(#ff5722, 5%);
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      // Styles pour la galerie photo
+      .photo-gallery {
+        .gallery-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+          gap: 16px;
+          
+          .photo-item {
+            width: 100%;
+            aspect-ratio: 1;
+            overflow: hidden;
+            border-radius: 8px;
+            
+            .photo-container {
+              width: 100%;
+              height: 100%;
+              position: relative;
+              
+              .gallery-image {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                transition: transform 0.3s;
+                
+                &:hover {
+                  transform: scale(1.05);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  .loading-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 60px;
+    
+    p {
+      margin-top: 20px;
+      color: #666;
+    }
+  }
+  
+  .loading-spinner {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 0;
+    
+    p {
+      margin-top: 16px;
+      color: #666;
+    }
+  }
+  
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 0;
+    color: #999;
+    
+    mat-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      margin-bottom: 16px;
+    }
+  }
+  
+  .error-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 16px;
+    text-align: center;
+    
+    mat-icon {
+      color: #f44336;
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      margin-bottom: 16px;
+    }
+    
+    p {
+      margin-bottom: 24px;
+      color: #666;
+    }
+  }
+}
+
+// Pour assurer que le dialogue est affiché correctement
+::ng-deep .salon-detail-dialog-container {
+  max-width: 90vw !important;
+  width: 900px !important;
+  height: 90vh !important;
+  
+  .mat-mdc-dialog-container {
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+}
+
+// Styles pour les notifications snackbar
+::ng-deep .success-snackbar {
+  background-color: #4caf50;
+  color: white;
+}
+
+::ng-deep .warning-snackbar {
+  background-color: #ff9800;
+  color: white;
+}
+
+::ng-deep .error-snackbar {
+  background-color: #f44336;
+  color: white;
+}
+
+::ng-deep .info-snackbar {
+  background-color: #2196f3;
+  color: white;
+}
+
+// Styles pour les onglets actifs/inactifs
+.presentation-tab, .services-tab, .photos-tab {
+  min-height: 300px;
+}

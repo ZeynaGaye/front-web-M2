@@ -1,0 +1,47 @@
+.contact-container {
+  background: #a4b1bd; // Couleur de fond
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  color: #fff; // Texte en blanc pour contraster avec le fond
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+input, textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fff; // Fond blanc pour les champs de formulaire
+  color: #333; // Texte sombre pour les champs de formulaire
+}
+
+button {
+  background: #f5a393; // Couleur des boutons
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  text-align: center;
+  cursor: pointer;
+  //transition: background 0.3s ease;
+
+  &:hover {
+    background: #f5a393; // Assombrir la couleur au survol
+  }
+}
+
+.error-message {
+  color: #ff6b6b; // Couleur pour les messages d'erreur
+  font-size: 12px;
+  margin-top: 5px;
+}

@@ -1,0 +1,317 @@
+// Variables de couleurs
+$primary-main: #fb8f71;
+$primary-lighter: #ffd7cc;
+$primary-darker: #f36a4a;
+$primary-text: #ffffff;
+
+$secondary-main: #9ca3af;
+$secondary-lighter: #e5e7eb;
+$secondary-darker: #6b7280;
+
+$secondary-text: #000000;
+
+// Variables générales
+$border-radius: 8px;
+$box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+$transition: all 0.3s ease;
+
+.dialog-container {
+  max-width: 800px;
+  padding: 0;
+  
+  h1 {
+    color: $primary-darker;
+    margin-bottom: 24px;
+    padding: 24px 24px 0;
+    font-weight: 600;
+    font-size: 1.5rem;
+  }
+}
+
+mat-dialog-content {
+  padding: 0 24px;
+  max-height: 70vh;
+  overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: $secondary-main;
+    border-radius: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background-color: $secondary-lighter;
+  }
+}
+
+.form-section {
+  margin-bottom: 24px;
+  
+  .section-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    
+    .section-icon {
+      color: $primary-main;
+      margin-right: 8px;
+    }
+    
+    h3 {
+      margin: 0;
+      font-weight: 500;
+      font-size: 1.1rem;
+    }
+  }
+  
+  .section-hint {
+    color: $secondary-darker;
+    font-size: 0.85rem;
+    margin-top: 4px;
+    margin-bottom: 16px;
+  }
+  
+  .section-error {
+    margin-top: 8px;
+    font-size: 0.85rem;
+  }
+}
+
+.card {
+  background-color: #ffffff;
+  border-radius: $border-radius;
+  padding: 16px;
+  box-shadow: $box-shadow;
+  border: 1px solid $secondary-lighter;
+}
+
+.required-asterisk {
+  color: #f44336;
+  margin-left: 2px;
+}
+
+.custom-field {
+  width: 100%;
+  
+  .form-icon {
+    color: $primary-main;
+    margin-right: 8px;
+  }
+}
+
+// Styles pour les chips
+.chip-container {
+  margin-top: 12px;
+  
+  .custom-chip {
+    background-color: $primary-lighter;
+    color: $primary-darker;
+    font-weight: 500;
+    
+    &.secondary {
+      background-color: $secondary-lighter;
+      color: $secondary-darker;
+    }
+    
+    mat-icon {
+      color: inherit;
+      opacity: 0.7;
+      
+      &:hover {
+        opacity: 1;
+      }
+    }
+  }
+
+  input {
+    margin-top: 8px;
+    padding: 8px 12px;
+    border: 2px solid $secondary-main;
+    outline: none;
+    font-size: 1rem;
+
+    
+    &::placeholder {
+      color: $secondary-main;
+    }
+  }
+}
+
+// Zone de drag & drop pour les images
+.upload-area {
+  border: 2px dashed $secondary-main;
+  border-radius: $border-radius;
+  padding: 32px 16px;
+  text-align: center;
+  transition: $transition;
+  cursor: pointer;
+  
+  &.drag-over {
+    border-color: $primary-main;
+    background-color: rgba($primary-lighter, 0.2);
+  }
+  
+  .upload-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    
+    .upload-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      color: $secondary-main;
+      margin-bottom: 16px;
+    }
+    
+    p {
+      margin: 0 0 8px;
+      color: $secondary-darker;
+    }
+    
+    .upload-or {
+      margin: 8px 0;
+      color: $secondary-main;
+      font-size: 0.85rem;
+    }
+    
+    .upload-button {
+      background-color: $primary-main;
+      color: $primary-text;
+      padding: 8px 16px;
+      
+      &:hover {
+        background-color: $primary-darker;
+      }
+      
+      mat-icon {
+        margin-right: 8px;
+      }
+    }
+  }
+}
+
+// Grille d'aperçu des images
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+  
+  .image-preview {
+    position: relative;
+    
+    .image-container {
+      position: relative;
+      height: 180px;
+      border-radius: $border-radius;
+      overflow: hidden;
+      margin-bottom: 8px;
+      
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      
+      .delete-button {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        background-color: rgba(0, 0, 0, 0.5);
+        color: white;
+        width: 32px;
+        height: 32px;
+        line-height: 32px;
+        
+        &:hover {
+          background-color: rgba($primary-darker, 0.8);
+        }
+        
+        mat-icon {
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+          line-height: 18px;
+        }
+      }
+    }
+    
+    .caption-field {
+      margin-top: 4px;
+      width: 100%;
+      font-size: 0.9rem;
+      
+      ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+        height: 20px;
+      }
+    }
+  }
+  
+  .add-more {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 180px;
+    border: 1px dashed $secondary-main;
+    border-radius: $border-radius;
+    cursor: pointer;
+    transition: $transition;
+    
+    &:hover {
+      background-color: $secondary-lighter;
+      border-color: $primary-main;
+      
+      mat-icon, span {
+        color: $primary-main;
+      }
+    }
+    
+    mat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      color: $secondary-main;
+      margin-bottom: 8px;
+    }
+    
+    span {
+      color: $secondary-darker;
+    }
+  }
+}
+
+// Actions du dialog
+.dialog-actions {
+  padding: 16px 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  border-top: 1px solid $secondary-lighter;
+  margin-top: 16px;
+  
+  button {
+    min-width: 100px;
+    
+    &[color="primary"] {
+      background-color: $primary-main;
+      color: $primary-text;
+      
+      &:hover:not([disabled]) {
+        background-color: $primary-darker;
+      }
+      
+      &[disabled] {
+        background-color: $secondary-lighter;
+        color: $secondary-main;
+      }
+    }
+  }
+  
+  mat-spinner {
+    margin: 0 auto;
+  }
+}

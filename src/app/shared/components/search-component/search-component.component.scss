@@ -1,0 +1,30 @@
+.search-bar {
+    display: flex;
+    align-items: center;
+    background: #ffffff;
+    border-radius: 25px;
+    padding: 5px;
+    width: 90%;
+
+    input {
+      border: none;
+      background: transparent;
+      padding: 8px 15px;
+      outline: none;
+      width: fit-content;
+
+      &::placeholder {
+        color: #666;
+      }
+    }
+
+    button {
+      background: #F5A393;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 20px;
+      color: #000;
+      cursor: pointer;
+    }
+  }
+

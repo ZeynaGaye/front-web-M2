@@ -1,0 +1,332 @@
+@use "sass:color";
+
+/* Palette de couleurs */
+:root {
+  --primary-color: #ff6b6b; /* Couleur principale (rose/corail) */
+  --secondary-color: #f9f9f9; /* Couleur secondaire (beige/blanc cassé) */
+  --accent-color: #4ecdc4; /* Couleur d'accentuation (turquoise) */
+  --text-color: #333; /* Couleur de texte principale */
+  --text-light: #fff; /* Texte sur fond sombre */
+}
+
+$primary-color: #ff6b6b;
+$accent-color: #f5a393;
+
+/* Styles généraux */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  color: var(--text-color);
+}
+
+.container {
+  width: 90%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 0;
+}
+
+/* En-tête */
+.header {
+  //background: url('assets/images/header-bg.jpg') no-repeat center center/cover;
+  color: var(--text-light);
+  text-align: center;
+  padding: 100px 0;
+}
+
+.header h1 {
+  font-size: 3rem;
+  margin-bottom: 20px;
+}
+
+.header p {
+  font-size: 1.2rem;
+  margin-bottom: 30px;
+}
+
+.btn {
+  padding: 10px 20px;
+  border-radius: 5px;
+  text-decoration: none;
+  font-size: 1rem;
+  transition: background-color 0.3s ease;
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  color: var(--text-light);
+}
+
+.btn-primary:hover {
+  background-color: color.adjust($primary-color, $lightness: -10%);
+}
+
+.btn-secondary {
+  background-color: var(--accent-color);
+  color: var(--text-light);
+}
+
+.btn-secondary:hover {
+  background-color: color.adjust($accent-color, $lightness: -10%);
+}
+
+/* Section Avantages */
+.advantages {
+  background-color: var(--secondary-color);
+  padding: 50px 0;
+  text-align: center;
+}
+
+.advantages h2 {
+  font-size: 2.5rem;
+  margin-bottom: 40px;
+}
+
+.advantage-cards {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+}
+
+.card {
+  background: var(--text-light);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 30%;
+  margin: 10px;
+}
+
+.card i {
+  font-size: 2rem;
+  margin-bottom: 15px;
+  color: var(--primary-color);
+}
+
+.card h3 {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+}
+
+.card p {
+  font-size: 1rem;
+  color: #666;
+}
+
+/* Section Témoignages */
+.testimonials {
+  padding: 50px 0;
+  text-align: center;
+}
+
+.testimonials h2 {
+  font-size: 2.5rem;
+  margin-bottom: 40px;
+}
+
+.testimonial-cards {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+}
+
+.testimonial-cards .card {
+  width: 45%;
+  margin: 10px;
+}
+
+.testimonial-cards p {
+  font-style: italic;
+  color: var(--text-color);
+}
+
+.testimonial-cards span {
+  display: block;
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+/* Section Inscription */
+.signup {
+  background-color: var(--accent-color);
+  color: var(--text-light);
+  text-align: center;
+  padding: 50px 0;
+}
+
+.signup h2 {
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+}
+
+.signup p {
+  font-size: 1.2rem;
+  margin-bottom: 30px;
+}
+/* Styles pour les modals */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-container {
+  background-color: white;
+  border-radius: 10px;
+  padding: 30px;
+  max-width: 500px;
+  width: 90%;
+  position: relative;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 24px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #999;
+}
+
+.close-btn:hover {
+  color: #333;
+}
+
+/* Styles pour le bouton de connexion */
+.signin-button {
+  transition: all 0.3s ease;
+}
+
+.signin-button:hover {
+  background-color: #f8f8f8;
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Styles pour les cartes d'avantages */
+.advantage-cards .card {
+  transition: all 0.3s ease;
+}
+
+.advantage-cards .card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Style pour les icônes */
+.fas {
+  display: block;
+}
+
+/* Styles responsive */
+@media (max-width: 768px) {
+  .advantage-cards {
+    flex-direction: column;
+  }
+  
+  .advantage-cards .card {
+    margin-bottom: 20px;
+  }
+  
+  .testimonial-cards {
+    flex-direction: column;
+  }
+  
+  .testimonial-cards .card {
+    margin-bottom: 20px;
+  }
+}
+
+/* Styles pour les modals */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-container {
+  background-color: white;
+  border-radius: 10px;
+  padding: 30px;
+  max-width: 500px;
+  width: 90%;
+  position: relative;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 24px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #999;
+}
+
+.close-btn:hover {
+  color: #333;
+}
+
+/* Styles pour le bouton de connexion */
+.signin-button {
+  transition: all 0.3s ease;
+}
+
+.signin-button:hover {
+  background-color: #f8f8f8;
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Styles pour les cartes d'avantages */
+.advantage-cards .card {
+  transition: all 0.3s ease;
+}
+
+.advantage-cards .card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Styles responsive */
+@media (max-width: 768px) {
+  .advantage-cards {
+    flex-direction: column;
+  }
+  
+  .advantage-cards .card {
+    margin-bottom: 20px;
+  }
+  
+  .testimonial-cards {
+    flex-direction: column;
+  }
+  
+  .testimonial-cards .card {
+    margin-bottom: 20px;
+  }
+}

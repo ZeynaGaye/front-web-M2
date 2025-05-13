@@ -1,0 +1,136 @@
+<div class="job-offer-section">
+  <div class="job-text-container">
+    <h2 class="job-title">Recrutez les talents de demain</h2>
+    
+    <p class="job-description">
+      Vous dirigez un salon de beauté et cherchez à étoffer votre équipe ? 
+      <span class="highlight">BeautyHub</span> vous connecte avec les meilleurs professionnels du secteur.
+    </p>
+    
+    <div class="benefits-container">
+      <div class="benefit-item">
+        <i class="material-icons">visibility</i>
+        <h3>Visibilité maximale</h3>
+        <p>Votre salon gagne en visibilité auprès de milliers de professionnels et clients potentiels.</p>
+      </div>
+      
+      <div class="benefit-item">
+        <i class="material-icons">verified_user</i>
+        <h3>Profils vérifiés</h3>
+        <p>Accédez à des talents qualifiés dont les compétences ont été rigoureusement validées.</p>
+      </div>
+      
+      <div class="benefit-item">
+        <i class="material-icons">speed</i>
+        <h3>Recrutement accéléré</h3>
+        <p>Réduisez votre temps de recrutement de 65% grâce à notre matching intelligent.</p>
+      </div>
+    </div>
+    
+    <div class="cta-container">
+      <button class="primary-btn" (click)="login()">Publier une offre</button>
+      <button class="secondary-btn" (click)="learnMore()">En savoir plus</button>
+    </div>
+  </div>
+  
+  <div class="job-image-container">
+    <div class="job-image"></div>
+    <div class="testimonial">
+      <p>"Grâce à BeautyHub, j'ai trouvé deux excellents coiffeurs en moins d'une semaine. Un service incontournable!"</p>
+      <span class="testimonial-author">— Marie D., Propriétaire du salon Éclat</span>
+    </div>
+  </div>
+</div>
+
+<!-- Section d'informations supplémentaires qui n'apparaît que si showMoreInfo est vrai -->
+<div class="more-info-section" *ngIf="showMoreInfo" [ngClass]="{'expanded': showMoreInfo}">
+  <div class="more-info-header" (click)="toggleMoreInfo()">
+    <h3>Informations supplémentaires</h3>
+    <i class="material-icons">{{ showMoreInfo ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}</i>
+  </div>
+  
+  <div class="more-info-content">
+    <!-- Contenu détaillé ici -->
+    <div class="more-info-grid">
+      <!-- Comment ça fonctionne -->
+      <div class="more-info-card">
+        <h4><i class="material-icons">help_outline</i> Comment ça fonctionne</h4>
+        <ol>
+          <li>Créez votre compte employeur en 2 minutes</li>
+          <li>Publiez votre offre avec tous les détails</li>
+          <li>Recevez des candidatures présélectionnées</li>
+          <li>Échangez directement avec les candidats</li>
+        </ol>
+        <div class="pricing-info">
+          <p>À partir de <span class="highlight">0€</span> pour une offre standard</p>
+          <p>Forfaits Premium à partir de <span class="highlight">49,90€/mois</span></p>
+        </div>
+      </div>
+      
+      <!-- Services additionnels -->
+      <div class="more-info-card">
+        <h4><i class="material-icons">add_circle_outline</i> Services additionnels</h4>
+        <ul>
+          <li>Aide à la rédaction d'offres attractives</li>
+          <li>Promotion ciblée auprès des meilleurs profils</li>
+          <li>Présélection personnalisée de candidats</li>
+          <li>Organisation de journées recrutement virtuelles</li>
+        </ul>
+      </div>
+      
+      <!-- Statistiques -->
+      <div class="more-info-card">
+        <h4><i class="material-icons">bar_chart</i> Nos chiffres clés</h4>
+        <div class="stats-container">
+          <div class="stat-item">
+            <span class="stat-number">15,000+</span>
+            <span class="stat-label">Professionnels inscrits</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number">7 jours</span>
+            <span class="stat-label">Délai moyen de recrutement</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number">94%</span>
+            <span class="stat-label">Taux de satisfaction</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- FAQ -->
+      <div class="more-info-card">
+        <h4><i class="material-icons">question_answer</i> Questions fréquentes</h4>
+        <div class="faq-item" *ngFor="let faq of frequentlyAskedQuestions">
+          <div class="faq-question" (click)="faq.isOpen = !faq.isOpen">
+            <span>{{ faq.question }}</span>
+            <i class="material-icons">{{ faq.isOpen ? 'remove' : 'add' }}</i>
+          </div>
+          <div class="faq-answer" [ngClass]="{'open': faq.isOpen}">
+            {{ faq.answer }}
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="cta-banner">
+      <h3>Prêt à trouver votre talent idéal ?</h3>
+      <button class="primary-btn large" (click)="login()">Commencer maintenant</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de connexion avec app-authent -->
+<div *ngIf="showLoginModal" class="modal-backdrop">
+  <div class="modal-container">
+    <button class="close-btn" (click)="closeLoginModal()">×</button>
+    <app-authent (switchToRegisterEvent)="switchToRegister()"></app-authent>
+  </div>
+</div>
+
+<!-- Modal d'inscription -->
+<div *ngIf="showRegisterModal" class="modal-backdrop">
+  <div class="modal-container">
+    <button class="close-btn" (click)="closeRegisterModal()">×</button>
+    <app-register (switchToLoginEvent)="switchToLogin()"></app-register>
+  </div>
+</div>

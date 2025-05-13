@@ -1,0 +1,14 @@
+<div *ngIf="services.length > 0">
+    <h2 *ngIf="userRole === 'ROLE_EMPLOYEUR'">Services de mon Salon</h2>
+    <h2 *ngIf="userRole === 'ROLE_FREELANCE'">Mes Services</h2>
+    <ul>
+      <li *ngFor="let service of services">
+        <h3>{{ service.name }}</h3>
+        <p>{{ service.description }}</p>
+        <p>Prix : {{ service.price }} €</p>
+      </li>
+    </ul>
+  </div>
+  <div *ngIf="services.length === 0">
+    <p>Aucun service disponible.</p>
+  </div>

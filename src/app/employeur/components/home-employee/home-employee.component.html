@@ -1,0 +1,113 @@
+<mat-sidenav-container class="container">
+    <!-- Sidebar -->
+    <mat-sidenav #sidenav mode="side" [(opened)]="sidebarOpen" class="sidebar">
+      <h2>Espace Employeur</h2>
+      <mat-nav-list>
+        <!-- <a mat-list-item routerLink="/employeur/dashboard" routerLinkActive="active">
+          <mat-icon>dashboard</mat-icon> Dashboard
+        </a> -->
+         <a mat-list-item (click)="showCreationForm = true">
+        <mat-icon>add_business</mat-icon> Créer un Salon
+         </a>
+         <!-- <a mat-list-item (click)="openServicesList()">
+            <mat-icon>miscellaneous_services</mat-icon> Mes Services
+        </a> -->
+        <a mat-list-item  (click)="openOffreEmploiForm()" >
+          <mat-icon>work</mat-icon> Publier une Offre
+        </a>
+        <a mat-list-item routerLink="/employeur/candidatures" routerLinkActive="active">
+          <mat-icon>people</mat-icon> Gérer les Candidatures
+        </a>
+        <a mat-list-item routerLink="/employeur/messages" routerLinkActive="active">
+          <mat-icon>chat</mat-icon> Messages
+        </a>
+        <a mat-list-item routerLink="/employeur/parametres" routerLinkActive="active">
+          <mat-icon>settings</mat-icon> Paramètres
+        </a>
+      </mat-nav-list>
+    </mat-sidenav>
+  
+    <!-- Contenu Principal -->
+    <mat-sidenav-content>
+      <!-- Navbar -->
+      <mat-toolbar color="primary" class="navbar">
+        <button mat-icon-button (click)="toggleSidebar()">
+          <mat-icon>menu</mat-icon>
+        </button>
+        <span><mat-icon class="icon">search</mat-icon></span>
+        <span class="spacer"></span>
+        <button mat-raised-button color="accent" class="btn-gestion-salon" (click)="openSalonsList()">
+          <mat-icon class="icon-salon">store</mat-icon>
+          Gérer vos Salons
+        </button>
+        <mat-icon class="icon">notifications</mat-icon>
+        <mat-icon class="icon">account_circle</mat-icon>
+      
+        
+        <!-- <a mat-list-item routerLink="/employeur/salon" routerLinkActive="active">
+            <mat-icon>add_business</mat-icon> Gerer votre Salon
+          </a> -->
+      </mat-toolbar>
+  
+      <!-- Contenu -->
+      <div class="content">
+        <h1>Bienvenue sur votre espace Employeur</h1>
+        <p>Gérez votre salon, publiez des offres d'emploi et trouvez les meilleurs talents.</p>
+  
+        <!-- Cartes Informatives -->
+        <div class="cards">
+         <!-- home-employee.component.html -->
+         <mat-card class="card" (click)="navigateToOffresManager()">
+          <mat-card-title>Offres Publiées</mat-card-title>
+          <div class="count-display">
+            <p>{{ offreCount }} offre(s) publiée(s)</p>
+            <mat-icon>work</mat-icon>
+          </div>
+        </mat-card>
+          <!-- <mat-card class="card">
+            <mat-card-title>Candidatures Reçues</mat-card-title>
+            <div class="count-display">
+            <p>12 nouvelles candidatures</p>
+            <mat-icon>people</mat-icon>
+            </div>
+          </mat-card> -->
+          <mat-card class="card">
+            <mat-card-title>Messages</mat-card-title>
+            <div class="count-display">
+            <p>3 nouveaux messages</p>
+            <mat-icon>chat</mat-icon>
+            </div>
+          </mat-card>
+        </div>
+  
+       
+        <!-- Carrousel -->
+        <div class="carousel-container">
+          <div id="carouselEmployeur" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-inner">
+              <div class="carousel-item active">
+                <img src="assets/images/src/assets/images/visage-femme-noire-citation-affiche-motivation-beaute-portrait-isole-fond-blanc-superposition-citation-inspiration-soins-peau-bien-etre-creatif-eclat-peau-studio_590464-147733.avif" class="d-block w-100" alt="">
+              </div>
+              <div class="carousel-item">
+                <img src="assets/images/salon2.jpg" class="d-block w-100" alt="">
+              </div>
+              <div class="carousel-item">
+                <img src="assets/images/salon3.jpg" class="d-block w-100" alt="">
+              </div>
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#carouselEmployeur" data-bs-slide="prev">
+              <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#carouselEmployeur" data-bs-slide="next">
+              <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <app-salon *ngIf="showCreationForm" (closeModalEvent)="closeCreationForm()"></app-salon>
+      <app-offre-emplois *ngIf="showOffreEmploiForm" (closeModalEvent)="closeOffreEmploiForm()"></app-offre-emplois>
+      <!-- <app-mes-services *ngIf="showServicesList" (closeModalEvent)="closeServicesList()"></app-mes-services> -->
+      <app-mes-salons *ngIf="showSalonsList" (closeModalEvent)="closeSalonsList()"></app-mes-salons>
+    </mat-sidenav-content>
+  </mat-sidenav-container>
+   

@@ -1,0 +1,8 @@
+<!-- offres.component.html -->
+<div *ngFor="let offre of offres" class="offre-card">
+    <h3>{{ offre.titre }}</h3>
+    <p>{{ offre.description }}</p>
+    <p>Date de Publication : {{ offre.datePublication }}</p>
+    <p>Candidatures : {{ offre.nombreCandidatures }}</p>
+    <button (click)="voirDetails(offre.id)">Voir Détails</button>
+  </div>

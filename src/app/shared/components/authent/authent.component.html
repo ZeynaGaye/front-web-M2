@@ -1,0 +1,37 @@
+<div class="auth-container">
+  <h2>Connexion</h2>
+
+  <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+    <div class="input-group">
+      <i class="material-icons">person</i>
+      <input type="text" placeholder="Email" formControlName="email">
+      <small *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+        Veuillez entrer une adresse email valide
+      </small>
+    </div>
+    
+    <div class="input-group">
+      <i class="material-icons">lock</i>
+      <input [type]="hidePassword ? 'password' : 'text'" placeholder="Mot de passe" formControlName="motDePasse">
+      <mat-icon class="password-toggle" (click)="hidePassword = !hidePassword">
+        {{ hidePassword ? 'visibility_off' : 'visibility' }}
+      </mat-icon>
+      <small *ngIf="loginForm.get('motDePasse')?.invalid && loginForm.get('motDePasse')?.touched">
+        Le mot de passe doit contenir au moins 6 caractères
+      </small>
+    </div>
+    
+    <button type="submit" class="login-btn" [disabled]="loginForm.invalid || isLoading">
+      <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
+      <span *ngIf="!isLoading">Se Connecter</span>
+    </button>
+  </form>
+  
+  <p class="forgot-password">
+    <a (click)="navigateToForgotPassword()">Mot de passe oublié ?</a>
+  </p>
+  
+  <p class="no-account">
+    Pas encore de compte ? <a (click)="switchToRegister()">Créer un compte</a>
+  </p>
+</div>

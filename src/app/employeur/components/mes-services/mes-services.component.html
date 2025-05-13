@@ -1,0 +1,58 @@
+<div class="services-container">
+  <div class="header">
+    <h2>Mes Services</h2>
+    <button mat-icon-button (click)="closeModal()" class="close-button">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- Chargement -->
+  <div *ngIf="loading" class="loading">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Chargement des services...</p>
+  </div>
+
+  <!-- Erreur s’il n’y a pas de salon sélectionné -->
+  <div *ngIf="error && !loading" class="error-message">
+    <mat-icon>error</mat-icon>
+    <p>{{ error }}</p>
+  </div>
+
+  <!-- Liste des services uniquement si salonId est présent -->
+  <div *ngIf="!loading && !error && salonId" class="services-list">
+    
+    <!-- Aucun service -->
+    <div *ngIf="services.length === 0" class="no-services">
+      <p>Vous n'avez pas encore de services.</p>
+      <button mat-raised-button color="primary" (click)="openAddServiceDialog()">
+        <mat-icon>add</mat-icon> Ajouter un service
+      </button>
+    </div>
+
+    <!-- Liste avec au moins un service -->
+    <div *ngIf="services.length > 0" class="services-actions">
+      <button mat-raised-button color="primary" (click)="openAddServiceDialog()">
+        <mat-icon>add</mat-icon> Ajouter un service
+      </button>
+    </div>
+
+    <mat-card *ngFor="let service of services" class="service-card">
+      <mat-card-header>
+        <mat-card-title>{{ service.name }}</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <p>{{ service.description }}</p>
+        <p class="price">{{ service.price | currency:'EUR' }}</p>
+        <p class="duration">Durée: {{ service.duration }} minutes</p>
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-button color="primary" (click)="editService(service)">
+          <mat-icon>edit</mat-icon> MODIFIER
+        </button>
+        <button mat-button color="warn" (click)="deleteService(service.id)">
+          <mat-icon>delete</mat-icon> SUPPRIMER
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+</div>

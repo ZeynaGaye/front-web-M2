@@ -1,0 +1,14 @@
+<html>
+<body>
+    <script>
+        // Informer l'application principale que l'authentification est terminée
+        parent.postMessage({
+            type: 'authentication-complete',
+            url: location.href
+        }, location.origin);
+        
+        // Rediriger vers la page principale
+        window.location.href = window.location.origin;
+    </script>
+</body>
+</html>

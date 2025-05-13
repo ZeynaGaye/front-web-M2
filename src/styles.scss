@@ -1,1 +1,51 @@
-/* You can add global styles to this file, and also import other style files */
+
+
+@use 'swiper/css';
+@use 'swiper/css/navigation';
+@use 'swiper/css/pagination';
+@use '@angular/material' as mat;
+
+html {
+  @include mat.theme((
+    color: (
+      theme-type: light,
+      primary: mat.$azure-palette,
+      tertiary: mat.$blue-palette,
+    ),
+    typography: Roboto,
+    density: 0,
+  ));
+  
+}/* You can add global styles to this file, and also import other style files */
+// @import "~@fortawesome/fontawesome-free/css/all.min.css";
+// @import "tailwindcss/base";
+// @import "tailwindcss/components";
+// @import "tailwindcss/utilities";
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #ffffff;
+  font-family: Arial, sans-serif;
+}
+
+html, body { height: 100%; }
+body { margin: 0; font-family:'Times New Roman', Times, serif}
+
+
+
+/* Styles globaux pour Swiper */
+swiper-container {
+  --swiper-theme-color: #fb8f71;
+  --swiper-navigation-color: #fb8f71;
+  --swiper-pagination-color: #fb8f71;
+}
+
+swiper-slide {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+

@@ -1,0 +1,176 @@
+<h2 mat-dialog-title>{{data.item ? 'Modifier' : 'Ajouter'}} une réalisation</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="editForm" class="form-container">
+    <!-- Section Titre et Description -->
+    <div class="form-section card">
+      <div class="section-header">
+        <mat-icon class="section-icon">title</mat-icon>
+        <h3>Informations de base</h3>
+      </div>
+      
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Titre</mat-label>
+        <input matInput formControlName="titre" required>
+        <mat-error *ngIf="editForm.get('titre')?.hasError('required')">Ce champ est obligatoire</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Description</mat-label>
+        <textarea matInput formControlName="description" rows="4" required></textarea>
+        <mat-error *ngIf="editForm.get('description')?.hasError('required')">Ce champ est obligatoire</mat-error>
+      </mat-form-field>
+    </div>
+
+    <!-- Section Catégories -->
+    <div class="form-section card">
+      <div class="section-header">
+        <mat-icon class="section-icon">category</mat-icon>
+        <h3>Catégories</h3>
+      </div>
+      
+      <div class="chips-container">
+        <mat-chip-listbox>
+          <mat-chip *ngFor="let category of editForm.get('categories')?.value" 
+                   [style.backgroundColor]="primaryLighter"
+                   [style.color]="primaryDarker"
+                   (removed)="removeCategory(category)">
+            {{category}}
+            <button matChipRemove>
+              <mat-icon>cancel</mat-icon>
+            </button>
+          </mat-chip>
+        </mat-chip-listbox>
+      </div>
+      
+      <div class="add-control">
+        <mat-form-field appearance="outline">
+          <mat-label>Nouvelle catégorie</mat-label>
+          <input matInput formControlName="newCategory">
+        </mat-form-field>
+        <button mat-mini-fab 
+                [style.backgroundColor]="primaryMain"
+                [style.color]="primaryText"
+                (click)="addCategory()">
+          <mat-icon>add</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Section Tags -->
+    <div class="form-section card">
+      <div class="section-header">
+        <mat-icon class="section-icon">tag</mat-icon>
+        <h3>Tags</h3>
+      </div>
+      
+      <div class="chips-container">
+        <mat-chip-listbox>
+          <mat-chip *ngFor="let tag of tags" 
+                   [style.backgroundColor]="secondaryLighter"
+                   [style.color]="secondaryDarker"
+                   (removed)="removeTag(tag)">
+            {{tag}}
+            <button matChipRemove>
+              <mat-icon>cancel</mat-icon>
+            </button>
+          </mat-chip>
+        </mat-chip-listbox>
+      </div>
+      
+      <div class="add-control">
+        <mat-form-field appearance="outline">
+          <mat-label>Nouveau tag</mat-label>
+          <input matInput formControlName="newTag">
+        </mat-form-field>
+        <button mat-mini-fab 
+                [style.backgroundColor]="secondaryMain"
+                [style.color]="primaryText"
+                (click)="addTag()">
+          <mat-icon>add</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Section Images -->
+    <div class="form-section card">
+      <div class="section-header">
+        <mat-icon class="section-icon">image</mat-icon>
+        <h3>Images</h3>
+      </div>
+      
+      <div class="image-management">
+        <!-- Images existantes -->
+        <div class="existing-images" *ngIf="existingImages && existingImages.length > 0">
+          <h4>Images actuelles</h4>
+          <div class="image-grid">
+            <div class="image-preview" *ngFor="let image of existingImages; let i = index">
+              <div class="image-container">
+                <img [src]="image.url" [alt]="image.legende || 'Image ' + (i+1)">
+                <button mat-icon-button class="delete-button" (click)="deleteImage(image.id)">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+              <mat-form-field appearance="outline" class="caption-field">
+                <mat-label>Légende</mat-label>
+                <input matInput [(ngModel)]="image.legende" [ngModelOptions]="{standalone: true}">
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Ajout de nouvelles images -->
+        <div class="new-images">
+          <h4>Ajouter des images</h4>
+          <div class="upload-area" appDragDrop (fileDropped)="onFileDropped($event)"
+            [class.drag-over]="isDragging" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)">
+            
+            <div class="upload-content" *ngIf="newImages.length === 0">
+              <mat-icon class="upload-icon">cloud_upload</mat-icon>
+              <p>Glissez-déposez vos images ici</p>
+              <span class="upload-or">ou</span>
+              <button mat-raised-button class="upload-button" (click)="fileInput.click()">
+                <mat-icon>upload</mat-icon>
+                Parcourir
+              </button>
+              <input type="file" #fileInput hidden multiple (change)="onFileSelected($event)" accept="image/*">
+            </div>
+            
+            <div class="image-grid" *ngIf="newImages.length > 0">
+              <div class="image-preview" *ngFor="let file of newImages; let i = index">
+                <div class="image-container">
+                  <img [src]="filePreviews[i]" [alt]="'Nouvelle image ' + (i+1)">
+                  <button mat-icon-button class="delete-button" (click)="removeNewImage(i)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+                <mat-form-field appearance="outline" class="caption-field">
+                  <mat-label>Légende</mat-label>
+                  <input matInput [(ngModel)]="file.legende" [ngModelOptions]="{standalone: true}">
+                </mat-form-field>
+              </div>
+              
+              <div class="add-more" *ngIf="newImages.length < maxFiles" (click)="fileInput.nativeElement.click()">
+                <mat-icon>add</mat-icon>
+                <span>Ajouter</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button [disabled]="isSubmitting" (click)="onCancel()">Annuler</button>
+  <button mat-raised-button 
+          [style.backgroundColor]="primaryMain"
+          [style.color]="primaryText"
+          (click)="onSubmit()" 
+          [disabled]="!editForm.valid || isSubmitting">
+    <mat-spinner *ngIf="isSubmitting" diameter="20" class="spinner-button"></mat-spinner>
+    <span *ngIf="!isSubmitting">Enregistrer</span>
+  </button>
+
+</mat-dialog-actions>

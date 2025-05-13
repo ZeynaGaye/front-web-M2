@@ -1,0 +1,135 @@
+<!-- Navigation bar séparée -->
+<nav class="nav-bar">
+  <div class="nav-container">
+    <div class="logo2">
+      <img src="assets/images/logo (2).png" alt="Logo" />
+    </div>
+    <div *ngIf="!isLoggedIn" (click)="login()" class="signin-button">
+      SIGN IN
+    </div>
+    <div *ngIf="isLoggedIn" class="user-info">
+      <button class="logout" (click)="logout()">SIGN OUT</button>
+    </div>
+    <div class="nav-links">
+      <a routerLink="/">HOME</a>
+      <a *ngIf="!isLoggedIn || isClient" routerLink="/services">SERVICES</a>
+      <a *ngIf="!isLoggedIn || isEmployeur" class="free-pro" routerLink="/recruter">RECRUTER</a>
+      <button *ngIf="!isLoggedIn || isFreelance" class="free-pro" (click)="navigateToFreelancePage()">
+        DEVENIR FREELANCE
+      </button>
+      <a *ngIf="!isLoggedIn || isClient" (click)="openContactModal()">CONTACTEZ-NOUS</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Header wrapper (sans la nav) -->
+<div class="header-wrapper">
+  <!-- Main header content -->
+  <div class="main-header">
+    <div class="left-section">
+      <div class="header-container">
+        <!-- <img src="assets/images/logo1.png" alt="BeautyHub Logo" class="logo" /> -->
+      </div>
+      <h1 class="header-title">
+        Un monde de beauté, une<br />plateforme de talents
+      </h1>
+      <h4 class="header-title2">
+        Réservez des services de beauté ou trouvez des talents près de chez vous
+      </h4>
+      <div *ngIf="!isLoggedIn || isClient" class="search-bar">
+        <input type="text" [(ngModel)]="searchTerm" placeholder="Rechercher un salon..." />
+        <button (click)="searchSalons()">
+          <i class="fas fa-search"></i>
+        </button>
+      </div>
+    </div>
+    <div class="right-section"></div>
+    <div class="hero-image">
+      <div class="hero-text">
+        Instantanée comme un<br />
+        coup de coeur, simple<br />
+        comme un coup de<br />
+        pousse
+      </div>
+    </div>
+  </div>
+  
+  <!-- Service navigation avec les événements click -->
+  <div *ngIf="!isLoggedIn || isClient" class="service-nav">
+    <button [class.active]="selectedService === 'Coiffure'" (click)="filterSalonsByService('Coiffure')">Coiffure</button>
+    <button [class.active]="selectedService === 'Pedicure,Manucure'" (click)="filterSalonsByService('Pedicure,Manucure')">Pédicure & Manucure</button>
+    <button [class.active]="selectedService === 'Barber'" (click)="filterSalonsByService('Barber')">Barber</button>
+    <button [class.active]="selectedService === 'Maquillage'" (click)="filterSalonsByService('Maquillage')">Maquillage</button>
+    <button [class.active]="selectedService === 'Soins de la peau'" (click)="filterSalonsByService('Soins de la peau')">Soins de la peau</button>
+  </div>
+</div>
+
+<!-- Salons display section -->
+<div class="salons-section" *ngIf="selectedService">
+  <!-- Loading indicator -->
+  <div class="loading-indicator" *ngIf="isLoading">
+    <div class="spinner"></div>
+  </div>
+  
+  <!-- Affichage des cartes de salon -->
+  <div class="salons-grid" *ngIf="!isLoading && filteredSalons.length > 0">
+    <div class="salon-card" *ngFor="let salon of filteredSalons">
+      <!-- Image du salon -->
+      <div class="salon-image">
+        <img [src]="salon.imageUrl || 'assets/images/salon.jpg'" alt="{{ salon.nom }}">
+      </div>
+      
+      <!-- Informations du salon -->
+      <div class="salon-info">
+        <h3 class="salon-name">{{ salon.nom }}</h3>
+        <p class="salon-address">{{ salon.adresse }}</p>
+        
+        <!-- Star rating system -->
+        <div class="salon-rating">
+          <div class="stars">
+            <i class="fas fa-star" *ngFor="let star of getStarArray(salon.rating)"></i>
+            <i class="fas fa-star-half-alt" *ngIf="hasHalfStar(salon.rating)"></i>
+          </div>
+          <span class="rating-value">{{ salon.rating }}</span>
+          <span class="review-count">({{ salon.reviewCount }} avis)</span>
+        </div>
+        
+        <!-- Services tags -->
+        <div class="salon-services">
+          <span class="service-tag" *ngFor="let service of salon.services.slice(0, 3)">{{ service }}</span>
+          <span class="more-services" *ngIf="salon.services.length > 3">+{{ salon.services.length - 3 }}</span>
+        </div>
+        
+        <!-- Action button -->
+        <button class="voir-salon-btn" (click)="openSalonDetailDialog(salon.id)">Voir le salon</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Message si aucun résultat -->
+  <div class="no-results" *ngIf="!isLoading && filteredSalons.length === 0">
+    Aucun salon proposant "{{ selectedService }}" n'a été trouvé.
+  </div>
+</div>
+
+<!-- Modal de connexion -->
+<div *ngIf="showLoginModal" class="modal-backdrop">
+  <div class="modal-container">
+    <button class="close-btn" (click)="closeLoginModal()">×</button>
+    <app-authent 
+      (switchToRegisterEvent)="switchToRegister()"
+      (close)="closeLoginModal()">
+    </app-authent>
+  </div>
+</div>
+
+<!-- Modal d'inscription -->
+<div *ngIf="showRegisterModal" class="modal-backdrop">
+  <div class="modal-container">
+    <button class="close-btn" (click)="closeRegisterModal()">×</button>
+    <app-register 
+      (switchToLoginEvent)="switchToLogin()"
+      (close)="closeRegisterModal()">
+    </app-register>
+  </div>
+</div>

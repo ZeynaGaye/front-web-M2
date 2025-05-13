@@ -1,0 +1,600 @@
+// header.component.scss
+:host {
+  display: block;
+  width: 100%;
+  background: #fff;
+}
+.main-header {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+.header-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.nav-bar {
+  background: transparent;
+  padding: 5px 0; // Hauteur réduite (de 10px à 5px)
+  width: 100%;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+
+  .nav-container {
+    display: flex;
+    justify-content: flex-start; // Alignement à gauche au lieu de center
+    align-items: center;
+    gap: 30px;
+    padding: 0 20px;
+    max-width: 1200px; // Assurer que le conteneur ne dépasse pas la largeur maximale
+    margin: 0 auto; // Centrer le conteneur lui-même
+
+    .logo2 {
+      margin-right: auto; // Pousse le logo complètement à gauche
+      img {
+        width: 110px; 
+        height: auto;
+        object-fit: contain;
+        display: block; 
+      }
+    }
+
+    // Reste du CSS pour les autres éléments de la nav
+    .signin-button {
+      background: #F5A393;
+      padding: 5px 25px;
+      border-radius: 15px;
+      color: #000;
+      font-size: 14px;
+      cursor: pointer;
+      &:hover {
+        color: #F5A393;
+        background: #e0e7ed;
+        font-weight: bolder;
+      }
+    }
+
+    .free-pro {
+      background: #A4B1BD;
+      padding: 5px 25px;
+      border-radius: 15px;
+      color: #000;
+      font-size: 14px;
+      cursor: pointer;
+      
+      &.active {
+        background-color: darken(#A4B1BD, 10%);
+        font-weight: bold;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      }
+      &:hover {
+        color: #F5A393;
+        background: #e0e7ed;
+        font-weight: bolder;
+      }
+    }
+    
+    .nav-links {
+      display: flex;
+      gap: 20px;
+
+      a {
+        text-decoration: none;
+        color: #000;
+        font-size: 14px;
+
+        &:hover {
+          color: #F5A393;
+        }
+      }
+    }
+  }
+}
+
+.main-header {
+  display: flex;
+  gap: 40px;
+  padding: 20px;
+  align-items: center; // Centrer les éléments verticalement
+  border-radius: 25px;
+  background:#e0e7ed;
+  position: relative; // Pour le positionnement relatif des enfants
+
+  .left-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 20px 0; // Ajout d'un peu d'espace en haut et en bas
+
+    .header-container {
+      margin-bottom: 20px;
+      // Suppression du positionnement absolu
+      // position: absolute;
+      // top: 20px;
+      // left: 20px;
+      margin-top: 40px;
+      margin-left: 20px;
+
+      .logo {
+        width: 120px;
+        height: 120px;
+        object-fit: contain;
+        border-radius: 100%;
+        transition: transform 0.8s ease;
+      }
+    }
+
+    .main-title {
+      font-size: 28px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      animation: fadeIn 8s ease-in-out; // Add animation
+    }
+
+    .header-title {
+      font-size: 24px;
+      font-weight: normal;
+      margin-bottom: 20px; // Espace entre le titre et le sous-titre
+      line-height: 1.4;
+      animation: slideIn 8s ease-in-out; // Add animation
+      // Suppression du positionnement absolu
+      // position: absolute;
+      // top: 160px;
+      // left: 160px;
+    }
+
+    .header-title2 {
+      font-size: 15px;
+      font-weight: normal;
+      margin-bottom: 30px; // Espace sous le sous-titre
+      line-height: 1.4;
+      animation: alternate slideIn 8s ease-in-out; // Add animation
+      // Suppression du positionnement absolu
+      // position: absolute;
+      // top: 200px;
+      // left: 160px;
+    }
+
+    .search-bar {
+      display: flex;
+      align-items: center;
+      background: #ffffff;
+      border-radius: 25px;
+      padding: 5px;
+      gap: 10px;
+      margin-top: 20px; // Espace au-dessus de la barre de recherche
+      width: 100%; // Largeur complète au sein du parent
+
+      button {
+        background: #F5A393;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 20px;
+        color: #000;
+        cursor: pointer;
+      }
+
+      input {
+        border: none;
+        background: transparent;
+        padding: 8px 15px;
+        outline: none;
+        flex: 1; // Make the input take the remaining space
+
+        &::placeholder {
+          color: #666;
+        }
+      }
+    }
+  }
+  .hero-image {
+    flex: 1;
+    height: 400px;
+    background-image: url('/assets/images/imageHeader.png');
+    background-size:auto;
+    background-position: center;
+    border-radius: 25px;
+    position: relative;
+    margin: 0; // Ensure no external margin
+
+    .hero-text {
+      position: absolute;
+      top: 20%;
+      right: 30px;
+      text-align: right;
+      font-size: 22px;
+      line-height: 1.4;
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.service-nav {
+  background: #A4B1BD;
+  padding: 15px;
+  margin: 20px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+
+  button {
+    background: #F5A393;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 8px;
+    color: #000;
+    cursor: pointer;
+    font-size: 16px;
+
+    &:hover {
+      background: #F5A393;
+    }
+  }
+}
+
+/* Style pour la section des salons */
+.salons-section {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 15px;
+  
+  h2 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: #333;
+  }
+}
+
+/* Grille de salons */
+.salons-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+/* Carte de salon - style similaire à votre photo */
+.salon-card {
+  background-color: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+  }
+  
+  .salon-image {
+    height: 180px;
+    overflow: hidden;
+    
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+  
+  .salon-info {
+    padding: 1.25rem;
+    
+    .salon-name {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 0 0 0.5rem;
+      color: #333;
+    }
+    
+    .salon-address {
+      font-size: 0.9rem;
+      color: #666;
+      margin-bottom: 0.75rem;
+    }
+    
+    .salon-rating {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1rem;
+      
+      .stars {
+        display: flex;
+        color: #ffb400;
+        margin-right: 0.5rem;
+      }
+      
+      .rating-value {
+        font-weight: 600;
+        color: #333;
+        margin-right: 0.25rem;
+      }
+      
+      .review-count {
+        font-size: 0.85rem;
+        color: #777;
+      }
+    }
+    
+    .salon-services {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+      
+      .service-tag {
+        background-color: #f0f7ff;
+        color: #A4B1BD;
+        padding: 0.25rem 0.75rem;
+        border-radius: 30px;
+        font-size: 0.85rem;
+      }
+      
+      .more-services {
+        color: #777;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+      }
+    }
+    
+    .voir-salon-btn {
+      width: 100%;
+      background-color: #F5A393;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      
+      &:hover {
+        background-color: #f1c0b6;
+      }
+    }
+  }
+}
+
+/* Indicateur de chargement */
+.loading-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    border-top-color: #F5A393;
+    animation: spin 1s ease-in-out infinite;
+  }
+  
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  
+  p {
+    margin-top: 1rem;
+    color: #666;
+  }
+}
+
+/* Message si aucun résultat */
+.no-results {
+  text-align: center;
+  padding: 3rem 0;
+  color: #666;
+  font-size: 1.1rem;
+}
+
+/* Styles pour les modaux */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-container {
+  background-color: white;
+  border-radius: 10px;
+  padding: 30px;
+  max-width: 500px;
+  width: 90%;
+  position: relative;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 24px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #999;
+  z-index: 10;
+}
+
+.close-btn:hover {
+  color: #333;
+}
+
+/* Style pour le bouton SIGN IN */
+.signin-button {
+  cursor: pointer;
+  padding: 8px 16px;
+  background-color: #fb8f71;
+  color: white;
+  border-radius: 4px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.signin-button:hover {
+  background-color: #e87d60;
+  transform: translateY(-2px);
+}
+
+/* Style pour le bouton SIGN OUT */
+.logout {
+  cursor: pointer;
+  padding: 8px 16px;
+  background-color: #f44336;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.logout:hover {
+  background-color: #d32f2f;
+  transform: translateY(-2px);
+}
+
+/* Style pour l'info utilisateur */
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+// Indicateur de chargement global (ajoutez à header.component.scss)
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+
+  .spinner {
+    width: 60px;
+    height: 60px;
+    border: 5px solid rgba(245, 163, 147, 0.3);
+    border-radius: 50%;
+    border-top-color: #F5A393;
+    animation: spin 1s ease infinite;
+  }
+
+  p {
+    margin-top: 15px;
+    font-size: 1.2rem;
+    color: #333;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+// Style pour les notifications
+.info-snackbar {
+  background-color: #F5A393;
+  color: white;
+  
+  .mat-simple-snackbar-action {
+    color: white;
+  }
+}
+// Animation de transition de page
+@keyframes fadeUpTransition {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes fadeDownTransition {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-transition {
+  overflow-x: hidden;
+  
+  &:before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.8);
+    z-index: 9000;
+    animation: fadeIn 0.3s ease forwards;
+  }
+  
+  // Animer le contenu actuel
+  .main-header, .salons-section, .service-nav {
+    animation: fadeUpTransition 0.4s ease forwards;
+  }
+}
+
+// Style pour les notifications subtiles
+.subtle-snackbar {
+  background-color: rgba(245, 163, 147, 0.9);
+  color: white;
+  border-radius: 30px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  
+  .mat-simple-snackbar {
+    font-weight: 500;
+  }
+  
+  .mat-simple-snackbar-action {
+    color: white;
+  }
+}

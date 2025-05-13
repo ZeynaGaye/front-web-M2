@@ -1,0 +1,165 @@
+.booking-dialog {
+    .mat-dialog-title {
+      color: #333;
+      margin-top: 0;
+      font-size: 1.5rem;
+      font-weight: 500;
+    }
+    
+    .salon-info {
+      margin-bottom: 20px;
+      
+      h3 {
+        margin: 0 0 8px 0;
+        font-size: 1.3rem;
+        color: #333;
+      }
+      
+      .address {
+        display: flex;
+        align-items: center;
+        margin: 0;
+        color: #666;
+        font-size: 0.9rem;
+        
+        mat-icon {
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+          margin-right: 4px;
+        }
+      }
+    }
+    
+    .service-summary {
+      margin-bottom: 24px;
+      
+      h4 {
+        margin-top: 0;
+        margin-bottom: 12px;
+        font-size: 1.1rem;
+        color: #333;
+        position: relative;
+        
+        &:after {
+          content: '';
+          display: block;
+          width: 40px;
+          height: 2px;
+          background-color: #ff5722;
+          margin-top: 6px;
+        }
+      }
+      
+      .service-card {
+        background-color: #f9f9f9;
+        border-radius: 8px;
+        padding: 16px;
+        border-left: 3px solid #ff5722;
+        
+        .service-name {
+          font-size: 1.1rem;
+          font-weight: 500;
+          color: #333;
+          margin-bottom: 8px;
+        }
+        
+        .service-details {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 8px;
+          
+          .price {
+            font-weight: 600;
+            color: #ff5722;
+          }
+          
+          .duration {
+            display: flex;
+            align-items: center;
+            color: #666;
+            
+            mat-icon {
+              font-size: 16px;
+              width: 16px;
+              height: 16px;
+              margin-right: 4px;
+            }
+          }
+        }
+        
+        .service-description {
+          font-size: 0.9rem;
+          color: #666;
+          margin-top: 8px;
+          line-height: 1.4;
+        }
+      }
+    }
+    
+    .form-row {
+      margin-bottom: 16px;
+    }
+    
+    .full-width {
+      width: 100%;
+    }
+    
+    .error-message {
+      display: flex;
+      align-items: flex-start;
+      background-color: #ffebee;
+      border-radius: 4px;
+      padding: 12px;
+      margin-bottom: 16px;
+      
+      mat-icon {
+        margin-right: 8px;
+        flex-shrink: 0;
+      }
+      
+      p {
+        margin: 0;
+        color: #d32f2f;
+        font-size: 0.9rem;
+      }
+    }
+    
+    .loading-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      
+      p {
+        margin-top: 16px;
+        color: #666;
+      }
+    }
+    
+    .mat-dialog-actions {
+      padding: 16px 0 0;
+      margin-bottom: 0;
+    }
+  }
+  
+  ::ng-deep .success-snackbar {
+    background-color: #4caf50;
+    color: white;
+  }
+  
+  ::ng-deep .warning-snackbar {
+    background-color: #ff9800;
+    color: white;
+  }
+  
+  ::ng-deep .error-snackbar {
+    background-color: #f44336;
+    color: white;
+  }
+  
+  ::ng-deep .info-snackbar {
+    background-color: #2196f3;
+    color: white;
+  }

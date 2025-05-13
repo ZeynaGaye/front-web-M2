@@ -1,0 +1,177 @@
+<!-- register.component.html -->
+<div class="modal-overlay" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <span class="close" (click)="closeModal()">&times;</span>
+    <h2>Créez votre compte</h2>
+
+    <!-- Message d'erreur -->
+    <div class="error-message" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+    <div class="step-indicators">
+      <div class="step" [class.active]="currentStep >= 1"></div>
+      <div class="step" [class.active]="currentStep >= 2"></div>
+      <div class="step" [class.active]="currentStep >= 3"></div>
+    </div>
+
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+      <!-- Étape 1 - Inchangée -->
+      <div class="step-content" *ngIf="currentStep === 1">
+        <div class="form-row">
+          <div class="input-group">
+            <i class="fas fa-user"></i>
+            <input type="text" formControlName="nom" placeholder="Nom" />
+            <small *ngIf="registerForm.get('nom')?.invalid && registerForm.get('nom')?.touched">
+              Le nom est obligatoire
+            </small>
+          </div>
+
+          <div class="input-group">
+            <i class="fas fa-user"></i>
+            <input type="text" formControlName="prenom" placeholder="Prénom" />
+            <small *ngIf="registerForm.get('prenom')?.invalid && registerForm.get('prenom')?.touched">
+              Le prénom est obligatoire
+            </small>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <i class="fas fa-envelope"></i>
+          <input type="email" formControlName="email" placeholder="Email" />
+          <small *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched">
+            Email invalide
+          </small>
+        </div>
+
+        <button type="button" class="btn-primary" (click)="nextStep()">
+          Continuer
+        </button>
+        
+        <!-- Lien pour basculer vers la connexion -->
+        <div class="login-link">
+          Déjà un compte ? <a (click)="switchToLogin()">Se connecter</a>
+        </div>
+      </div>
+
+      <!-- Étape 2 - Modifiée pour inclure le type d'utilisateur et le sexe -->
+      <div class="step-content" *ngIf="currentStep === 2">
+        <div class="input-group">
+          <i class="fas fa-phone"></i>
+          <input type="tel" formControlName="telephone" placeholder="Téléphone" />
+          <small *ngIf="registerForm.get('telephone')?.invalid && registerForm.get('telephone')?.touched">
+            Format : 10 chiffres
+          </small>
+        </div>
+
+        <div class="input-group">
+          <i class="fas fa-home"></i>
+          <input type="text" formControlName="adresse" placeholder="Adresse" />
+        </div>
+
+        <div class="form-row">
+          <div class="input-group">
+            <i class="fas fa-user-tag"></i>
+            <select formControlName="role">
+              <option value="">Sélectionnez le type de compte</option>
+              <option *ngFor="let role of roles" [value]="role">{{role}}</option>
+            </select>
+            <small *ngIf="registerForm.get('role')?.invalid && registerForm.get('role')?.touched">
+              Le type de compte est obligatoire
+            </small>
+          </div>
+
+          <div class="input-group">
+            <i class="fas fa-venus-mars"></i>
+            <select formControlName="sexe">
+              <option value="">Sélectionnez le sexe</option>
+              <option *ngFor="let sexe of sexes" [value]="sexe">{{sexe}}</option>
+            </select>
+            <small *ngIf="registerForm.get('sexe')?.invalid && registerForm.get('sexe')?.touched">
+              Le sexe est obligatoire
+            </small>
+          </div>
+        </div>
+
+        <!-- Champs spécifiques selon le rôle -->
+        <div *ngIf="registerForm.get('role')?.value === 'EMPLOYEUR'">
+          <div class="input-group">
+            <i class="fas fa-building"></i>
+            <textarea formControlName="description" placeholder="Description de l'entreprise"></textarea>
+            <small *ngIf="registerForm.get('description')?.invalid && registerForm.get('description')?.touched">
+              La description est obligatoire
+            </small>
+          </div>
+        </div>
+
+        <div *ngIf="registerForm.get('role')?.value === 'CLIENT'">
+          <div class="input-group">
+            <i class="fas fa-list-ul"></i>
+            <textarea formControlName="preferences" placeholder="Vos préférences"></textarea>
+            <small *ngIf="registerForm.get('preferences')?.invalid && registerForm.get('preferences')?.touched">
+              Les préférences sont obligatoires
+            </small>
+          </div>
+        </div>
+
+        <div *ngIf="registerForm.get('role')?.value === 'FREELANCE'">
+          <div class="input-group">
+            <i class="fas fa-tools"></i>
+            <textarea formControlName="competences" placeholder="Vos compétences"></textarea>
+            <small *ngIf="registerForm.get('competences')?.invalid && registerForm.get('competences')?.touched">
+              Les compétences sont obligatoires
+            </small>
+          </div>
+          
+          <div class="input-group">
+            <i class="fas fa-briefcase"></i>
+            <textarea formControlName="experiences" placeholder="Vos expériences"></textarea>
+            <small *ngIf="registerForm.get('experiences')?.invalid && registerForm.get('experiences')?.touched">
+              Les expériences sont obligatoires
+            </small>
+          </div>
+          
+          <div class="input-group">
+            <i class="fas fa-folder-open"></i>
+            <input type="text" formControlName="portfolio" placeholder="URL de votre portfolio (optionnel)" />
+          </div>
+        </div>
+
+        <div class="button-group">
+          <button type="button" class="btn-secondary" (click)="previousStep()">
+            Retour
+          </button>
+          <button type="button" class="btn-primary" (click)="nextStep()">
+            Continuer
+          </button>
+        </div>
+      </div>
+
+      <!-- Étape 3 - Inchangée -->
+      <div class="step-content" *ngIf="currentStep === 3">
+        <div class="input-group">
+          <i class="fas fa-lock"></i>
+          <input type="password" formControlName="motDePasse" placeholder="Mot de passe" />
+          <small *ngIf="registerForm.get('motDePasse')?.invalid && registerForm.get('motDePasse')?.touched">
+            Min 6 caractères, au moins 1 chiffre
+          </small>
+        </div>
+
+        <div class="input-group">
+          <i class="fas fa-lock"></i>
+          <input type="password" formControlName="confirmPassword" placeholder="Confirmez le mot de passe" />
+          <small *ngIf="registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched">
+            Les mots de passe ne correspondent pas
+          </small>
+        </div>
+
+        <div class="button-group">
+          <button type="button" class="btn-secondary" (click)="previousStep()">
+            Retour
+          </button>
+          <button type="submit" class="btn-primary" [disabled]="registerForm.invalid">
+            S'inscrire
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>

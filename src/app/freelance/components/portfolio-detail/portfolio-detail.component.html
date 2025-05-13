@@ -1,0 +1,112 @@
+<div class="portfolio-detail-container" *ngIf="!loading; else loadingTemplate" [@fadeIn]>
+    <div class="portfolio-header">
+      <button mat-icon-button routerLink="/portfolio">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <h1 class="portfolio-title">{{portfolioItem.titre}}</h1>
+      
+      <!-- Actions disponibles uniquement pour le propriétaire -->
+      <div class="owner-actions" *ngIf="isOwner">
+        <button mat-icon-button color="primary" (click)="editItem()" matTooltip="Modifier">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button mat-icon-button color="warn" (click)="deleteItem()" matTooltip="Supprimer">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    </div>
+  
+    <div class="portfolio-gallery" *ngIf="portfolioItem.images && portfolioItem.images.length > 0">
+      <div class="gallery-container">
+        <button mat-icon-button class="gallery-nav-btn prev-btn" (click)="prevImage()">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        <div class="gallery-image-container">
+          <img [src]="portfolioItem.images[activeImageIndex].url" alt="{{portfolioItem.titre}}" class="gallery-image">
+          <div class="image-caption" *ngIf="portfolioItem.images[activeImageIndex].legende">
+            {{portfolioItem.images[activeImageIndex].legende}}
+          </div>
+        </div>
+        <button mat-icon-button class="gallery-nav-btn next-btn" (click)="nextImage()">
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+      </div>
+  
+      <div class="gallery-thumbnails" *ngIf="portfolioItem.images.length > 1">
+        <div *ngFor="let image of portfolioItem.images; let i = index" 
+             class="thumbnail" 
+             [class.active]="i === activeImageIndex"
+             (click)="setActiveImage(i)">
+          <img [src]="image.url" alt="Thumbnail">
+        </div>
+      </div>
+    </div>
+  
+    <div class="portfolio-details">
+      <div class="detail-section">
+        <h2>Description</h2>
+        <div class="description">{{portfolioItem.description}}</div>
+      </div>
+  
+      <div class="detail-section" *ngIf="portfolioItem.categories && portfolioItem.categories.length > 0">
+        <h2>Catégories</h2>
+        <div class="categories">
+          <span class="category-badge" *ngFor="let category of portfolioItem.categories">{{category}}</span>
+        </div>
+      </div>
+  
+      <div class="detail-section" *ngIf="portfolioItem.tags && portfolioItem.tags.length > 0">
+        <h2>Tags</h2>
+        <div class="tags">
+          <span class="tag-badge" *ngFor="let tag of portfolioItem.tags">#{{tag}}</span>
+        </div>
+      </div>
+  
+      <div class="portfolio-stats">
+        <div class="stat-item">
+          <mat-icon>visibility</mat-icon>
+          <span>{{portfolioItem.nombreVues}} vues</span>
+        </div>
+        <!-- Le bouton Like est toujours disponible pour tous les utilisateurs sauf le propriétaire -->
+        <div class="stat-item like-btn" (click)="!isOwner && likeItem()" [class.disabled]="isOwner">
+          <mat-icon [class.liked]="portfolioItem.liked">favorite</mat-icon>
+          <span>{{portfolioItem.nombreLikes}} j'aime</span>
+        </div>
+        <div class="stat-item">
+          <mat-icon>calendar_today</mat-icon>
+          <span>Ajouté le {{portfolioItem.dateCreation | date:'dd/MM/yyyy'}}</span>
+        </div>
+      </div>
+  
+      <!-- Partage sur les réseaux sociaux - accessible à tous -->
+      <div class="social-sharing">
+        <h3>Partager</h3>
+        <div class="share-buttons">
+          <button mat-icon-button color="primary" (click)="shareOnSocialMedia('facebook')" matTooltip="Partager sur Facebook">
+            <mat-icon>facebook</mat-icon>
+          </button>
+          <button mat-icon-button color="accent" (click)="shareOnSocialMedia('twitter')" matTooltip="Partager sur Twitter">
+            <mat-icon>twitter</mat-icon>
+          </button>
+          <button mat-icon-button color="primary" (click)="shareOnSocialMedia('linkedin')" matTooltip="Partager sur LinkedIn">
+            <mat-icon>linkedin</mat-icon>
+          </button>
+        </div>
+      </div>
+  
+      <!-- Commentaires - fonctionnalité future -->
+      <div class="comments-section">
+        <h3>Commentaires</h3>
+        <!-- Implémentation des commentaires à venir -->
+        <p *ngIf="!isOwner">Cette fonctionnalité sera bientôt disponible.</p>
+        <p *ngIf="isOwner">Les visiteurs pourront bientôt laisser des commentaires sur vos créations.</p>
+      </div>
+    </div>
+  </div>
+  
+  <ng-template #loadingTemplate>
+    <div class="loading-container">
+      <mat-spinner diameter="40"></mat-spinner>
+      <span>Chargement en cours...</span>
+    </div>
+  </ng-template>

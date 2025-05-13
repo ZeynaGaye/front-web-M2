@@ -1,0 +1,102 @@
+<div class="opportunites-container">
+  <button class="back-button" (click)="goBack()">
+    <mat-icon>arrow_back</mat-icon>
+    Retour à l'accueil
+  </button>
+    <!-- En-tête et recherche -->
+    <div class="header-section">
+      <h1>Opportunités d'Emplois en Beauté</h1>
+      <p>Découvrez les dernières opportunités professionnelles et trouvez votre prochaine mission !</p>
+    </div>
+  
+    <!-- Section de recherche -->
+    <div class="search-section">
+      <form [formGroup]="searchForm">
+        <div class="search-input">
+          <i class="search-icon">🔍</i>
+          <input 
+            type="text" 
+            formControlName="searchTerm"
+            placeholder="Rechercher une offre..."
+          >
+        </div>
+        
+        <div class="status-filter">
+          <select formControlName="status">
+            <option value="">Tous les statuts</option>
+            <option *ngFor="let status of statusOptions" [value]="status">
+              {{ status }}
+            </option>
+          </select>
+        </div>
+        
+        <button class="reset-btn" (click)="resetFilters()">
+          <i class="reset-icon">↺</i> Réinitialiser
+        </button>
+      </form>
+    </div>
+  
+    <!-- Affichage des offres -->
+    <div class="offers-container">
+      <!-- Chargement -->
+      <div class="loading" *ngIf="isLoading">
+        <div class="spinner"></div>
+        <p>Chargement des opportunités...</p>
+      </div>
+  
+      <!-- Aucune offre trouvée -->
+      <div class="no-results" *ngIf="!isLoading && filteredOffres.length === 0">
+        <div class="no-results-icon">📭</div>
+        <h3>Aucune offre ne correspond à votre recherche</h3>
+        <p>Essayez de modifier vos critères ou réinitialisez les filtres</p>
+      </div>
+  
+      <!-- Liste des offres -->
+      <div class="offers-grid" *ngIf="!isLoading && filteredOffres.length > 0">
+        <div class="offer-card" *ngFor="let offre of filteredOffres" (click)="viewOffreDetails(offre)">
+          <div class="offer-header">
+            <h3>{{ offre.titre }}</h3>
+            <span class="status-badge" [ngClass]="getStatusClass(offre.status)">{{ offre.status }}</span>
+          </div>
+          
+          <div class="offer-details">
+            <div class="detail-item">
+              <i class="location-icon">📍</i>
+              <span>{{ offre.lieu }}</span>
+            </div>
+            
+            <div class="detail-item">
+              <i class="contract-icon">📄</i>
+              <span>{{ offre.typeContrat }}</span>
+            </div>
+            
+            <div class="detail-item">
+              <i class="salary-icon">💰</i>
+              <span>{{ offre.salaire }}</span>
+            </div>
+          </div>
+          
+          <div class="offer-description">
+            <p>{{ truncateText(offre.description, 150) }}</p>
+          </div>
+          
+          <div class="offer-skills">
+            <p><strong>Compétences:</strong> {{ truncateText(offre.competences, 100) }}</p>
+          </div>
+          
+          <div class="offer-footer">
+            <span class="experience">📚 {{ offre.experienceRequise }}</span>
+            <button class="view-details-btn">Voir les détails</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Détails de l'offre (modal) -->
+
+<app-offre-details
+*ngIf="showDetails && selectedOffre"
+[offre]="selectedOffre"
+(closeEvent)="closeDetails()"
+></app-offre-details>
+  </div>

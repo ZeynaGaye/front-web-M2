@@ -1,0 +1,16 @@
+<google-map
+  [center]="center"
+  [zoom]="zoom"
+  (mapInitialized)="onMapInitialized($event)"
+>
+  @for (marker of markers; track $index) {
+    <map-marker
+      [position]="marker"
+      (mapClick)="openInfoWindow(infoWindows[$index], marker)"
+    ></map-marker>
+  }
+</google-map>
+
+@if (error) {
+  <p class="error">{{ error }}</p>
+}
