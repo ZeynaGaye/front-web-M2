@@ -21,7 +21,8 @@ import { RegisterComponent } from '../../../shared/components/register/register.
     FormsModule, 
     MatDialogModule, 
     AuthentComponent, 
-    RegisterComponent
+    RegisterComponent,
+    
   ],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss'],
@@ -112,15 +113,24 @@ export class HeaderComponent implements OnInit {
   }
 
   // Nouvelle méthode pour ouvrir le dialogue des détails du salon
-  openSalonDetailDialog(salonId: number): void {
-    if (!this.isBrowser) return;
+  // Nouvelle méthode pour ouvrir le dialogue des détails du salon
+openSalonDetailDialog(salonId: number): void {
+  console.log('Méthode openSalonDetailDialog appelée avec ID:', salonId);
+  
+  if (!this.isBrowser) {
+    console.log('Non-browser environment, returning');
+    return;
+  }
+  
+  if (!salonId) {
+    console.error('ID de salon invalide:', salonId);
+    return;
+  }
+  
+  try {
+    console.log('Tentative d\'ouverture du dialogue pour le salon ID:', salonId);
     
-    if (!salonId) {
-      console.error('ID de salon invalide:', salonId);
-      return;
-    }
-    
-    this.dialog.open(SalonDetailsComponent, {
+    const dialogRef = this.dialog.open(SalonDetailsComponent, {
       width: '900px',
       height: '90vh',
       maxWidth: '90vw',
@@ -128,8 +138,27 @@ export class HeaderComponent implements OnInit {
       panelClass: 'salon-detail-dialog-container',
       autoFocus: false,
     });
+    
+    console.log('Dialogue ouvert avec succès');
+    
+    // Ajouter des événements pour suivre le cycle de vie du dialogue
+    dialogRef.afterOpened().subscribe(() => {
+      console.log('Événement afterOpened déclenché');
+    });
+    
+    dialogRef.afterClosed().subscribe(result => {
+      console.log('Dialogue fermé avec résultat:', result);
+    });
+  } catch (error) {
+    console.error('Erreur lors de l\'ouverture du dialogue:', error);
+    
+    // Afficher un message d'erreur à l'utilisateur
+    const errorMessage = error instanceof Error ? error.message : 'Inconnue';
+    this.snackBar.open('Impossible d\'ouvrir les détails du salon. Erreur: ' + errorMessage, 'OK', {
+      duration: 5000
+    });
   }
-
+}
   // Méthode améliorée pour filterSalonsByService
   filterSalonsByService(service: string): void {
     // Si on clique sur le même service, désactiver le filtre
