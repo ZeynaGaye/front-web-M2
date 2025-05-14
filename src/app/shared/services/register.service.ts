@@ -6,13 +6,12 @@ import { catchError, Observable, tap, throwError } from 'rxjs';
 export interface SignupRequest {
   // Attributs de base
   email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
+  motDePasse: string;       
+  nom: string;              
+  prenom: string;  
   telephone?: string;
   adresse?: string;
   sexe: string;
-  
   // Type d'utilisateur
   role: string;
   
@@ -43,7 +42,7 @@ export interface AuthResponse {
   providedIn: 'root',
 })
 export class RegisterService {
-  private apiUrl = 'http://localhost:8080/api/auth';
+  private apiUrl = 'http://localhost:8081/api/auth';
 
   constructor(private http: HttpClient) {}
 
@@ -56,7 +55,7 @@ signup(request: SignupRequest): Observable<AuthResponse> {
   const formattedRequest = {
     ...request,
     // S'assurer que nous utilisons le bon nom de champ
-    password: request.password
+    password: request.motDePasse,
   };
   
   // Vérifier si le champ nécessaire existe

@@ -8,6 +8,7 @@ import { isPlatformBrowser } from '@angular/common';
 
 import { environment } from '../../../environments/environment';
 import { RoleRedirectService } from '../services/auth/role-redirect.service';
+import { AuthUIService } from '../../shared/services/authUI/auth-ui.service';
 
 export interface LoginCredentials {
   email: string; // IMPORTANT: Utiliser "password" et non "motDePasse" pour le backend
@@ -22,6 +23,7 @@ export interface AuthResponse {
   accesToken: string;
   refreshToken: string;
   expiresIn: string;
+  
 }
 
 @Injectable({
@@ -34,6 +36,7 @@ export class AuthService {
   private router = inject(Router);
   private roleRedirectService = inject(RoleRedirectService);
   private isBrowser: boolean;
+  private authUIService = inject(AuthUIService);
 
   private apiUrl = `${environment.apiUrl}/auth`;
   private currentUserSubject = new BehaviorSubject<any>(null);
@@ -279,4 +282,10 @@ export class AuthService {
       this.refreshTokenTimeout = null;
     }
   }
+
+  triggerLoginModal() {
+  if (this.isBrowser) {
+    this.authUIService.triggerLoginModal();
+  }
+}
 }

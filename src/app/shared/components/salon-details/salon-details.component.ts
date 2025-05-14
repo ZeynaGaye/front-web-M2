@@ -15,7 +15,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { BookingDialogComponent } from '../booking-dialog/booking-dialog.component';
 import { ServiceSalonService } from '../../../employeur/services/service-salon.service';
 import { AuthService } from '../../../core/servces/auth.service';
-
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-salon-details',
@@ -75,7 +75,8 @@ export class SalonDetailsComponent implements OnInit {
     private authService: AuthService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
-    @Inject(PLATFORM_ID) private platformId: Object
+    @Inject(PLATFORM_ID) private platformId: Object,
+    private router: Router
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
     this.salonId = data?.salonId || 0; // Initialiser salonId
@@ -120,19 +121,33 @@ export class SalonDetailsComponent implements OnInit {
   }
 
   loadSalonServices(): void {
-    this.isLoadingServices = true;
-    
-    this.serviceSalonService.getServicesBySalon(this.salonId).subscribe({
-      next: (services) => {
-        this.services = services || [];
-        this.isLoadingServices = false;
-      },
-      error: () => {
-        this.errorMessage = 'Impossible de charger les services du salon';
-        this.isLoadingServices = false;
+  console.log('Chargement des services pour le salon ID:', this.salonId);
+  this.isLoadingServices = true;
+  
+  this.serviceSalonService.getServicesBySalon(this.salonId).subscribe({
+    next: (services) => {
+      console.log('Services récupérés:', services);
+      
+      if (!services) {
+        console.warn('La réponse services est undefined ou null');
+        this.services = [];
+      } else if (!Array.isArray(services)) {
+        console.warn('La réponse n\'est pas un tableau:', services);
+        // Tentative de conversion si possible
+        this.services = Array.isArray(services) ? services : [];
+      } else {
+        this.services = services;
       }
-    });
-  }
+      
+      this.isLoadingServices = false;
+    },
+    error: (error) => {
+      console.error('Erreur lors du chargement des services:', error);
+      this.errorMessage = `Impossible de charger les services du salon: ${error.message}`;
+      this.isLoadingServices = false;
+    }
+  });
+}
 
   loadSalonPhotos(): void {
     this.isLoadingPhotos = true;
@@ -182,16 +197,23 @@ export class SalonDetailsComponent implements OnInit {
       return;
     }
     
-    if (!this.isLoggedIn) {
-      this.snackBar.open('Veuillez vous connecter pour réserver un service', 'Se connecter', {
-        duration: 5000,
-        panelClass: ['warning-snackbar']
-      }).onAction().subscribe(() => {
-        // Rediriger vers la page de connexion ou ouvrir un modal de connexion
-        this.closeDialog();
-      });
-      return;
+   if (!this.isLoggedIn) {
+    // Fermer le dialogue de détails du salon
+    if (this.dialogRef) {
+      this.dialogRef.close();
     }
+    
+    // Déclencher l'ouverture du modal de connexion
+    this.authService.triggerLoginModal();
+    
+    // Afficher un message
+    this.snackBar.open('Veuillez vous connecter pour réserver un service', 'Fermer', {
+      duration: 5000,
+      panelClass: ['warning-snackbar']
+    });
+    
+    return;
+  }
 
     const dialogRef = this.dialog.open(BookingDialogComponent, {
       width: '500px',
@@ -210,6 +232,7 @@ export class SalonDetailsComponent implements OnInit {
         }).onAction().subscribe(() => {
           // Rediriger vers la page des réservations
           this.closeDialog();
+          this.router.navigate(['/mes-reservations']);
         });
       }
     });

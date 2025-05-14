@@ -125,7 +125,7 @@
           background-color: #f9f9f9;
           
           mat-icon, span {
-            color: #ff5722;
+            color:  #F5A393;
           }
         }
         
@@ -133,7 +133,7 @@
           background-color: #fff0eb;
           
           mat-icon, span {
-            color: #ff5722;
+            color:  #F5A393;
             font-weight: 500;
           }
         }
@@ -183,7 +183,7 @@
           
           mat-icon {
             margin-right: 16px;
-            color: #ff5722;
+            color:  #F5A393;
           }
           
           .info-text {
@@ -252,7 +252,7 @@
               
               .service-price {
                 font-weight: 600;
-                color: #ff5722;
+                color: #F5A393;
               }
             }
             
@@ -269,7 +269,7 @@
               
               .book-button {
                 width: 100%;
-                background-color: #ff5722;
+                background-color:#A4B1BD;
                 color: white;
                 
                 mat-icon {
@@ -277,7 +277,7 @@
                 }
                 
                 &:hover {
-                  background-color: darken(#ff5722, 5%);
+                  background-color: darken(#F5A393, 5%);
                 }
               }
             }
@@ -413,7 +413,7 @@
 }
 
 ::ng-deep .info-snackbar {
-  background-color: #2196f3;
+  background-color:  #F5A393;
   color: white;
 }
 

@@ -11,6 +11,7 @@ import { ContactComponent } from '../contact/contact.component';
 import { SalonDetailsComponent } from '../salon-details/salon-details.component';
 import { AuthentComponent } from '../../../shared/components/authent/authent.component';
 import { RegisterComponent } from '../../../shared/components/register/register.component';
+import { AuthUIService } from '../../services/authUI/auth-ui.service';
 
 @Component({
   selector: 'app-header',
@@ -44,12 +45,19 @@ export class HeaderComponent implements OnInit {
   salons: any[] = [];
   searchTerm: string = '';
   isBrowser: boolean;
-
+  private authUIService: AuthUIService;
   constructor(
     private salonService: SalonService,
-    @Inject(PLATFORM_ID) private platformId: Object
+    @Inject(PLATFORM_ID) private platformId: Object,
+    authUIService: AuthUIService
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
+    this.authUIService = authUIService;
+    if (this.isBrowser) {
+      this.authUIService.loginModal$.subscribe(() => {
+        this.openLoginModal();
+      });
+    }
   }
 
   get isLoggedIn() {

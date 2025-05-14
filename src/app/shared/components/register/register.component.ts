@@ -23,7 +23,10 @@ export class RegisterComponent implements OnInit {
   
   // Types d'utilisateurs
   roles = ['CLIENT', 'FREELANCE', 'EMPLOYEUR'];
-  sexes = ['HOMME', 'FEMME',];
+  sexeOptions = [
+  { value: 'MASCULIN', label: 'Homme' },
+  { value: 'FEMININ', label: 'Femme' }
+];
   
   constructor(
     private fb: FormBuilder,
@@ -147,16 +150,14 @@ export class RegisterComponent implements OnInit {
   // Création de l'objet de requête à partir du formulaire
 const signupRequest: SignupRequest = {
   email: this.registerForm.value.email,
-  // Utiliser password au lieu de motDePasse pour le backend
-  password: this.registerForm.value.motDePasse,
-  firstName: this.registerForm.value.prenom,
-  lastName: this.registerForm.value.nom,
+  motDePasse: this.registerForm.value.motDePasse,  
+  nom: this.registerForm.value.nom,                
+  prenom: this.registerForm.value.prenom,          
   telephone: this.registerForm.value.telephone || '',
   adresse: this.registerForm.value.adresse || '',
   role: this.registerForm.value.role,
   sexe: this.registerForm.value.sexe
 };
-
     // Ajouter les champs spécifiques s'ils existent
     if (this.registerForm.value.description) signupRequest.description = this.registerForm.value.description;
     if (this.registerForm.value.preferences) signupRequest.preferences = this.registerForm.value.preferences;

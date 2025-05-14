@@ -83,7 +83,7 @@
             <i class="fas fa-venus-mars"></i>
             <select formControlName="sexe">
               <option value="">Sélectionnez le sexe</option>
-              <option *ngFor="let sexe of sexes" [value]="sexe">{{sexe}}</option>
+              <option *ngFor="let option of sexeOptions" [value]="option.value">{{option.label}}</option>
             </select>
             <small *ngIf="registerForm.get('sexe')?.invalid && registerForm.get('sexe')?.touched">
               Le sexe est obligatoire
