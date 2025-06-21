@@ -1,148 +1,743 @@
 
 .booking-dialog {
-  min-width: 350px;
-  max-width: 600px;
+  min-width: 420px;
+  max-width: 550px;
+  background: linear-gradient(135deg, #fafafa 0%, #ffffff 100%);
+  border-radius: 16px;
+  overflow: visible !important; // ⚠️ IMPORTANT pour le calendrier
+  position: relative;
+  z-index: 100;
   
   h2 {
-    margin-top: 0;
-    color: #333;
-    font-weight: 500;
+    margin: -24px -24px 24px -24px;
+    padding: 24px;
+    background: linear-gradient(135deg, #F5A393 0%, #e89580 100%);
+    color: white;
+    font-weight: 600;
+    font-size: 1.5rem;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(245, 163, 147, 0.3);
+    letter-spacing: 0.5px;
   }
   
+  // ==========================================
+  // 📍 SALON INFO SECTION
+  // ==========================================
   .salon-info {
-    margin-bottom: 16px;
+    margin-bottom: 24px;
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(245, 163, 147, 0.08) 0%, rgba(245, 163, 147, 0.04) 100%);
+    border-radius: 12px;
+    border: 1px solid rgba(245, 163, 147, 0.15);
+    transition: all 0.3s ease;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(245, 163, 147, 0.15);
+    }
     
     h3 {
-      margin: 0 0 8px 0;
-      font-size: 1.3rem;
-      color: #333;
+      margin: 0 0 12px 0;
+      font-size: 1.4rem;
+      color: #2d3748;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      
+      &::before {
+        content: '💄';
+        margin-right: 10px;
+        font-size: 1.2rem;
+      }
     }
     
     .address {
       display: flex;
       align-items: center;
-      color: #666;
+      color: #9ca3af;
       margin: 0;
+      font-weight: 500;
       
       mat-icon {
-        font-size: 18px;
-        width: 18px;
-        height: 18px;
-        margin-right: 4px;
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+        margin-right: 8px;
+        color: #F5A393;
       }
     }
   }
   
+  // ==========================================
+  // 💅 SERVICE SUMMARY SECTION
+  // ==========================================
   .service-summary {
-    margin-bottom: 24px;
+    margin-bottom: 32px;
     
     h4 {
-      margin: 0 0 8px 0;
-      color: #555;
-      font-weight: 500;
+      margin: 0 0 16px 0;
+      color: #2d3748;
+      font-weight: 600;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      
+      &::before {
+        content: '✨';
+        margin-right: 8px;
+      }
     }
     
     .service-card {
-      background-color: #f9f9f9;
-      border-radius: 8px;
-      padding: 16px;
+      background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%);
+      border-radius: 16px;
+      padding: 24px;
+      border: 2px solid rgba(245, 163, 147, 0.1);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #F5A393 0%, #e89580 100%);
+      }
+      
+      &:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 30px rgba(245, 163, 147, 0.2);
+        border-color: rgba(245, 163, 147, 0.3);
+      }
       
       .service-name {
-        font-weight: 500;
-        margin-bottom: 8px;
+        font-weight: 600;
+        font-size: 1.2rem;
+        margin-bottom: 16px;
         color: #F5A393;
+        text-transform: capitalize;
       }
       
       .service-details {
         display: flex;
         justify-content: space-between;
-        margin-bottom: 8px;
+        align-items: center;
+        margin-bottom: 12px;
+        padding: 12px 16px;
+        background: rgba(245, 163, 147, 0.05);
+        border-radius: 8px;
         
         .price {
-          font-weight: 600;
+          font-weight: 700;
+          font-size: 1.1rem;
+          color: #2d3748;
+          padding: 6px 12px;
+          background: linear-gradient(135deg, #F5A393 0%, #e89580 100%);
+          color: white;
+          border-radius: 20px;
+          box-shadow: 0 2px 8px rgba(245, 163, 147, 0.3);
         }
         
         .duration {
           display: flex;
           align-items: center;
+          padding: 6px 12px;
+          background: rgba(156, 163, 175, 0.1);
+          border-radius: 20px;
           
           mat-icon {
-            font-size: 16px;
-            width: 16px;
-            height: 16px;
-            margin-right: 4px;
-            color: #888;
+            font-size: 18px;
+            width: 18px;
+            height: 18px;
+            margin-right: 6px;
+            color: #9ca3af;
           }
           
           span {
-            color: #666;
+            color: #9ca3af;
+            font-weight: 600;
           }
         }
       }
       
       .service-description {
-        font-size: 0.9rem;
-        color: #666;
-        margin-top: 8px;
-        line-height: 1.4;
+        font-size: 0.95rem;
+        color: #6b7280;
+        margin-top: 16px;
+        line-height: 1.6;
+        padding: 12px;
+        background: rgba(156, 163, 175, 0.05);
+        border-radius: 8px;
+        font-style: italic;
       }
     }
   }
   
+  // ==========================================
+  // 📝 FORM STYLES
+  // ==========================================
   .form-row {
-    margin-bottom: 16px;
-
+    margin-bottom: 24px;
+    
+    .full-width {
+      width: 100%;
+    }
   }
   
-  .full-width {
-    width: 100%;
-    color:  #F5A393;
-  }
-  
+  // ==========================================
+  // ⚠️ ERROR MESSAGE
+  // ==========================================
   .error-message {
     display: flex;
     align-items: center;
-    background-color: #ffebee;
-    padding: 12px;
-    margin-bottom: 16px;
-    border-radius: 4px;
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    border-radius: 12px;
+    border-left: 4px solid #ef4444;
+    animation: shake 0.5s ease-in-out;
     
     mat-icon {
-      margin-right: 8px;
+      margin-right: 12px;
+      color: #ef4444;
     }
     
     p {
       margin: 0;
-      color: #d32f2f;
+      color: #dc2626;
+      font-weight: 500;
     }
   }
   
+  // ==========================================
+  // 🔄 LOADING STATE
+  // ==========================================
   .loading-container {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 24px 0;
-    color:  #F5A393;
+    padding: 40px 0;
+    
+    mat-spinner {
+      ::ng-deep circle {
+        stroke: #F5A393;
+      }
+    }
+    
     p {
-      margin-top: 16px;
-      color: #666;
+      margin-top: 20px;
+      color: #9ca3af;
+      font-weight: 500;
+      animation: pulse 2s infinite;
+    }
+  }
+  
+  // ==========================================
+  // ⏰ SLOTS INFO STYLES
+  // ==========================================
+  .loading-slots {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #9ca3af;
+    font-size: 0.95rem;
+    padding: 12px 0;
+    
+    mat-icon.spin {
+      animation: spin 1s linear infinite;
+      color: #F5A393;
+    }
+  }
+  
+  .no-slots {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #ef4444;
+    font-size: 0.95rem;
+    padding: 12px 0;
+    font-weight: 500;
+  }
+  
+  .slots-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    padding: 12px 18px;
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+    border-radius: 12px;
+    border-left: 4px solid #22c55e;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      transform: translateX(4px);
+    }
+    
+    mat-icon {
+      color: #22c55e;
+    }
+    
+    span {
+      font-size: 0.9rem;
+      color: #166534;
+      font-weight: 600;
+    }
+  }
+  
+  .closed-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    padding: 12px 18px;
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    border-radius: 12px;
+    border-left: 4px solid #f59e0b;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      transform: translateX(4px);
+    }
+    
+    mat-icon {
+      color: #f59e0b;
+    }
+    
+    span {
+      font-size: 0.9rem;
+      color: #92400e;
+      font-weight: 600;
     }
   }
 }
 
-// Overrides Material styles for the dialog
-::ng-deep .mat-mdc-dialog-container {
-  .mat-mdc-dialog-surface {
-    padding: 24px;
-    border-radius: 8px;
+// ==========================================
+// 🎯 DIALOG ACTIONS (BUTTONS)
+// ==========================================
+::ng-deep .mat-mdc-dialog-actions {
+  padding: 24px 0 0 0;
+  margin: 0;
+  border-top: 1px solid rgba(245, 163, 147, 0.1);
+  
+  button {
+    margin-left: 12px;
+    border-radius: 25px;
+    padding: 0 24px;
+    height: 44px;
+    font-weight: 600;
+    text-transform: none;
+    transition: all 0.3s ease;
+    
+    &.mat-mdc-button {
+      color: #9ca3af;
+      border: 2px solid rgba(156, 163, 175, 0.3);
+      
+      &:hover {
+        background: rgba(156, 163, 175, 0.1);
+        border-color: #9ca3af;
+        transform: translateY(-2px);
+      }
+    }
+    
+    &.mat-mdc-raised-button {
+      background: linear-gradient(135deg, #F5A393 0%, #e89580 100%);
+      color: white;
+      box-shadow: 0 4px 15px rgba(245, 163, 147, 0.4);
+      
+      &:hover:not(:disabled) {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(245, 163, 147, 0.5);
+      }
+      
+      &:disabled {
+        background: #e2e8f0;
+        color: #94a3b8;
+        box-shadow: none;
+      }
+    }
   }
 }
 
-::ng-deep .mat-primary .mat-mdc-button-persistent-ripple {
-  background-color: #F5A393;
+// ==========================================
+// 🎨 MATERIAL OVERRIDES - CORRECTION COMPLÈTE
+// ==========================================
+
+// Dialog container
+::ng-deep .mat-mdc-dialog-container {
+  .mat-mdc-dialog-surface {
+    padding: 24px;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+  }
 }
 
-::ng-deep .mat-calendar-body-selected {
-  background-color: #F5A393;
+// ==========================================
+// 📝 FORM FIELDS - SUPPRESSION DU BLEU
+// ==========================================
+::ng-deep .mat-mdc-form-field {
+  // Container principal
+  .mat-mdc-form-field-flex {
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    background-color: rgba(245, 163, 147, 0.02);
+    
+    &:hover {
+      transform: translateY(-1px);
+      background-color: rgba(245, 163, 147, 0.05);
+    }
+  }
+  
+  // Focus state
+  &.mat-focused .mat-mdc-form-field-flex {
+    box-shadow: 0 4px 20px rgba(245, 163, 147, 0.2);
+    background-color: rgba(245, 163, 147, 0.08);
+  }
+  
+  // Outline borders
+  .mat-mdc-form-field-outline {
+    color: rgba(156, 163, 175, 0.4) !important;
+    
+    .mat-mdc-form-field-outline-thick {
+      color: #F5A393 !important;
+      border-color: #F5A393 !important;
+    }
+  }
+  
+  // Labels
+  .mat-mdc-form-field-label {
+    color: #9ca3af !important;
+    font-weight: 500;
+  }
+  
+  &.mat-focused .mat-mdc-form-field-label {
+    color: #F5A393 !important;
+  }
+  
+  // Input text
+  .mat-mdc-input-element {
+    color: #2d3748 !important;
+    caret-color: #F5A393 !important;
+  }
+  
+  // Focus overlay - SUPPRESSION DU BLEU
+  .mat-mdc-form-field-focus-overlay {
+    background-color: transparent !important;
+  }
+  
+  // Ripple effect
+  .mat-mdc-form-field-ripple {
+    background-color: #F5A393 !important;
+  }
+}
+
+// ==========================================
+// 📅 DATEPICKER - CORRECTION CALENDRIER COMPLÈTE
+// ==========================================
+
+// Toggle button du datepicker
+::ng-deep .mat-datepicker-toggle {
+  color: #F5A393 !important;
+  
+  .mat-mdc-button-persistent-ripple {
+    background-color: rgba(245, 163, 147, 0.1) !important;
+  }
+  
+  .mat-mdc-icon-button {
+    &:hover {
+      background-color: rgba(245, 163, 147, 0.1) !important;
+    }
+  }
+}
+
+// Container principal du datepicker
+::ng-deep .cdk-overlay-container {
+  z-index: 9999 !important;
+}
+
+::ng-deep .cdk-overlay-backdrop {
+  background-color: rgba(0, 0, 0, 0.3) !important;
+}
+
+::ng-deep .mat-datepicker-popup {
+  z-index: 10000 !important;
+}
+
+::ng-deep .mat-datepicker-content {
+  border-radius: 16px !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15) !important;
+  
+  .mat-calendar {
+    border-radius: 16px;
+    
+    // Header du calendrier
+    .mat-calendar-header {
+      background: linear-gradient(135deg, #F5A393 0%, #e89580 100%) !important;
+      color: white !important;
+      border-radius: 16px 16px 0 0;
+      padding: 16px;
+      
+      .mat-calendar-controls {
+        .mat-mdc-icon-button {
+          color: white !important;
+          
+          &:hover {
+            background-color: rgba(255, 255, 255, 0.1) !important;
+          }
+        }
+        
+        .mat-calendar-period-button {
+          color: white !important;
+          font-weight: 600;
+          
+          &:hover {
+            background-color: rgba(255, 255, 255, 0.1) !important;
+          }
+        }
+      }
+    }
+    
+    // Corps du calendrier
+    .mat-calendar-content {
+      padding: 16px;
+      
+      // Jours de la semaine
+      .mat-calendar-table-header {
+        th {
+          color: #9ca3af !important;
+          font-weight: 600;
+          padding: 8px;
+        }
+      }
+      
+      // Cellules des dates
+      .mat-calendar-body-cell {
+        border-radius: 8px !important;
+        margin: 2px;
+        transition: all 0.2s ease;
+        
+        &:hover .mat-calendar-body-cell-content:not(.mat-calendar-body-selected) {
+          background-color: rgba(245, 163, 147, 0.2) !important;
+          color: #F5A393 !important;
+        }
+        
+        .mat-calendar-body-cell-content {
+          border-radius: 8px !important;
+          font-weight: 500;
+          
+          // Date sélectionnée
+          &.mat-calendar-body-selected {
+            background-color: #F5A393 !important;
+            color: white !important;
+            box-shadow: 0 2px 8px rgba(245, 163, 147, 0.4) !important;
+          }
+          
+          // Aujourd'hui
+          &.mat-calendar-body-today:not(.mat-calendar-body-selected) {
+            border: 2px solid #F5A393 !important;
+            color: #F5A393 !important;
+            background-color: rgba(245, 163, 147, 0.1) !important;
+          }
+          
+          // Dates désactivées
+          &.mat-calendar-body-disabled {
+            color: #e2e8f0 !important;
+            background-color: transparent !important;
+          }
+        }
+      }
+    }
+  }
+}
+
+// ==========================================
+// 📋 SELECT DROPDOWN
+// ==========================================
+::ng-deep .mat-mdc-select {
+  .mat-mdc-select-trigger {
+    .mat-mdc-select-value {
+      color: #2d3748 !important;
+    }
+    
+    .mat-mdc-select-arrow-wrapper {
+      .mat-mdc-select-arrow {
+        color: #F5A393 !important;
+      }
+    }
+  }
+  
+  &.mat-focused .mat-mdc-select-trigger {
+    .mat-mdc-select-arrow {
+      color: #F5A393 !important;
+    }
+  }
+}
+
+::ng-deep .mat-mdc-select-panel {
+  border-radius: 12px !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15) !important;
+  
+  .mat-mdc-option {
+    border-radius: 8px !important;
+    margin: 4px 8px;
+    transition: all 0.2s ease;
+    
+    &:hover:not(.mdc-list-item--disabled) {
+      background-color: rgba(245, 163, 147, 0.1) !important;
+      color: #F5A393 !important;
+    }
+    
+    &.mat-mdc-option-active {
+      background-color: rgba(245, 163, 147, 0.15) !important;
+      color: #F5A393 !important;
+    }
+    
+    &.mdc-list-item--selected {
+      background-color: #F5A393 !important;
+      color: white !important;
+    }
+  }
+}
+
+// ==========================================
+// 🔘 BUTTONS - SUPPRESSION DU BLEU
+// ==========================================
+::ng-deep .mat-mdc-button,
+::ng-deep .mat-mdc-raised-button {
+  .mat-mdc-button-persistent-ripple {
+    background-color: transparent !important;
+  }
+  
+  .mat-ripple-element {
+    background-color: rgba(245, 163, 147, 0.3) !important;
+  }
+}
+
+// Bouton primary spécifique
+::ng-deep .mat-primary {
+  &.mat-mdc-raised-button {
+    background: linear-gradient(135deg, #F5A393 0%, #e89580 100%) !important;
+    color: white !important;
+    
+    &:not(:disabled):hover {
+      background: linear-gradient(135deg, #e89580 0%, #d88770 100%) !important;
+    }
+    
+    &:disabled {
+      background: #e2e8f0 !important;
+      color: #94a3b8 !important;
+    }
+  }
+  
+  &.mat-mdc-button {
+    color: #9ca3af !important;
+    
+    &:hover {
+      background-color: rgba(156, 163, 175, 0.1) !important;
+    }
+  }
+}
+
+// ==========================================
+// 🔄 SPINNER
+// ==========================================
+::ng-deep mat-spinner {
+  circle {
+    stroke: #F5A393 !important;
+  }
+}
+
+// ==========================================
+// ⚠️ ERROR STATES
+// ==========================================
+::ng-deep .mat-mdc-form-field.mat-form-field-invalid {
+  .mat-mdc-form-field-outline-thick {
+    color: #ef4444 !important;
+    border-color: #ef4444 !important;
+  }
+  
+  .mat-mdc-form-field-label {
+    color: #ef4444 !important;
+  }
+}
+
+::ng-deep .mat-mdc-form-field-error {
+  color: #ef4444 !important;
+  font-weight: 500;
+}
+
+// ==========================================
+// 🎬 ANIMATIONS
+// ==========================================
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Animation d'entrée pour le dialog
+.booking-dialog {
+  animation: slideInUp 0.4s ease-out;
+}
+
+// ==========================================
+// 📱 RESPONSIVE DESIGN
+// ==========================================
+@media (max-width: 480px) {
+  .booking-dialog {
+    min-width: 320px;
+    max-width: 95vw;
+    
+    h2 {
+      font-size: 1.3rem;
+      margin: -16px -16px 20px -16px;
+      padding: 20px 16px;
+    }
+    
+    .salon-info, .service-summary .service-card {
+      padding: 16px;
+    }
+    
+    .service-summary .service-card .service-details {
+      flex-direction: column;
+      gap: 12px;
+      align-items: stretch;
+      
+      .price, .duration {
+        text-align: center;
+        justify-content: center;
+      }
+    }
+  }
+  
+  ::ng-deep .mat-mdc-dialog-container .mat-mdc-dialog-surface {
+    padding: 16px;
+  }
 }

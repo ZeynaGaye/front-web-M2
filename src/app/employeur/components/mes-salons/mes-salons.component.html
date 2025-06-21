@@ -137,7 +137,7 @@
                 <h4>Galerie photos</h4>
                 
                 <!-- Charger les photos lors de l'ouverture de l'onglet -->
-                <ng-container *ngIf="setActiveTab(salon.id, 'photos') && loadSalonPhotos(salon.id); then photosLoaded else photosLoading"></ng-container>
+                <ng-container *ngIf="activeTab[salon.id] === 'photos' && salonPhotos[salon.id] !== undefined; then photosLoaded else photosLoading"></ng-container>
                 
                 <ng-template #photosLoading>
                   <div class="loading">

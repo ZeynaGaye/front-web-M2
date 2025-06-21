@@ -6,10 +6,10 @@ import { MatCardActions, MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
-import { AddServiceDialogComponent } from '../add-service-dialog/add-service-dialog.component';
 import { SalonService } from '../../services/salon.service';
 import { MatDialog } from '@angular/material/dialog';
 import { ServiceSalonService } from '../../services/service-salon.service';
+import { AddServiceDialogComponent } from '../add-service-dialog/add-service-dialog.component';
 
 @Component({
   selector: 'app-mes-services',

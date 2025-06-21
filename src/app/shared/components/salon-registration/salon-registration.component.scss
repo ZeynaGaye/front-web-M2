@@ -1,0 +1,979 @@
+// Variables de couleurs
+$primary-color: #F5A393;
+$secondary-color: #A4B1BD;
+$primary-dark: darken($primary-color, 10%);
+$secondary-dark: darken($secondary-color, 10%);
+
+.salon-registration-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, $secondary-color 0%, $primary-color 100%);
+  
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+}
+
+// ===============================================
+// HERO SECTION
+// ===============================================
+.hero-section {
+  background: linear-gradient(135deg, $secondary-color 0%, $primary-color 100%);
+  color: white;
+  padding: 2rem 0 4rem;
+  position: relative;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 50px;
+    background: white;
+    clip-path: polygon(0 100%, 100% 0, 100% 100%);
+  }
+  
+  .hero-content {
+    text-align: center;
+    
+    .back-btn {
+      position: absolute;
+      top: -1rem;
+      left: 0;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      
+      &:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateX(-5px);
+      }
+      
+      i {
+        margin-right: 0.5rem;
+      }
+    }
+    
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin: 2rem 0 1rem;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      
+      @media (max-width: 768px) {
+        font-size: 1.8rem;
+      }
+    }
+    
+    .hero-subtitle {
+      h2 {
+        font-size: 1.5rem;
+        margin: 1rem 0;
+        
+        @media (max-width: 768px) {
+          font-size: 1.2rem;
+        }
+      }
+      
+      p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        max-width: 800px;
+        margin: 0 auto;
+        line-height: 1.6;
+        
+        @media (max-width: 768px) {
+          font-size: 1rem;
+        }
+      }
+    }
+  }
+}
+
+// ===============================================
+// SECTIONS GÉNÉRALES
+// ===============================================
+section {
+  background: white;
+  margin: 2rem 0;
+  padding: 3rem 2rem;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  
+  h2 {
+    font-size: 2rem;
+    color: #333;
+    text-align: center;
+    margin-bottom: 2rem;
+    
+    @media (max-width: 768px) {
+      font-size: 1.5rem;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    padding: 2rem 1rem;
+    margin: 1rem 0;
+  }
+}
+
+// ===============================================
+// BENEFITS SECTION - ✅ CORRIGÉ POUR L'ALIGNEMENT
+// ===============================================
+.benefits-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+  // ✅ CORRECTION : Assurer que toutes les cartes aient la même hauteur
+  align-items: stretch;
+  
+  .benefit-card {
+    background: #f8f9fa;
+    padding: 2rem;
+    border-radius: 12px;
+    text-align: center;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    // ✅ AMÉLIORATION : Ajouter une ombre légère pour améliorer la perception
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    
+    // ✅ CORRECTION : Utiliser flexbox pour la disposition interne
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; // Aligner le contenu en haut
+    min-height: 100%; // Assurer une hauteur minimale
+    height: 100%; // Prendre toute la hauteur disponible dans la grille
+    
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+      border-color: $primary-color;
+      // ✅ AMÉLIORATION : Assurer que la carte ne change pas de taille pendant le hover
+      transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    }
+    
+    .benefit-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      // ✅ CORRECTION : Empêcher l'icône de grandir/rétrécir
+      flex-shrink: 0;
+      flex-grow: 0;
+    }
+    
+    h3 {
+      color: #333;
+      margin-bottom: 1rem;
+      font-size: 1.3rem;
+      // ✅ CORRECTION : Hauteur cohérente pour les titres
+      min-height: 2.6rem; // Environ 2 lignes de texte
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      // Empêcher le titre de grandir/rétrécir
+      flex-shrink: 0;
+      flex-grow: 0;
+    }
+    
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      // ✅ CORRECTION : Permettre à la liste de prendre l'espace restant
+      flex-grow: 1;
+      // Répartir l'espace équitablement entre les éléments
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start; // Aligner les éléments en haut
+      
+      li {
+        padding: 0.5rem 0;
+        color: #666;
+        position: relative;
+        padding-left: 1.5rem;
+        // ✅ CORRECTION : Hauteur cohérente pour chaque élément de liste
+        min-height: 2.5rem;
+        display: flex;
+        align-items: center;
+        line-height: 1.4;
+        
+        &::before {
+          content: '✓';
+          position: absolute;
+          left: 0;
+          color: #28a745;
+          font-weight: bold;
+          top: 50%;
+          transform: translateY(-50%);
+        }
+      }
+    }
+  }
+}
+
+// ===============================================
+// FEATURES SECTION
+// ===============================================
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  
+  .feature-block {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 1.5rem;
+    border-radius: 10px;
+    border-left: 4px solid $primary-color;
+    
+    h3 {
+      color: #333;
+      margin-bottom: 1rem;
+      font-size: 1.2rem;
+    }
+    
+    ul {
+      list-style: none;
+      padding: 0;
+      
+      li {
+        padding: 0.3rem 0;
+        color: #555;
+        position: relative;
+        padding-left: 1.2rem;
+        
+        &::before {
+          content: '→';
+          position: absolute;
+          left: 0;
+          color: $primary-color;
+        }
+      }
+    }
+  }
+}
+
+// ===============================================
+// ANALYTICS SECTION
+// ===============================================
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  
+  .analytics-block {
+    background: linear-gradient(135deg, $secondary-color 0%, $primary-color 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 12px;
+    
+    h3 {
+      color: white;
+      margin-bottom: 1rem;
+    }
+    
+    ul {
+      list-style: none;
+      padding: 0;
+      
+      li {
+        padding: 0.5rem 0;
+        position: relative;
+        padding-left: 1.5rem;
+        
+        &::before {
+          content: '📊';
+          position: absolute;
+          left: 0;
+        }
+      }
+    }
+  }
+}
+
+// ===============================================
+// PRICING SECTION
+// ===============================================
+.pricing-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+  
+  .pricing-card {
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 15px;
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    
+    &.popular {
+      border-color: $primary-color;
+      transform: scale(1.05);
+      box-shadow: 0 15px 35px rgba($primary-color, 0.3);
+      
+      .popular-badge {
+        position: absolute;
+        top: -12px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: $primary-color;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+      }
+    }
+    
+    &.selected {
+      border-color: #28a745;
+      background: #f8fff9;
+      
+      .select-indicator {
+        color: #28a745;
+        font-weight: 600;
+        margin-top: 1rem;
+        
+        i {
+          margin-right: 0.5rem;
+        }
+      }
+    }
+    
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    }
+    
+    h3 {
+      color: #333;
+      margin-bottom: 1rem;
+      font-size: 1.3rem;
+    }
+    
+    .price {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: $primary-color;
+      margin-bottom: 1.5rem;
+    }
+    
+    .features-list {
+      list-style: none;
+      padding: 0;
+      text-align: left;
+      
+      li {
+        padding: 0.5rem 0;
+        color: #555;
+        
+        i {
+          color: #28a745;
+          margin-right: 0.5rem;
+        }
+      }
+    }
+  }
+}
+
+// ===============================================
+// PROCESS SECTION
+// ===============================================
+.process-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+  
+  .step {
+    text-align: center;
+    position: relative;
+    
+    .step-number {
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, $secondary-color 0%, $primary-color 100%);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin: 0 auto 1rem;
+    }
+    
+    h3 {
+      color: #333;
+      margin-bottom: 1rem;
+    }
+    
+    ul {
+      list-style: none;
+      padding: 0;
+      
+      li {
+        padding: 0.3rem 0;
+        color: #666;
+      }
+    }
+  }
+}
+
+// ===============================================
+// CTA SECTION (Call to Action)
+// ===============================================
+.cta-section {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+  border: 3px solid $secondary-color;
+  
+  .cta-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: center;
+    margin-bottom: 2rem;
+    
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+    
+    .cta-text {
+      h3 {
+        color: #333;
+        font-size: 1.8rem;
+        margin-bottom: 1rem;
+        font-weight: 700;
+      }
+      
+      p {
+        color: #666;
+        font-size: 1.1rem;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+      }
+      
+      .selected-plan-info {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        border-left: 4px solid $secondary-color;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        margin-bottom: 1.5rem;
+        
+        .plan-highlight {
+          h4 {
+            color: $secondary-color;
+            margin: 0 0 0.5rem 0;
+            font-size: 1.2rem;
+          }
+          
+          p {
+            color: #666;
+            margin: 0;
+            font-size: 0.9rem;
+            font-style: italic;
+          }
+        }
+      }
+      
+      .features-preview {
+        .feature-preview-item {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          margin-bottom: 0.75rem;
+          
+          i {
+            color: #28a745;
+            font-size: 1.1rem;
+          }
+          
+          span {
+            color: #555;
+            font-weight: 500;
+          }
+        }
+      }
+    }
+    
+    .cta-actions {
+      .action-buttons {
+        background: white;
+        padding: 2.5rem;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        margin-bottom: 1.5rem;
+        
+        .logged-in-actions {
+          h4 {
+            color: #333;
+            margin-bottom: 1.5rem;
+            font-size: 1.2rem;
+          }
+          
+          .btn-dashboard {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0 auto;
+            
+            &:hover {
+              transform: translateY(-2px);
+              box-shadow: 0 10px 25px rgba(40, 167, 69, 0.3);
+            }
+          }
+        }
+        
+        .auth-actions {
+          .main-cta {
+            margin-bottom: 2rem;
+            
+            .btn-start-journey {
+              background: linear-gradient(135deg, $primary-color 0%, $primary-dark 100%);
+              color: white;
+              border: none;
+              padding: 1.2rem 2.5rem;
+              border-radius: 30px;
+              font-size: 1.2rem;
+              font-weight: 600;
+              cursor: pointer;
+              transition: all 0.3s ease;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 0.75rem;
+              margin: 0 auto 1rem;
+              box-shadow: 0 5px 20px rgba($primary-color, 0.3);
+              
+              &:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 15px 35px rgba($primary-color, 0.4);
+              }
+              
+              i {
+                font-size: 1.3rem;
+              }
+            }
+            
+            .cta-subtitle {
+              color: #666;
+              font-size: 0.95rem;
+              margin: 0;
+              font-style: italic;
+            }
+          }
+          
+          .separator {
+            margin: 1.5rem 0;
+            position: relative;
+            text-align: center;
+            color: #666;
+            font-size: 0.9rem;
+            
+            &::before {
+              content: '';
+              position: absolute;
+              top: 50%;
+              left: 0;
+              right: 0;
+              height: 1px;
+              background: #ddd;
+              z-index: 1;
+            }
+            
+            span {
+              background: white;
+              padding: 0 1rem;
+              position: relative;
+              z-index: 2;
+            }
+          }
+          
+          .btn-login {
+            background: transparent;
+            color: $secondary-color;
+            border: 2px solid $secondary-color;
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin: 0 auto 1rem;
+            
+            &:hover {
+              background: $secondary-color;
+              color: white;
+              transform: translateY(-2px);
+            }
+          }
+          
+          .auth-note {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            
+            i {
+              font-size: 1rem;
+            }
+          }
+        }
+      }
+      
+      .demo-section {
+        text-align: center;
+        
+        .btn-demo {
+          background: transparent;
+          color: $secondary-color;
+          border: 2px solid $secondary-color;
+          padding: 0.75rem 1.5rem;
+          border-radius: 25px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          margin: 0 auto 0.5rem;
+          
+          &:hover {
+            background: $secondary-color;
+            color: white;
+            transform: translateY(-2px);
+          }
+        }
+        
+        .demo-text {
+          color: #666;
+          font-size: 0.9rem;
+          margin: 0;
+        }
+      }
+    }
+  }
+  
+  .guarantees {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #ddd;
+    
+    .guarantee-item {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      color: #666;
+      
+      i {
+        color: #28a745;
+        font-size: 1.2rem;
+      }
+      
+      span {
+        font-weight: 500;
+        font-size: 0.9rem;
+      }
+    }
+  }
+}
+
+// ===============================================
+// CONTACT SECTION
+// ===============================================
+.contact-section {
+  background: linear-gradient(135deg, $secondary-color 0%, $primary-color 100%) !important;
+  color: white;
+  text-align: center;
+  
+  h2 {
+    color: white;
+  }
+  
+  .contact-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+    
+    .contact-item {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      
+      i {
+        font-size: 1.2rem;
+      }
+      
+      span {
+        font-weight: 500;
+      }
+    }
+  }
+}
+
+// ===============================================
+// RESPONSIVE - ✅ AMÉLIORÉ POUR L'ALIGNEMENT
+// ===============================================
+@media (max-width: 768px) {
+  .salon-registration-page .container {
+    padding: 0 15px;
+  }
+  
+  .hero-section {
+    padding: 1.5rem 0 3rem;
+    
+    .hero-content .back-btn {
+      position: static;
+      margin-bottom: 1rem;
+    }
+  }
+  
+  section {
+    margin: 1rem 0;
+    padding: 2rem 1rem;
+  }
+  
+  .benefits-grid,
+  .features-grid,
+  .analytics-grid,
+  .pricing-cards,
+  .process-steps {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  // ✅ CORRECTION RESPONSIVE POUR L'ALIGNEMENT
+  .benefits-grid {
+    .benefit-card {
+      // Réinitialiser la hauteur sur mobile
+      height: auto;
+      min-height: auto;
+      
+      h3 {
+        min-height: auto; // Permettre au titre de s'adapter sur mobile
+      }
+      
+      ul li {
+        min-height: auto; // Permettre aux éléments de s'adapter sur mobile
+      }
+    }
+  }
+  
+  .pricing-cards .pricing-card.popular {
+    transform: none;
+  }
+  
+  .cta-section {
+    .cta-content {
+      .cta-text h3 {
+        font-size: 1.5rem;
+      }
+      
+      .cta-actions .action-buttons {
+        padding: 2rem 1.5rem;
+        
+        .auth-actions .main-cta .btn-start-journey {
+          padding: 1rem 2rem;
+          font-size: 1.1rem;
+        }
+      }
+    }
+    
+    .guarantees {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      
+      .guarantee-item {
+        font-size: 0.85rem;
+        
+        span {
+          font-size: 0.8rem;
+        }
+      }
+    }
+  }
+}
+
+// ===============================================
+// ANIMATIONS
+// ===============================================
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+section {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.benefit-card,
+.feature-block,
+.analytics-block,
+.pricing-card,
+.step {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+// Effet de survol pour les cartes
+.benefit-card,
+.pricing-card {
+  &:hover {
+    animation: pulse 0.6s ease-in-out;
+  }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+// ===============================================
+// CLASSES UTILITAIRES POUR L'ALIGNEMENT (Optionnelles)
+// ===============================================
+
+// Classe pour forcer l'égalisation JavaScript si nécessaire
+.benefits-grid.js-equalized {
+  .benefit-card {
+    transition: height 0.3s ease;
+    
+    &.js-height-equalized {
+      // Indicateur visuel que l'égalisation JS est active
+      position: relative;
+      
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, $primary-color, transparent);
+        opacity: 0.3;
+      }
+    }
+  }
+}
+
+// Classe pour hauteurs fixes (alternative)
+.benefits-grid.fixed-height {
+  .benefit-card {
+    height: 350px; // Hauteur fixe pour toutes les cartes
+    
+    .benefit-icon {
+      margin-bottom: 1.5rem;
+    }
+    
+    h3 {
+      margin-bottom: 1.5rem;
+      height: 3rem; // Hauteur fixe pour les titres
+    }
+    
+    ul {
+      overflow-y: auto; // Permettre le scroll si le contenu dépasse
+      max-height: calc(100% - 120px); // Hauteur maximale moins l'icône et le titre
+    }
+  }
+}
+
+// ===============================================
+// FALLBACK POUR NAVIGATEURS ANCIENS
+// ===============================================
+@supports not (display: grid) {
+  .benefits-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    
+    .benefit-card {
+      flex: 1 1 280px;
+      margin-bottom: 2rem;
+      
+      &.js-height-set {
+        height: var(--card-height);
+      }
+    }
+  }
+}
+
+// ===============================================
+// MODE SOMBRE (Optionnel)
+// ===============================================
+@media (prefers-color-scheme: dark) {
+  .benefit-card {
+    background: #2c3e50;
+    color: #ecf0f1;
+    
+    h3 {
+      color: #ecf0f1;
+    }
+    
+    ul li {
+      color: #bdc3c7;
+      
+      &::before {
+        color: #27ae60;
+      }
+    }
+  }
+}
+
+// ===============================================
+// ACCESSIBILITÉ
+// ===============================================
+@media (prefers-reduced-motion: reduce) {
+  .benefit-card,
+  .pricing-card,
+  section,
+  .feature-block,
+  .analytics-block,
+  .step {
+    animation: none;
+    transition: none;
+  }
+}
+
+// Focus states pour l'accessibilité
+.benefit-card:focus,
+.pricing-card:focus {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+}

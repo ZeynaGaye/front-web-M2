@@ -1,6 +1,6 @@
 import { Injectable, inject, PLATFORM_ID, Inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, throwError, from } from 'rxjs';
+import { BehaviorSubject, Observable, throwError, from, of } from 'rxjs';
 import { catchError, tap, switchMap } from 'rxjs/operators';
 import { KeycloakService } from 'keycloak-angular';
 import { Router } from '@angular/router';
@@ -11,7 +11,8 @@ import { RoleRedirectService } from '../services/auth/role-redirect.service';
 import { AuthUIService } from '../../shared/services/authUI/auth-ui.service';
 
 export interface LoginCredentials {
-  email: string; // IMPORTANT: Utiliser "password" et non "motDePasse" pour le backend
+  email: string;
+  password: string; 
 }
 
 export interface AuthResponse {
@@ -23,7 +24,6 @@ export interface AuthResponse {
   accesToken: string;
   refreshToken: string;
   expiresIn: string;
-  
 }
 
 @Injectable({
@@ -47,25 +47,34 @@ export class AuthService {
   constructor(@Inject(PLATFORM_ID) platformId: Object) {
     this.isBrowser = isPlatformBrowser(platformId);
     
+    console.log('AuthService constructor - initializing without triggering modals');
+    
     // Charger l'utilisateur depuis le localStorage au démarrage (uniquement côté navigateur)
     if (this.isBrowser) {
       const storedUser = localStorage.getItem('currentUser');
       if (storedUser) {
-        const user = JSON.parse(storedUser);
-        this.currentUserSubject.next(user);
-        this.setupRefreshTokenTimer(user);
+        try {
+          const user = JSON.parse(storedUser);
+          this.currentUserSubject.next(user);
+          this.setupRefreshTokenTimer(user);
+          console.log('User restored from localStorage:', user.email);
+        } catch (error) {
+          console.error('Error parsing stored user data:', error);
+          // Nettoyer les données corrompues
+          localStorage.removeItem('currentUser');
+        }
       }
     }
   }
 
   login(credentials: LoginCredentials): Observable<any> {
-    console.log('Tentative de connexion avec:', credentials);
+    console.log('Tentative de connexion avec:', credentials.email);
     
     return this.http
       .post<AuthResponse>(`${this.apiUrl}/login`, credentials)
       .pipe(
         tap((response) => {
-          console.log('Authentification réussie via API:', response);
+          console.log('Authentification réussie via API pour:', response.email);
 
           if (!response || !response.accesToken) {
             throw new Error('Token non reçu dans la réponse');
@@ -74,6 +83,7 @@ export class AuthService {
           // Stocker les informations de l'utilisateur et le token (uniquement côté navigateur)
           if (this.isBrowser) {
             localStorage.setItem('currentUser', JSON.stringify(response));
+            console.log('User data saved to localStorage');
           }
           
           this.currentUserSubject.next(response);
@@ -100,29 +110,51 @@ export class AuthService {
   }
 
   logout(): Observable<any> {
-    // Supprimer les informations d'utilisateur du stockage local (uniquement côté navigateur)
+    console.log('Logout process started');
+    
+    // Nettoyer le localStorage
+    this.clearLocalStorage();
+    
+    // Rediriger l'utilisateur
+    this.router.navigate(['/accueil']);
+    
+    console.log('Logout completed successfully');
+    
+    // Retourner un Observable de succès
+    return of({ message: 'Déconnexion réussie' });
+  }
+
+  private clearLocalStorage(): void {
     if (this.isBrowser) {
-      localStorage.removeItem('currentUser');
+      console.log('Clearing localStorage and user session');
+      
+      // Liste de toutes les clés à supprimer
+      const keysToRemove = [
+        'currentUser',
+        'auth_token',
+        'refresh_token',
+        'user_role',
+        'user_id',
+        'beautyHubSearchParams' // Optionnel: nettoyer aussi les paramètres de recherche
+      ];
+      
+      keysToRemove.forEach(key => {
+        localStorage.removeItem(key);
+      });
     }
     
     this.currentUserSubject.next(null);
     this.clearRefreshTokenTimer();
-
-    // Déconnexion de Keycloak
-    return from(
-      this.keycloakService.logout(window.location.origin + '/login')
-    ).pipe(
-      tap(() => {
-        this.router.navigate(['/login']);
-      })
-    );
   }
 
   refreshToken(): Observable<any> {
     const currentUser = this.currentUserSubject.value;
     if (!currentUser) {
+      console.error('No current user found for token refresh');
       return throwError(() => new Error("Pas d'utilisateur connecté"));
     }
+
+    console.log('Refreshing token for user:', currentUser.email);
 
     return this.http
       .post<AuthResponse>(`${this.apiUrl}/refresh-token`, {
@@ -130,6 +162,8 @@ export class AuthService {
       })
       .pipe(
         tap((response) => {
+          console.log('Token refreshed successfully for:', currentUser.email);
+          
           // Mettre à jour l'utilisateur avec les nouveaux tokens
           const updatedUser = {
             ...currentUser,
@@ -155,6 +189,7 @@ export class AuthService {
         }),
         catchError((error) => {
           console.error('Erreur lors du rafraîchissement du token:', error);
+          console.log('Forcing logout due to token refresh failure');
           this.logout();
           return throwError(() => error);
         })
@@ -162,7 +197,8 @@ export class AuthService {
   }
 
   isAuthenticated(): boolean {
-    return !!this.currentUserSubject.value;
+    const isAuth = !!this.currentUserSubject.value;
+    return isAuth;
   }
 
   getCurrentUser(): any {
@@ -179,8 +215,58 @@ export class AuthService {
         this.roleRedirectService.getRedirectUrlForRole(userRoles);
       this.router.navigate([redirectUrl]);
     } else {
+      console.log('No user role found, redirecting to home');
       this.router.navigate(['/accueil']);
     }
+  }
+
+  // ✅ MÉTHODES MODALES CORRIGÉES - Avec logging et protection
+  triggerLoginModal() {
+    if (!this.isBrowser) {
+      console.log('Not in browser environment, cannot trigger login modal');
+      return;
+    }
+    
+    console.log('triggerLoginModal called from AuthService');
+    
+    // ✅ Vérifier si l'utilisateur n'est pas déjà connecté
+    if (this.isAuthenticated()) {
+      console.log('User already authenticated, not showing login modal');
+      return;
+    }
+    
+    this.authUIService.triggerLoginModal();
+  }
+
+  triggerRegisterModal() {
+    if (!this.isBrowser) {
+      console.log('Not in browser environment, cannot trigger register modal');
+      return;
+    }
+    
+    console.log('triggerRegisterModal called from AuthService');
+    
+    // ✅ Vérifier si l'utilisateur n'est pas déjà connecté
+    if (this.isAuthenticated()) {
+      console.log('User already authenticated, not showing register modal');
+      return;
+    }
+    
+    // Vérifier si le service a cette méthode
+    if (this.authUIService.triggerRegisterModal) {
+      this.authUIService.triggerRegisterModal();
+    } else {
+      // Fallback: ouvrir le modal de connexion avec un flag pour l'inscription
+      if (this.isBrowser) {
+        sessionStorage.setItem('preferRegister', 'true');
+      }
+      this.authUIService.triggerLoginModal();
+    }
+  }
+
+  // ✅ MÉTHODE UTILITAIRE: Vérifier si on doit afficher les modals d'auth
+  shouldShowAuthModals(): boolean {
+    return !this.isAuthenticated();
   }
 
   // Initialise Keycloak avec les tokens obtenus via l'API
@@ -193,15 +279,16 @@ export class AuthService {
       const keycloakInstance = (this.keycloakService as any).instance;
 
       if (keycloakInstance) {
-        // Définir manuellement les tokens sur l'instance Keycloak
-        keycloakInstance.token = accessToken;
-        keycloakInstance.refreshToken = refreshToken;
-        keycloakInstance.authenticated = true;
-
-        // Mettre à jour le tokenParsed à partir du JWT
         try {
+          // Définir manuellement les tokens sur l'instance Keycloak
+          keycloakInstance.token = accessToken;
+          keycloakInstance.refreshToken = refreshToken;
+          keycloakInstance.authenticated = true;
+
+          // Mettre à jour le tokenParsed à partir du JWT
           keycloakInstance.tokenParsed = this.parseJwtToken(accessToken);
           keycloakInstance.refreshTokenParsed = this.parseJwtToken(refreshToken);
+          
           console.log('Keycloak initialisé avec tokens obtenus via API');
           resolve(true);
         } catch (e) {
@@ -260,9 +347,17 @@ export class AuthService {
       const timeout = expiresAt - Date.now() - 60 * 1000; // Rafraîchir 1 minute avant expiration
 
       if (timeout > 0) {
+        console.log(`Token refresh scheduled in ${timeout / 1000} seconds`);
         this.refreshTokenTimeout = setTimeout(() => {
           console.log('Rafraîchissement automatique du token');
-          this.refreshToken().subscribe();
+          this.refreshToken().subscribe({
+            next: () => {
+              console.log('Automatic token refresh successful');
+            },
+            error: (error) => {
+              console.error('Automatic token refresh failed:', error);
+            }
+          });
         }, timeout);
       } else {
         console.warn('Token déjà expiré, rafraîchissement immédiat');
@@ -280,12 +375,7 @@ export class AuthService {
     if (this.refreshTokenTimeout) {
       clearTimeout(this.refreshTokenTimeout);
       this.refreshTokenTimeout = null;
+      console.log('Token refresh timer cleared');
     }
   }
-
-  triggerLoginModal() {
-  if (this.isBrowser) {
-    this.authUIService.triggerLoginModal();
-  }
-}
 }

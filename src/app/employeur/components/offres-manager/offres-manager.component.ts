@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewChild, TemplateRef } from '@angular/core';
-import { OffreEmploisService } from '../../services/OffreEmploisService/offre-emplois-service.service';
+import { OffreEmploisService, OffreEmploi } from '../../services/OffreEmploisService/offre-emplois-service.service';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { CommonModule } from '@angular/common';
@@ -29,19 +29,7 @@ interface Candidature {
   status: string;
 }
 
-interface OffreEmploi {
-  id?: number;
-  titre: string;
-  description: string;
-  competences: string;
-  lieu: string;
-  typeContrat: string;
-  salaire: string;
-  dateLimite: string;
-  experienceRequise: string;
-  status: string;
-  candidaturesCount?: number;
-}
+
 
 @Component({
   selector: 'app-offres-manager',
@@ -258,7 +246,14 @@ export class OffresManagerComponent implements OnInit {
     const offre = this.offres.find(o => o.id === offreId);
     if (!offre) return;
 
-    const updatedOffre = { ...offre, status: newStatus };
+    // CORRECTION: S'assurer que toutes les propriétés requises sont présentes
+    const updatedOffre: OffreEmploi = {
+      ...offre,
+      status: newStatus,
+      // S'assurer que ces propriétés existent, sinon les initialiser
+      datePublication: offre.datePublication || new Date(),
+      candidatures: offre.candidatures || []
+    };
     
     this.offreEmploisService.updateOffreEmploi(offreId, updatedOffre).subscribe({
       next: (response) => {
@@ -330,10 +325,8 @@ export class OffresManagerComponent implements OnInit {
     this.showOffreEmploiForm = true;
   }
 
-
-
-closeOffreEmploiForm() {
-  this.showOffreEmploiForm = false;
-  this.loadOffres(); // Recharger la liste après création
-}
+  closeOffreEmploiForm() {
+    this.showOffreEmploiForm = false;
+    this.loadOffres(); // Recharger la liste après création
+  }
 }

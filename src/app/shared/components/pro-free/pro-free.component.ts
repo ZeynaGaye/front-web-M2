@@ -13,7 +13,7 @@ import { CommonModule, NgFor } from '@angular/common';
 export class ProFreeComponent implements OnInit, OnDestroy {
   currentSlide = 0;
   slides = [
-    { id: 1, image: '/assets/images/femme-noire-heureuse-fleurs-studio-pour-bien-etre-dorloter-produit-nature-fond-marron-modele-fille-souriante-couronne-fleurs-cosmetiques-pour-beaute-zen-esthetique-maquette_590464-116273.avif', title: 'Créez votre portfolio', subtitle: 'Exposez vos plus belles réalisations' },
+    { id: 1, image: '/assets/images/femme noir.avif', title: 'Créez votre portfolio', subtitle: 'Exposez vos plus belles réalisations' },
     { id: 2, image: '/assets/images/pexels-rdne-7755238.jpg', title: 'Gagnez en visibilité', subtitle: 'Apparaissez dans les recherches locales' },
     { id: 3, image: '/assets/images/pexels-barik5ive-3355696-5282408.jpg', title: 'Recevez des demandes', subtitle: 'Clients et salons vous contactent directement' },
     { id: 4, image: '/assets/images/photo-1522335789203-aabd1fc54bc9.avif', title: 'Développez votre clientèle', subtitle: 'Attirez plus de clients grâce à votre expertise' },

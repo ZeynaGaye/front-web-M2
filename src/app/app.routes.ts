@@ -13,6 +13,9 @@ import { OffresManagerComponent } from './employeur/components/offres-manager/of
 import { SalonDetailsComponent } from './shared/components/salon-details/salon-details.component';
 import { OpportunitesEmploiComponent } from './freelance/components/opportunites-emploi/opportunites-emploi.component';
 import { PortfolioComponent } from './freelance/components/portfolio/portfolio.component';
+import { JobOfferComponent } from './shared/components/job-offer/job-offer.component';
+import { SalonRegistrationComponent } from './shared/components/salon-registration/salon-registration.component';
+import path from 'path';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/accueil', pathMatch: 'full' },
@@ -26,6 +29,8 @@ export const routes: Routes = [
   {path: 'freelance/portfolio',component: PortfolioComponent},
   {path:'shared/salonDetails/:id',component:SalonDetailsComponent},
   {path:'freelance/opportunites-emploi',component:OpportunitesEmploiComponent},
+  { path: 'salon-registration', component:SalonRegistrationComponent },
+  {path:'job-offer',component:JobOfferComponent},
 
 
   {

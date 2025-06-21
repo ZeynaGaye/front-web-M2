@@ -1,12 +1,16 @@
 <google-map
   [center]="center"
   [zoom]="zoom"
+  [options]="mapOptions"
   (mapInitialized)="onMapInitialized($event)"
+  height="400px"
+  width="100%"
 >
   @for (marker of markers; track $index) {
     <map-marker
-      [position]="marker"
-      (mapClick)="openInfoWindow(infoWindows[$index], marker)"
+      [position]="marker.position"
+      [title]="marker.title"
+      (mapClick)="openInfoWindow($index)"
     ></map-marker>
   }
 </google-map>

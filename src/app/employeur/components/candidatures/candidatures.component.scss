@@ -1,33 +1,933 @@
+// Variables (utiliser les mêmes que votre fichier principal)
+$primary-color: #F5A393;
+$secondary-color: #A4B1BD;
+$primary-dark: darken($primary-color, 10%);
+$secondary-dark: darken($secondary-color, 10%);
+$white: #ffffff;
+$text-primary: #333333;
+$text-secondary: #777777;
+$border-color: #e0e0e0;
+$background-color: #f8f9fa;
+$success-color: #4caf50;
+$warning-color: #ff9800;
+$danger-color: #f44336;
+$neutral-color: #9e9e9e;
+$card-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
 .candidatures-container {
-    padding: 2rem;
-    max-width: 1200px;
-    margin: 0 auto;
+  background-color: $background-color;
+  min-height: calc(100vh - 70px);
+  padding: 20px;
+
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba($border-color, 0.5);
+    
+    .header-content {
+      h2 {
+        font-size: 24px;
+        font-weight: 500;
+        margin-bottom: 5px;
+        color: $text-primary;
+        display: flex;
+        align-items: center;
+        
+        i {
+          margin-right: 10px;
+          color: $primary-color;
+        }
+      }
+      
+      p {
+        color: $text-secondary;
+        font-size: 14px;
+        margin: 0;
+      }
+    }
   }
-  
-  h2 {
+
+  .content-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    
+    .search-filter {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+      
+      .search-input {
+        position: relative;
+        
+        i {
+          position: absolute;
+          left: 12px;
+          top: 50%;
+          transform: translateY(-50%);
+          color: $text-secondary;
+        }
+        
+        input {
+          padding: 10px 10px 10px 35px;
+          border: 1px solid $border-color;
+          border-radius: 20px;
+          font-size: 14px;
+          width: 250px;
+          transition: all 0.2s;
+          
+          &:focus {
+            outline: none;
+            border-color: $primary-color;
+            box-shadow: 0 0 0 3px rgba($primary-color, 0.1);
+          }
+        }
+      }
+      
+      .filters {
+        display: flex;
+        gap: 10px;
+        
+        .filter-select {
+          padding: 8px 12px;
+          border: 1px solid $border-color;
+          border-radius: 20px;
+          font-size: 14px;
+          background-color: $white;
+          transition: all 0.2s;
+          
+          &:focus {
+            outline: none;
+            border-color: $primary-color;
+          }
+        }
+      }
+    }
+  }
+
+  .offers-with-candidatures {
+    .offers-list {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+
+      .offer-candidatures-card {
+        background-color: $white;
+        border-radius: 8px;
+        box-shadow: $card-shadow;
+        overflow: hidden;
+        border: 1px solid rgba($border-color, 0.5);
+
+        .offer-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 20px;
+          cursor: pointer;
+          transition: background-color 0.2s;
+          border-bottom: 1px solid rgba($border-color, 0.3);
+
+          &:hover {
+            background-color: rgba($primary-color, 0.02);
+          }
+
+          .offer-info {
+            display: flex;
+            align-items: center;
+            flex: 1;
+
+            .offer-icon {
+              width: 50px;
+              height: 50px;
+              border-radius: 10px;
+              background-color: rgba($primary-color, 0.1);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              margin-right: 15px;
+              flex-shrink: 0;
+
+              i {
+                font-size: 20px;
+                color: $primary-color;
+              }
+            }
+
+            .offer-details {
+              flex: 1;
+
+              h3 {
+                font-size: 18px;
+                font-weight: 500;
+                margin: 0 0 5px 0;
+                color: $text-primary;
+              }
+
+              p {
+                font-size: 14px;
+                color: $text-secondary;
+                margin: 0 0 5px 0;
+                display: flex;
+                align-items: center;
+
+                i {
+                  margin-right: 5px;
+                  color: $primary-color;
+                }
+              }
+
+              .offer-date {
+                font-size: 12px;
+                color: $text-secondary;
+              }
+            }
+          }
+
+          .offer-stats {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+
+            .candidatures-count {
+              text-align: center;
+
+              .count {
+                display: block;
+                font-size: 24px;
+                font-weight: 600;
+                color: $primary-color;
+                line-height: 1;
+              }
+
+              .label {
+                font-size: 12px;
+                color: $text-secondary;
+              }
+            }
+
+            .expand-icon {
+              i {
+                font-size: 16px;
+                color: $text-secondary;
+                transition: transform 0.2s;
+              }
+            }
+          }
+        }
+
+        .candidatures-list {
+          background-color: rgba($background-color, 0.5);
+
+          .candidatures-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba($border-color, 0.3);
+
+            h4 {
+              font-size: 16px;
+              font-weight: 500;
+              margin: 0;
+              color: $text-primary;
+            }
+
+            .candidatures-actions {
+              display: flex;
+              gap: 10px;
+
+              .filter-button {
+                padding: 6px 12px;
+                border: 1px solid $border-color;
+                border-radius: 15px;
+                background-color: $white;
+                color: $text-secondary;
+                font-size: 12px;
+                cursor: pointer;
+                transition: all 0.2s;
+
+                &:hover {
+                  background-color: rgba($primary-color, 0.05);
+                }
+
+                &.active {
+                  background-color: $primary-color;
+                  color: $white;
+                  border-color: $primary-color;
+                }
+              }
+            }
+          }
+
+          .candidatures-table {
+            padding: 0 20px 20px;
+
+            .mat-mdc-table {
+              background-color: $white;
+              border-radius: 8px;
+              overflow: hidden;
+              box-shadow: none;
+              border: 1px solid rgba($border-color, 0.3);
+
+              .mat-mdc-header-row {
+                background-color: rgba($primary-color, 0.05);
+                
+                .mat-mdc-header-cell {
+                  font-weight: 600;
+                  color: $text-primary;
+                  border-bottom: 1px solid $border-color;
+                  padding: 12px 16px;
+                }
+              }
+
+              .candidature-row {
+                transition: background-color 0.2s;
+
+                &:hover {
+                  background-color: rgba($primary-color, 0.02);
+                }
+
+                .mat-mdc-cell {
+                  padding: 12px 16px;
+                  border-bottom: 1px solid rgba($border-color, 0.3);
+
+                  &:last-child {
+                    border-bottom: none;
+                  }
+                }
+              }
+            }
+
+            .candidat-info {
+              display: flex;
+              align-items: center;
+
+              .candidat-avatar {
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                overflow: hidden;
+                margin-right: 12px;
+                flex-shrink: 0;
+                border: 2px solid $white;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+                img {
+                  width: 100%;
+                  height: 100%;
+                  object-fit: cover;
+                }
+              }
+
+              .candidat-details {
+                .candidat-name {
+                  display: block;
+                  font-weight: 500;
+                  color: $text-primary;
+                  margin-bottom: 2px;
+                }
+
+                .candidat-date {
+                  font-size: 12px;
+                  color: $text-secondary;
+                }
+              }
+            }
+
+            .tarif-badge {
+              background-color: rgba($primary-color, 0.1);
+              color: $primary-color;
+              padding: 4px 8px;
+              border-radius: 12px;
+              font-size: 12px;
+              font-weight: 500;
+            }
+
+            .no-tarif {
+              color: $text-secondary;
+              font-style: italic;
+              font-size: 13px;
+            }
+
+            .disponibilite-badge {
+              background-color: rgba($secondary-color, 0.1);
+              color: $secondary-dark;
+              padding: 4px 8px;
+              border-radius: 12px;
+              font-size: 12px;
+              font-weight: 500;
+            }
+
+            .no-disponibilite {
+              color: $text-secondary;
+              font-style: italic;
+              font-size: 13px;
+            }
+
+            .status-dropdown {
+              position: relative;
+
+              .status-badge {
+                display: flex;
+                align-items: center;
+                padding: 6px 12px;
+                border-radius: 15px;
+                font-size: 12px;
+                font-weight: 500;
+                border: none;
+                cursor: pointer;
+                transition: all 0.2s;
+
+                i {
+                  margin-left: 5px;
+                  font-size: 10px;
+                }
+
+                &.status-nouveau {
+                  background-color: rgba($primary-color, 0.1);
+                  color: $primary-color;
+                }
+
+                &.status-contacté {
+                  background-color: rgba($secondary-color, 0.1);
+                  color: $secondary-dark;
+                }
+
+                &.status-entretien {
+                  background-color: rgba($success-color, 0.1);
+                  color: $success-color;
+                }
+
+                &.status-embauché {
+                  background-color: rgba(#673ab7, 0.1);
+                  color: #673ab7;
+                }
+
+                &.status-refusé {
+                  background-color: rgba($danger-color, 0.1);
+                  color: $danger-color;
+                }
+
+                &:hover {
+                  opacity: 0.8;
+                }
+              }
+
+              .dropdown-menu {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                min-width: 140px;
+                background-color: $white;
+                border-radius: 6px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                z-index: 100;
+                overflow: hidden;
+                display: none;
+
+                a {
+                  display: block;
+                  padding: 8px 12px;
+                  color: $text-primary;
+                  text-decoration: none;
+                  font-size: 13px;
+                  transition: background-color 0.2s;
+
+                  &:hover {
+                    background-color: rgba($primary-color, 0.05);
+                  }
+                }
+              }
+
+              &:hover .dropdown-menu {
+                display: block;
+              }
+            }
+
+            .actions-buttons {
+              display: flex;
+              gap: 5px;
+
+              .action-btn {
+                width: 36px;
+                height: 36px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.2s;
+
+                .mat-icon {
+                  font-size: 18px;
+                  width: 18px;
+                  height: 18px;
+                }
+
+                &.view-btn {
+                  color: $secondary-color;
+                  
+                  &:hover {
+                    background-color: rgba($secondary-color, 0.1);
+                  }
+                }
+
+                &.contact-btn {
+                  color: $primary-color;
+                  
+                  &:hover {
+                    background-color: rgba($primary-color, 0.1);
+                  }
+                }
+
+                &.accept-btn {
+                  color: $success-color;
+                  
+                  &:hover {
+                    background-color: rgba($success-color, 0.1);
+                  }
+                }
+
+                &.reject-btn {
+                  color: $danger-color;
+                  
+                  &:hover {
+                    background-color: rgba($danger-color, 0.1);
+                  }
+                }
+              }
+            }
+
+            .no-candidatures {
+              text-align: center;
+              padding: 40px 20px;
+              color: $text-secondary;
+
+              i {
+                font-size: 32px;
+                margin-bottom: 10px;
+                color: $neutral-color;
+              }
+
+              p {
+                margin: 0;
+                font-style: italic;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // États de chargement et d'erreur
+  .loading-state-full {
     text-align: center;
-    font-size: 1.875rem;
-    font-weight: 600;
-    margin-bottom: 2rem;
-    color: #1a1a1a;
+    padding: 60px 20px;
+    background-color: $white;
+    border-radius: 8px;
+    box-shadow: $card-shadow;
+    
+    .spinner {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background-color: rgba($primary-color, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      
+      i {
+        font-size: 36px;
+        color: $primary-color;
+      }
+    }
+    
+    h3 {
+      font-size: 20px;
+      font-weight: 500;
+      margin-bottom: 10px;
+      color: $text-primary;
+    }
+  }
+
+  .error-state-full {
+    text-align: center;
+    padding: 60px 20px;
+    background-color: $white;
+    border-radius: 8px;
+    box-shadow: $card-shadow;
+    
+    .error-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background-color: rgba($danger-color, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      
+      i {
+        font-size: 36px;
+        color: $danger-color;
+      }
+    }
+    
+    h3 {
+      font-size: 20px;
+      font-weight: 500;
+      margin-bottom: 10px;
+      color: $text-primary;
+    }
+    
+    p {
+      color: $text-secondary;
+      margin-bottom: 20px;
+    }
+
+    .primary-button-large {
+      background-color: $primary-color;
+      color: $white;
+      border: none;
+      border-radius: 25px;
+      padding: 12px 20px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      
+      &:hover {
+        background-color: $primary-dark;
+      }
+    }
+  }
+
+  .empty-state-full {
+    text-align: center;
+    padding: 60px 20px;
+    background-color: $white;
+    border-radius: 8px;
+    box-shadow: $card-shadow;
+    
+    .empty-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background-color: rgba($primary-color, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      
+      i {
+        font-size: 36px;
+        color: $primary-color;
+      }
+    }
+    
+    h3 {
+      font-size: 20px;
+      font-weight: 500;
+      margin-bottom: 10px;
+      color: $text-primary;
+    }
+    
+    p {
+      color: $text-secondary;
+      margin-bottom: 20px;
+    }
+  }
+}
+
+// Modal de détails
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.candidature-details-modal {
+  width: 90%;
+  max-width: 700px;
+  max-height: 90vh;
+  background-color: $white;
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid $border-color;
+    
+    h2 {
+      font-size: 18px;
+      font-weight: 500;
+      margin: 0;
+    }
+    
+    .close-button {
+      background: none;
+      border: none;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: $text-secondary;
+      cursor: pointer;
+      
+      &:hover {
+        background-color: $background-color;
+      }
+    }
   }
   
-  table {
-    width: 100%;
-    margin-top: 1rem;
+  .modal-content {
+    padding: 0;
+    overflow-y: auto;
+    flex: 1;
+    
+    .candidat-profile {
+      .profile-header {
+        display: flex;
+        align-items: center;
+        padding: 20px;
+        background-color: rgba($primary-color, 0.05);
+        
+        .profile-avatar {
+          width: 80px;
+          height: 80px;
+          border-radius: 50%;
+          overflow: hidden;
+          margin-right: 20px;
+          border: 3px solid $white;
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+          
+          img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
+        }
+        
+        .profile-info {
+          flex: 1;
+          
+          h3 {
+            font-size: 22px;
+            font-weight: 500;
+            margin: 0 0 10px 0;
+            color: $text-primary;
+          }
+          
+          .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            
+            &.status-nouveau {
+              background-color: rgba($primary-color, 0.1);
+              color: $primary-color;
+            }
+            
+            &.status-contacté {
+              background-color: rgba($secondary-color, 0.1);
+              color: $secondary-dark;
+            }
+            
+            &.status-entretien {
+              background-color: rgba($success-color, 0.1);
+              color: $success-color;
+            }
+            
+            &.status-embauché {
+              background-color: rgba(#673ab7, 0.1);
+              color: #673ab7;
+            }
+            
+            &.status-refusé {
+              background-color: rgba($danger-color, 0.1);
+              color: $danger-color;
+            }
+          }
+        }
+      }
+      
+      .profile-details {
+        padding: 0 20px 20px;
+        
+        .detail-section {
+          margin: 20px 0;
+          
+          h4 {
+            font-size: 16px;
+            font-weight: 500;
+            margin: 0 0 15px 0;
+            color: $text-primary;
+            display: flex;
+            align-items: center;
+            
+            &::after {
+              content: '';
+              flex: 1;
+              height: 1px;
+              background-color: $border-color;
+              margin-left: 15px;
+            }
+          }
+          
+          .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            
+            .detail-item {
+              display: flex;
+              flex-direction: column;
+              
+              .label {
+                font-size: 13px;
+                color: $text-secondary;
+                margin-bottom: 5px;
+                display: flex;
+                align-items: center;
+                
+                i {
+                  margin-right: 8px;
+                  color: $primary-color;
+                }
+              }
+              
+              .value {
+                font-size: 15px;
+                color: $text-primary;
+                font-weight: 500;
+              }
+            }
+          }
+          
+          .message-content {
+            background-color: $background-color;
+            padding: 15px;
+            border-radius: 8px;
+            
+            p {
+              margin: 0;
+              line-height: 1.6;
+              color: $text-primary;
+            }
+          }
+        }
+      }
+    }
   }
   
-  .mat-header-cell,
-  .mat-cell {
-    padding: 1rem;
-    text-align: left;
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 20px;
+    border-top: 1px solid $border-color;
+    background-color: rgba($background-color, 0.5);
+    
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      
+      .secondary-button {
+        padding: 8px 15px;
+        border-radius: 5px;
+        border: 1px solid $border-color;
+        background-color: $white;
+        color: $text-primary;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s;
+        
+        &:hover {
+          background-color: $background-color;
+        }
+      }
+      
+      .primary-button {
+        padding: 8px 15px;
+        border-radius: 5px;
+        border: none;
+        background-color: $primary-color;
+        color: $white;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        
+        .mat-icon {
+          margin-right: 8px;
+        }
+        
+        &:hover {
+          background-color: $primary-dark;
+        }
+      }
+    }
   }
-  
-  .mat-header-cell {
-    font-weight: bold;
-    background-color: #f5f5f5;
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .candidatures-container {
+    padding: 15px;
+
+    .content-toolbar {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 15px;
+
+      .search-filter {
+        .search-input input {
+          width: 100%;
+        }
+      }
+    }
+
+    .offers-with-candidatures .offers-list .offer-candidatures-card {
+      .offer-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+
+        .offer-stats {
+          align-self: flex-end;
+        }
+      }
+
+      .candidatures-list .candidatures-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+    }
+
+    .candidatures-table {
+      overflow-x: auto;
+    }
   }
-  
-  button.mat-icon-button {
-    margin: 0 4px;
-  }
+}

@@ -1,8 +1,9 @@
 import { isPlatformBrowser } from '@angular/common';
-import { Component, Inject, OnDestroy, OnInit, PLATFORM_ID, CUSTOM_ELEMENTS_SCHEMA, AfterViewInit, Input } from '@angular/core';
+import { Component, Inject, OnDestroy, OnInit, PLATFORM_ID, CUSTOM_ELEMENTS_SCHEMA, AfterViewInit, Input, HostListener } from '@angular/core';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { trigger, transition, style, animate, state, query, stagger } from '@angular/animations';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -17,10 +18,8 @@ import { AddPortfolioItemComponent } from '../add-portfolio-item/add-portfolio-i
 import { EditPortfolioItemDialogComponent } from '../edit-portfolio-item-dialog/edit-portfolio-item-dialog.component';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { register } from 'swiper/element/bundle';
-import { finalize } from 'rxjs/operators';
 import { Freelance, PortfolioItem } from '../../../models/PortfolioItem';
 import { PortfolioAuthManagerService } from '../../services/portfolio-auth-manager-service.service';
-
 
 // Enregistrer Swiper comme élément personnalisé
 register();
@@ -39,7 +38,8 @@ register();
     MatSnackBarModule,
     MatDialogModule,
     MatChipsModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    ReactiveFormsModule
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   animations: [
@@ -52,15 +52,28 @@ register();
           ])
         ], { optional: true })
       ])
+    ]),
+    trigger('modalAnimation', [
+      state('closed', style({ 
+        opacity: 0,
+        transform: 'scale(0.9)',
+        visibility: 'hidden'
+      })),
+      state('open', style({ 
+        opacity: 1,
+        transform: 'scale(1)',
+        visibility: 'visible'
+      })),
+      transition('closed <=> open', animate('300ms cubic-bezier(0.4, 0.0, 0.2, 1)'))
     ])
   ]
 })
 export class PortfolioComponent implements OnInit, OnDestroy, AfterViewInit {
-  // Paramètre d'entrée pour forcer le mode "client" (pour la section client)
+  // Paramètres d'entrée existants
   @Input() clientMode: boolean = false;
   @Input() freelanceId: number | null = null;
   
-  // Variables pour le portfolio
+  // Variables existantes pour le portfolio
   swiperInstances: { [key: number]: any } = {};
   userLikes: Set<number> = new Set<number>();
   portfolioItems: PortfolioItem[] = [];
@@ -69,9 +82,16 @@ export class PortfolioComponent implements OnInit, OnDestroy, AfterViewInit {
   isImageLoading = true;
   activeFilter: string = 'all';
   autoplayStatus: { [key: number]: boolean } = {};
-  
-  // Freelance complet avec toutes les informations
   freelanceInfo: Freelance | null = null;
+  
+  // ✅ NOUVEAU : État de chargement séparé pour les infos freelance
+  freelanceInfoLoading: boolean = false;
+  
+  // Propriétés pour le contact
+  showContactModal: boolean = false;
+  selectedFreelanceForContact: Freelance | null = null;
+  contactForm: FormGroup;
+  isSubmittingContact: boolean = false;
   
   // Statistiques
   stats: any = {
@@ -115,10 +135,21 @@ export class PortfolioComponent implements OnInit, OnDestroy, AfterViewInit {
     private router: Router,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
+    private fb: FormBuilder,
     public authManager: PortfolioAuthManagerService,
     @Inject(PLATFORM_ID) platformId: Object
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
+    
+    // Initialisation du formulaire de contact
+    this.contactForm = this.fb.group({
+      name: ['', [Validators.required, Validators.minLength(2)]],
+      email: ['', [Validators.required, Validators.email]],
+      subject: ['', [Validators.required, Validators.minLength(5)]],
+      message: ['', [Validators.required, Validators.minLength(10)]],
+      freelanceId: [''],
+      portfolioContext: ['']
+    });
   }
 
   ngOnInit(): void {
@@ -128,19 +159,13 @@ export class PortfolioComponent implements OnInit, OnDestroy, AfterViewInit {
       this.freelanceId = idParam && idParam !== '0' ? +idParam : null;
     }
     
-    // Pour le débogage
-    console.log('Mode client:', this.clientMode);
-    console.log('Freelance ID:', this.freelanceId);
-    console.log('User authentifié:', this.authManager.isAuthenticated());
+    console.log('🚀 Portfolio ngOnInit - Mode client:', this.clientMode, 'Freelance ID:', this.freelanceId);
     
     this.loadUserLikes();
-    this.loadPortfolio();
     this.loadStats();
     
-    // Si nous avons un ID de freelance, charger ses informations complètes
-    if (this.freelanceId) {
-      this.loadFreelanceInfo(this.freelanceId);
-    }
+    // ✅ NOUVEAU : Chargement simultané du portfolio ET des infos freelance
+    this.loadPortfolioAndFreelanceInfo();
   }
 
   ngAfterViewInit(): void {
@@ -151,41 +176,327 @@ export class PortfolioComponent implements OnInit, OnDestroy, AfterViewInit {
     }, 100);
   }
 
-  // Méthode pour charger les informations complètes du freelance
-  loadFreelanceInfo(freelanceId: number): void {
-    this.freelanceService.getFreelanceById(freelanceId).subscribe({
-      next: (freelance) => {
-        this.freelanceInfo = freelance;
-        console.log('Informations du freelance chargées:', this.freelanceInfo);
+  // ==========================================
+  // 🔧 NOUVELLE MÉTHODE DE CHARGEMENT OPTIMISÉE
+  // ==========================================
+
+  /**
+   * ✅ NOUVELLE : Charge le portfolio ET les infos freelance simultanément
+   */
+  loadPortfolioAndFreelanceInfo(): void {
+    this.loading = true;
+    this.freelanceInfoLoading = true;
+    this.error = false;
+    
+    console.log('🔄 Début du chargement portfolio + freelance info');
+    
+    // Déterminer l'observable du portfolio selon le mode
+    const portfolioObservable = this.freelanceId !== null 
+      ? this.portfolioService.getFreelancePortfolio(this.freelanceId)
+      : this.portfolioService.getCurrentUserPortfolio();
+    
+    // Charger le portfolio en premier
+    portfolioObservable.subscribe({
+      next: (items) => {
+        console.log('✅ Portfolio chargé:', items.length, 'éléments');
         
-        // Mettre à jour les informations du freelance dans tous les éléments du portfolio
-        this.portfolioItems = this.portfolioItems.map(item => ({
+        // Traiter les éléments du portfolio
+        this.portfolioItems = items.map(item => ({
           ...item,
-          freelance: this.freelanceInfo || item.freelance
+          isExpanded: false,
+          images: item.images?.map(img => ({
+            ...img,
+            url: this.portfolioService.getImageUrl(img.url)
+          })) || [],
+          isOwner: !this.clientMode && this.authManager.isOwnerOfPortfolio(item.freelanceId)
         }));
+        
+        this.loading = false;
+        
+        // ✅ CRUCIAL : Déterminer l'ID du freelance à charger
+        let freelanceIdToLoad: number | null = null;
+        
+        if (this.freelanceId) {
+          // Cas 1: ID fourni en paramètre (mode client avec URL)
+          freelanceIdToLoad = this.freelanceId;
+          console.log('📋 ID freelance depuis paramètre:', freelanceIdToLoad);
+        } else if (this.portfolioItems.length > 0 && this.portfolioItems[0].freelanceId) {
+          // Cas 2: ID depuis le premier élément du portfolio (mode propriétaire)
+          freelanceIdToLoad = this.portfolioItems[0].freelanceId;
+          console.log('📋 ID freelance depuis premier élément portfolio:', freelanceIdToLoad);
+        }
+        
+        // Charger les infos du freelance si on a un ID
+        if (freelanceIdToLoad) {
+          this.loadFreelanceInfoById(freelanceIdToLoad);
+        } else {
+          console.warn('⚠️ Aucun ID freelance trouvé');
+          this.freelanceInfoLoading = false;
+        }
+        
+        // Initialiser les swipers après le chargement
+        setTimeout(() => this.initSwipers(), 100);
       },
       error: (error) => {
-        console.error('Erreur lors du chargement des informations du freelance:', error);
-        // On ne définit pas error = true ici pour ne pas bloquer l'affichage du portfolio
+        console.error('❌ Erreur chargement portfolio:', error);
+        this.loading = false;
+        this.freelanceInfoLoading = false;
+        this.error = true;
       }
     });
   }
 
-  // Initialiser tous les Swipers
+  /**
+   * ✅ AMÉLIORÉE : Charge les infos du freelance par ID
+   */
+  loadFreelanceInfoById(freelanceId: number): void {
+    console.log('🔄 Chargement infos freelance ID:', freelanceId);
+    
+    this.freelanceService.getFreelanceById(freelanceId).subscribe({
+      next: (freelance) => {
+        console.log('✅ Infos freelance chargées:', {
+          id: freelance.id,
+          nom: `${freelance.prenom} ${freelance.nom}`,
+          profession: freelance.profession
+        });
+        
+        this.freelanceInfo = freelance;
+        this.freelanceInfoLoading = false;
+        
+        // Mettre à jour tous les éléments du portfolio avec ces infos
+        this.portfolioItems = this.portfolioItems.map(item => ({
+          ...item,
+          freelance: freelance
+        }));
+        
+        console.log('🔄 Portfolio items mis à jour avec infos freelance');
+      },
+      error: (error) => {
+        console.error('❌ Erreur chargement infos freelance:', error);
+        this.freelanceInfoLoading = false;
+        
+        // Fallback: essayer d'utiliser les infos depuis le portfolio
+        if (this.portfolioItems.length > 0 && this.portfolioItems[0].freelance) {
+          console.log('📋 Utilisation fallback depuis premier élément portfolio');
+          this.freelanceInfo = this.portfolioItems[0].freelance;
+        }
+      }
+    });
+  }
+
+  // ==========================================
+  // 🔧 MÉTHODES POUR RÉCUPÉRER LES INFOS DU PROPRIÉTAIRE
+  // ==========================================
+
+  /**
+   * ✅ AMÉLIORÉE : Récupère le nom d'affichage avec fallback intelligent
+   */
+  getOwnerDisplayName(): string | null {
+    // 1. Source principale : freelanceInfo chargé séparément
+    if (this.freelanceInfo?.prenom && this.freelanceInfo?.nom) {
+      return `${this.freelanceInfo.prenom} ${this.freelanceInfo.nom}`;
+    }
+
+    // 2. Fallback : Premier élément du portfolio
+    if (this.portfolioItems.length > 0 && this.portfolioItems[0].freelance) {
+      const freelance = this.portfolioItems[0].freelance;
+      if (freelance.prenom && freelance.nom) {
+        return `${freelance.prenom} ${freelance.nom}`;
+      }
+    }
+
+    // 3. Fallback partiel : prénom seulement
+    if (this.freelanceInfo?.prenom) {
+      return this.freelanceInfo.prenom;
+    }
+
+    // 4. Fallback partiel depuis portfolio
+    if (this.portfolioItems.length > 0 && this.portfolioItems[0].freelance?.prenom) {
+      return this.portfolioItems[0].freelance.prenom;
+    }
+
+    // 5. Aucune info disponible
+    return null;
+  }
+
+  /**
+   * ✅ AMÉLIORÉE : Récupère l'objet freelance complet
+   */
+  getOwnerInfo(): Freelance | null {
+    // 1. Source principale
+    if (this.freelanceInfo) {
+      return this.freelanceInfo;
+    }
+
+    // 2. Fallback depuis portfolio
+    if (this.portfolioItems.length > 0 && this.portfolioItems[0].freelance) {
+      return this.portfolioItems[0].freelance;
+    }
+
+    return null;
+  }
+
+  /**
+   * ✅ NOUVELLE : Vérifie si on est en cours de chargement
+   */
+  isLoadingOwnerInfo(): boolean {
+    return this.freelanceInfoLoading || this.loading;
+  }
+
+  // ==========================================
+  // MÉTHODES POUR LE FORMULAIRE DE CONTACT (INCHANGÉES)
+  // ==========================================
+
+  contactFreelance(freelance: Freelance, event: Event): void {
+    if (!freelance) {
+      console.warn('⚠️ Tentative de contact avec freelance null');
+      return;
+    }
+    
+    event.stopPropagation();
+    event.preventDefault();
+    
+    console.log('🎯 Ouverture contact modal depuis Portfolio pour:', freelance.prenom, freelance.nom);
+    
+    this.selectedFreelanceForContact = freelance;
+    
+    let contextMessage = '';
+    if (this.clientMode) {
+      contextMessage = `Bonjour ${freelance.prenom},
+
+J'ai consulté votre magnifique portfolio et je suis très intéressé(e) par vos créations.
+
+Pourriez-vous me contacter pour discuter d'une collaboration ?
+
+Cordialement.`;
+    } else {
+      contextMessage = `Bonjour ${freelance.prenom},
+
+Je vous contacte après avoir vu votre travail. Vos réalisations sont impressionnantes !
+
+J'aimerais en savoir plus sur vos services.
+
+Cordialement.`;
+    }
+    
+    this.contactForm.patchValue({
+      subject: `Demande après consultation de votre portfolio - ${freelance.prenom} ${freelance.nom}`,
+      freelanceId: freelance.id,
+      portfolioContext: 'portfolio_contact',
+      name: '',
+      email: '',
+      message: contextMessage
+    });
+    
+    this.showContactModal = true;
+    
+    if (this.isBrowser) {
+      document.body.style.overflow = 'hidden';
+    }
+  }
+
+  closeContactModal(): void {
+    console.log('❌ Fermeture contact modal depuis Portfolio');
+    
+    this.showContactModal = false;
+    this.selectedFreelanceForContact = null;
+    this.contactForm.reset();
+    
+    if (this.isBrowser) {
+      document.body.style.overflow = 'auto';
+    }
+  }
+
+  onSubmitContact(): void {
+    if (this.contactForm.invalid) {
+      console.log('❌ Formulaire invalide depuis Portfolio');
+      
+      Object.keys(this.contactForm.controls).forEach(key => {
+        this.contactForm.get(key)?.markAsTouched();
+      });
+      return;
+    }
+
+    this.isSubmittingContact = true;
+    const formData = this.contactForm.value;
+
+    console.log('📤 Envoi du message de contact depuis Portfolio:', {
+      freelance: this.selectedFreelanceForContact?.prenom,
+      data: formData,
+      context: 'portfolio'
+    });
+
+    // Simulation d'envoi
+    setTimeout(() => {
+      this.isSubmittingContact = false;
+      
+      this.snackBar.open(
+        `Message envoyé à ${this.selectedFreelanceForContact?.prenom} avec succès !`, 
+        'Fermer', 
+        {
+          duration: 5000,
+          panelClass: 'success-snackbar'
+        }
+      );
+      
+      this.closeContactModal();
+      
+    }, 2000);
+  }
+
+  hasFieldError(fieldName: string): boolean {
+    const field = this.contactForm.get(fieldName);
+    return !!(field && field.invalid && field.touched);
+  }
+
+  getFieldError(fieldName: string): string {
+    const field = this.contactForm.get(fieldName);
+    if (!field || !field.errors) return '';
+
+    if (field.errors['required']) {
+      return `${this.getFieldLabel(fieldName)} est requis.`;
+    }
+    if (field.errors['email']) {
+      return 'Veuillez entrer une adresse e-mail valide.';
+    }
+    if (field.errors['minlength']) {
+      const requiredLength = field.errors['minlength'].requiredLength;
+      return `${this.getFieldLabel(fieldName)} doit contenir au moins ${requiredLength} caractères.`;
+    }
+    
+    return 'Ce champ contient une erreur.';
+  }
+
+  private getFieldLabel(fieldName: string): string {
+    const labels: { [key: string]: string } = {
+      name: 'Le nom',
+      email: 'L\'e-mail',
+      subject: 'Le sujet',
+      message: 'Le message'
+    };
+    return labels[fieldName] || 'Ce champ';
+  }
+
+  @HostListener('document:keydown.escape', ['$event'])
+  onEscapeKey(event: KeyboardEvent): void {
+    if (this.showContactModal) {
+      this.closeContactModal();
+    }
+  }
+
+  // ==========================================
+  // MÉTHODES EXISTANTES (INCHANGÉES)
+  // ==========================================
+
   initSwipers(): void {
     const swiperElements = document.querySelectorAll('swiper-container');
     if (swiperElements.length > 0) {
       swiperElements.forEach((element: any) => {
         const itemId = element.getAttribute('data-item-id');
         if (itemId) {
-          // Configurer le swiper
           Object.assign(element, this.swiperConfig);
           element.initialize();
-          
-          // Stocker l'instance
           this.swiperInstances[parseInt(itemId)] = element;
-          
-          // Initialiser l'état autoplay
           this.autoplayStatus[parseInt(itemId)] = true;
         }
       });
@@ -193,60 +504,13 @@ export class PortfolioComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   loadPortfolio(): void {
-    this.loading = true;
-    this.error = false;
-    
-    const portfolioObservable = this.freelanceId !== null 
-      ? this.portfolioService.getFreelancePortfolio(this.freelanceId)
-      : this.portfolioService.getCurrentUserPortfolio();
-    
-    portfolioObservable
-      .pipe(finalize(() => this.loading = false))
-      .subscribe({
-        next: (items) => {
-          // Mapper les éléments et ajouter isExpanded et les URLs des images
-          this.portfolioItems = items.map(item => ({
-            ...item,
-            isExpanded: false,
-            images: item.images?.map(img => ({
-              ...img,
-              url: this.portfolioService.getImageUrl(img.url)
-            })) || [],
-            // Ajouter isOwner uniquement si on est en mode freelance
-            isOwner: !this.clientMode && this.authManager.isOwnerOfPortfolio(item.freelanceId)
-          }));
-          
-          console.log('Éléments de portfolio chargés:', this.portfolioItems);
-          console.log('isOwner défini sur:', this.portfolioItems.map(item => item.isOwner));
-          
-          // Si nous avons déjà les informations du freelance, les mettre à jour
-          if (this.freelanceInfo) {
-            this.portfolioItems = this.portfolioItems.map(item => ({
-              ...item,
-              freelance: this.freelanceInfo || item.freelance
-            }));
-          } 
-          // Si nous n'avons pas encore les infos du freelance mais que tous les éléments partagent le même freelanceId
-          else if (this.portfolioItems.length > 0 && !this.freelanceId) {
-            const firstItem = this.portfolioItems[0];
-            if (firstItem.freelanceId) {
-              this.loadFreelanceInfo(firstItem.freelanceId);
-            }
-          }
-          
-          // Initialiser les swipers après le chargement
-          setTimeout(() => this.initSwipers(), 100);
-        },
-        error: (error) => {
-          console.error('Error loading portfolio', error);
-          this.error = true;
-        }
-      });
+    // ✅ Cette méthode est maintenant remplacée par loadPortfolioAndFreelanceInfo()
+    // Gardée pour compatibilité avec les boutons "Réessayer"
+    this.loadPortfolioAndFreelanceInfo();
   }
   
   loadStats(): void {
     if (this.clientMode) {
-      // En mode client, nous ne chargeons pas les statistiques
       return;
     }
     
@@ -260,13 +524,11 @@ export class PortfolioComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  // Méthode pour vérifier si une description devrait être tronquée
   shouldShowMore(description: string | undefined): boolean {
     if (!description) return false;
-    return description.length > 100; // Limite de caractères avant troncature
+    return description.length > 100;
   }
   
-  // Méthode pour basculer l'état d'expansion d'une description
   toggleExpand(item: PortfolioItem): void {
     item.isExpanded = !item.isExpanded;
   }
@@ -303,7 +565,6 @@ export class PortfolioComponent implements OnInit, OnDestroy, AfterViewInit {
     event.stopPropagation();
     event.preventDefault();
     
-    // Si l'utilisateur n'est pas authentifié, afficher un message et rediriger
     if (!this.authManager.isAuthenticated()) {
       this.snackBar.open('Vous devez être connecté pour aimer cet élément', 'Se connecter', {
         duration: 5000
@@ -313,10 +574,8 @@ export class PortfolioComponent implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
     
-    // Vérifier si l'item est déjà liké par l'utilisateur
     const isLiked = this.userLikes.has(itemId);
     
-    // Appeler le service approprié selon l'état actuel
     const likeObservable = isLiked 
       ? this.portfolioService.unlikeItem(itemId)
       : this.portfolioService.likeItem(itemId);
@@ -331,7 +590,6 @@ export class PortfolioComponent implements OnInit, OnDestroy, AfterViewInit {
             freelance: this.portfolioItems[index].freelance
           };
           
-          // Mettre à jour les stats totales
           if (isLiked) {
             this.stats.totalLikes = Math.max(0, (this.stats.totalLikes || 0) - 1);
             this.userLikes.delete(itemId);
@@ -340,7 +598,6 @@ export class PortfolioComponent implements OnInit, OnDestroy, AfterViewInit {
             this.userLikes.add(itemId);
           }
           
-          // Animation pour le like
           const likeIcon = document.querySelector(`[data-item-id="${itemId}"] .liked-icon`);
           if (likeIcon) {
             likeIcon.classList.add('like-animation');
@@ -351,7 +608,6 @@ export class PortfolioComponent implements OnInit, OnDestroy, AfterViewInit {
         }
       },
       error: (error) => {
-        // Si l'erreur est 401 (Non authentifié)
         if (error.status === 401) {
           this.snackBar.open('Vous devez être connecté pour aimer cet élément', 'Se connecter', {
             duration: 5000
@@ -367,173 +623,143 @@ export class PortfolioComponent implements OnInit, OnDestroy, AfterViewInit {
       }
     });
   }
+
   isLikedByUser(itemId: number): boolean {
     return this.userLikes.has(itemId);
   }
-  // Charger les likes de l'utilisateur
-loadUserLikes(): void {
-  this.portfolioService.getUserLikes().subscribe({
-    next: (likedItemsIds) => {
-      // Réinitialiser les likes de l'utilisateur
-      this.userLikes.clear();
-      
-      // Ajouter les IDs des éléments likés par l'utilisateur
-      likedItemsIds.forEach(id => this.userLikes.add(id));
-    },
-    error: (error) => console.error('Error loading user likes', error)
-  });
-}
-openAddPortfolioDialog(): void {
-  // N'est accessible qu'en mode propriétaire
-  if (this.clientMode) {
-    return;
-  }
-  
-  const dialogRef = this.dialog.open(AddPortfolioItemComponent, {
-    width: '80%',
-    maxWidth: '600px',
-    disableClose: true
-  });
 
-  dialogRef.afterClosed().subscribe(result => {
-    if (result === 'success') {
-      this.loadPortfolio();
-      this.loadStats();
+  loadUserLikes(): void {
+    this.portfolioService.getUserLikes().subscribe({
+      next: (likedItemsIds) => {
+        this.userLikes.clear();
+        likedItemsIds.forEach(id => this.userLikes.add(id));
+      },
+      error: (error) => console.error('Error loading user likes', error)
+    });
+  }
+
+  openAddPortfolioDialog(): void {
+    if (this.clientMode) {
+      return;
     }
-  });
-}
+    
+    const dialogRef = this.dialog.open(AddPortfolioItemComponent, {
+      width: '80%',
+      maxWidth: '600px',
+      disableClose: true
+    });
 
-editItem(item: PortfolioItem): void {
-  // N'est accessible qu'en mode propriétaire
-  if (this.clientMode || !item.isOwner) {
-    return;
+    dialogRef.afterClosed().subscribe(result => {
+      if (result === 'success') {
+        this.loadPortfolio();
+        this.loadStats();
+      }
+    });
   }
-  
-  const dialogRef = this.dialog.open(EditPortfolioItemDialogComponent, {
-    width: '600px',
-    data: { item }
-  });
 
-  dialogRef.afterClosed().subscribe(result => {
-    if (result) {
-      this.loadPortfolio();
+  editItem(item: PortfolioItem): void {
+    if (this.clientMode || !item.isOwner) {
+      return;
     }
-  });
-}
+    
+    const dialogRef = this.dialog.open(EditPortfolioItemDialogComponent, {
+      width: '600px',
+      data: { item }
+    });
 
-deleteItem(item: PortfolioItem): void {
-  // N'est accessible qu'en mode propriétaire
-  if (this.clientMode || !item.isOwner) {
-    return;
-  }
-  
-  // Afficher un état de chargement avant d'ouvrir la boîte de dialogue
-  const itemIndex = this.portfolioItems.findIndex(i => i.id === item.id);
-  if (itemIndex !== -1) {
-    this.portfolioItems[itemIndex] = { ...this.portfolioItems[itemIndex], isDeleting: true };
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.loadPortfolio();
+      }
+    });
   }
 
-  const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-    width: '400px',
-    disableClose: true,
-    data: {
-      title: 'Confirmer la suppression',
-      message: `Êtes-vous sûr de vouloir supprimer "${item.titre}" ? Cette action est irréversible.`
+  deleteItem(item: PortfolioItem): void {
+    if (this.clientMode || !item.isOwner) {
+      return;
     }
-  });
-
-  dialogRef.afterClosed().subscribe(result => {
-    // Réinitialiser l'état de chargement
+    
+    const itemIndex = this.portfolioItems.findIndex(i => i.id === item.id);
     if (itemIndex !== -1) {
-      this.portfolioItems[itemIndex] = { ...this.portfolioItems[itemIndex], isDeleting: false };
+      this.portfolioItems[itemIndex] = { ...this.portfolioItems[itemIndex], isDeleting: true };
     }
 
-    if (result && item.id) {
-      // Ajouter un état de chargement pour la suppression
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      disableClose: true,
+      data: {
+        title: 'Confirmer la suppression',
+        message: `Êtes-vous sûr de vouloir supprimer "${item.titre}" ? Cette action est irréversible.`
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
       if (itemIndex !== -1) {
-        this.portfolioItems[itemIndex] = { ...this.portfolioItems[itemIndex], isDeleting: true };
+        this.portfolioItems[itemIndex] = { ...this.portfolioItems[itemIndex], isDeleting: false };
       }
 
-      this.portfolioService.deletePortfolioItem(item.id).subscribe({
-        next: () => {
-          // Suppression réussie - retirer l'élément de la liste
-          this.portfolioItems = this.portfolioItems.filter(i => i.id !== item.id);
-          
-          // Mettre à jour les statistiques
-          this.stats.totalItems = (this.stats.totalItems || 0) - 1;
-          this.stats.totalViews = (this.stats.totalViews || 0) - (item.nombreVues || 0);
-          this.stats.totalLikes = (this.stats.totalLikes || 0) - (item.nombreLikes || 0);
-          
-          // Afficher un message de succès
-          this.snackBar.open(`"${item.titre}" a été supprimé avec succès`, 'Fermer', {
-            duration: 3000,
-            panelClass: 'success-snackbar'
-          });
-        },
-        error: (err) => {
-          console.error('Erreur lors de la suppression:', err);
-          // Réinitialiser l'état de chargement en cas d'erreur
-          if (itemIndex !== -1) {
-            this.portfolioItems[itemIndex] = { ...this.portfolioItems[itemIndex], isDeleting: false };
-          }
-          // Afficher un message d'erreur
-          this.snackBar.open('Erreur lors de la suppression. Veuillez réessayer.', 'Fermer', {
-            duration: 4000,
-            panelClass: 'error-snackbar'
-          });
+      if (result && item.id) {
+        if (itemIndex !== -1) {
+          this.portfolioItems[itemIndex] = { ...this.portfolioItems[itemIndex], isDeleting: true };
         }
-      });
+
+        this.portfolioService.deletePortfolioItem(item.id).subscribe({
+          next: () => {
+            this.portfolioItems = this.portfolioItems.filter(i => i.id !== item.id);
+            
+            this.stats.totalItems = (this.stats.totalItems || 0) - 1;
+            this.stats.totalViews = (this.stats.totalViews || 0) - (item.nombreVues || 0);
+            this.stats.totalLikes = (this.stats.totalLikes || 0) - (item.nombreLikes || 0);
+            
+            this.snackBar.open(`"${item.titre}" a été supprimé avec succès`, 'Fermer', {
+              duration: 3000,
+              panelClass: 'success-snackbar'
+            });
+          },
+          error: (err) => {
+            console.error('Erreur lors de la suppression:', err);
+            if (itemIndex !== -1) {
+              this.portfolioItems[itemIndex] = { ...this.portfolioItems[itemIndex], isDeleting: false };
+            }
+            this.snackBar.open('Erreur lors de la suppression. Veuillez réessayer.', 'Fermer', {
+              duration: 4000,
+              panelClass: 'error-snackbar'
+            });
+          }
+        });
+      }
+    });
+  }
+
+  toggleAutoplay(itemId: number, event: Event): void {
+    event.stopPropagation();
+    event.preventDefault();
+    
+    const swiper = this.swiperInstances[itemId];
+    if (!swiper) return;
+    
+    if (this.autoplayStatus[itemId]) {
+      swiper.swiper.autoplay.stop();
+      this.autoplayStatus[itemId] = false;
+    } else {
+      swiper.swiper.autoplay.start();
+      this.autoplayStatus[itemId] = true;
     }
-  });
-}
-// Toggle autoplay pour Swiper
-toggleAutoplay(itemId: number, event: Event): void {
-  event.stopPropagation();
-  event.preventDefault();
-  
-  const swiper = this.swiperInstances[itemId];
-  if (!swiper) return;
-  
-  if (this.autoplayStatus[itemId]) {
-    swiper.swiper.autoplay.stop();
-    this.autoplayStatus[itemId] = false;
-  } else {
-    swiper.swiper.autoplay.start();
-    this.autoplayStatus[itemId] = true;
   }
-}
 
-onImageLoad(): void {
-  this.isImageLoading = false;
-}
+  onImageLoad(): void {
+    this.isImageLoading = false;
+  }
 
-onImageError(event: Event): void {
-  const imgElement = event.target as HTMLImageElement;
-  imgElement.src = 'assets/images/image-placeholder.jpg';
-  this.isImageLoading = false;
-}
-// Méthode pour contacter un freelance
-contactFreelance(freelance: Freelance, event: Event): void {
-  if (!freelance) return;
-  
-  event.stopPropagation();
-  
-  let message = `Contacter ${freelance.prenom} ${freelance.nom}`;
-  if (freelance.telephone) {
-    message += ` au ${freelance.telephone}`;
+  onImageError(event: Event): void {
+    const imgElement = event.target as HTMLImageElement;
+    imgElement.src = 'assets/images/image-placeholder.jpg';
+    this.isImageLoading = false;
   }
-  if (freelance.email) {
-    message += ` / ${freelance.email}`;
+
+  ngOnDestroy(): void {
+    if (this.isBrowser) {
+      document.body.style.overflow = 'auto';
+    }
   }
-  
-  this.snackBar.open(message, 'Fermer', {
-    duration: 5000
-  });
-  
-  // Rediriger vers une page de contact
-  // this.router.navigate(['/contact', freelance.id]);
-}
-ngOnDestroy(): void {
-  // Nettoyage des instances Swiper si nécessaire
-}
 }

@@ -1,171 +1,302 @@
 <div class="client-container">
-    <div class="client-header">
-      <h2 class="main-title">Pour les <span class="highlight">clients qui souhaitent des prestation a domicile</span></h2>
-      <p class="subtitle">Trouvez facilement des professionnels qualifiés pour tous vos besoins beauté sans vous déplacer</p>
-    </div>
-    
-    <div class="feature-cards">
-      <div class="feature-navigation">
-        <div *ngFor="let feature of features; let i = index" 
-             class="nav-item" 
-             [ngClass]="{'active': i === activeFeature}"
-             (click)="setActiveFeature(i)">
-          <i class="material-icons">{{ feature.icon }}</i>
-          <span>{{ feature.title }}</span>
-        </div>
-      </div>
-      
-      <div class="feature-display">
-        <div *ngFor="let feature of features; let i = index" 
-             class="feature-content" 
-             [@fadeInOut]
-             [ngClass]="{'active': i === activeFeature}">
-          <div class="feature-text">
-            <h3>{{ feature.title }}</h3>
-            <p>{{ feature.description }}</p>
-            
-            <!-- Bouton pour afficher les portfolios (uniquement pour la fonctionnalité "Explorez les portfolios") -->
-            <div *ngIf="feature.id === 2" class="feature-action">
-              <button class="toggle-btn feature-btn" (click)="toggleFreelancesSection()">
-                {{ showFreelancesSection ? 'Masquer les professionnels' : 'Découvrir nos professionnels' }}
-                <i class="material-icons">{{ showFreelancesSection ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}</i>
-              </button>
-            </div>
-          </div>
-          <div class="feature-image" [style.backgroundImage]="'url(' + feature.image + ')'">
-            <div class="image-overlay"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Liste des freelances avec toggle -->
-    <div class="freelance-list-section"   [class.hidden]="!showFreelancesSection">
-      <!-- <h3>Nos professionnels</h3>
-      <p class="subtitle">Découvrez les portfolios de nos experts beauté</p> -->
-      
-      <!-- Bouton pour afficher/masquer les freelances -->
-      <!-- <div class="toggle-freelances">
-        <button class="toggle-btn" (click)="toggleFreelancesSection()">
-          {{ showFreelancesSection ? 'Masquer les professionnels' : 'Découvrir nos professionnels' }}
-          <i class="material-icons">{{ showFreelancesSection ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}</i>
-        </button>
-      </div> -->
-      
-      <!-- Section conditionnelle des freelances -->
-      <div class="freelances-content" [@expandPanel]="showFreelancesSection ? 'expanded' : 'collapsed'">
-        <!-- Barre de recherche et filtres -->
-        <div class="search-filter-container" *ngIf="showFreelancesSection">
-          <div class="search-bar">
-            <i class="material-icons">search</i>
-            <input type="text" placeholder="Rechercher un professionnel..." [(ngModel)]="searchTerm" (input)="filterFreelances()">
-          </div>
-          
-          <div class="filter-chips">
-            <div class="filter-label">Filtrer par:</div>
-            <div class="chip" [class.active]="activeFilter === 'all'" (click)="setFilter('all')">Tous</div>
-            <div class="chip" [class.active]="activeFilter === 'coiffure'" (click)="setFilter('coiffure')">Coiffure</div>
-            <div class="chip" [class.active]="activeFilter === 'maquillage'" (click)="setFilter('maquillage')">Maquillage</div>
-            <div class="chip" [class.active]="activeFilter === 'onglerie'" (click)="setFilter('onglerie')">Onglerie</div>
-            <div class="chip" [class.active]="activeFilter === 'soins'" (click)="setFilter('soins')">Soins</div>
-          </div>
-        </div>
-        
-        <!-- État de chargement -->
-        <div *ngIf="loadingFreelances && showFreelancesSection" class="loading-container">
-          <div class="spinner"></div>
-          <p>Chargement des professionnels...</p>
-        </div>
-      
-        <!-- Affichage sous forme de grille avec slider horizontal pour mobile -->
-        <div class="freelance-display-container" *ngIf="!loadingFreelances && filteredFreelances.length > 0 && showFreelancesSection">
-          <!-- Vue mode grille (bureau) -->
-          <div class="freelance-grid">
-            <div class="freelance-card" *ngFor="let freelance of paginatedFreelances">
-              <div class="card-image" [style.backgroundImage]="'url(' + (freelance.profileImage || '/assets/images/profile-placeholder.jpg') + ')'">
-                <div class="card-category" *ngIf="freelance.competences">{{ getMainCategory(freelance.competences) }}</div>
-              </div>
-              
-              <div class="card-content">
-                <h4>{{ freelance.prenom }} {{ freelance.nom }}</h4>
-                <p class="card-location" *ngIf="freelance.adresse">
-                  <i class="material-icons">location_on</i>
-                  <span>{{ extractCity(freelance.adresse) }}</span>
-                </p>
-                
-                <div class="card-divider"></div>
-                
-                <div class="card-contact">
-                  <div class="contact-item" *ngIf="freelance.telephone">
-                    <i class="material-icons">phone</i>
-                    <span>{{ formatPhone(freelance.telephone) }}</span>
-                  </div>
-                </div>
-                
-                <div class="card-actions">
-                  <button class="portfolio-btn" (click)="viewFreelancePortfolio(freelance.id)">
-                    <i class="material-icons">photo_library</i> Portfolio
-                  </button>
-                  <button class="contact-btn" (click)="contactFreelance(freelance, $event)">
-                    <i class="material-icons">message</i>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Pagination -->
-          <div class="pagination-controls">
-            <button 
-              class="page-btn prev" 
-              [class.disabled]="currentPage === 1" 
-              (click)="changePage(currentPage - 1)">
-              <i class="material-icons">chevron_left</i>
-            </button>
-            
-            <div class="page-indicator">
-              <span *ngFor="let page of getPageNumbers()" 
-                    class="page-number" 
-                    [class.active]="page === currentPage"
-                    (click)="changePage(page)">
-                {{ page }}
-              </span>
-            </div>
-            
-            <button 
-              class="page-btn next" 
-              [class.disabled]="currentPage === totalPages" 
-              (click)="changePage(currentPage + 1)">
-              <i class="material-icons">chevron_right</i>
-            </button>
-          </div>
-          
-          <div class="results-info">
-            Affichage {{ (currentPage - 1) * itemsPerPage + 1 }} - {{ Math.min(currentPage * itemsPerPage, filteredFreelances.length) }} 
-            sur {{ filteredFreelances.length }} professionnels
-          </div>
-        </div>
-        
-        <!-- État de recherche sans résultat -->
-        <div class="empty-state search-empty" *ngIf="!loadingFreelances && allFreelances.length > 0 && filteredFreelances.length === 0 && showFreelancesSection">
-          <i class="material-icons">filter_none</i>
-          <p>Aucun professionnel ne correspond à votre recherche</p>
-          <button class="reset-btn" (click)="resetFilters()">
-            Réinitialiser les filtres
-          </button>
-        </div>
-      </div>
-    </div>
+  <div class="client-header">
+    <h2 class="main-title">Pour les <span class="highlight">clients qui souhaitent des prestation a domicile</span></h2>
+    <p class="subtitle">Trouvez facilement des professionnels qualifiés pour tous vos besoins beauté sans vous déplacer</p>
+  </div>
   
-    <!-- Affichage du portfolio du freelance sélectionné -->
-    <div id="freelance-portfolio" class="portfolio-container" *ngIf="showPortfolio && selectedFreelanceId">
-      <div class="portfolio-header">
-        <button mat-icon-button (click)="closePortfolio()" class="close-button">
-          <mat-icon>arrow_back</mat-icon>
-        </button>
-        <h3>Portfolio du professionnel</h3>
+  <div class="feature-cards">
+    <div class="feature-navigation">
+      <div *ngFor="let feature of features; let i = index" 
+           class="nav-item" 
+           [ngClass]="{'active': i === activeFeature}"
+           (click)="setActiveFeature(i)">
+        <i class="material-icons">{{ feature.icon }}</i>
+        <span>{{ feature.title }}</span>
       </div>
-      
-      <app-portfolio [clientMode]="true" [freelanceId]="selectedFreelanceId"></app-portfolio>
+    </div>
+    
+    <div class="feature-display">
+      <div *ngFor="let feature of features; let i = index" 
+           class="feature-content" 
+           [@fadeInOut]
+           [ngClass]="{'active': i === activeFeature}">
+        <div class="feature-text">
+          <h3>{{ feature.title }}</h3>
+          <p>{{ feature.description }}</p>
+          
+          <!-- Bouton pour afficher les portfolios (uniquement pour la fonctionnalité "Explorez les portfolios") -->
+          <div *ngIf="feature.id === 2" class="feature-action">
+            <button class="toggle-btn feature-btn" (click)="toggleFreelancesSection()">
+              {{ showFreelancesSection ? 'Masquer les professionnels' : 'Découvrir nos professionnels' }}
+              <i class="material-icons">{{ showFreelancesSection ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}</i>
+            </button>
+          </div>
+        </div>
+        <div class="feature-image" [style.backgroundImage]="'url(' + feature.image + ')'">
+          <div class="image-overlay"></div>
+        </div>
+      </div>
     </div>
   </div>
+  
+  <!-- Liste des freelances avec toggle -->
+  <div class="freelance-list-section" [class.hidden]="!showFreelancesSection">
+    <!-- Section conditionnelle des freelances -->
+    <div class="freelances-content" [@expandPanel]="showFreelancesSection ? 'expanded' : 'collapsed'">
+      <!-- Barre de recherche et filtres -->
+      <div class="search-filter-container" *ngIf="showFreelancesSection">
+        <div class="search-bar">
+          <i class="material-icons">search</i>
+          <input type="text" placeholder="Rechercher un professionnel..." [(ngModel)]="searchTerm" (input)="filterFreelances()">
+        </div>
+        
+        <div class="filter-chips">
+          <div class="filter-label">Filtrer par:</div>
+          <div class="chip" [class.active]="activeFilter === 'all'" (click)="setFilter('all')">Tous</div>
+          <div class="chip" [class.active]="activeFilter === 'coiffure'" (click)="setFilter('coiffure')">Coiffure</div>
+          <div class="chip" [class.active]="activeFilter === 'maquillage'" (click)="setFilter('maquillage')">Maquillage</div>
+          <div class="chip" [class.active]="activeFilter === 'onglerie'" (click)="setFilter('onglerie')">Onglerie</div>
+          <div class="chip" [class.active]="activeFilter === 'soins'" (click)="setFilter('soins')">Soins</div>
+        </div>
+      </div>
+      
+      <!-- État de chargement -->
+      <div *ngIf="loadingFreelances && showFreelancesSection" class="loading-container">
+        <div class="spinner"></div>
+        <p>Chargement des professionnels...</p>
+      </div>
+    
+      <!-- Affichage sous forme de grille avec slider horizontal pour mobile -->
+      <div class="freelance-display-container" *ngIf="!loadingFreelances && filteredFreelances.length > 0 && showFreelancesSection">
+        <!-- Vue mode grille (bureau) -->
+        <div class="freelance-grid">
+          <div class="freelance-card" *ngFor="let freelance of paginatedFreelances">
+            <div class="card-image" [style.backgroundImage]="'url(' + (freelance.profileImage || '/assets/images/profile-placeholder.jpg') + ')'">
+              <div class="card-category" *ngIf="freelance.competences">{{ getMainCategory(freelance.competences) }}</div>
+            </div>
+            
+            <div class="card-content">
+              <h4>{{ freelance.prenom }} {{ freelance.nom }}</h4>
+              <p class="card-location" *ngIf="freelance.adresse">
+                <i class="material-icons">location_on</i>
+                <span>{{ extractCity(freelance.adresse) }}</span>
+              </p>
+              
+              <div class="card-divider"></div>
+              
+              <div class="card-contact">
+                <div class="contact-item" *ngIf="freelance.telephone">
+                  <i class="material-icons">phone</i>
+                  <span>{{ formatPhone(freelance.telephone) }}</span>
+                </div>
+              </div>
+              
+              <div class="card-actions">
+                <button class="portfolio-btn" (click)="viewFreelancePortfolio(freelance.id)">
+                  <i class="material-icons">photo_library</i> Portfolio
+                </button>
+                <!-- ✅ MODIFIÉ : Le bouton contact ouvre maintenant la modal -->
+                <button class="contact-btn" (click)="contactFreelance(freelance, $event)">
+                  <i class="material-icons">message</i> Contact
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Pagination -->
+        <div class="pagination-controls">
+          <button 
+            class="page-btn prev" 
+            [class.disabled]="currentPage === 1" 
+            (click)="changePage(currentPage - 1)">
+            <i class="material-icons">chevron_left</i>
+          </button>
+          
+          <div class="page-indicator">
+            <span *ngFor="let page of getPageNumbers()" 
+                  class="page-number" 
+                  [class.active]="page === currentPage"
+                  (click)="changePage(page)">
+              {{ page }}
+            </span>
+          </div>
+          
+          <button 
+            class="page-btn next" 
+            [class.disabled]="currentPage === totalPages" 
+            (click)="changePage(currentPage + 1)">
+            <i class="material-icons">chevron_right</i>
+          </button>
+        </div>
+        
+        <div class="results-info">
+          Affichage {{ (currentPage - 1) * itemsPerPage + 1 }} - {{ Math.min(currentPage * itemsPerPage, filteredFreelances.length) }} 
+          sur {{ filteredFreelances.length }} professionnels
+        </div>
+      </div>
+      
+      <!-- État de recherche sans résultat -->
+      <div class="empty-state search-empty" *ngIf="!loadingFreelances && allFreelances.length > 0 && filteredFreelances.length === 0 && showFreelancesSection">
+        <i class="material-icons">filter_none</i>
+        <p>Aucun professionnel ne correspond à votre recherche</p>
+        <button class="reset-btn" (click)="resetFilters()">
+          Réinitialiser les filtres
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Affichage du portfolio du freelance sélectionné -->
+  <div id="freelance-portfolio" class="portfolio-container" *ngIf="showPortfolio && selectedFreelanceId">
+    <div class="portfolio-header">
+      <button mat-icon-button (click)="closePortfolio()" class="close-button">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <h3>Portfolio du professionnel</h3>
+    </div>
+    
+    <app-portfolio [clientMode]="true" [freelanceId]="selectedFreelanceId"></app-portfolio>
+  </div>
+
+  <!-- ==========================================
+  🆕 NOUVELLE MODAL DE CONTACT
+  ========================================== -->
+  <div class="contact-modal-overlay" 
+       *ngIf="showContactModal" 
+       [@modalAnimation]="showContactModal ? 'open' : 'closed'"
+       (click)="closeContactModal()">
+    
+    <div class="contact-modal-container" (click)="$event.stopPropagation()">
+      <!-- Header de la modal -->
+      <div class="contact-modal-header">
+        <div class="contact-header-info">
+          <h2>
+            <i class="material-icons">message</i>
+            Contacter {{ selectedFreelanceForContact?.prenom }}
+          </h2>
+          <p *ngIf="selectedFreelanceForContact">
+            Envoyez un message à {{ selectedFreelanceForContact.prenom }} {{ selectedFreelanceForContact.nom }}
+          </p>
+        </div>
+        <button class="close-modal-btn" (click)="closeContactModal()" type="button">
+          <i class="material-icons">close</i>
+        </button>
+      </div>
+
+      <!-- Formulaire de contact -->
+      <form [formGroup]="contactForm" (ngSubmit)="onSubmitContact()" class="contact-form">
+        
+        <!-- Champ Nom -->
+        <div class="form-group">
+          <label for="contact-name">
+            <i class="material-icons">person</i>
+            Votre nom <span class="required">*</span>
+          </label>
+          <input
+            id="contact-name"
+            type="text"
+            formControlName="name"
+            placeholder="Prénom Nom"
+            [class.error]="hasFieldError('name')"
+          />
+          <div *ngIf="hasFieldError('name')" class="error-message">
+            <i class="material-icons">error_outline</i>
+            {{ getFieldError('name') }}
+          </div>
+        </div>
+
+        <!-- Champ E-mail -->
+        <div class="form-group">
+          <label for="contact-email">
+            <i class="material-icons">email</i>
+            Votre e-mail <span class="required">*</span>
+          </label>
+          <input
+            id="contact-email"
+            type="email"
+            formControlName="email"
+            placeholder="votre.email@exemple.com"
+            [class.error]="hasFieldError('email')"
+          />
+          <div *ngIf="hasFieldError('email')" class="error-message">
+            <i class="material-icons">error_outline</i>
+            {{ getFieldError('email') }}
+          </div>
+        </div>
+
+        <!-- Champ Sujet -->
+        <div class="form-group">
+          <label for="contact-subject">
+            <i class="material-icons">subject</i>
+            Sujet <span class="required">*</span>
+          </label>
+          <input
+            id="contact-subject"
+            type="text"
+            formControlName="subject"
+            placeholder="Objet de votre demande"
+            [class.error]="hasFieldError('subject')"
+          />
+          <div *ngIf="hasFieldError('subject')" class="error-message">
+            <i class="material-icons">error_outline</i>
+            {{ getFieldError('subject') }}
+          </div>
+        </div>
+
+        <!-- Champ Message -->
+        <div class="form-group">
+          <label for="contact-message">
+            <i class="material-icons">chat_bubble</i>
+            Votre message <span class="required">*</span>
+          </label>
+          <textarea
+            id="contact-message"
+            formControlName="message"
+            placeholder="Décrivez votre demande..."
+            rows="5"
+            [class.error]="hasFieldError('message')"
+          ></textarea>
+          <div *ngIf="hasFieldError('message')" class="error-message">
+            <i class="material-icons">error_outline</i>
+            {{ getFieldError('message') }}
+          </div>
+        </div>
+
+        <!-- Actions de la modal -->
+        <div class="contact-modal-actions">
+          <button type="button" class="cancel-btn" (click)="closeContactModal()">
+            <i class="material-icons">close</i>
+            Annuler
+          </button>
+          
+          <button 
+            type="submit" 
+            class="send-btn"
+            [disabled]="contactForm.invalid || isSubmittingContact"
+            [class.loading]="isSubmittingContact">
+            
+            <span *ngIf="!isSubmittingContact">
+              <i class="material-icons">send</i>
+              Envoyer le message
+            </span>
+            
+            <span *ngIf="isSubmittingContact" class="loading-state">
+              <div class="spinner-small"></div>
+              Envoi en cours...
+            </span>
+          </button>
+        </div>
+      </form>
+
+      <!-- Info supplémentaire -->
+      <div class="contact-info-footer">
+        <p>
+          <i class="material-icons">info</i>
+          Votre message sera envoyé directement au professionnel. 
+          Vous recevrez une copie par e-mail.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

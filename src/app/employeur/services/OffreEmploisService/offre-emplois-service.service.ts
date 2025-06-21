@@ -3,6 +3,8 @@ import { HttpClient } from '@angular/common/http';
 import { catchError, Observable, of } from 'rxjs';
 
 export interface OffreEmploi {
+  datePublication: Date;
+  candidatures: any;
   status: string;
   experienceRequise: string;
   id?: number;
@@ -13,6 +15,7 @@ export interface OffreEmploi {
   typeContrat: string;
   salaire: string;
   dateLimite: string;
+  candidaturesCount: number;
 }
 
 @Injectable({

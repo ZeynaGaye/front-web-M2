@@ -1,0 +1,345 @@
+<div class="salon-registration-page">
+  
+    <!-- Header Hero Section -->
+    <div class="hero-section">
+      <div class="container">
+        <div class="hero-content">
+          <button class="back-btn" (click)="goBack()">
+            <i class="fas fa-arrow-left"></i> Retour
+          </button>
+          
+          <h1>Inscrivez votre salon sur la première plateforme beauté du Sénégal</h1>
+          
+          <div class="hero-subtitle">
+            <h2>🎯 Rejoignez la révolution de la beauté au Sénégal</h2>
+            <p>Donnez à votre salon la visibilité qu'il mérite et accédez à une clientèle plus large grâce à notre plateforme intelligente qui connecte professionnels et clients.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <div class="container">
+      
+      <!-- Section Avantages -->
+      <section class="benefits-section">
+        <h2>✨ Pourquoi choisir notre plateforme ?</h2>
+        
+        <div class="benefits-grid">
+          <div class="benefit-card">
+            <div class="benefit-icon">📍</div>
+            <h3>Visibilité maximale</h3>
+            <ul>
+              <li>Apparaissez dans les résultats de recherche géolocalisée</li>
+              <li>Profitez d'une mise en avant sur la carte interactive</li>
+              <li>Bénéficiez d'un référencement optimisé</li>
+            </ul>
+          </div>
+  
+          <div class="benefit-card">
+            <div class="benefit-icon">👥</div>
+            <h3>Recrutement facilité</h3>
+            <ul>
+              <li>Publiez vos offres d'emploi en quelques clics</li>
+              <li>Accédez à une base de talents qualifiés</li>
+              <li>Recevez des candidatures pré-filtrées selon vos critères</li>
+            </ul>
+          </div>
+  
+          <div class="benefit-card">
+            <div class="benefit-icon">💼</div>
+            <h3>Gestion simplifiée</h3>
+            <ul>
+              <li>Tableau de bord complet pour gérer votre activité</li>
+              <li>Suivi des candidatures et planification d'entretiens</li>
+              <li>Statistiques détaillées sur vos performances</li>
+            </ul>
+          </div>
+  
+          <div class="benefit-card">
+            <div class="benefit-icon">🌟</div>
+            <h3>Réputation renforcée</h3>
+            <ul>
+              <li>Collectez et affichez les avis clients</li>
+              <li>Partagez votre portfolio de réalisations</li>
+              <li>Construisez votre réputation en ligne</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+  
+      <!-- Section Ce que vous obtenez -->
+      <section class="features-section">
+        <h2>🚀 Ce que vous obtenez en vous inscrivant</h2>
+        
+        <div class="features-grid">
+          <div class="feature-block">
+            <h3>Profil Salon Complet</h3>
+            <ul>
+              <li>Présentation détaillée de votre salon</li>
+              <li>Galerie photos de vos réalisations</li>
+              <li>Liste complète de vos services et tarifs</li>
+              <li>Informations pratiques (horaires, contact, localisation)</li>
+            </ul>
+          </div>
+  
+          <div class="feature-block">
+            <h3>Outils de Recrutement</h3>
+            <ul>
+              <li>Publication illimitée d'offres d'emploi</li>
+              <li>Interface de gestion des candidatures</li>
+              <li>Filtres avancés pour trier les profils</li>
+              <li>Communication directe avec les candidats</li>
+            </ul>
+          </div>
+  
+          <div class="feature-block">
+            <h3>Système de Réservation</h3>
+            <ul>
+              <li>Calendrier de rendez-vous intégré</li>
+              <li>Confirmations automatiques</li>
+              <li>Gestion des disponibilités</li>
+              <li>Notifications en temps réel</li>
+            </ul>
+          </div>
+  
+          <div class="feature-block">
+            <h3>Promotion et Marketing</h3>
+            <ul>
+              <li>Options de mise en avant payante</li>
+              <li>Partage sur les réseaux sociaux</li>
+              <li>Promotions et offres spéciales</li>
+              <li>Newsletter aux clients potentiels</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+  
+      <!-- Section Analytics -->
+      <section class="analytics-section">
+        <h2>📊 Statistiques et Analytics</h2>
+        
+        <div class="analytics-grid">
+          <div class="analytics-block">
+            <h3>Tableau de Bord Complet</h3>
+            <ul>
+              <li>Nombre de vues de votre profil</li>
+              <li>Taux de conversion des visites</li>
+              <li>Statistiques des candidatures</li>
+              <li>Analyse de la satisfaction client</li>
+            </ul>
+          </div>
+  
+          <div class="analytics-block">
+            <h3>Rapports Détaillés</h3>
+            <ul>
+              <li>Performance mensuelle</li>
+              <li>Évolution de votre réputation</li>
+              <li>Retour sur investissement</li>
+              <li>Tendances du marché local</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+  
+      <!-- Section Tarification -->
+      <section class="pricing-section">
+        <h2>💰 Tarification transparente</h2>
+        
+        <div class="pricing-cards">
+          <div 
+            *ngFor="let plan of plans" 
+            class="pricing-card"
+            [class.selected]="selectedPlan === plan.id"
+            [class.popular]="plan.popular"
+            (click)="selectPlan(plan.id)">
+            
+            <div class="popular-badge" *ngIf="plan.popular">Le plus populaire</div>
+            
+            <h3>{{ plan.name }}</h3>
+            <div class="price">{{ plan.price }}</div>
+            
+            <ul class="features-list">
+              <li *ngFor="let feature of plan.features">
+                <i class="fas fa-check"></i>
+                {{ feature }}
+              </li>
+            </ul>
+            
+            <div class="select-indicator" *ngIf="selectedPlan === plan.id">
+              <i class="fas fa-check-circle"></i> Sélectionné
+            </div>
+          </div>
+        </div>
+      </section>
+  
+      <!-- Section Processus -->
+      <section class="process-section">
+        <h2>🎯 Processus d'inscription en 3 étapes</h2>
+        
+        <div class="process-steps">
+          <div class="step">
+            <div class="step-number">1</div>
+            <h3>Création de compte</h3>
+            <ul>
+              <li>Informations de base du salon</li>
+              <li>Coordonnées de contact</li>
+              <li>Vérification par email/téléphone</li>
+            </ul>
+          </div>
+  
+          <div class="step">
+            <div class="step-number">2</div>
+            <h3>Profil détaillé</h3>
+            <ul>
+              <li>Description de votre salon</li>
+              <li>Services proposés et tarifs</li>
+              <li>Photos et portfolio</li>
+              <li>Horaires d'ouverture</li>
+            </ul>
+          </div>
+  
+          <div class="step">
+            <div class="step-number">3</div>
+            <h3>Activation</h3>
+            <ul>
+              <li>Validation de votre profil</li>
+              <li>Formation à l'utilisation</li>
+              <li>Mise en ligne immédiate</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+  
+      <!-- Call to Action Section -->
+      <section class="cta-section">
+        <h2>🚀 Prêt à rejoindre la plateforme ?</h2>
+        
+        <div class="cta-content">
+          <div class="cta-text">
+            <h3>Démarrez votre aventure dès maintenant</h3>
+            <p>Rejoignez plus de <strong>500 salons</strong> qui font déjà confiance à notre plateforme pour développer leur activité et recruter les meilleurs talents du Sénégal.</p>
+            
+            <div class="selected-plan-info" *ngIf="selectedPlan">
+              <div class="plan-highlight">
+                <h4>📋 Plan sélectionné : {{ getSelectedPlanName() }}</h4>
+                <p>Vous pourrez confirmer ou modifier votre choix après connexion</p>
+              </div>
+            </div>
+            
+            <div class="features-preview">
+              <div class="feature-preview-item">
+                <i class="fas fa-check-circle"></i>
+                <span>Inscription gratuite et immédiate</span>
+              </div>
+              <div class="feature-preview-item">
+                <i class="fas fa-check-circle"></i>
+                <span>Accès au tableau de bord employeur</span>
+              </div>
+              <div class="feature-preview-item">
+                <i class="fas fa-check-circle"></i>
+                <span>Support technique inclus</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="cta-actions">
+            <div class="action-buttons">
+              <!-- Si déjà connecté -->
+              <div *ngIf="isLoggedIn" class="logged-in-actions">
+                <h4>✨ Vous êtes déjà connecté</h4>
+                <button 
+                  type="button" 
+                  class="btn-dashboard"
+                  (click)="goToDashboard()">
+                  <i class="fas fa-tachometer-alt"></i>
+                  Accéder à mon tableau de bord
+                </button>
+              </div>
+              
+              <!-- Si pas connecté -->
+              <div *ngIf="!isLoggedIn" class="auth-actions">
+                <div class="main-cta">
+                  <button 
+                    type="button" 
+                    class="btn-start-journey"
+                    (click)="startJourney()">
+                    <i class="fas fa-rocket"></i>
+                    Démarrer votre aventure
+                  </button>
+                  <p class="cta-subtitle">Créez votre compte employeur en 2 minutes</p>
+                </div>
+                
+                <div class="separator">
+                  <span>Vous avez déjà un compte ?</span>
+                </div>
+                
+                <button 
+                  type="button" 
+                  class="btn-login"
+                  (click)="openLoginModal()">
+                  <i class="fas fa-sign-in-alt"></i>
+                  Se connecter
+                </button>
+                
+                <p class="auth-note">
+                  <i class="fas fa-info-circle"></i>
+                  Lors de l'inscription, sélectionnez "Employeur" comme type de compte
+                </p>
+              </div>
+            </div>
+            
+            <div class="demo-section">
+              <button 
+                type="button" 
+                class="btn-demo" 
+                (click)="requestDemo()">
+                <i class="fas fa-play"></i>
+                Demander une démonstration
+              </button>
+              <p class="demo-text">Découvrez toutes les fonctionnalités en action</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Garanties -->
+        <div class="guarantees">
+          <div class="guarantee-item">
+            <i class="fas fa-shield-alt"></i>
+            <span>Données sécurisées</span>
+          </div>
+          <div class="guarantee-item">
+            <i class="fas fa-clock"></i>
+            <span>Activation immédiate</span>
+          </div>
+          <div class="guarantee-item">
+            <i class="fas fa-headset"></i>
+            <span>Support 24/7</span>
+          </div>
+          <div class="guarantee-item">
+            <i class="fas fa-money-bill-wave"></i>
+            <span>Essai gratuit disponible</span>
+          </div>
+        </div>
+      </section>
+  
+      <!-- Section Contact -->
+      <section class="contact-section">
+        <h2>Besoin d'aide ?</h2>
+        <div class="contact-info">
+          <div class="contact-item">
+            <i class="fas fa-envelope"></i>
+            <span>support&#64;beautyHub.sn</span>
+          </div>
+          <div class="contact-item">
+            <i class="fas fa-phone"></i>
+            <span>+221 775195609</span>
+          </div>
+          <div class="contact-item">
+            <i class="fas fa-comments"></i>
+            <span>Chat en direct disponible</span>
+          </div>
+        </div>
+      </section>
+  
+    </div>
+  </div>

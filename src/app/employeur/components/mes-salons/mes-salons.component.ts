@@ -87,10 +87,15 @@ export class MesSalonsComponent implements OnInit {
   salons: any[] = [];
   expandedSalonId: number | null = null;
   services: { [salonId: number]: any[] } = {};
+  salonPhotos: { [salonId: number]: any[] } = {};
   isLoading = false;
   errorMessage = '';
   activeTab: { [salonId: number]: string } = {};
-   salonId: number = 0;
+  
+  // États de chargement spécifiques
+  loadingStates: { [key: string]: boolean } = {};
+  salonId: number = 0;
+
   constructor(
     private salonService: SalonService,
     private serviceSalonService: ServiceSalonService,
@@ -135,17 +140,18 @@ export class MesSalonsComponent implements OnInit {
       this.expandedSalonId = null;
     } else {
       this.expandedSalonId = salonId;
+      // Charger les services par défaut
       this.loadServices(salonId);
     }
   }
 
   loadServices(salonId: number) {
     if (!this.services[salonId]) {
-      this.isLoading = true;
+      this.setLoadingState(`services-${salonId}`, true);
       this.serviceSalonService.getServicesBySalon(salonId).subscribe({
         next: (data: any[]) => {
           this.services[salonId] = data;
-          this.isLoading = false;
+          this.setLoadingState(`services-${salonId}`, false);
           
           // Afficher le popup si aucun service n'est disponible
           if (data.length === 0 && this.activeTab[salonId] === 'services') {
@@ -159,10 +165,35 @@ export class MesSalonsComponent implements OnInit {
         },
         error: (error: { message: string }) => {
           this.errorMessage = 'Erreur lors du chargement des services: ' + error.message;
-          this.isLoading = false;
+          this.setLoadingState(`services-${salonId}`, false);
         }
       });
     }
+  }
+
+  // MÉTHODE CORRIGÉE pour le chargement des photos
+  loadSalonPhotos(salonId: number) {
+    // Éviter les chargements multiples
+    if (this.salonPhotos[salonId] || this.getLoadingState(`photos-${salonId}`)) {
+      return;
+    }
+
+    console.log(`🖼️ Chargement des photos pour le salon ${salonId}`);
+    this.setLoadingState(`photos-${salonId}`, true);
+    
+    this.salonService.getSalonPhotos(salonId).subscribe({
+      next: (photos) => {
+        console.log(`✅ Photos reçues pour salon ${salonId}:`, photos);
+        this.salonPhotos[salonId] = photos || [];
+        this.setLoadingState(`photos-${salonId}`, false);
+      },
+      error: (error) => {
+        console.error(`❌ Erreur photos salon ${salonId}:`, error);
+        this.errorMessage = "Erreur lors du chargement des photos: " + error.message;
+        this.salonPhotos[salonId] = []; // Initialiser un tableau vide en cas d'erreur
+        this.setLoadingState(`photos-${salonId}`, false);
+      }
+    });
   }
 
   openNoDataDialog(data: {title: string, message: string, buttonText: string, icon: string}) {
@@ -174,7 +205,7 @@ export class MesSalonsComponent implements OnInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         if (data.buttonText === 'Créer un salon') {
-          this.closeModal(); // Rediriger vers la page de création de salon
+          this.closeModal();
         } else if (data.buttonText === 'Ajouter un service') {
           this.addService(this.expandedSalonId!);
         }
@@ -182,16 +213,42 @@ export class MesSalonsComponent implements OnInit {
     });
   }
 
+  // MÉTHODE CORRIGÉE pour setActiveTab
   setActiveTab(salonId: number, tab: string) {
+    console.log(`🔄 Changement d'onglet pour salon ${salonId}: ${tab}`);
+    
+    // Éviter les changements inutiles
+    if (this.activeTab[salonId] === tab) {
+      return;
+    }
+    
     this.activeTab[salonId] = tab;
     
+    // Charger les données selon l'onglet sélectionné
     if (tab === 'services') {
       this.loadServices(salonId);
     } else if (tab === 'photos') {
       this.loadSalonPhotos(salonId);
     }
-    
-    return true; // Pour permettre l'utilisation dans le template avec && operator
+  }
+
+  // Méthodes utilitaires pour gérer les états de chargement
+  setLoadingState(key: string, loading: boolean) {
+    this.loadingStates[key] = loading;
+  }
+
+  getLoadingState(key: string): boolean {
+    return this.loadingStates[key] || false;
+  }
+
+  // Vérifier si un salon a des photos chargées
+  hasPhotosLoaded(salonId: number): boolean {
+    return this.salonPhotos[salonId] !== undefined;
+  }
+
+  // Vérifier si les photos sont en cours de chargement
+  arePhotosLoading(salonId: number): boolean {
+    return this.getLoadingState(`photos-${salonId}`);
   }
 
   addService(salonId: number) {
@@ -215,7 +272,6 @@ export class MesSalonsComponent implements OnInit {
   }
 
   editService(serviceId: number, salonId: number) {
-    // Votre logique d'édition
     const serviceModifie = {
       nom: 'Service modifié',
       prix: 6000,
@@ -240,7 +296,6 @@ export class MesSalonsComponent implements OnInit {
       this.serviceSalonService.deleteService(serviceId).subscribe({
         next: () => {
           this.services[salonId] = this.services[salonId].filter(s => s.id !== serviceId);
-          // Si tous les services ont été supprimés, afficher le popup
           if (this.services[salonId].length === 0) {
             this.openNoDataDialog({
               title: 'Services du Salon',
@@ -258,15 +313,13 @@ export class MesSalonsComponent implements OnInit {
   }
 
   editSalon(salonId: number) {
-    // Implémentez la logique pour modifier les informations du salon
     console.log('Modifier le salon avec ID:', salonId);
   }
 
   closeModal() {
-    // Implémentez la logique pour fermer le modal ou rediriger
     console.log('Modal fermé ou redirection effectuée.');
+    this.closeModalEvent.emit();
   }
-
 
   changeProfilePhoto(salonId: number) {
     const fileInput = document.createElement('input');
@@ -284,122 +337,102 @@ export class MesSalonsComponent implements OnInit {
   }
   
   uploadProfilePhoto(salonId: number, file: File) {
-    this.isLoading = true;
+    this.setLoadingState(`profile-photo-${salonId}`, true);
     
     const formData = new FormData();
     formData.append('file', file);
     
     this.salonService.updateSalonProfilePhoto(salonId, formData).subscribe({
       next: (updatedSalon) => {
-        // Mettre à jour le salon dans la liste
         const index = this.salons.findIndex(s => s.id === salonId);
         if (index !== -1) {
           this.salons[index] = updatedSalon;
         }
-        this.isLoading = false;
+        this.setLoadingState(`profile-photo-${salonId}`, false);
       },
       error: (error) => {
         this.errorMessage = "Erreur lors du téléchargement de la photo: " + error.message;
-        this.isLoading = false;
+        this.setLoadingState(`profile-photo-${salonId}`, false);
       }
     });
   }
 
+  openFileSelector(salonId: number) {
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    fileInput.multiple = true;
+    
+    fileInput.addEventListener('change', (event) => {
+      const files = (event.target as HTMLInputElement).files;
+      if (files && files.length > 0) {
+        this.uploadSalonPhotos(salonId, files);
+      }
+    });
+    
+    fileInput.click();
+  }
 
-  // Propriété pour stocker les photos de chaque salon
-salonPhotos: { [salonId: number]: any[] } = {};
-
-// Charger les photos d'un salon
-loadSalonPhotos(salonId: number) {
-  if (!this.salonPhotos[salonId]) {
-    this.isLoading = true;
-    this.salonService.getSalonPhotos(salonId).subscribe({
+  uploadSalonPhotos(salonId: number, files: FileList) {
+    this.setLoadingState(`upload-photos-${salonId}`, true);
+    
+    const formData = new FormData();
+    for (let i = 0; i < files.length; i++) {
+      formData.append('files', files[i]);
+    }
+    
+    this.salonService.uploadSalonPhotos(salonId, formData).subscribe({
       next: (photos) => {
-        this.salonPhotos[salonId] = photos;
-        this.isLoading = false;
+        if (!this.salonPhotos[salonId]) {
+          this.salonPhotos[salonId] = [];
+        }
+        this.salonPhotos[salonId] = [...this.salonPhotos[salonId], ...photos];
+        this.setLoadingState(`upload-photos-${salonId}`, false);
       },
       error: (error) => {
-        this.errorMessage = "Erreur lors du chargement des photos: " + error.message;
-        this.isLoading = false;
+        this.errorMessage = "Erreur lors du téléchargement des photos: " + error.message;
+        this.setLoadingState(`upload-photos-${salonId}`, false);
       }
     });
   }
-}
 
-// Méthode pour ouvrir le sélecteur de fichiers
-openFileSelector(salonId: number) {
-  const fileInput = document.createElement('input');
-  fileInput.type = 'file';
-  fileInput.accept = 'image/*';
-  fileInput.multiple = true; // Permet la sélection multiple
-  
-  fileInput.addEventListener('change', (event) => {
-    const files = (event.target as HTMLInputElement).files;
-    if (files && files.length > 0) {
-      this.uploadSalonPhotos(salonId, files);
+  deletePhoto(photoId: number, salonId: number) {
+    if (confirm('Voulez-vous vraiment supprimer cette photo ?')) {
+      this.setLoadingState(`delete-photo-${photoId}`, true);
+      this.salonService.deleteSalonPhoto(photoId).subscribe({
+        next: () => {
+          this.salonPhotos[salonId] = this.salonPhotos[salonId].filter(photo => photo.id !== photoId);
+          this.setLoadingState(`delete-photo-${photoId}`, false);
+        },
+        error: (error) => {
+          this.errorMessage = "Erreur lors de la suppression de la photo: " + error.message;
+          this.setLoadingState(`delete-photo-${photoId}`, false);
+        }
+      });
     }
-  });
-  
-  fileInput.click();
-}
-
-// Méthode pour télécharger plusieurs photos
-uploadSalonPhotos(salonId: number, files: FileList) {
-  this.isLoading = true;
-  
-  const formData = new FormData();
-  for (let i = 0; i < files.length; i++) {
-    formData.append('files', files[i]);
   }
-  
-  this.salonService.uploadSalonPhotos(salonId, formData).subscribe({
-    next: (photos) => {
-      if (!this.salonPhotos[salonId]) {
-        this.salonPhotos[salonId] = [];
-      }
-      this.salonPhotos[salonId] = [...this.salonPhotos[salonId], ...photos];
-      this.isLoading = false;
-    },
-    error: (error) => {
-      this.errorMessage = "Erreur lors du téléchargement des photos: " + error.message;
-      this.isLoading = false;
-    }
-  });
-}
 
-// Méthode pour supprimer une photo
-deletePhoto(photoId: number, salonId: number) {
-  if (confirm('Voulez-vous vraiment supprimer cette photo ?')) {
-    this.isLoading = true;
-    this.salonService.deleteSalonPhoto(photoId).subscribe({
-      next: () => {
-        this.salonPhotos[salonId] = this.salonPhotos[salonId].filter(photo => photo.id !== photoId);
-        this.isLoading = false;
+  setAsProfilePhoto(photoUrl: string, salonId: number) {
+    this.setLoadingState(`set-profile-${salonId}`, true);
+    this.salonService.updateSalonProfilePhotoUrl(salonId, { photoUrl }).subscribe({
+      next: (updatedSalon) => {
+        const index = this.salons.findIndex(s => s.id === salonId);
+        if (index !== -1) {
+          this.salons[index] = updatedSalon;
+        }
+        this.setLoadingState(`set-profile-${salonId}`, false);
       },
       error: (error) => {
-        this.errorMessage = "Erreur lors de la suppression de la photo: " + error.message;
-        this.isLoading = false;
+        this.errorMessage = "Erreur lors de la mise à jour de la photo de profil: " + error.message;
+        this.setLoadingState(`set-profile-${salonId}`, false);
       }
     });
   }
-}
 
-// Méthode pour définir une photo comme photo de profil
-setAsProfilePhoto(photoUrl: string, salonId: number) {
-  this.isLoading = true;
-  this.salonService.updateSalonProfilePhotoUrl(salonId, { photoUrl }).subscribe({
-    next: (updatedSalon) => {
-      // Mettre à jour le salon dans la liste
-      const index = this.salons.findIndex(s => s.id === salonId);
-      if (index !== -1) {
-        this.salons[index] = updatedSalon;
-      }
-      this.isLoading = false;
-    },
-    error: (error) => {
-      this.errorMessage = "Erreur lors de la mise à jour de la photo de profil: " + error.message;
-      this.isLoading = false;
-    }
-  });
-}
+  // Méthode pour gérer les erreurs de chargement d'images
+  onImageError(event: any) {
+    console.warn('Erreur de chargement d\'image:', event.target.src);
+    // Remplacer par une image par défaut
+    event.target.src = 'assets/images/default-image.jpg';
+  }
 }

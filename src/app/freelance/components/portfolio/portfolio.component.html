@@ -1,3 +1,4 @@
+<!-- Portfolio container existant -->
 <div class="portfolio-container">
   <!-- En-tête avec statistiques - Visible uniquement si non clientMode -->
   <div class="portfolio-header" *ngIf="!clientMode">
@@ -22,52 +23,82 @@
   </div>
   
   <!-- En-tête alternative pour le mode client avec informations complètes du freelance -->
-  <div class="portfolio-header client-header" *ngIf="clientMode && freelanceInfo">
+  <div class="portfolio-header client-header" *ngIf="clientMode">
     <div class="freelance-info">
-      <h1>Portfolio de {{freelanceInfo.prenom}} {{freelanceInfo.nom}}</h1>
+      <!-- ✅ AMÉLIORÉ : Titre avec fallback intelligent -->
+      <h1>
+        <ng-container *ngIf="getOwnerDisplayName(); else loadingTitle">
+          Portfolio de {{getOwnerDisplayName()}}
+        </ng-container>
+        <ng-template #loadingTitle>
+          <span class="loading-title">
+            Portfolio 
+            <mat-spinner diameter="20" class="inline-spinner"></mat-spinner>
+          </span>
+        </ng-template>
+      </h1>
       
-      <div class="freelance-details">
+      <!-- ✅ AMÉLIORÉ : Affichage conditionnel des détails -->
+      <div class="freelance-details" *ngIf="getOwnerInfo(); else loadingDetails">
         <!-- Profession et notation -->
         <div class="profession-rating">
-          <span class="profession" *ngIf="freelanceInfo.profession">{{freelanceInfo.profession}}</span>
-          <div class="rating" *ngIf="freelanceInfo.rating">
+          <span class="profession" *ngIf="getOwnerInfo()?.profession">{{getOwnerInfo()?.profession}}</span>
+          <div class="rating" *ngIf="getOwnerInfo()?.rating">
             <span class="stars">
               <i class="material-icons" *ngFor="let star of [1,2,3,4,5]">
-                {{star <= freelanceInfo.rating ? 'star' : (star - 0.5 <= freelanceInfo.rating ? 'star_half' : 'star_border')}}
+                {{star <= (getOwnerInfo()?.rating ?? 0) ? 'star' : (star - 0.5 <= (getOwnerInfo()?.rating ?? 0) ? 'star_half' : 'star_border')}}
               </i>
             </span>
-            <span class="rating-value">{{freelanceInfo.rating}}/5</span>
-            <span class="reviews-count" *ngIf="freelanceInfo.reviews">({{freelanceInfo.reviews}} avis)</span>
+            <span class="rating-value">{{getOwnerInfo()?.rating}}/5</span>
+            <span class="reviews-count" *ngIf="getOwnerInfo()?.reviews">({{getOwnerInfo()?.reviews}} avis)</span>
           </div>
         </div>
         
         <!-- Informations de contact -->
         <div class="contact-details">
-          <div class="contact-item" *ngIf="freelanceInfo.telephone">
+          <div class="contact-item" *ngIf="getOwnerInfo()?.telephone">
             <i class="material-icons">phone</i>
-            <span>{{freelanceInfo.telephone}}</span>
+            <span>{{getOwnerInfo()?.telephone}}</span>
           </div>
-          <div class="contact-item" *ngIf="freelanceInfo.email">
+          <div class="contact-item" *ngIf="getOwnerInfo()?.email">
             <i class="material-icons">email</i>
-            <span>{{freelanceInfo.email}}</span>
+            <span>{{getOwnerInfo()?.email}}</span>
           </div>
-          <div class="contact-item" *ngIf="freelanceInfo.adresse || freelanceInfo.ville">
+          <div class="contact-item" *ngIf="getOwnerInfo()?.adresse || getOwnerInfo()?.ville">
             <i class="material-icons">location_on</i>
             <span>
-              <ng-container *ngIf="freelanceInfo.adresse">{{freelanceInfo.adresse}}, </ng-container>
-              <ng-container *ngIf="freelanceInfo.codePostal">{{freelanceInfo.codePostal}} </ng-container>
-              <ng-container *ngIf="freelanceInfo.ville">{{freelanceInfo.ville}}</ng-container>
+              <ng-container *ngIf="getOwnerInfo()?.adresse">{{getOwnerInfo()?.adresse}}, </ng-container>
+              <ng-container *ngIf="getOwnerInfo()?.codePostal">{{getOwnerInfo()?.codePostal}} </ng-container>
+              <ng-container *ngIf="getOwnerInfo()?.ville">{{getOwnerInfo()?.ville}}</ng-container>
             </span>
           </div>
         </div>
         
-        <!-- Bouton de contact -->
+        <!-- ✅ Bouton de contact qui ouvre la modal -->
         <div class="contact-actions">
-          <button mat-raised-button color="primary" (click)="contactFreelance(freelanceInfo, $event)">
-            <mat-icon>message</mat-icon> Contacter
+          <button mat-raised-button color="primary" (click)="contactFreelance(getOwnerInfo()!, $event)">
+            <mat-icon>chat_bubble_outline</mat-icon> Contacter
           </button>
         </div>
       </div>
+
+      <!-- ✅ NOUVEAU : Template de chargement pour les détails -->
+      <ng-template #loadingDetails>
+        <div class="freelance-details loading-details">
+          <div class="profession-rating">
+            <div class="skeleton skeleton-profession"></div>
+            <div class="skeleton skeleton-rating"></div>
+          </div>
+          <div class="contact-details">
+            <div class="skeleton skeleton-contact"></div>
+            <div class="skeleton skeleton-contact"></div>
+            <div class="skeleton skeleton-contact"></div>
+          </div>
+          <div class="contact-actions">
+            <div class="skeleton skeleton-button"></div>
+          </div>
+        </div>
+      </ng-template>
     </div>
   </div>
 
@@ -159,9 +190,10 @@
             <p *ngIf="item.freelance.profession">{{item.freelance.profession}}</p>
           </div>
         </div>
+        <!-- ✅ Bouton contact qui ouvre la modal -->
         <button mat-icon-button (click)="contactFreelance(item.freelance, $event)" 
                 matTooltip="Contacter" class="contact-btn">
-          <mat-icon>phone</mat-icon>
+          <mat-icon>chat_bubble_outline</mat-icon>
         </button>
       </div>
       
@@ -178,13 +210,6 @@
             </div>
           </swiper-slide>
         </swiper-container>
-        
-        <!-- Contrôles du carousel -->
-        <!-- <div class="carousel-controls">
-          <button mat-icon-button (click)="toggleAutoplay(item.id, $event)" matTooltip="Play/Pause">
-            <mat-icon>{{ autoplayStatus[item.id] ? 'pause' : 'play_arrow' }}</mat-icon>
-          </button>
-        </div> -->
       </div>
 
       <!-- Badge de catégorie -->
@@ -240,4 +265,149 @@
       </div>
     </div>
   </div>
+
+  <!-- ==========================================
+  🆕 MODAL DE CONTACT POUR PORTFOLIO
+  ========================================== -->
+  <div class="portfolio-contact-modal-overlay" 
+       *ngIf="showContactModal" 
+       [@modalAnimation]="showContactModal ? 'open' : 'closed'"
+       (click)="closeContactModal()">
+    
+    <div class="portfolio-contact-modal-container" (click)="$event.stopPropagation()">
+      
+      <!-- Header adapté au thème portfolio -->
+      <div class="portfolio-contact-modal-header">
+        <div class="contact-header-info">
+          <h2>
+            <mat-icon>email</mat-icon>
+            Contacter {{ selectedFreelanceForContact?.prenom }}
+          </h2>
+          <p *ngIf="selectedFreelanceForContact">
+            Envoyez votre message après avoir consulté le portfolio de 
+            <strong>{{ selectedFreelanceForContact.prenom }} {{ selectedFreelanceForContact.nom }}</strong>
+          </p>
+        </div>
+        <button mat-icon-button class="close-modal-btn" (click)="closeContactModal()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <!-- Formulaire de contact adapté au portfolio -->
+      <form [formGroup]="contactForm" (ngSubmit)="onSubmitContact()" class="portfolio-contact-form">
+        
+        <!-- Champ Nom -->
+        <div class="form-group">
+          <label for="portfolio-contact-name">
+            <mat-icon>person_outline</mat-icon>
+            Votre nom complet <span class="required">*</span>
+          </label>
+          <input
+            id="portfolio-contact-name"
+            type="text"
+            formControlName="name"
+            placeholder="Prénom Nom"
+            [class.error]="hasFieldError('name')"
+          />
+          <div *ngIf="hasFieldError('name')" class="error-message">
+            <mat-icon>error_outline</mat-icon>
+            {{ getFieldError('name') }}
+          </div>
+        </div>
+
+        <!-- Champ E-mail -->
+        <div class="form-group">
+          <label for="portfolio-contact-email">
+            <mat-icon>mail_outline</mat-icon>
+            Votre adresse e-mail <span class="required">*</span>
+          </label>
+          <input
+            id="portfolio-contact-email"
+            type="email"
+            formControlName="email"
+            placeholder="votre.email@exemple.com"
+            [class.error]="hasFieldError('email')"
+          />
+          <div *ngIf="hasFieldError('email')" class="error-message">
+            <mat-icon>error_outline</mat-icon>
+            {{ getFieldError('email') }}
+          </div>
+        </div>
+
+        <!-- Champ Sujet -->
+        <div class="form-group">
+          <label for="portfolio-contact-subject">
+            <mat-icon>subject</mat-icon>
+            Sujet de votre demande <span class="required">*</span>
+          </label>
+          <input
+            id="portfolio-contact-subject"
+            type="text"
+            formControlName="subject"
+            placeholder="Ex: Collaboration suite à consultation de votre portfolio"
+            [class.error]="hasFieldError('subject')"
+          />
+          <div *ngIf="hasFieldError('subject')" class="error-message">
+            <mat-icon>error_outline</mat-icon>
+            {{ getFieldError('subject') }}
+          </div>
+        </div>
+
+        <!-- Champ Message -->
+        <div class="form-group">
+          <label for="portfolio-contact-message">
+            <mat-icon>chat_bubble_outline</mat-icon>
+            Votre message <span class="required">*</span>
+          </label>
+          <textarea
+            id="portfolio-contact-message"
+            formControlName="message"
+            placeholder="Décrivez votre projet, vos inspirations d'après le portfolio consulté..."
+            rows="5"
+            [class.error]="hasFieldError('message')"
+          ></textarea>
+          <div *ngIf="hasFieldError('message')" class="error-message">
+            <mat-icon>error_outline</mat-icon>
+            {{ getFieldError('message') }}
+          </div>
+        </div>
+
+        <!-- Actions adaptées au thème Material -->
+        <div class="portfolio-contact-modal-actions">
+          <button type="button" mat-button (click)="closeContactModal()">
+            <mat-icon>close</mat-icon>
+            Annuler
+          </button>
+          
+          <button 
+            type="submit" 
+            mat-raised-button
+            color="primary"
+            [disabled]="contactForm.invalid || isSubmittingContact"
+            [class.loading]="isSubmittingContact">
+            
+            <span *ngIf="!isSubmittingContact">
+              <mat-icon>send</mat-icon>
+              Envoyer le message
+            </span>
+            
+            <span *ngIf="isSubmittingContact" class="loading-state">
+              <mat-spinner diameter="16"></mat-spinner>
+              Envoi en cours...
+            </span>
+          </button>
+        </div>
+      </form>
+
+      <!-- Info adaptée au portfolio -->
+      <div class="portfolio-contact-info-footer">
+        <p>
+          <mat-icon>info_outline</mat-icon>
+          Votre message fait référence au portfolio consulté, ce qui aidera 
+          {{ selectedFreelanceForContact?.prenom }} à mieux comprendre vos attentes.
+        </p>
+      </div>
+    </div>
+  </div>
+
 </div>

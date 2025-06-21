@@ -13,7 +13,7 @@ export interface SignupRequest {
   adresse?: string;
   sexe: string;
   // Type d'utilisateur
-  role: string;
+  role: string; 
   
   // Attributs spécifiques
   description?: string;        // Pour EMPLOYEUR
@@ -93,13 +93,13 @@ signup(request: SignupRequest): Observable<AuthResponse> {
       );
   }
 
-  // Méthode de déconnexion
-  logout(): void {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('user_role');
-    localStorage.removeItem('user_id');
-  }
+  // // Méthode de déconnexion
+  // logout(): void {
+  //   localStorage.removeItem('auth_token');
+  //   localStorage.removeItem('refresh_token');
+  //   localStorage.removeItem('user_role');
+  //   localStorage.removeItem('user_id');
+  // }
 
   // Stocker les données d'authentification
   private storeAuthData(authData: AuthResponse): void {
@@ -109,19 +109,19 @@ signup(request: SignupRequest): Observable<AuthResponse> {
     localStorage.setItem('user_id', authData.userId);
   }
 
-  // Vérifier si l'utilisateur est connecté
-  isLoggedIn(): boolean {
-    return !!localStorage.getItem('auth_token');
-  }
+  // // Vérifier si l'utilisateur est connecté
+  // isLoggedIn(): boolean {
+  //   return !!localStorage.getItem('auth_token');
+  // }
 
-  // Récupérer le token d'authentification
-  getToken(): string | null {
-    return localStorage.getItem('auth_token');
-  }
+  // // Récupérer le token d'authentification
+  // getToken(): string | null {
+  //   return localStorage.getItem('auth_token');
+  // }
 
-  // Récupérer le rôle de l'utilisateur
-  getUserRole(): string | null {
-    return localStorage.getItem('user_role');
-  }
+  // // Récupérer le rôle de l'utilisateur
+  // getUserRole(): string | null {
+  //   return localStorage.getItem('user_role');
+  // }
 
 }

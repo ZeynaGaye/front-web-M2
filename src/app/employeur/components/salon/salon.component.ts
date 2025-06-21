@@ -2,6 +2,7 @@ import { CommonModule, NgFor, NgIf, TitleCasePipe } from '@angular/common';
 import { Component, EventEmitter, Output, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormArray, FormsModule } from '@angular/forms';
 import { SalonService } from '../../services/salon.service';
+import { HttpClient } from '@angular/common/http';
 
  // Assurez-vous que le chemin est correct
 
@@ -42,7 +43,8 @@ export class SalonComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private salonService: SalonService // Injecter le service
+    private salonService: SalonService, // Injecter le service
+    private http: HttpClient
   ) {
     this.salonForm = this.fb.group({
       nom: ['', Validators.required],
@@ -226,6 +228,7 @@ export class SalonComponent implements OnInit {
       this.salonService.createSalonWithFile(formData).subscribe({
         next: (response: any) => {
           console.log('Salon créé :', response);
+          this.creerHorairesDefaut(response.id);
           this.salonCreated.emit(response);
           this.closeModal();
           this.isSubmitting = false;
@@ -243,13 +246,13 @@ export class SalonComponent implements OnInit {
       });
     }
   }
-  // // Ajoutez cette méthode pour récupérer l'ID de l'utilisateur actuel
-  // private getUserId(): string {
-  //   // Récupérer l'ID depuis le token JWT ou le service d'authentification
-  //   // Par exemple:
-  //   return this.authService.getEmployeurId();
-  // }
-
+  private creerHorairesDefaut(salonId: number) {
+    this.http.post(`http://localhost:8081/api/disponibilites/salon/${salonId}/horaires/defaut`, {})
+      .subscribe({
+        next: (response) => console.log('✅ Horaires créés:', response),
+        error: (error) => console.error('❌ Erreur horaires:', error)
+      });
+  }
   closeModal() {
     this.closeModalEvent.emit();
   }

@@ -2,6 +2,8 @@ import { PortfolioImage } from "./PortfolioImage";
 
 // Interface Freelance pour contenir toutes les informations du freelance
 export interface Freelance {
+note: any;
+nombreAvis: any;
   competences: any;
   id: number;
   nom: string;
