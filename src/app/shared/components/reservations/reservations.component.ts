@@ -1,10 +1,9 @@
-
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ReservationService } from '../../../shared/services/reservation/reservation.service';
 
-// Interface pour les réservations
+
 interface Reservation {
   id: number;
   clientId: number;
@@ -19,11 +18,10 @@ interface Reservation {
   servicePrix: number;
   datePrestation: Date;
   dateCreation: Date;
-  statut: 'en_attente' | 'confirmee' | 'annulee' | 'terminee';
+  statut: 'confirmee' | 'terminee' | 'annulee' | 'non_presentee'; // ✅ CORRIGÉ
   notes?: string;
 }
 
-// Interface pour les salons (reçu du parent)
 interface Salon {
   id: number;
   nom: string;
@@ -34,37 +32,29 @@ interface Salon {
 @Component({
   selector: 'app-reservations',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule
-  ],
+  imports: [CommonModule, FormsModule],
   templateUrl: './reservations.component.html',
   styleUrls: ['./reservations.component.scss']
 })
 export class ReservationsComponent implements OnInit {
   
-  // ===== INPUTS DEPUIS LE PARENT =====
-  @Input() salons: Salon[] = []; // Liste des salons depuis le parent
-  
-  // ===== OUTPUTS VERS LE PARENT =====
+  @Input() salons: Salon[] = [];
   @Output() closeEvent = new EventEmitter<void>();
   @Output() reservationUpdated = new EventEmitter<any>();
   @Output() statsUpdated = new EventEmitter<any>();
   
-  // ===== PROPRIÉTÉS DU COMPOSANT =====
   reservations: Reservation[] = [];
   filteredReservations: Reservation[] = [];
   selectedReservation: Reservation | null = null;
   loadingReservations = false;
   reservationsError: string | null = null;
   
-  // Statistiques des réservations
-  pendingReservationsCount = 0;
-  confirmedReservationsCount = 0;
+  // ✅ STATISTIQUES CORRIGÉES
+  confirmedReservationsCount = 0; // CONFIRMEE = "en attente" dans l'affichage
+  completedReservationsCount = 0;   // TERMINEE
   todayReservationsCount = 0;
   totalRevenue = 0;
   
-  // Filtres et recherche
   searchTerm = '';
   statusFilter = '';
   salonFilter = '';
@@ -77,37 +67,23 @@ export class ReservationsComponent implements OnInit {
     this.loadReservations();
   }
   
-  // ==========================================
-  // 🔧 MÉTHODES UTILITAIRES TRACKBY (CORRIGÉ)
-  // ==========================================
-  
-  /**
-   * ✅ TrackBy pour optimiser les performances de ngFor
-   */
   trackByReservationId(index: number, reservation: Reservation): number {
     return reservation.id;
   }
   
   /**
-   * ✅ Formate le label du statut pour l'affichage
+   * ✅ LABELS CORRIGÉS
    */
   getStatusLabel(statut: string): string {
     const labels: { [key: string]: string } = {
-      'en_attente': 'En attente',
       'confirmee': 'Confirmée',
+      'terminee': 'Terminée',
       'annulee': 'Annulée',
-      'terminee': 'Terminée'
+      'non_presentee': 'Non présenté'
     };
     return labels[statut] || statut;
   }
   
-  // ==========================================
-  // 📅 MÉTHODES DE CHARGEMENT DES DONNÉES
-  // ==========================================
-  
-  /**
-   * ✅ Charge toutes les réservations des salons de l'employeur
-   */
   loadReservations(): void {
     this.loadingReservations = true;
     this.reservationsError = null;
@@ -116,7 +92,6 @@ export class ReservationsComponent implements OnInit {
       next: (data: any[]) => {
         console.log('Réservations chargées:', data);
         
-        // Mapper les données selon votre structure
         this.reservations = data.map(reservation => ({
           id: reservation.id,
           clientId: reservation.clientId || reservation.utilisateurId,
@@ -131,61 +106,53 @@ export class ReservationsComponent implements OnInit {
           servicePrix: reservation.servicePrix || reservation.prixService || 0,
           datePrestation: new Date(reservation.datePrestation || reservation.dateRendezVous),
           dateCreation: new Date(reservation.dateCreation || reservation.createdAt || Date.now()),
-          statut: this.normalizeStatut(reservation.statut || reservation.status || 'en_attente'),
+          statut: this.normalizeStatut(reservation.statut || reservation.status || 'confirmee'),
           notes: reservation.notes || reservation.commentaires || ''
         }));
         
-        // Calculer les statistiques
         this.calculateReservationsStats();
-        
-        // Appliquer les filtres
         this.filterReservations();
-        
         this.loadingReservations = false;
-        console.log(`${this.reservations.length} réservations traitées`);
-        
-        // Émettre les stats vers le parent
         this.emitStatsToParent();
       },
       error: (error) => {
         console.error('Erreur lors du chargement des réservations:', error);
         this.reservationsError = 'Impossible de charger les réservations.';
         this.loadingReservations = false;
-        
-        // Fallback avec données de test en développement
         this.loadMockReservations();
       }
     });
   }
   
   /**
-   * ✅ Normalise le statut de réservation
+   * ✅ MAPPING STATUTS CORRIGÉ
    */
-  private normalizeStatut(statut: string): 'en_attente' | 'confirmee' | 'annulee' | 'terminee' {
-    const statusMap: { [key: string]: 'en_attente' | 'confirmee' | 'annulee' | 'terminee' } = {
-      'pending': 'en_attente',
-      'PENDING': 'en_attente',
+  private normalizeStatut(statut: string): 'confirmee' | 'terminee' | 'annulee' | 'non_presentee' {
+    const statusMap: { [key: string]: 'confirmee' | 'terminee' | 'annulee' | 'non_presentee' } = {
+      'CONFIRMEE': 'confirmee',
       'confirmed': 'confirmee',
-      'CONFIRMED': 'confirmee',
-      'cancelled': 'annulee',
-      'CANCELLED': 'annulee',
+      'TERMINEE': 'terminee',
       'completed': 'terminee',
-      'COMPLETED': 'terminee'
+      'ANNULEE_CLIENT': 'annulee',
+      'ANNULEE_PRESTATAIRE': 'annulee',
+      'cancelled': 'annulee',
+      'NON_PRESENTEE': 'non_presentee',
+      'no_show': 'non_presentee'
     };
     
-    return statusMap[statut] || 'en_attente';
+    return statusMap[statut] || 'confirmee';
   }
   
   /**
-   * ✅ Calcule les statistiques des réservations
+   * ✅ STATISTIQUES CORRIGÉES
    */
   private calculateReservationsStats(): void {
     const stats = {
       total: this.reservations.length,
-      enAttente: 0,
-      confirmees: 0,
-      annulees: 0,
+      confirmees: 0,    // "En attente" dans l'affichage
       terminees: 0,
+      annulees: 0,
+      nonPresentees: 0,
       chiffreAffaires: 0,
       reservationsAujourdhui: 0
     };
@@ -193,45 +160,40 @@ export class ReservationsComponent implements OnInit {
     const today = new Date().toISOString().split('T')[0];
     
     this.reservations.forEach(reservation => {
-      // Compter par statut
       switch (reservation.statut) {
-        case 'en_attente':
-          stats.enAttente++;
-          break;
         case 'confirmee':
           stats.confirmees++;
-          break;
-        case 'annulee':
-          stats.annulees++;
           break;
         case 'terminee':
           stats.terminees++;
           stats.chiffreAffaires += reservation.servicePrix;
           break;
+        case 'annulee':
+          stats.annulees++;
+          break;
+        case 'non_presentee':
+          stats.nonPresentees++;
+          break;
       }
       
-      // Compter réservations du jour
       const reservationDate = new Date(reservation.datePrestation);
       if (reservationDate.toISOString().split('T')[0] === today) {
         stats.reservationsAujourdhui++;
       }
     });
     
-    this.pendingReservationsCount = stats.enAttente;
     this.confirmedReservationsCount = stats.confirmees;
+    this.completedReservationsCount = stats.terminees;
     this.todayReservationsCount = stats.reservationsAujourdhui;
     this.totalRevenue = stats.chiffreAffaires;
     
     console.log('Statistiques calculées:', stats);
   }
   
-  /**
-   * ✅ Émet les statistiques vers le composant parent
-   */
   private emitStatsToParent(): void {
     const stats = {
-      pendingReservationsCount: this.pendingReservationsCount,
       confirmedReservationsCount: this.confirmedReservationsCount,
+      completedReservationsCount: this.completedReservationsCount,
       todayReservationsCount: this.todayReservationsCount,
       totalRevenue: this.totalRevenue
     };
@@ -240,51 +202,11 @@ export class ReservationsComponent implements OnInit {
   }
   
   // ==========================================
-  // 🎯 ACTIONS SUR LES RÉSERVATIONS
+  // 🎯 ACTIONS CORRIGÉES
   // ==========================================
   
   /**
-   * ✅ Confirme une réservation en attente
-   */
-  confirmReservation(reservationId: number): void {
-    console.log('Confirmation réservation:', reservationId);
-    
-    this.reservationService.confirmerReservation(reservationId).subscribe({
-      next: (updatedReservation) => {
-        console.log('Réservation confirmée:', updatedReservation);
-        this.updateLocalReservation(reservationId, updatedReservation);
-        this.showSuccessMessage('Réservation confirmée avec succès');
-        this.reservationUpdated.emit({ action: 'confirmed', reservation: updatedReservation });
-      },
-      error: (error) => {
-        console.error('Erreur confirmation:', error);
-        this.showErrorMessage('Impossible de confirmer la réservation');
-      }
-    });
-  }
-  
-  /**
-   * ✅ Refuse une réservation en attente
-   */
-  rejectReservation(reservationId: number, motif?: string): void {
-    console.log('Refus réservation:', reservationId, motif);
-    
-    this.reservationService.refuserReservation(reservationId, motif).subscribe({
-      next: (updatedReservation) => {
-        console.log('Réservation refusée:', updatedReservation);
-        this.updateLocalReservation(reservationId, updatedReservation);
-        this.showSuccessMessage('Réservation refusée');
-        this.reservationUpdated.emit({ action: 'rejected', reservation: updatedReservation });
-      },
-      error: (error) => {
-        console.error('Erreur refus:', error);
-        this.showErrorMessage('Impossible de refuser la réservation');
-      }
-    });
-  }
-  
-  /**
-   * ✅ Termine une réservation confirmée
+   * ✅ TERMINER (CONFIRMEE → TERMINEE)
    */
   completeReservation(reservationId: number): void {
     console.log('Finalisation réservation:', reservationId);
@@ -304,7 +226,7 @@ export class ReservationsComponent implements OnInit {
   }
   
   /**
-   * ✅ Annule une réservation confirmée
+   * ✅ ANNULER (CONFIRMEE → ANNULEE_PRESTATAIRE)
    */
   cancelReservation(reservationId: number): void {
     console.log('Annulation réservation:', reservationId);
@@ -324,12 +246,28 @@ export class ReservationsComponent implements OnInit {
   }
   
   /**
-   * ✅ Met à jour une réservation dans la liste locale
+   * ✅ NOUVEAU : NON PRÉSENTÉ (CONFIRMEE → NON_PRESENTEE)
    */
+  markNoShow(reservationId: number): void {
+    console.log('Marquer non présenté:', reservationId);
+    
+    this.reservationService.marquerNonPresentee(reservationId).subscribe({
+      next: (updatedReservation) => {
+        console.log('Client marqué non présenté:', updatedReservation);
+        this.updateLocalReservation(reservationId, updatedReservation);
+        this.showSuccessMessage('Client marqué comme non présenté');
+        this.reservationUpdated.emit({ action: 'no_show', reservation: updatedReservation });
+      },
+      error: (error) => {
+        console.error('Erreur non présenté:', error);
+        this.showErrorMessage('Impossible de marquer comme non présenté');
+      }
+    });
+  }
+  
   private updateLocalReservation(reservationId: number, updatedData: any): void {
     const index = this.reservations.findIndex(r => r.id === reservationId);
     if (index !== -1) {
-      // Mettre à jour la réservation
       this.reservations[index] = {
         ...this.reservations[index],
         ...updatedData,
@@ -338,33 +276,19 @@ export class ReservationsComponent implements OnInit {
         dateCreation: new Date(updatedData.dateCreation || this.reservations[index].dateCreation)
       };
       
-      // Mettre à jour la réservation sélectionnée si c'est la même
       if (this.selectedReservation && this.selectedReservation.id === reservationId) {
         this.selectedReservation = this.reservations[index];
       }
       
-      // Recalculer les statistiques
       this.calculateReservationsStats();
-      
-      // Refiltrer les réservations
       this.filterReservations();
-      
-      // Émettre les nouvelles stats
       this.emitStatsToParent();
     }
   }
   
-  // ==========================================
-  // 🔍 FILTRAGE ET RECHERCHE
-  // ==========================================
-  
-  /**
-   * ✅ Filtre les réservations selon les critères
-   */
   filterReservations(): void {
     let filtered = [...this.reservations];
     
-    // Filtre par terme de recherche
     if (this.searchTerm.trim()) {
       const searchLower = this.searchTerm.toLowerCase();
       filtered = filtered.filter(r => 
@@ -376,17 +300,14 @@ export class ReservationsComponent implements OnInit {
       );
     }
     
-    // Filtre par statut
     if (this.statusFilter) {
       filtered = filtered.filter(r => r.statut === this.statusFilter);
     }
     
-    // Filtre par salon
     if (this.salonFilter) {
       filtered = filtered.filter(r => r.salonId.toString() === this.salonFilter);
     }
     
-    // Filtre par date
     if (this.dateFilter) {
       const filterDate = new Date(this.dateFilter);
       filterDate.setHours(0, 0, 0, 0);
@@ -398,36 +319,19 @@ export class ReservationsComponent implements OnInit {
       });
     }
     
-    // Trier par date (plus récent en premier)
     this.filteredReservations = filtered.sort((a, b) => {
       return new Date(b.datePrestation).getTime() - new Date(a.datePrestation).getTime();
     });
-    
-    console.log(`${this.filteredReservations.length} réservations après filtrage`);
   }
   
-  // ==========================================
-  // 🎯 NAVIGATION ET UI
-  // ==========================================
-  
-  /**
-   * ✅ Ferme le composant et émet vers le parent
-   */
   closeReservations(): void {
     this.closeEvent.emit();
   }
   
-  /**
-   * ✅ Affiche les détails d'une réservation
-   */
   viewReservationDetails(reservation: Reservation): void {
     this.selectedReservation = reservation;
-    console.log('Affichage détails réservation:', reservation);
   }
   
-  /**
-   * ✅ Ferme la modal de détails
-   */
   closeReservationModal(event?: MouseEvent): void {
     if (event && (event.target as HTMLElement).classList.contains('modal-overlay')) {
       this.selectedReservation = null;
@@ -436,56 +340,33 @@ export class ReservationsComponent implements OnInit {
     }
   }
   
-  /**
-   * ✅ Change le mode d'affichage
-   */
   setViewMode(mode: 'cards' | 'list' | 'calendar'): void {
     this.viewMode = mode;
-    console.log('Mode d\'affichage changé:', mode);
   }
   
-  /**
-   * ✅ Vérifie s'il y a des filtres actifs
-   */
   hasActiveFilters(): boolean {
     return !!(this.searchTerm || this.statusFilter || this.salonFilter || this.dateFilter);
   }
   
-  /**
-   * ✅ Efface tous les filtres
-   */
   clearFilters(): void {
     this.searchTerm = '';
     this.statusFilter = '';
     this.salonFilter = '';
     this.dateFilter = '';
     this.filterReservations();
-    console.log('Filtres effacés');
   }
   
-  // ==========================================
-  // 🎨 MÉTHODES D'AFFICHAGE
-  // ==========================================
-  
-  /**
-   * ✅ Formate le jour pour l'affichage
-   */
+  // Méthodes d'affichage (inchangées)
   formatDay(date: Date): string {
     return date.getDate().toString().padStart(2, '0');
   }
   
-  /**
-   * ✅ Formate le mois pour l'affichage
-   */
   formatMonth(date: Date): string {
     const months = ['JAN', 'FÉV', 'MAR', 'AVR', 'MAI', 'JUN', 
                    'JUL', 'AOÛ', 'SEP', 'OCT', 'NOV', 'DÉC'];
     return months[date.getMonth()];
   }
   
-  /**
-   * ✅ Formate l'heure
-   */
   formatTime(date: Date): string {
     return date.toLocaleTimeString('fr-FR', { 
       hour: '2-digit', 
@@ -493,9 +374,6 @@ export class ReservationsComponent implements OnInit {
     });
   }
   
-  /**
-   * ✅ Formate la date complète
-   */
   formatDate(date: Date): string {
     return date.toLocaleDateString('fr-FR', {
       day: '2-digit',
@@ -504,9 +382,6 @@ export class ReservationsComponent implements OnInit {
     });
   }
   
-  /**
-   * ✅ Formate la date complète avec jour
-   */
   formatFullDate(date: Date): string {
     return date.toLocaleDateString('fr-FR', {
       weekday: 'long',
@@ -516,50 +391,26 @@ export class ReservationsComponent implements OnInit {
     });
   }
   
-  /**
-   * ✅ Retourne le nom d'un salon
-   */
   getSalonName(salonId: number): string {
     const salon = this.salons.find(s => s.id === salonId);
     return salon ? salon.nom : `Salon #${salonId}`;
   }
   
-  /**
-   * ✅ Retourne l'adresse d'un salon
-   */
   getSalonAddress(salonId: number): string {
     const salon = this.salons.find(s => s.id === salonId);
     return salon ? salon.adresse : 'Adresse non trouvée';
   }
   
-  // ==========================================
-  // 💬 MESSAGES ET NOTIFICATIONS
-  // ==========================================
-  
-  /**
-   * ✅ Affiche un message de succès
-   */
   private showSuccessMessage(message: string): void {
     console.log('✅ Succès:', message);
-    // Ici vous pouvez intégrer votre système de notifications
-    // Exemple : this.toastr.success(message);
   }
   
-  /**
-   * ✅ Affiche un message d'erreur
-   */
   private showErrorMessage(message: string): void {
     console.error('❌ Erreur:', message);
-    // Ici vous pouvez intégrer votre système de notifications
-    // Exemple : this.toastr.error(message);
   }
   
-  // ==========================================
-  // 🧪 DONNÉES DE TEST (DÉVELOPPEMENT)
-  // ==========================================
-  
   /**
-   * ✅ Charge des données de test (fallback développement)
+   * ✅ DONNÉES DE TEST CORRIGÉES
    */
   private loadMockReservations(): void {
     console.log('🧪 Chargement de données de test');
@@ -577,9 +428,9 @@ export class ReservationsComponent implements OnInit {
         serviceDescription: 'Coupe personnalisée avec brushing',
         serviceDuree: 60,
         servicePrix: 45000,
-        datePrestation: new Date('2024-06-17T10:00:00'),
-        dateCreation: new Date('2024-06-15T14:30:00'),
-        statut: 'en_attente',
+        datePrestation: new Date('2024-07-22T10:00:00'),
+        dateCreation: new Date('2024-07-20T14:30:00'),
+        statut: 'confirmee', // ✅ CORRIGÉ
         notes: 'Première visite au salon'
       },
       {
@@ -594,9 +445,9 @@ export class ReservationsComponent implements OnInit {
         serviceDescription: 'Coloration complète',
         serviceDuree: 120,
         servicePrix: 75000,
-        datePrestation: new Date('2024-06-16T14:00:00'),
-        dateCreation: new Date('2024-06-14T09:15:00'),
-        statut: 'confirmee',
+        datePrestation: new Date('2024-07-21T14:00:00'),
+        dateCreation: new Date('2024-07-19T09:15:00'),
+        statut: 'terminee', // ✅ CORRIGÉ
         notes: 'Allergie aux sulfates'
       },
       {
@@ -611,9 +462,9 @@ export class ReservationsComponent implements OnInit {
         serviceDescription: 'Manucure française',
         serviceDuree: 45,
         servicePrix: 25000,
-        datePrestation: new Date(), // Aujourd'hui
-        dateCreation: new Date('2024-06-14T16:20:00'),
-        statut: 'terminee',
+        datePrestation: new Date(),
+        dateCreation: new Date('2024-07-20T16:20:00'),
+        statut: 'confirmee', // ✅ CORRIGÉ
         notes: ''
       }
     ];

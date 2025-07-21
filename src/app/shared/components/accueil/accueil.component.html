@@ -1,5 +1,42 @@
-<div>
-    <app-pro-free></app-pro-free>
-    <app-client-section></app-client-section>
-    <app-job-offer></app-job-offer>
-  </div>
+<div class="accueil-container">
+  <app-header></app-header>
+  <!-- <app-header></app-header> -->
+  <app-pro-free></app-pro-free>
+  <app-client-section></app-client-section>
+  
+  <!-- 🆕 SECTION RECOMMANDATIONS -->
+  <!-- <section class="recommendations-wrapper" *ngIf="showRecommendations">
+    <app-recommendations
+      [showRecommendations]="true"
+      [autoLoad]="true"
+      [userLocation]="userLocation"
+      [headerTitle]="'Découvrez les meilleurs professionnels'"
+      [headerSubtitle]="'Sélectionnés spécialement pour vous selon vos préférences'"
+      [showCta]="true"
+      [ctaTitle]="'Besoin de plus d\'options ?'"
+      [ctaDescription]="'Explorez notre catalogue complet ou utilisez notre recherche avancée'"
+      [ctaButtonText]="'Explorer tous les salons'"
+      (salonClick)="onSalonClick($event)"
+      (viewAllSection)="onViewAllSection($event)"
+      (favoriteToggle)="onFavoriteToggle($event)"
+      (ctaClick)="onRecommendationCta()">
+    </app-recommendations>
+  </section> -->
+
+  <!-- 🆕 SECTION OPPORTUNITÉS D'EMPLOI - COMPOSANT DIRECT -->
+  <!-- <section class="job-opportunities-wrapper" *ngIf="showJobOpportunities">
+    <app-opportunites-emploi
+      [maxOffersToShow]="maxJobOffersOnHomepage"
+      [showHeader]="true"
+      [compactMode]="true"
+      [autoLoad]="true"
+      (offreClick)="onJobOfferClick($event)"
+      (viewAllClick)="onViewAllJobOffers()"
+      (filterChange)="onJobFilterChange($event)">
+    </app-opportunites-emploi> -->
+  <!-- </section> -->
+
+  <!-- Section existante job offers (peut être supprimée si remplacée) -->
+  <!-- <app-job-offer></app-job-offer> -->
+  
+</div>

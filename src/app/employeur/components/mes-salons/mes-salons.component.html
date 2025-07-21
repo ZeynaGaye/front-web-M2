@@ -22,9 +22,7 @@
           <div class="salon-main-content">
             <div class="salon-image">
               <img [src]="salon.photoProfilUrl || 'src/assets/images/pexels-barik5ive-3355696-5282408.jpg'" alt="{{ salon.nom }}">
-              <!-- <button mat-mini-fab class="edit-photo-btn" (click)="changeProfilePhoto(salon.id)"> -->
-                <mat-icon (click)="changeProfilePhoto(salon.id)">edit</mat-icon>
-              <!-- </button> -->
+              <mat-icon (click)="changeProfilePhoto(salon.id)">edit</mat-icon>
             </div>
             <div class="salon-details">
               <h3>{{ salon.nom }}</h3>
@@ -131,47 +129,127 @@
               </div>
             </div>
             
-            <!-- Contenu de l'onglet Photos -->
+            <!-- ✅ CONTENU DE L'ONGLET PHOTOS CORRIGÉ -->
             <div class="tab-content" *ngIf="activeTab[salon.id] === 'photos'" [@tabAnimation]>
               <div class="photos-content">
-                <h4>Galerie photos</h4>
-                
-                <!-- Charger les photos lors de l'ouverture de l'onglet -->
-                <ng-container *ngIf="activeTab[salon.id] === 'photos' && salonPhotos[salon.id] !== undefined; then photosLoaded else photosLoading"></ng-container>
-                
-                <ng-template #photosLoading>
-                  <div class="loading">
-                    <mat-spinner diameter="40"></mat-spinner>
+                <div class="photos-header">
+                  <h4>Galerie photos</h4>
+                  <div class="photos-controls">
+                    <!-- Bouton de debug -->
+                    <button mat-icon-button (click)="debugSalon(salon.id)" matTooltip="Debug salon" class="debug-btn">
+                      <!-- <mat-icon>bug_report</mat-icon> -->
+                    </button>
+                    
+                    <!-- Bouton de rechargement -->
+                    <button mat-icon-button (click)="reloadPhotos(salon.id)" matTooltip="Recharger les photos" 
+                            [disabled]="arePhotosLoading(salon.id)">
+                      <mat-icon [class.fa-spin]="arePhotosLoading(salon.id)">refresh</mat-icon>
+                    </button>
+                    
+                    <!-- Bouton d'ajout de photos -->
+                    <button mat-raised-button (click)="openFileSelector(salon.id)" 
+                            [disabled]="arePhotosLoading(salon.id)">
+                      <mat-icon>add_photo_alternate</mat-icon> 
+                      Ajouter des photos
+                    </button>
                   </div>
-                </ng-template>
-                
-                <ng-template #photosLoaded>
+                </div>
+
+                <!-- État de chargement -->
+                <div *ngIf="arePhotosLoading(salon.id)" class="loading-photos">
+                  <mat-spinner diameter="40"></mat-spinner>
+                  <p>Chargement des photos...</p>
+                </div>
+
+                <!-- Affichage des erreurs -->
+                <div *ngIf="hasPhotosError(salon.id)" class="photos-error">
+                  <mat-icon color="warn">error</mat-icon>
+                  <p>{{ getPhotosError(salon.id) }}</p>
+                  <button mat-button (click)="reloadPhotos(salon.id)">
+                    <mat-icon>refresh</mat-icon> Réessayer
+                  </button>
+                </div>
+
+                <!-- Contenu principal des photos -->
+                <div *ngIf="!arePhotosLoading(salon.id) && !hasPhotosError(salon.id)" class="photos-main-content">
+                  
+                  <!-- Informations de debug -->
+                  <!-- <div class="debug-info">
+                    <small>
+                      <strong>Debug:</strong> 
+                      Photos initialisées: {{ hasPhotosLoaded(salon.id) ? 'Oui' : 'Non' }} | 
+                      Nombre de photos: {{ getPhotosCount(salon.id) }} | 
+                      En chargement: {{ arePhotosLoading(salon.id) ? 'Oui' : 'Non' }}
+                    </small>
+                  </div> -->
+
                   <!-- Affichage des photos existantes -->
-                  <div *ngIf="(salonPhotos[salon.id] ?? []).length > 0" class="photo-gallery">
-                    <div *ngFor="let photo of salonPhotos[salon.id]" class="photo-item" [@photoAnimation]>
-                      <img [src]="photo.url" alt="Photo du salon">
-                      <div class="photo-actions">
-                        <button mat-icon-button (click)="setAsProfilePhoto(photo.url, salon.id)" matTooltip="Définir comme photo de profil">
-                          <mat-icon>portrait</mat-icon>
-                        </button>
-                        <button mat-icon-button color="warn" (click)="deletePhoto(photo.id, salon.id)" matTooltip="Supprimer">
-                          <mat-icon>delete</mat-icon>
-                        </button>
+                  <div *ngIf="hasPhotosLoaded(salon.id) && getPhotosCount(salon.id) > 0" class="photo-gallery">
+                    <div *ngFor="let photo of salonPhotos[salon.id]; let i = index" class="photo-item" [@photoAnimation]>
+                      <div class="photo-container">
+                        <img [src]="photo.url" 
+                             [alt]="'Photo ' + (i + 1) + ' du salon'"
+                             (error)="onImageError($event)"
+                             loading="lazy">
+                        
+                        <div class="photo-overlay">
+                          <button mat-icon-button 
+                                  (click)="setAsProfilePhoto(photo.url, salon.id)" 
+                                  matTooltip="Définir comme photo de profil"
+                                  [disabled]="getLoadingState('set-profile-' + salon.id)"
+                                  class="set-profile-btn">
+                            <mat-icon>portrait</mat-icon>
+                          </button>
+                          
+                          <button mat-icon-button 
+                                  color="warn" 
+                                  (click)="deletePhoto(photo.id, salon.id)" 
+                                  matTooltip="Supprimer cette photo"
+                                  [disabled]="getLoadingState('delete-photo-' + photo.id)"
+                                  class="delete-btn">
+                            <mat-icon>delete</mat-icon>
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <!-- Informations de debug pour chaque photo -->
+                      <!-- <div class="photo-debug">
+                        <small>
+                          ID: {{ photo.id }} | 
+                          <span [style.color]="photo.fileExists === false ? '#f39c12' : '#28a745'">
+                            {{ photo.fileExists === false ? 'Fichier manquant' : 'Fichier OK' }}
+                          </span>
+                        </small>
                       </div>
                     </div>
-                  </div>
+                  </div> -->
                   
                   <!-- Message si aucune photo n'est disponible -->
-                  <div *ngIf="salonPhotos[salon.id]?.length === 0" class="photo-gallery-placeholder">
+                  <div *ngIf="hasPhotosLoaded(salon.id) && getPhotosCount(salon.id) === 0" class="photo-gallery-placeholder">
                     <mat-icon>photo_library</mat-icon>
-                    <p>Ajoutez des photos pour illustrer votre salon</p>
+                    <h5>Aucune photo disponible</h5>
+                    <p>Ajoutez des photos pour illustrer votre salon et attirer plus de clients.</p>
+                    <button mat-raised-button color="primary" (click)="openFileSelector(salon.id)">
+                      <mat-icon>add_photo_alternate</mat-icon> 
+                      Ajouter la première photo
+                    </button>
                   </div>
                   
-                  <!-- Bouton pour ajouter des photos -->
-                  <button mat-raised-button (click)="openFileSelector(salon.id)">
-                    <mat-icon>add_photo_alternate</mat-icon> Ajouter des photos
-                  </button>
-                </ng-template>
+                  <!-- Message si les photos ne sont pas encore initialisées -->
+                  <div *ngIf="!hasPhotosLoaded(salon.id)" class="photos-not-loaded">
+                    <mat-icon>info</mat-icon>
+                    <p>Cliquez sur "Recharger les photos" pour voir les photos disponibles</p>
+                    <button mat-button (click)="loadSalonPhotos(salon.id, true)">
+                      <mat-icon>refresh</mat-icon> Charger les photos
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Indicateur d'upload en cours -->
+                <div *ngIf="getLoadingState('upload-photos-' + salon.id)" class="upload-progress">
+                  <mat-spinner diameter="30"></mat-spinner>
+                  <p>Upload en cours...</p>
+                </div>
               </div>
             </div>
           </div>
@@ -188,3 +266,464 @@
     </div>
   </div>
 </div>
+
+<!-- ✅ STYLES CSS INTÉGRÉS POUR LES PHOTOS -->
+<style>
+  /* Styles généraux de la modal */
+  .modal-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    max-height: 90vh;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #e0e0e0;
+    background: #f8f9fa;
+  }
+
+  .modal-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+  }
+
+  .loading, .error-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+  }
+
+  .error-message {
+    color: #d32f2f;
+  }
+
+  /* Styles des cartes de salon */
+  .salon-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .salon-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    overflow: hidden;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: box-shadow 0.3s ease;
+  }
+
+  .salon-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  }
+
+  .salon-main-content {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    gap: 20px;
+  }
+
+  .salon-image {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .salon-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .salon-image mat-icon {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(255,255,255,0.9);
+    border-radius: 50%;
+    padding: 4px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+
+  .salon-image mat-icon:hover {
+    background: rgba(255,255,255,1);
+  }
+
+  .salon-details {
+    flex: 1;
+  }
+
+  .salon-details h3 {
+    margin: 0 0 10px 0;
+    color: #333;
+    font-size: 18px;
+  }
+
+  .salon-details p {
+    margin: 5px 0;
+    color: #666;
+    font-size: 14px;
+  }
+
+  .address i {
+    color: #ff6b35;
+    margin-right: 5px;
+  }
+
+  .stars i {
+    color: #ffd700;
+    margin-right: 2px;
+  }
+
+  .salon-services {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 10px;
+  }
+
+  .service-tag {
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+  }
+
+  .service-tag.more {
+    background: #f5f5f5;
+    color: #666;
+  }
+
+  .salon-actions {
+    flex-shrink: 0;
+  }
+
+  /* Styles du contenu expansible */
+  .salon-expanded-content {
+    border-top: 1px solid #e0e0e0;
+    background: #fafafa;
+  }
+
+  .action-tabs {
+    display: flex;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .action-tabs button {
+    flex: 1;
+    padding: 15px;
+    border: none;
+    background: transparent;
+    color: #666;
+    font-weight: 500;
+    transition: all 0.3s;
+  }
+
+  .action-tabs button.active-tab {
+    background: white;
+    color: #1976d2;
+    border-bottom: 2px solid #1976d2;
+  }
+
+  .action-tabs button:hover:not(.active-tab) {
+    background: #f0f0f0;
+  }
+
+  .tab-content {
+    padding: 20px;
+    background: white;
+  }
+
+  /* ✅ STYLES SPÉCIFIQUES POUR LES PHOTOS */
+  .photos-content {
+    padding: 15px;
+  }
+
+  .photos-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .photos-header h4 {
+    margin: 0;
+    color: #333;
+  }
+
+  .photos-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .debug-btn {
+    color: #ff9800 !important;
+  }
+
+  .loading-photos, .photos-error, .photo-gallery-placeholder, .photos-not-loaded, .upload-progress {
+    text-align: center;
+    padding: 30px;
+    color: #666;
+    border-radius: 8px;
+    margin: 20px 0;
+  }
+
+  .photos-error {
+    background: #ffebee;
+    border: 1px solid #ffcdd2;
+    color: #c62828;
+  }
+
+  .photo-gallery-placeholder {
+    background: #f5f5f5;
+    border: 2px dashed #ddd;
+  }
+
+  .photo-gallery-placeholder mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    color: #bbb;
+    margin-bottom: 15px;
+  }
+
+  .photos-not-loaded {
+    background: #e3f2fd;
+    border: 1px solid #bbdefb;
+    color: #1565c0;
+  }
+
+  .upload-progress {
+    background: #f3e5f5;
+    border: 1px solid #ce93d8;
+    color: #7b1fa2;
+  }
+
+  .debug-info {
+    background: #f0f0f0;
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+  }
+
+  .photo-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+  }
+
+  .photo-item {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    overflow: hidden;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: box-shadow 0.3s ease;
+  }
+
+  .photo-item:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  }
+
+  .photo-container {
+    position: relative;
+    width: 100%;
+    height: 150px;
+    overflow: hidden;
+  }
+
+  .photo-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s ease;
+  }
+
+  .photo-container:hover img {
+    transform: scale(1.05);
+  }
+
+  .photo-overlay {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    display: flex;
+    gap: 5px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .photo-container:hover .photo-overlay {
+    opacity: 1;
+  }
+
+  .set-profile-btn, .delete-btn {
+    background: rgba(255, 255, 255, 0.9) !important;
+    backdrop-filter: blur(4px);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    min-width: auto !important;
+  }
+
+  .set-profile-btn {
+    color: #2196f3 !important;
+  }
+
+  .set-profile-btn:hover {
+    background: rgba(33, 150, 243, 0.1) !important;
+  }
+
+  .delete-btn {
+    color: #f44336 !important;
+  }
+
+  .delete-btn:hover {
+    background: rgba(244, 67, 54, 0.1) !important;
+  }
+
+  .photo-debug {
+    padding: 8px;
+    background: #fafafa;
+    border-top: 1px solid #e0e0e0;
+    font-size: 11px;
+    text-align: center;
+  }
+
+  /* Styles pour les boutons disabled */
+  button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  /* Animation pour le spinner de rechargement */
+  .fa-spin {
+    animation: fa-spin 1s infinite linear;
+  }
+
+  @keyframes fa-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  /* Styles pour les services */
+  .services-container h4, .info-content h4 {
+    margin: 0 0 20px 0;
+    color: #333;
+  }
+
+  .service-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+  }
+
+  .service-card {
+    border-radius: 8px;
+  }
+
+  .add-service-btn-container {
+    text-align: center;
+  }
+
+  .empty-services {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+  }
+
+  .empty-services mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    color: #ccc;
+    margin-bottom: 15px;
+  }
+
+  .info-content .salon-info-details {
+    margin-bottom: 20px;
+  }
+
+  .info-content .salon-info-details p {
+    margin: 10px 0;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .no-salons {
+    text-align: center;
+    padding: 60px 20px;
+    color: #666;
+  }
+
+  .no-salons mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: #ccc;
+    margin-bottom: 20px;
+  }
+
+  /* Responsive design */
+  @media (max-width: 768px) {
+    .salon-main-content {
+      flex-direction: column;
+      text-align: center;
+    }
+
+    .salon-image {
+      width: 100px;
+      height: 100px;
+    }
+
+    .photo-gallery {
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 10px;
+    }
+    
+    .photos-header {
+      flex-direction: column;
+      gap: 10px;
+      align-items: stretch;
+    }
+    
+    .photos-controls {
+      justify-content: center;
+    }
+
+    .action-tabs {
+      flex-direction: column;
+    }
+
+    .service-cards {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

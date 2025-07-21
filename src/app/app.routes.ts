@@ -3,7 +3,6 @@ import { FreelanceDashbordComponent } from './freelance/components/freelance-das
 import { AccueilComponent } from './shared/components/accueil/accueil.component';
 import { ContactComponent } from './shared/components/contact/contact.component';
 import { HomeEmployeeComponent } from './employeur/components/home-employee/home-employee.component';
-
 import { HomeFreelanceComponent } from './freelance/components/home-freelance/home-freelance.component';
 import { authGuard } from './core/guards/auth.guard';
 import { SalonComponent } from './employeur/components/salon/salon.component';
@@ -15,38 +14,93 @@ import { OpportunitesEmploiComponent } from './freelance/components/opportunites
 import { PortfolioComponent } from './freelance/components/portfolio/portfolio.component';
 import { JobOfferComponent } from './shared/components/job-offer/job-offer.component';
 import { SalonRegistrationComponent } from './shared/components/salon-registration/salon-registration.component';
-import path from 'path';
+
+// ❌ SUPPRIMÉ : import path from 'path'; // ← CECI CASSAIT TOUT !
 
 export const routes: Routes = [
-  { path: '', redirectTo: '/accueil', pathMatch: 'full' },
-  { path: 'accueil', component: AccueilComponent },
-  { path: 'contacts', component: ContactComponent },
-  {path:'salon',component:SalonComponent},
-  { path: 'freelance-dashboard', component: FreelanceDashbordComponent },
-  {path: 'employeur/candidatures', component: CandidaturesComponent,},
-  {path: 'employeur/dashboard', component: DashboardComponent,},
-  {path: 'employeur/offresManager',    component: OffresManagerComponent, },
-  {path: 'freelance/portfolio',component: PortfolioComponent},
-  {path:'shared/salonDetails/:id',component:SalonDetailsComponent},
-  {path:'freelance/opportunites-emploi',component:OpportunitesEmploiComponent},
-  { path: 'salon-registration', component:SalonRegistrationComponent },
-  {path:'job-offer',component:JobOfferComponent},
-
-
+  // ✅ CORRECTION 1 : Pas de redirection, route directe
+  { 
+    path: '', 
+    component: AccueilComponent, 
+    pathMatch: 'full' 
+  },
+  
+  // ✅ Route accueil explicite
+  { 
+    path: 'accueil', 
+    component: AccueilComponent 
+  },
+  
+  // ✅ ROUTES PUBLIQUES (pas de guard)
+  { 
+    path: 'contacts', 
+    component: ContactComponent 
+  },
+  { 
+    path: 'salon-registration', 
+    component: SalonRegistrationComponent 
+  },
+  { 
+    path: 'job-offer', 
+    component: JobOfferComponent 
+  },
+  
+  // ✅ ROUTES SALON (corrigées)
+  { 
+    path: 'salon', 
+    component: SalonComponent 
+  },
+  { 
+    path: 'salon/:id', 
+    component: SalonDetailsComponent 
+  },
+  
+  // ✅ ROUTES FREELANCE
+  { 
+    path: 'freelance-dashboard', 
+    component: FreelanceDashbordComponent 
+  },
+  { 
+    path: 'portfolio', 
+    component: PortfolioComponent 
+  },
+  { 
+    path: 'opportunites-emploi', 
+    component: OpportunitesEmploiComponent 
+  },
+  
+  // ✅ ROUTES EMPLOYEUR
+  { 
+    path: 'candidatures', 
+    component: CandidaturesComponent 
+  },
+  { 
+    path: 'dashboard', 
+    component: DashboardComponent 
+  },
+  { 
+    path: 'offres-manager', 
+    component: OffresManagerComponent 
+  },
+  
+  // ✅ ROUTES PROTÉGÉES (avec guard)
   {
     path: 'home-freelance',
     component: HomeFreelanceComponent,
     canActivate: [authGuard],
     data: { roles: ['FREELANCE'] },
   },
-
-
   {
     path: 'home-employee',
     component: HomeEmployeeComponent,
-    
     canActivate: [authGuard],
     data: { roles: ['EMPLOYEUR'] },
   },
-  { path: 'home', redirectTo: '/accueil' }, // Ajout d'une redirection vers 'accueil' pour les utilisateurs non spécifiés
+  
+  // ✅ ROUTE WILDCARD (IMPORTANTE - toujours en dernier)
+  { 
+    path: '**', 
+    redirectTo: '/', 
+    pathMatch: 'full' 
+  }
 ];

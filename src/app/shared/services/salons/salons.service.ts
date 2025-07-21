@@ -5,7 +5,7 @@ import {
   HttpParams,
 } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { catchError, map, retry, tap } from 'rxjs/operators';
+import { catchError, map, retry, tap, switchMap } from 'rxjs/operators';
 import { ServiceSalon } from '../../../models/service-salon';
 
 @Injectable({
@@ -15,14 +15,13 @@ export class SalonService {
   private apiUrl = 'http://localhost:8081/api';
 
   constructor(private http: HttpClient) {
-    // console.log('SalonService initialisé avec URL de base:', this.apiUrl);
+    console.log('🔧 SalonService initialisé avec nouveaux endpoints Freelance');
   }
 
   // ===============================================
-  // MÉTHODES EXISTANTES (CONSERVÉES)
+  // MÉTHODES EXISTANTES SALON (CONSERVÉES)
   // ===============================================
 
-  // MISE À JOUR: Implémentation de la méthode getEmployeurSalons
   getEmployeurSalons(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/salons/employeur/mes-salons`).pipe(
       tap(salons => console.log('Salons récupérés pour l\'employeur:', salons)),
@@ -33,7 +32,6 @@ export class SalonService {
     );
   }
 
-  // Get services of the connected employer
   getEmployeurServices(): Observable<ServiceSalon[]> {
     return this.http
       .get<ServiceSalon[]>(`${this.apiUrl}/salons/employeur/services`)
@@ -45,7 +43,6 @@ export class SalonService {
       );
   }
 
-  // Get services of a specific salon
   getServicesBySalon(salonId: number): Observable<ServiceSalon[]> {
     return this.http
       .get<ServiceSalon[]>(`${this.apiUrl}/salons/${salonId}/services/all`)
@@ -66,7 +63,6 @@ export class SalonService {
     );
   }
 
-  // Get salon by ID
   getSalonById(id: number): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/salons/${id}`).pipe(
       catchError((error) => {
@@ -80,35 +76,29 @@ export class SalonService {
     return this.http.post<any>(`${this.apiUrl}/salons/create`, salon);
   }
 
-  // Save salon as draft
   saveSalonDraft(salonData: any): Observable<any> {
     const draftData = { ...salonData, status: 'DRAFT' };
     return this.http.post(`${this.apiUrl}/salons/create`, draftData);
   }
 
-  // Update existing salon
   updateSalon(id: number, salonData: any): Observable<any> {
     return this.http.put(`${this.apiUrl}/salons/update/${id}`, salonData);
   }
 
-  // Delete salon
   deleteSalon(id: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/salons/delete/${id}`);
   }
 
-  // Get all salons of an owner
   getSalonsByProprietaire(proprietaireId: number): Observable<any[]> {
     return this.http.get<any[]>(
       `${this.apiUrl}/salons/proprietaire/${proprietaireId}`
     );
   }
 
-  // Create salon with file
   createSalonWithFile(formData: FormData): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/salons/with-file`, formData);
   }
 
-  // Ajoutez cette méthode au SalonService
   getSalonPhotos(salonId: number): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/salons/${salonId}/photos`).pipe(
       catchError((error) => {
@@ -118,65 +108,313 @@ export class SalonService {
     );
   }
 
-  // Service de géocodage inversé
   reverseGeocode(latitude: number, longitude: number): Observable<string> {
     return this.http.get<string>(`${this.apiUrl}/location/reverse-geocode?lat=${latitude}&lng=${longitude}`);
   }
 
   // ===============================================
-  // NOUVELLES MÉTHODES POUR L'INTÉGRATION FREELANCES
+  // NOUVEAUX ENDPOINTS FREELANCE (ALIGNÉS SUR LE BACKEND)
   // ===============================================
 
   /**
-   * MÉTHODE MISE À JOUR: Recherche par service avec support du type de professionnel
+   * 🔍 RECHERCHE PRINCIPALE FREELANCE - ENDPOINT UNIFIÉ
+   * Utilise le nouveau endpoint /api/search du FreelanceController
    */
-  getSalonsByService(serviceName: string, providerType: 'salon' | 'freelance' | 'both' = 'salon'): Observable<any[]> {
-    console.log(`Recherche de salons pour le service: ${serviceName}, type: ${providerType}`);
+  searchFreelances(searchCriteria: {
+    service: string;
+    ville?: string;
+    maxPrice?: number;
+    date?: string;
+    time?: string;
+    domicile?: boolean;
+    weekend?: boolean;
+    soir?: boolean;
+    lat?: number;
+    lng?: number;
+    deplacementInclus?: boolean;
+  }): Observable<any> {
+    console.log('🔍 Recherche freelances avec nouveaux critères:', searchCriteria);
 
-    // Vérifier si le nom du service est valide
-    if (!serviceName || !serviceName.trim()) {
-      console.warn('Nom de service invalide');
-      return of([]);
+    if (!searchCriteria.service?.trim()) {
+      console.warn('Service requis pour la recherche');
+      return of({ freelances: [], total: 0 });
     }
 
-    // Construire les paramètres
     let params = new HttpParams();
-    params = params.set('serviceNom', serviceName.trim());
-    
-    // Ajouter le type de professionnel si différent de 'salon' (défaut backend)
-    if (providerType && providerType !== 'salon') {
-      params = params.set('providerType', providerType);
+    params = params.set('service', searchCriteria.service.trim());
+
+    // Ajouter les paramètres optionnels
+    if (searchCriteria.ville) {
+      params = params.set('ville', searchCriteria.ville);
+    }
+    if (searchCriteria.maxPrice) {
+      params = params.set('maxPrice', searchCriteria.maxPrice.toString());
+    }
+    if (searchCriteria.date) {
+      params = params.set('date', searchCriteria.date);
+    }
+    if (searchCriteria.time) {
+      params = params.set('time', searchCriteria.time);
+    }
+    if (searchCriteria.domicile !== undefined) {
+      params = params.set('domicile', searchCriteria.domicile.toString());
+    }
+    if (searchCriteria.weekend !== undefined) {
+      params = params.set('weekend', searchCriteria.weekend.toString());
+    }
+    if (searchCriteria.soir !== undefined) {
+      params = params.set('soir', searchCriteria.soir.toString());
+    }
+    if (searchCriteria.lat && searchCriteria.lng) {
+      params = params.set('lat', searchCriteria.lat.toString());
+      params = params.set('lng', searchCriteria.lng.toString());
+    }
+    if (searchCriteria.deplacementInclus !== undefined) {
+      params = params.set('deplacementInclus', searchCriteria.deplacementInclus.toString());
     }
 
-    const url = `${this.apiUrl}/salons/by-service`;
-    console.log(`Appel API: ${url}?${params.toString()}`);
+    const url = `${this.apiUrl}/search`;
+    console.log(`📤 Nouveau endpoint recherche: ${url}?${params.toString()}`);
 
-    return this.http.get<any[]>(url, { params }).pipe(
-      retry(2),
-      tap((salons) => {
-        console.log(`${salons?.length || 0} salons trouvés pour le service: ${serviceName} (${providerType})`);
+    return this.http.get<any>(url, { params }).pipe(
+      tap(response => {
+        console.log('📥 Réponse nouveau endpoint:', response);
+        console.log(`✅ ${response.total || 0} freelances trouvés`);
       }),
-      catchError((error: HttpErrorResponse) => {
-        console.error(`Erreur lors de la recherche de salons pour le service: ${serviceName}`, error);
-        return this.handleError('getSalonsByService', [])(error);
+      catchError(error => {
+        console.error('❌ Erreur recherche freelances:', error);
+        return of({ freelances: [], total: 0, error: error.message });
       })
     );
   }
 
   /**
-   * NOUVELLE MÉTHODE: Recherche par service et type de professionnel (alias)
+   * 📍 RECHERCHE GÉOLOCALISÉE RAPIDE
+   * Utilise le nouveau endpoint /api/search/nearby
    */
-  getSalonsByServiceAndType(service: string, providerType: 'salon' | 'freelance' | 'both'): Observable<any[]> {
-    return this.getSalonsByService(service, providerType);
+  searchFreelancesNearby(service: string, lat: number, lng: number): Observable<any> {
+    console.log(`📍 Recherche freelances à proximité: ${service} [${lat}, ${lng}]`);
+
+    if (!service?.trim()) {
+      return of({ freelances: [], total: 0 });
+    }
+
+    let params = new HttpParams()
+      .set('service', service.trim())
+      .set('lat', lat.toString())
+      .set('lng', lng.toString());
+
+    const url = `${this.apiUrl}/search/nearby`;
+    console.log(`📤 Endpoint proximité: ${url}?${params.toString()}`);
+
+    return this.http.get<any>(url, { params }).pipe(
+      tap(response => {
+        console.log('📥 Freelances proximité:', response);
+        console.log(`✅ ${response.total || 0} freelances à proximité`);
+      }),
+      catchError(error => {
+        console.error('❌ Erreur recherche proximité:', error);
+        return of({ freelances: [], total: 0, error: error.message });
+      })
+    );
   }
 
   /**
-   * MÉTHODE MISE À JOUR: Recherche avancée avec objet de données
+   * 🏙️ RECHERCHE PAR VILLE
+   * Utilise le nouveau endpoint /api/search/city
+   */
+  searchFreelancesByCity(service: string, ville: string, maxPrice?: number): Observable<any> {
+    console.log(`🏙️ Recherche freelances par ville: ${service} à ${ville}`);
+
+    if (!service?.trim() || !ville?.trim()) {
+      return of({ freelances: [], total: 0 });
+    }
+
+    let params = new HttpParams()
+      .set('service', service.trim())
+      .set('ville', ville.trim());
+
+    if (maxPrice) {
+      params = params.set('maxPrice', maxPrice.toString());
+    }
+
+    const url = `${this.apiUrl}/search/city`;
+    console.log(`📤 Endpoint ville: ${url}?${params.toString()}`);
+
+    return this.http.get<any>(url, { params }).pipe(
+      tap(response => {
+        console.log('📥 Freelances par ville:', response);
+        console.log(`✅ ${response.total || 0} freelances trouvés à ${ville}`);
+      }),
+      catchError(error => {
+        console.error('❌ Erreur recherche par ville:', error);
+        return of({ freelances: [], total: 0, error: error.message });
+      })
+    );
+  }
+
+  // ===============================================
+  // MÉTHODES SIMPLIFIÉES POUR COMPATIBILITÉ
+  // ===============================================
+
+  /**
+   * 👤 RECHERCHE FREELANCES PAR SERVICE (SIMPLIFIED)
+   * Utilise la nouvelle méthode searchFreelances
+   */
+  searchFreelancesByService(serviceName: string): Observable<any[]> {
+    console.log(`👤 Recherche freelances pour service: ${serviceName}`);
+    
+    return this.searchFreelances({ service: serviceName }).pipe(
+      map(response => response.freelances || []),
+      catchError(error => {
+        console.error(`❌ Erreur recherche service ${serviceName}:`, error);
+        return of([]);
+      })
+    );
+  }
+
+  /**
+   * 👤 RECHERCHE AVEC CRITÈRES AVANCÉS
+   */
+  searchFreelancesWithCriteria(params: {
+    query: string;
+    userLat?: number;
+    userLng?: number;
+    disponibleWeekend?: boolean;
+    disponibleSoir?: boolean;
+  }): Observable<any[]> {
+    console.log('👤 Recherche freelances avec critères avancés:', params);
+
+    const searchCriteria = {
+      service: params.query,
+      lat: params.userLat,
+      lng: params.userLng,
+      weekend: params.disponibleWeekend,
+      soir: params.disponibleSoir
+    };
+
+    return this.searchFreelances(searchCriteria).pipe(
+      map(response => response.freelances || []),
+      catchError(error => {
+        console.error('❌ Erreur recherche avec critères:', error);
+        return of([]);
+      })
+    );
+  }
+
+  /**
+   * 👤 RECHERCHE FREELANCES PAR TEXTE
+   */
+  searchFreelancesByText(query: string): Observable<any[]> {
+    console.log(`👤 Recherche freelances par texte: ${query}`);
+    
+    return this.searchFreelancesByService(query);
+  }
+
+  /**
+   * 👤 FREELANCES À PROXIMITÉ (WRAPPER)
+   */
+  getFreelancesNearby(latitude: number, longitude: number, radius: number = 15): Observable<any[]> {
+    console.log(`👤 Freelances à proximité: ${latitude}, ${longitude} (${radius}km)`);
+    
+    // Note: Le nouveau endpoint ne prend pas radius, mais on peut l'adapter
+    return this.searchFreelancesNearby('tous', latitude, longitude).pipe(
+      map(response => response.freelances || []),
+      catchError(error => {
+        console.error('❌ Erreur freelances proximité:', error);
+        return of([]);
+      })
+    );
+  }
+
+  // ===============================================
+  // MÉTHODES UNIFIÉES - ROUTAGE INTELLIGENT
+  // ===============================================
+
+  /**
+   * ✅ MÉTHODE PRINCIPALE: Recherche par service avec routage automatique
+   */
+  getSalonsByService(serviceName: string, providerType: 'salon' | 'freelance' | 'both' = 'salon'): Observable<any[]> {
+    console.log(`🔄 getSalonsByService - Service: ${serviceName}, Type: ${providerType}`);
+
+    if (!serviceName || !serviceName.trim()) {
+      console.warn('Nom de service invalide');
+      return of([]);
+    }
+
+    // ✅ ROUTAGE SELON LE TYPE
+    switch (providerType) {
+      case 'salon':
+        console.log('🏪 Route vers méthode salon existante');
+        return this.searchSalonsOnly(serviceName);
+
+      case 'freelance':
+        console.log('👤 Route vers nouveaux endpoints freelances');
+        return this.searchFreelancesByService(serviceName);
+
+      case 'both':
+        console.log('🔄 Combinaison salon + freelance');
+        return this.getCombinedProviders(serviceName);
+
+      default:
+        return of([]);
+    }
+  }
+
+  /**
+   * 🏪 RECHERCHE SALONS SEULEMENT
+   */
+  private searchSalonsOnly(serviceName: string): Observable<any[]> {
+    let params = new HttpParams();
+    params = params.set('serviceNom', serviceName.trim());
+    
+    return this.http.get<any[]>(`${this.apiUrl}/salons/by-service`, { params }).pipe(
+      tap(salons => console.log(`🏪 ${salons?.length || 0} salons trouvés`)),
+      catchError(error => {
+        console.error('❌ Erreur salons', error);
+        return of([]);
+      })
+    );
+  }
+
+  /**
+   * 🔄 COMBINE SALONS + FREELANCES
+   */
+  private getCombinedProviders(serviceName: string): Observable<any[]> {
+    console.log(`🔄 Combinaison providers pour: ${serviceName}`);
+    
+    const salons$ = this.searchSalonsOnly(serviceName);
+    const freelances$ = this.searchFreelancesByService(serviceName);
+    
+    return salons$.pipe(
+      switchMap(salons => {
+        return freelances$.pipe(
+          map(freelances => {
+            // Marquer le type de chaque élément
+            const markedSalons = salons.map(salon => ({ ...salon, type: 'salon' }));
+            const markedFreelances = freelances.map(freelance => ({ ...freelance, type: 'freelance' }));
+            
+            // Combiner les résultats
+            const combined = [...markedSalons, ...markedFreelances];
+            console.log(`🔄 Combiné: ${markedSalons.length} salons + ${markedFreelances.length} freelances = ${combined.length} total`);
+            
+            return combined;
+          })
+        );
+      }),
+      catchError(error => {
+        console.error('❌ Erreur combinaison', error);
+        return of([]);
+      })
+    );
+  }
+
+  /**
+   * ✅ RECHERCHE AVANCÉE UNIFIÉE
    */
   searchSalons(searchData: any): Observable<any[]> {
-    console.log('🔍 searchSalons appelé avec:', searchData);
+    console.log('🔍 searchSalons unifié appelé avec:', searchData);
     
-    // Vérifications de sécurité
     if (!searchData || typeof searchData !== 'object') {
       console.error('❌ searchData invalide:', searchData);
       return of([]);
@@ -187,16 +425,26 @@ export class SalonService {
       return of([]);
     }
 
-    // Utiliser l'endpoint /search existant
+    const providerType = searchData.providerType || 'salon';
+    console.log(`🔄 Recherche avancée pour type: ${providerType}`);
+
+    // Router selon le type
+    if (providerType === 'salon') {
+      return this.searchSalonsAdvanced(searchData);
+    } else if (providerType === 'freelance') {
+      return this.searchFreelancesAdvanced(searchData);
+    } else {
+      return this.searchCombinedAdvanced(searchData);
+    }
+  }
+
+  /**
+   * 🏪 RECHERCHE SALONS AVANCÉE
+   */
+  private searchSalonsAdvanced(searchData: any): Observable<any[]> {
     let params = new HttpParams();
     params = params.set('query', searchData.term.trim());
     
-    // Ajouter le type de professionnel si spécifié
-    if (searchData.providerType && searchData.providerType !== 'salon') {
-      params = params.set('providerType', searchData.providerType);
-    }
-    
-    // Ajouter les coordonnées utilisateur si disponibles
     if (searchData.location && typeof searchData.location === 'string') {
       const coords = this.extractCoordinates(searchData.location);
       if (!isNaN(coords[0]) && !isNaN(coords[1])) {
@@ -205,133 +453,87 @@ export class SalonService {
       }
     }
     
-    // Ajouter le budget si spécifié
     if (searchData.budget && typeof searchData.budget === 'number' && searchData.budget > 0) {
       params = params.set('budget', searchData.budget.toString());
     }
     
-    // Ajouter la date/heure si spécifiée
     if (searchData.datetime && typeof searchData.datetime === 'string') {
       params = params.set('datetime', searchData.datetime);
     }
     
     const url = `${this.apiUrl}/salons/search`;
-    console.log('📤 URL:', url);
-    console.log('📤 Paramètres:', params.toString());
+    console.log('📤 Recherche salon avancée:', url);
     
     return this.http.get<any[]>(url, { params }).pipe(
       catchError(error => {
-        console.error('❌ Erreur lors de la recherche avancée:', error);
+        console.error('❌ Erreur recherche salon avancée:', error);
         return of([]);
       })
     );
   }
 
   /**
-   * NOUVELLE MÉTHODE: Recherche par mot-clé simple (pour compatibilité)
+   * 👤 RECHERCHE FREELANCES AVANCÉE (NOUVELLE VERSION)
    */
-  searchSalonsByKeyword(keyword: string): Observable<any[]> {
-    if (!keyword || !keyword.trim()) {
-      return of([]);
-    }
-
-    let params = new HttpParams().set('query', keyword.trim());
+  private searchFreelancesAdvanced(searchData: any): Observable<any[]> {
+    console.log('👤 Recherche freelances avancée avec nouveaux endpoints:', searchData);
     
-    return this.http.get<any[]>(`${this.apiUrl}/salons/search`, { params }).pipe(
-      catchError((error) => {
-        console.error(`Error searching salons with keyword ${keyword}`, error);
-        return of([]);
-      })
-    );
-  }
-
-  /**
-   * NOUVELLE MÉTHODE: Recherche avec photo
-   */
-  searchSalonsWithPhoto(formData: FormData): Observable<any[]> {
-    const url = `${this.apiUrl}/salons/search-with-photo`;
+    const coords = searchData.location ? this.extractCoordinates(searchData.location) : [NaN, NaN];
     
-    return this.http.post<any[]>(url, formData).pipe(
-      catchError(error => {
-        console.error('Erreur lors de la recherche avec photo:', error);
-        return of([]);
-      })
-    );
-  }
-
-  /**
-   * NOUVELLE MÉTHODE: Recherche de salons à proximité
-   */
-  getSalonsNearby(latitude: number, longitude: number, radius: number = 10): Observable<any[]> {
-    const url = `${this.apiUrl}/salons/nearby`;
-    let params = new HttpParams()
-      .set('latitude', latitude.toString())
-      .set('longitude', longitude.toString())
-      .set('radius', radius.toString());
+    const searchCriteria = {
+      service: searchData.term.trim(),
+      ville: searchData.ville,
+      maxPrice: searchData.budget,
+      date: searchData.datetime,
+      time: searchData.time,
+      domicile: searchData.domicile,
+      weekend: searchData.disponibleWeekend,
+      soir: searchData.disponibleSoir,
+      lat: !isNaN(coords[0]) ? coords[0] : undefined,
+      lng: !isNaN(coords[1]) ? coords[1] : undefined,
+      deplacementInclus: searchData.deplacementInclus
+    };
     
-    return this.http.get<any[]>(url, { params }).pipe(
+    return this.searchFreelances(searchCriteria).pipe(
+      map(response => response.freelances || []),
       catchError(error => {
-        console.error('Erreur lors de la recherche de salons à proximité:', error);
+        console.error('❌ Erreur recherche freelances avancée:', error);
         return of([]);
       })
     );
   }
 
   /**
-   * NOUVELLE MÉTHODE: Obtenir les statistiques de services
+   * 🔄 RECHERCHE COMBINÉE AVANCÉE
    */
-  getServiceStatistics(): Observable<any> {
-    // Essayer d'abord l'endpoint réel (si implémenté)
-    return this.http.get<any>(`${this.apiUrl}/salons/statistics`).pipe(
+  private searchCombinedAdvanced(searchData: any): Observable<any[]> {
+    const salonsData = { ...searchData, providerType: 'salon' };
+    const freelancesData = { ...searchData, providerType: 'freelance' };
+    
+    const salons$ = this.searchSalonsAdvanced(salonsData);
+    const freelances$ = this.searchFreelancesAdvanced(freelancesData);
+    
+    return salons$.pipe(
+      switchMap(salons => {
+        return freelances$.pipe(
+          map(freelances => {
+            const markedSalons = salons.map(salon => ({ ...salon, type: 'salon' }));
+            const markedFreelances = freelances.map(freelance => ({ ...freelance, type: 'freelance' }));
+            return [...markedSalons, ...markedFreelances];
+          })
+        );
+      }),
       catchError(error => {
-        console.warn('Endpoint /statistics non disponible, utilisation de données mockées');
-        // Retourner des données mockées en cas d'erreur
-        const mockStats = {
-          'Coiffure': { salon: 42, freelance: 28, total: 70 },
-          'Pedicure,Manucure': { salon: 18, freelance: 35, total: 53 },
-          'Barber': { salon: 25, freelance: 15, total: 40 },
-          'Maquillage': { salon: 12, freelance: 22, total: 34 },
-          'Soins de la peau': { salon: 31, freelance: 8, total: 39 }
-        };
-        return of(mockStats);
-      })
-    );
-  }
-
-  /**
-   * NOUVELLE MÉTHODE: Recherche de freelances uniquement
-   */
-  getFreelancesByService(service: string): Observable<any[]> {
-    return this.getSalonsByService(service, 'freelance');
-  }
-
-  /**
-   * NOUVELLE MÉTHODE: Recherche mixte (salons + freelances)
-   */
-  getMixedProvidersByService(service: string): Observable<any[]> {
-    return this.getSalonsByService(service, 'both');
-  }
-
-  /**
-   * NOUVELLE MÉTHODE: Obtenir les détails d'un freelance
-   */
-  getFreelanceDetails(freelanceId: number): Observable<any> {
-    // Pour l'instant, utiliser l'endpoint salon existant
-    return this.getSalonById(freelanceId).pipe(
-      catchError(error => {
-        console.error('Erreur lors de la récupération du freelance:', error);
-        return of(null);
+        console.error('❌ Erreur recherche combinée avancée:', error);
+        return of([]);
       })
     );
   }
 
   // ===============================================
-  // MÉTHODES UTILITAIRES
+  // MÉTHODES UTILITAIRES (CONSERVÉES)
   // ===============================================
 
-  /**
-   * Extraire des coordonnées depuis une chaîne de texte
-   */
   private extractCoordinates(location: string): [number, number] {
     if (!location) return [NaN, NaN];
     
@@ -349,45 +551,127 @@ export class SalonService {
     return [NaN, NaN];
   }
 
-  /**
-   * Gestionnaire d'erreur générique
-   */
-  private handleError<T>(operation = 'opération', result?: T) {
-    return (error: any): Observable<T> => {
-      console.error(`${operation} a échoué: ${error.message}`);
-      
-      if (error.status === 0) {
-        console.error('Problème de connexion réseau. Vérifiez votre connexion internet.');
-      } else if (error.status === 401) {
-        console.error('Erreur d\'authentification (401). Vérifiez si l\'endpoint nécessite une authentification.');
-      } else if (error.status === 404) {
-        console.error('Endpoint non trouvé (404). Vérifiez l\'URL de l\'API.');
-      } else {
-        console.error(`Le serveur a retourné le code ${error.status}: ${error.message}`);
-        if (error.error) {
-          console.error("Détails de l'erreur:", error.error);
-        }
-      }
+  // ===============================================
+  // MÉTHODES ADDITIONNELLES (CONSERVÉES)
+  // ===============================================
 
-      return of(result as T);
-    };
+  getSalonsNearby(latitude: number, longitude: number, radius: number = 10): Observable<any[]> {
+    const url = `${this.apiUrl}/salons/nearby`;
+    let params = new HttpParams()
+      .set('latitude', latitude.toString())
+      .set('longitude', longitude.toString())
+      .set('radius', radius.toString());
+    
+    return this.http.get<any[]>(url, { params }).pipe(
+      catchError(error => {
+        console.error('Erreur lors de la recherche de salons à proximité:', error);
+        return of([]);
+      })
+    );
+  }
+
+  searchSalonsWithPhoto(formData: FormData): Observable<any[]> {
+    const url = `${this.apiUrl}/salons/search-with-photo`;
+    
+    return this.http.post<any[]>(url, formData).pipe(
+      catchError(error => {
+        console.error('Erreur lors de la recherche avec photo:', error);
+        return of([]);
+      })
+    );
+  }
+
+  searchSalonsByKeyword(keyword: string): Observable<any[]> {
+    if (!keyword || !keyword.trim()) {
+      return of([]);
+    }
+
+    let params = new HttpParams().set('query', keyword.trim());
+    
+    return this.http.get<any[]>(`${this.apiUrl}/salons/search`, { params }).pipe(
+      catchError((error) => {
+        console.error(`Error searching salons with keyword ${keyword}`, error);
+        return of([]);
+      })
+    );
   }
 
   // ===============================================
-  // MÉTHODES DE MIGRATION (pour compatibilité)
+  // MÉTHODES LEGACY ADAPTÉES
   // ===============================================
 
-  /**
-   * Méthode de recherche globale (utilise searchSalons en interne)
-   */
+  getFreelanceById(id: number): Observable<any> {
+    console.log(`👤 Récupération freelance ID: ${id}`);
+    
+    const url = `${this.apiUrl}/freelances/${id}`;
+    
+    return this.http.get<any>(url).pipe(
+      tap(freelance => console.log('👤 Freelance récupéré:', freelance.nom || freelance.name)),
+      catchError((error) => {
+        console.error(`❌ Freelance non trouvé ID: ${id}`, error);
+        return of(null);
+      })
+    );
+  }
+
+  getAllFreelances(): Observable<any[]> {
+    console.log('📋 Récupération tous freelances');
+    
+    const url = `${this.apiUrl}/freelances/all`;
+    
+    return this.http.get<any[]>(url).pipe(
+      tap(freelances => console.log(`📋 ${freelances.length} freelances récupérés`)),
+      catchError((error) => {
+        console.error('❌ Erreur récupération freelances', error);
+        return of([]);
+      })
+    );
+  }
+
+  getFreelanceStatistics(): Observable<any> {
+    console.log('📊 Récupération statistiques freelances');
+    
+    const url = `${this.apiUrl}/freelances/statistics`;
+    
+    return this.http.get<any>(url).pipe(
+      tap(stats => console.log('📊 Stats freelances reçues:', stats)),
+      catchError((error) => {
+        console.error('❌ Erreur stats freelances', error);
+        return of({
+          total: 0,
+          availableWeekend: 0,
+          byService: {
+            'Coiffure': 0,
+            'Manucure': 0,
+            'Barber': 0,
+            'Maquillage': 0
+          }
+        });
+      })
+    );
+  }
+
+  // ===============================================
+  // MÉTHODES LEGACY POUR COMPATIBILITÉ
+  // ===============================================
+
+  getSalonsByServiceAndType(service: string, providerType: 'salon' | 'freelance' | 'both'): Observable<any[]> {
+    return this.getSalonsByService(service, providerType);
+  }
+
+  getFreelancesByService(service: string): Observable<any[]> {
+    return this.searchFreelancesByService(service);
+  }
+
+  getMixedProvidersByService(service: string): Observable<any[]> {
+    return this.getSalonsByService(service, 'both');
+  }
+
+  getFreelanceDetails(freelanceId: number): Observable<any> {
+    return this.getFreelanceById(freelanceId);
+  }
+
   searchSalonsGlobal(searchData: any): Observable<any[]> {
-    return this.searchSalons(searchData);
-  }
-
-  /**
-   * Méthode de recherche avancée (alias pour searchSalons)
-   */
-  searchSalonsAdvanced(searchData: any): Observable<any[]> {
     return this.searchSalons(searchData);
   }
 }

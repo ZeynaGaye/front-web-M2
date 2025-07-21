@@ -1,50 +1,74 @@
 <div class="client-container">
   <div class="client-header">
-    <h2 class="main-title">Pour les <span class="highlight">clients qui souhaitent des prestation a domicile</span></h2>
+    <h2 class="main-title">Pour les <span class="highlight">clients qui souhaitent des prestations à domicile</span></h2>
     <p class="subtitle">Trouvez facilement des professionnels qualifiés pour tous vos besoins beauté sans vous déplacer</p>
   </div>
   
-  <div class="feature-cards">
-    <div class="feature-navigation">
-      <div *ngFor="let feature of features; let i = index" 
-           class="nav-item" 
-           [ngClass]="{'active': i === activeFeature}"
-           (click)="setActiveFeature(i)">
-        <i class="material-icons">{{ feature.icon }}</i>
-        <span>{{ feature.title }}</span>
-      </div>
-    </div>
-    
-    <div class="feature-display">
-      <div *ngFor="let feature of features; let i = index" 
-           class="feature-content" 
-           [@fadeInOut]
-           [ngClass]="{'active': i === activeFeature}">
-        <div class="feature-text">
-          <h3>{{ feature.title }}</h3>
-          <p>{{ feature.description }}</p>
-          
-          <!-- Bouton pour afficher les portfolios (uniquement pour la fonctionnalité "Explorez les portfolios") -->
-          <div *ngIf="feature.id === 2" class="feature-action">
-            <button class="toggle-btn feature-btn" (click)="toggleFreelancesSection()">
-              {{ showFreelancesSection ? 'Masquer les professionnels' : 'Découvrir nos professionnels' }}
-              <i class="material-icons">{{ showFreelancesSection ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}</i>
-            </button>
+  <!-- ✅ SECTION SIMPLIFIÉE - Plus de carousel -->
+  <div class="main-content-section">
+    <div class="content-wrapper">
+      <div class="text-content">
+        <h3>Découvrez nos professionnels indépendants</h3>
+        <p class="description">
+          Explorez les portfolios de nos experts beauté et contactez directement 
+          celui qui correspond à vos besoins. Coiffure, maquillage, soins esthétiques... 
+          nos professionnels viennent chez vous pour des prestations de qualité.
+        </p>
+        
+        <div class="benefits-list">
+          <div class="benefit-item">
+            <i class="material-icons">verified</i>
+            <span>Professionnels vérifiés et qualifiés</span>
+          </div>
+          <div class="benefit-item">
+            <i class="material-icons">photo_library</i>
+            <span>Portfolios détaillés avec réalisations</span>
+          </div>
+          <div class="benefit-item">
+            <i class="material-icons">home</i>
+            <span>Prestations à domicile sur mesure</span>
+          </div>
+          <div class="benefit-item">
+            <i class="material-icons">chat</i>
+            <span>Contact direct sans intermédiaire</span>
           </div>
         </div>
-        <div class="feature-image" [style.backgroundImage]="'url(' + feature.image + ')'">
-          <div class="image-overlay"></div>
+        
+        <!-- ✅ BOUTON PRINCIPAL POUR DÉCOUVRIR LES FREELANCES -->
+        <div class="main-action">
+          <button class="discover-btn" (click)="showFreelancesSection = !showFreelancesSection">
+            <i class="material-icons">{{ showFreelancesSection ? 'keyboard_arrow_up' : 'explore' }}</i>
+            <span>{{ showFreelancesSection ? 'Masquer les professionnels' : 'Découvrir nos professionnels' }}</span>
+          </button>
+          
+          <!-- Indicateur d'état -->
+          <p class="action-hint">
+            {{ showFreelancesSection ? 'Section ouverte' : 'Cliquez pour voir tous nos professionnels indépendants' }}
+          </p>
+        </div>
+      </div>
+      
+      <div class="visual-content">
+        <div class="hero-image">
+          <img src="/assets/images/freelances1.jpeg" alt="Professionnels beauté à domicile">
+          <div class="image-overlay">
+            <div class="stats-badge">
+              <span class="stat-number">50+</span>
+              <span class="stat-label">Professionnels</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
   
-  <!-- Liste des freelances avec toggle -->
-  <div class="freelance-list-section" [class.hidden]="!showFreelancesSection">
-    <!-- Section conditionnelle des freelances -->
-    <div class="freelances-content" [@expandPanel]="showFreelancesSection ? 'expanded' : 'collapsed'">
-      <!-- Barre de recherche et filtres -->
-      <div class="search-filter-container" *ngIf="showFreelancesSection">
+  <!-- ✅ SECTION FREELANCES (inchangée) -->
+  <div class="freelance-list-section" 
+       [class.hidden]="!showFreelancesSection"
+       [@expandPanel]="showFreelancesSection ? 'expanded' : 'collapsed'">
+    
+    <div class="freelances-content" *ngIf="showFreelancesSection">
+      <div class="search-filter-container">
         <div class="search-bar">
           <i class="material-icons">search</i>
           <input type="text" placeholder="Rechercher un professionnel..." [(ngModel)]="searchTerm" (input)="filterFreelances()">
@@ -61,14 +85,13 @@
       </div>
       
       <!-- État de chargement -->
-      <div *ngIf="loadingFreelances && showFreelancesSection" class="loading-container">
+      <div *ngIf="loadingFreelances" class="loading-container">
         <div class="spinner"></div>
         <p>Chargement des professionnels...</p>
       </div>
     
-      <!-- Affichage sous forme de grille avec slider horizontal pour mobile -->
-      <div class="freelance-display-container" *ngIf="!loadingFreelances && filteredFreelances.length > 0 && showFreelancesSection">
-        <!-- Vue mode grille (bureau) -->
+      <!-- Affichage sous forme de grille -->
+      <div class="freelance-display-container" *ngIf="!loadingFreelances && filteredFreelances.length > 0">
         <div class="freelance-grid">
           <div class="freelance-card" *ngFor="let freelance of paginatedFreelances">
             <div class="card-image" [style.backgroundImage]="'url(' + (freelance.profileImage || '/assets/images/profile-placeholder.jpg') + ')'">
@@ -81,9 +104,7 @@
                 <i class="material-icons">location_on</i>
                 <span>{{ extractCity(freelance.adresse) }}</span>
               </p>
-              
               <div class="card-divider"></div>
-              
               <div class="card-contact">
                 <div class="contact-item" *ngIf="freelance.telephone">
                   <i class="material-icons">phone</i>
@@ -95,7 +116,6 @@
                 <button class="portfolio-btn" (click)="viewFreelancePortfolio(freelance.id)">
                   <i class="material-icons">photo_library</i> Portfolio
                 </button>
-                <!-- ✅ MODIFIÉ : Le bouton contact ouvre maintenant la modal -->
                 <button class="contact-btn" (click)="contactFreelance(freelance, $event)">
                   <i class="material-icons">message</i> Contact
                 </button>
@@ -105,7 +125,7 @@
         </div>
         
         <!-- Pagination -->
-        <div class="pagination-controls">
+        <div class="pagination-controls" *ngIf="totalPages > 1">
           <button 
             class="page-btn prev" 
             [class.disabled]="currentPage === 1" 
@@ -135,19 +155,22 @@
           sur {{ filteredFreelances.length }} professionnels
         </div>
       </div>
-      
-      <!-- État de recherche sans résultat -->
-      <div class="empty-state search-empty" *ngIf="!loadingFreelances && allFreelances.length > 0 && filteredFreelances.length === 0 && showFreelancesSection">
+      <div class="empty-state search-empty" *ngIf="!loadingFreelances && allFreelances.length > 0 && filteredFreelances.length === 0">
         <i class="material-icons">filter_none</i>
         <p>Aucun professionnel ne correspond à votre recherche</p>
         <button class="reset-btn" (click)="resetFilters()">
           Réinitialiser les filtres
         </button>
       </div>
+      <div class="empty-state" *ngIf="!loadingFreelances && allFreelances.length === 0">
+        <i class="material-icons">person_search</i>
+        <p>Aucun professionnel indépendant disponible pour le moment</p>
+        <button class="reset-btn" (click)="loadAllFreelances()">
+          Recharger
+        </button>
+      </div>
     </div>
   </div>
-
-  <!-- Affichage du portfolio du freelance sélectionné -->
   <div id="freelance-portfolio" class="portfolio-container" *ngIf="showPortfolio && selectedFreelanceId">
     <div class="portfolio-header">
       <button mat-icon-button (click)="closePortfolio()" class="close-button">
@@ -159,16 +182,13 @@
     <app-portfolio [clientMode]="true" [freelanceId]="selectedFreelanceId"></app-portfolio>
   </div>
 
-  <!-- ==========================================
-  🆕 NOUVELLE MODAL DE CONTACT
-  ========================================== -->
+  <!-- Modal de contact (inchangée) -->
   <div class="contact-modal-overlay" 
        *ngIf="showContactModal" 
        [@modalAnimation]="showContactModal ? 'open' : 'closed'"
        (click)="closeContactModal()">
     
     <div class="contact-modal-container" (click)="$event.stopPropagation()">
-      <!-- Header de la modal -->
       <div class="contact-modal-header">
         <div class="contact-header-info">
           <h2>
@@ -184,10 +204,7 @@
         </button>
       </div>
 
-      <!-- Formulaire de contact -->
       <form [formGroup]="contactForm" (ngSubmit)="onSubmitContact()" class="contact-form">
-        
-        <!-- Champ Nom -->
         <div class="form-group">
           <label for="contact-name">
             <i class="material-icons">person</i>
@@ -206,7 +223,6 @@
           </div>
         </div>
 
-        <!-- Champ E-mail -->
         <div class="form-group">
           <label for="contact-email">
             <i class="material-icons">email</i>
@@ -225,7 +241,6 @@
           </div>
         </div>
 
-        <!-- Champ Sujet -->
         <div class="form-group">
           <label for="contact-subject">
             <i class="material-icons">subject</i>
@@ -244,7 +259,6 @@
           </div>
         </div>
 
-        <!-- Champ Message -->
         <div class="form-group">
           <label for="contact-message">
             <i class="material-icons">chat_bubble</i>
@@ -263,7 +277,6 @@
           </div>
         </div>
 
-        <!-- Actions de la modal -->
         <div class="contact-modal-actions">
           <button type="button" class="cancel-btn" (click)="closeContactModal()">
             <i class="material-icons">close</i>
@@ -275,12 +288,10 @@
             class="send-btn"
             [disabled]="contactForm.invalid || isSubmittingContact"
             [class.loading]="isSubmittingContact">
-            
             <span *ngIf="!isSubmittingContact">
               <i class="material-icons">send</i>
               Envoyer le message
             </span>
-            
             <span *ngIf="isSubmittingContact" class="loading-state">
               <div class="spinner-small"></div>
               Envoi en cours...
@@ -288,8 +299,6 @@
           </button>
         </div>
       </form>
-
-      <!-- Info supplémentaire -->
       <div class="contact-info-footer">
         <p>
           <i class="material-icons">info</i>

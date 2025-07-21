@@ -1,504 +1,910 @@
-/* Vos variables */
-$primary-color: #fb8f71;
-$secondary-color: #9ca3af;
-$tertiary-color: #A4B1BD;
-$light-color: #e0e7ed;
+/* ✅ Variables avec votre palette de couleurs */
+$primary: #F5A393;
+$primary-light: #ffd7cc;
+$primary-dark: #f3856d;
+$primary-text: #ffffff;
+
+$secondary: #9ca3af;
+$secondary-light: #e5e7eb;
+$secondary-dark: #6b7280;
+$secondary-text: #000000;
+
 $white: #ffffff;
 $text-dark: #333333;
-$shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+$text-light: #9ca3af;
+$bg-light: #f8fafc;
+$border-color: #e5e7eb;
 
-/* Reset */
-body, html {
-  margin: 0;
-  padding: 0;
-  height: 100%;
+/* ✅ Container principal avec gestion responsive */
+.beauty-container {
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+  background-color: $bg-light;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Conteneur principal */
-.beauty-container {
-  width: 100%;
-  height: 100vh;
+/* ✅ Sidebar avec z-index correct */
+.beauty-sidebar {
+  width: 280px !important;
+  background: $white;
+  border-right: 1px solid $border-color;
+  // REMOVED: z-index: 1000; // Cette valeur sera définie plus bas avec !important
   
-  .mat-drawer-inner-container {
+  .sidebar-header {
+    padding: 1.5rem;
+    text-align: center;
+    border-bottom: 1px solid $border-color;
+    background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
+    color: $white;
+
+    .user-avatar img {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      margin-bottom: 1rem;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      object-fit: cover;
+    }
+
+    h2 {
+      color: $white;
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .user-info-sidebar {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      padding: 1rem;
+      border-radius: 12px;
+      margin-top: 1rem;
+
+      .user-name {
+        font-weight: 600;
+        font-size: 0.95rem;
+        margin: 0 0 0.5rem 0;
+        color: $white;
+      }
+
+      .user-email {
+        font-size: 0.75rem;
+        opacity: 0.9;
+        margin: 0 0 0.5rem 0;
+        word-break: break-word;
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .user-role {
+        font-size: 0.7rem;
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.25rem 0.5rem;
+        border-radius: 8px;
+        display: inline-block;
+        margin: 0;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: $white;
+      }
+    }
+  }
+
+  .beauty-menu {
+    padding: 0;
+
+    .menu-item {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid $border-color;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      color: $text-dark;
+      font-weight: 500;
+
+      &:hover {
+        background-color: $bg-light;
+        border-left: 4px solid $primary;
+      }
+
+      &.active {
+        background-color: $primary-light;
+        border-left: 4px solid $primary;
+        color: $primary-dark;
+
+        .menu-icon {
+          color: $primary;
+        }
+      }
+
+      .menu-icon {
+        color: $secondary;
+        margin-right: 1rem;
+        transition: color 0.2s ease;
+      }
+
+      span {
+        color: inherit;
+      }
+    }
+
+    .logout-item {
+      margin-top: auto;
+      border-top: 2px solid $border-color;
+
+      .menu-icon {
+        color: $secondary !important;
+      }
+
+      span {
+        color:$secondary !important;
+      }
+
+      &:hover {
+        background-color: #fef2f2 !important;
+        border-left: 4px solid #dc2626;
+      }
+    }
+  }
+}
+
+/* ✅ Contenu principal avec gestion responsive */
+mat-sidenav-content {
+  position: relative;
+  z-index: 1; // Ajusté plus bas avec !important
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ✅ Toolbar */
+.beauty-toolbar {
+  background: $white;
+  border-bottom: 1px solid $border-color;
+  z-index: 500 !important; /* Maintenu pour la barre d'outils */
+  position: sticky;
+  top: 0;
+  color: $primary-text;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 1rem;
+
+  .menu-button {
+    color: $primary;
+  }
+
+  .toolbar-title {
+    flex: 1;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: $text-dark;
+    margin-left: 1rem;
+  }
+
+  .toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    button[mat-raised-button] {
+      background-color: $primary;
+      color: $white;
+    }
+
+    button[mat-icon-button] {
+      color: $secondary;
+    }
+  }
+
+  .notification-badge {
+    background-color: red;
+    color: #fff;
+    font-size: 10px;
+    padding: 0 5px;
+    border-radius: 50%;
+    position: relative;
+    top: -8px;
+    right: 8px;
+  }
+}
+
+/* ✅ Menu utilisateur */
+.user-menu-header {
+  padding: 1rem;
+  background: $bg-light;
+  margin: -8px -16px 8px -16px;
+  text-align: center;
+  border-bottom: 1px solid $border-color;
+
+  strong {
+    color: $text-dark;
+    font-size: 1rem;
+  }
+
+  small {
+    color: $text-light;
+    font-size: 0.8rem;
+  }
+
+  .user-role-badge {
+    background: $secondary;
+    color: $white;
+    padding: 0.2rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.7rem !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
+/* ✅ Message de non-connexion */
+.not-connected-message {
+  padding: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 64px);
+  background: $bg-light;
+
+  .warning-card {
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+    border: 1px solid $border-color;
+
+    .warning-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+      padding: 2rem;
+
+      mat-icon {
+        font-size: 4rem;
+        width: 4rem;
+        height: 4rem;
+        color: #f59e0b;
+      }
+
+      h3 {
+        margin: 0;
+        color: $text-dark;
+        font-size: 1.5rem;
+        font-weight: 600;
+      }
+
+      p {
+        margin: 0;
+        color: $text-light;
+        font-size: 1rem;
+        line-height: 1.5;
+      }
+
+      button {
+        background-color: $primary;
+        color: $white;
+      }
+    }
+  }
+}
+
+/* ✅ Dashboard home simplifié */
+.dashboard-home {
+  padding: 2rem;
+  background: $bg-light;
+  min-height: calc(100vh - 64px);
+  max-width: 100%;
+  overflow-x: hidden;
+
+  // ✅ IMPORTANT: Force les éléments à s'afficher en colonne
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+
+  .dashboard-welcome,
+  .welcome-section {
+    text-align: center;
+    background: #A4B1BD;
+    color: $white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(245, 163, 147, 0.2);
+
+    h1, h2 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin: 0 0 0.5rem 0;
+      color: $white;
+    }
+
+    p {
+      font-size: 1rem;
+      opacity: 0.95;
+      margin: 0;
+      line-height: 1.5;
+      color: $white;
+    }
+  }
+
+  .dashboard-cards,
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+
+    .beauty-card {
+      background: $white;
+      text-align: center;
+      padding: 2rem 1rem;
+      border-radius: 16px;
+      border: 1px solid $border-color;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+      &:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 40px rgba(245, 163, 147, 0.15);
+        border-color: $primary-light;
+      }
+
+      .card-icon mat-icon {
+        font-size: 36px;
+        color: $primary;
+        margin-bottom: 0.5rem;
+      }
+
+      mat-card-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: $primary;
+        margin-bottom: 0.5rem;
+        display: block;
+      }
+
+      p {
+        color: $text-light;
+        font-size: 0.9rem;
+        margin: 0;
+        font-weight: 500;
+      }
+    }
+  }
+
+  // ✅ CORRECTION: Sections activité et conseils en colonne
+  .recent-activity,
+  .quick-tips {
+    width: 100%;
+    display: block;
+    clear: both;
+
+    h3 {
+      color: $text-dark;
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+  }
+
+  /* Section Activité récente */
+  .recent-activity {
+    .activity-card {
+      background: $white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+      .activity-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem 0;
+
+        mat-icon {
+          flex-shrink: 0;
+          font-size: 1.5rem;
+          width: 1.5rem;
+          height: 1.5rem;
+        }
+
+        .activity-text {
+          flex: 1;
+
+          strong {
+            color: $text-dark;
+            font-size: 0.95rem;
+            display: block;
+            margin-bottom: 0.25rem;
+          }
+
+          p {
+            margin: 0;
+            color: $text-light;
+            font-size: 0.9rem;
+            line-height: 1.4;
+          }
+        }
+
+        .activity-time {
+          color: $text-light;
+          font-size: 0.8rem;
+          flex-shrink: 0;
+        }
+      }
+
+      mat-divider {
+        margin: 0.5rem 0;
+      }
+    }
+  }
+
+  /* Section Conseils rapides */
+  .quick-tips {
+    .tip-card {
+      background: linear-gradient(135deg, $primary-light 0%, rgba(245, 163, 147, 0.1) 100%);
+      border: 1px solid $primary-light;
+      border-radius: 12px;
+
+      mat-card-content {
+        p {
+          margin: 0 0 1rem 0;
+          color: $text-dark;
+          line-height: 1.5;
+          font-size: 1rem;
+        }
+
+        button {
+          border-color: $primary;
+          color: $primary;
+
+          &:hover {
+            background: $primary;
+            color: $white;
+          }
+        }
+      }
+    }
+  }
+}
+
+/* ✅ CORRECTION: Headers de sections avec position sticky */
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 2rem;
+  background: $white;
+  border-bottom: 1px solid $border-color;
+  position: sticky !important; /* ✅ IMPORTANT: Force sticky */
+  top: 64px !important; /* ✅ IMPORTANT: Juste sous la toolbar */
+  z-index: 100 !important; /* Maintenu pour le header de section */
+  margin-bottom: 2rem;
+
+  button {
+    color: $primary;
+    background-color: $primary;
+    color: $primary-text;
+
+    &:hover {
+      background-color: $primary-dark;
+    }
+  }
+
+  h2 {
+    color: $text-dark;
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin: 0;
+  }
+}
+
+/* ✅ CORRECTION: Sections des composants avec header sticky */
+.portfolio-section,
+.opportunities-section,
+.services-section {
+  position: relative;
+  z-index: 1; // Ajusté plus bas avec !important
+  background: $bg-light;
+  min-height: calc(100vh - 64px);
+  /* Retirer le padding et overflow directement sur la section, les appliquer à .section-content */
+  height: calc(100vh - 64px);
+
+  > *:not(.section-header) {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  // Le header sticky est maintenant défini globalement et est donc correct ici.
+  // La marge est retirée ici car le contenu suit directement.
+  .section-header {
+    margin-bottom: 0;
+  }
+
+  /* AJOUT: Section content avec padding et scroll */
+  .section-content {
+    padding: 2rem;
+    overflow-y: auto;
+    height: calc(100vh - 64px - 80px); /* Hauteur totale - toolbar - header */
+    background: $bg-light;
+  }
+
+  app-mes-services,
+  app-mes-services-freelance,
+  app-portfolio,
+  app-opportunites-emploi {
+    display: block;
+    background-color: $white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     overflow: hidden;
   }
 }
 
-/* Sidebar */
-.beauty-sidebar {
-  width: 280px;
-  background: $white;
-  border-right: none;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-  
-  .sidebar-header {
-    padding: 25px;
-    text-align: center;
-    background: $primary-color;
-    color: $white;
-    
-    .user-avatar {
-      width: 80px;
-      height: 80px;
+/* ✅ Cartes tableau de bord secondaires */
+.secondary-dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.2rem;
+
+  .dashboard-card {
+    background-color: $white;
+    border-left: 4px solid $secondary-dark;
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      border-left-color: $secondary;
+    }
+
+    .card-icon {
+      background-color: $secondary-light;
       border-radius: 50%;
-      margin: 0 auto 15px;
-      overflow: hidden;
-      border: 3px solid rgba($white, 0.3);
-      
-      img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
+      padding: 0.5rem;
+      margin-bottom: 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      mat-icon {
+        font-size: 28px;
+        color: $secondary-dark;
       }
     }
-    
-    h2 {
+
+    h3 {
+      margin: 0.3rem 0;
+      color: $text-dark;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    p {
       margin: 0;
+      color: $secondary-dark;
+      font-size: 0.95rem;
+    }
+  }
+}
+
+/* ✅ Styles pour l'affichage du nom et prénom de l'utilisateur */
+.header {
+  margin-bottom: 2rem;
+  text-align: center;
+
+  h2 {
+    color: $text-dark;
+    font-size: 2rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  .user-info {
+    margin: 1rem 0;
+
+    .user-greeting {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: linear-gradient(135deg, $secondary 0%, $secondary-dark 100%);
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 25px;
       font-weight: 500;
+      font-size: 1rem;
+      margin: 0;
+      box-shadow: 0 4px 12px rgba(156, 163, 175, 0.3);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+      mat-icon {
+        font-size: 1.2rem;
+        width: 1.2rem;
+        height: 1.2rem;
+      }
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(156, 163, 175, 0.4);
+      }
+    }
+  }
+
+  .subtitle {
+    color: $text-light;
+    font-size: 1.1rem;
+    margin: 0;
+    font-weight: 400;
+  }
+}
+
+/* ✅ Styles pour la section d'erreur avec bouton de connexion */
+.error-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem;
+  text-align: center;
+  color: #d32f2f;
+  background: #ffebee;
+  border-radius: 8px;
+  border: 1px solid #ffcdd2;
+
+  mat-icon {
+    font-size: 3rem;
+    width: 3rem;
+    height: 3rem;
+    color: #d32f2f;
+  }
+
+  p {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 500;
+  }
+
+  button {
+    margin-top: 1rem;
+  }
+}
+
+/* ✅ Responsive design */
+@media (max-width: 1024px) {
+  .beauty-sidebar {
+    width: 250px !important;
+  }
+
+  .dashboard-home {
+    padding: 1.5rem;
+
+    .dashboard-cards,
+    .stats-grid {
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .beauty-container {
+    // La barre latérale en mode 'over' doit avoir un z-index plus faible sur mobile aussi
+    .mat-drawer-side {
+      z-index: 50 !important; // Harmonisé
+    }
+  }
+
+  .beauty-sidebar {
+    width: 100% !important;
+    max-width: 280px;
+
+    .sidebar-header {
+      padding: 1rem;
+
+      .user-avatar img {
+        width: 50px;
+        height: 50px;
+      }
+
+      .user-info-sidebar {
+        padding: 0.75rem;
+
+        .user-name {
+          font-size: 0.85rem;
+        }
+
+        .user-email {
+          font-size: 0.7rem;
+        }
+
+        .user-role {
+          font-size: 0.65rem;
+        }
+      }
+    }
+
+    .beauty-menu .menu-item {
+      padding: 0.75rem 1rem;
+    }
+  }
+
+  .beauty-toolbar {
+    .toolbar-title {
+      font-size: 1rem;
+      margin-left: 0.5rem;
+    }
+  }
+
+  .dashboard-home {
+    padding: 1rem;
+
+    .dashboard-welcome,
+    .welcome-section {
+      padding: 1.5rem;
+
+      h1, h2 {
+        font-size: 1.4rem;
+      }
+
+      p {
+        font-size: 0.9rem;
+      }
+    }
+
+    .dashboard-cards,
+    .stats-grid {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+
+      .beauty-card {
+        padding: 1.5rem 1rem;
+
+        mat-card-title {
+          font-size: 2rem;
+        }
+      }
+    }
+  }
+
+  .section-header {
+    padding: 0.75rem 1rem;
+    top: 56px !important; /* ✅ Ajuster pour mobile */
+
+    h2 {
       font-size: 1.2rem;
     }
   }
-}
 
-/* Menu */
-.beauty-menu {
-  padding: 15px 0;
-  
-  .menu-item {
-    margin: 5px 15px;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    
-    &:hover {
-      background: rgba($primary-color, 0.1);
-      color: $primary-color;
-    }
-    
-    &.active {
-      background: rgba($primary-color, 0.2);
-      color: $primary-color;
-      font-weight: 500;
-    }
-    
-    .menu-icon {
-      color: $primary-color;
-      margin-right: 10px;
-    }
-    
-    .notification-badge {
-      background: $primary-color;
-      color: $white;
-      border-radius: 50%;
-      width: 20px;
-      height: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.7rem;
-      margin-left: auto;
+  /* ✅ AJOUT: Ajuster section-content pour mobile */
+  .portfolio-section,
+  .opportunities-section,
+  .services-section {
+    .section-content {
+      padding: 1rem;
+      height: calc(100vh - 56px - 70px); /* Mobile toolbar + header heights */
     }
   }
 }
 
-/* Toolbar */
+@media (max-width: 480px) {
+  .dashboard-home {
+    .dashboard-welcome,
+    .welcome-section {
+      padding: 1rem;
+
+      h1, h2 {
+        font-size: 1.2rem;
+      }
+    }
+
+    .dashboard-cards .beauty-card,
+    .stats-grid .beauty-card {
+      padding: 1rem;
+
+      mat-card-title {
+        font-size: 1.8rem;
+      }
+    }
+  }
+}
+
+/* ✅ Animations */
+.user-info-sidebar {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.user-info {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.dashboard-cards .beauty-card,
+.stats-grid .beauty-card {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --- ✅ Z-index management pour éviter les superpositions --- */
+
+// Le plus élevé pour les modaux et overlays Material
+.cdk-overlay-container {
+  z-index: 99999 !important; /* Le conteneur principal des overlays doit être le plus haut */
+}
+
+.cdk-overlay-backdrop {
+  z-index: 99998 !important; /* La superposition sombre juste en dessous du modal */
+}
+
+.cdk-overlay-pane {
+  z-index: 99999 !important; /* Le panneau qui contient le dialogue */
+}
+
+.mat-dialog-container {
+  z-index: 100000 !important; /* Le contenu du dialogue lui-même, encore plus haut */
+  position: relative !important; /* S'assurer que le z-index s'applique */
+}
+
+// ✅ CORRECTION CLÉ: Barre latérale et leurs superpositions
+// Quand la barre latérale est ouverte en mode 'over' (ce que l'image montre) ou en mode 'side',
+// son z-index doit être clairement inférieur à celui des modaux.
+// Ces valeurs sont harmonisées avec ce que votre TypeScript tente d'appliquer directement.
+.mat-sidenav-container .mat-drawer-over {
+  z-index: 50 !important; /* Barre latérale en mode 'over' */
+}
+
+.mat-sidenav-container .mat-drawer-over + .mat-drawer-backdrop {
+  z-index: 49 !important; /* Superposition de la barre latérale en mode 'over' */
+}
+
+.beauty-sidebar {
+  z-index: 50 !important; /* La barre latérale elle-même (s'applique aussi aux modes 'side'/'push') */
+}
+
+.mat-sidenav { // S'applique à tous les mat-sidenavs quel que soit le mode
+  z-index: 50 !important; /* Harmonisé avec la valeur définie par TypeScript */
+}
+
+.mat-sidenav-backdrop { // S'applique à toutes les superpositions de mat-sidenav
+  z-index: 49 !important; /* Harmonisé avec la valeur définie par TypeScript */
+}
+
+
+// Barre d'outils
 .beauty-toolbar {
-  background: $white;
-  color: $text-dark;
-  box-shadow: $shadow;
-  padding: 0 20px;
-  height: 70px;
-  display: flex;
-  align-items: center;
-  
-  .menu-button {
-    color: $primary-color;
-  }
-  
-  .search-bar {
-    flex: 1;
-    max-width: 500px;
-    margin: 0 30px;
-    background: $light-color;
-    border-radius: 30px;
-    padding: 8px 15px;
-    display: flex;
-    align-items: center;
-    
-    mat-icon {
-      color: $primary-color;
-      margin-right: 10px;
-    }
-    
-    input {
-      border: none;
-      background: transparent;
-      outline: none;
-      width: 100%;
-      color: $text-dark;
-      
-      &::placeholder {
-        color: rgba($text-dark, 0.5);
-      }
-    }
-  }
-  
-  .toolbar-actions {
-    button {
-      position: relative;
-      color: $tertiary-color;
-      
-      .notification-badge {
-        position: absolute;
-        top: 5px;
-        right: 5px;
-        background: $primary-color;
-        color: $white;
-        border-radius: 50%;
-        width: 18px;
-        height: 18px;
-        font-size: 0.6rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-    }
-  }
+  z-index: 500 !important; /* Sous la sidebar, sous les modals */
 }
 
-/* Contenu principal */
-.beauty-content {
-  padding: 30px;
-  background-color: $light-color;
-  min-height: calc(100vh - 70px);
+// En-têtes de section collants
+.section-header {
+  z-index: 100 !important; /* Sous la barre d'outils */
 }
 
-.welcome-section {
-  margin-bottom: 30px;
-  
-  h1 {
-    color: $primary-color;
-    font-weight: 500;
-    margin-bottom: 5px;
-  }
-  
-  p {
-    color: $tertiary-color;
-    margin: 0;
-  }
+// Conteneur principal, le plus bas
+.mat-sidenav-content {
+  z-index: 1 !important;
 }
 
-.modern-carousel {
-  width: 100%;
-  margin: 0 auto 30px;
-  position: relative;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: $shadow;
-  height: 400px; /* Hauteur fixe */
-  
-  .carousel-track {
-    display: flex;
-    height: 100%;
-    transition: transform 0.5s ease;
-    
-    .carousel-slide {
-      min-width: 100%;
-      position: relative;
-      
-      .image-container {
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        
-        img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          object-position: center;
-        }
-      }
-      
-      .slide-overlay {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
-        padding: 30px;
-        color: $white;
-        
-        h3 {
-          margin: 0 0 10px;
-          font-size: 1.8rem;
-        }
-        
-        p {
-          margin: 0;
-          opacity: 0.9;
-        }
-      }
-      
-      &:not(.active) {
-        display: none;
-      }
-    }
-  }
-  
-  .carousel-controls {
-    position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
-    display: flex;
-    justify-content: space-between;
-    transform: translateY(-50%);
-    padding: 0 15px;
-    
-    button {
-      background: rgba($white, 0.3);
-      color: $white;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      
-      &:hover {
-        background: rgba($white, 0.5);
-      }
-    }
-    
-    .indicators {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      
-      span {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        background: rgba($white, 0.5);
-        cursor: pointer;
-        
-        &.active {
-          background: $white;
-          transform: scale(1.2);
-        }
-      }
-    }
-  }
+.mat-sidenav-container {
+  z-index: 1 !important; /* Garde le conteneur lui-même bas */
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .modern-carousel {
-    height: 250px;
-    
-    .slide-overlay {
-      padding: 15px !important;
-      
-      h3 {
-        font-size: 1.2rem !important;
-      }
-      
-      p {
-        font-size: 0.8rem !important;
-      }
-    }
-  }
-}
-
-/* Cartes Statistiques */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-  margin-bottom: 30px;
-}
-
-.beauty-card {
-  padding: 25px;
-  text-align: center;
-  border-radius: 12px;
-  background: $white;
-  box-shadow: $shadow;
-  transition: transform 0.3s ease;
-  border-left: 4px solid $primary-color;
-  
-  &:hover {
-    transform: translateY(-5px);
-  }
-  
-  .card-icon {
-    width: 60px;
-    height: 60px;
-    background: rgba($primary-color, 0.1);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 15px;
-    
-    mat-icon {
-      color: $primary-color;
-      font-size: 30px;
-    }
-  }
-  
-  mat-card-title {
-    color: $primary-color;
-    font-size: 2rem;
-    margin-bottom: 5px;
-  }
-  
-  p {
-    color: $secondary-color;
-    margin: 0;
-  }
-}
-
-/* Section Services */
-.services-section {
-  background: $white;
-  border-radius: 12px;
-  padding: 25px;
-  box-shadow: $shadow;
-  
-  h2 {
-    color: $primary-color;
-    margin-bottom: 20px;
-    font-weight: 500;
-  }
-}
-
-.services-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 15px;
-}
-
-.service-item {
-  background: $light-color;
-  border-radius: 8px;
-  padding: 20px;
-  text-align: center;
-  transition: all 0.3s ease;
-  
-  &:hover {
-    background: rgba($primary-color, 0.1);
-    transform: translateY(-3px);
-  }
-  
-  .service-icon {
-    width: 50px;
-    height: 50px;
-    background: $white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 15px;
-    box-shadow: $shadow;
-    
-    mat-icon {
-      color: $primary-color;
-    }
-  }
-  
-  h3 {
-    color: $text-dark;
-    font-size: 1rem;
-    margin-bottom: 5px;
-  }
-  
-  p {
-    color: $primary-color;
-    margin: 0;
-    font-weight: 500;
-  }
-}
-
-/* Section Portfolio */
-.portfolio-section {
-  background: $white;
-  min-height: calc(100vh - 70px);
-  padding: 30px;
-  
-  .section-header {
-    display: flex;
-    align-items: center;
-    margin-bottom: 30px;
-    
-    .back-button {
-      color: $primary-color;
-      margin-right: 15px;
-    }
-    
-    h2 {
-      flex: 1;
-      color: $primary-color;
-      margin: 0;
-    }
-    
-    .add-button {
-      background: $primary-color;
-      color: $white;
-      
-      mat-icon {
-        margin-right: 8px;
-      }
-    }
-  }
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .beauty-sidebar {
-    width: 70px;
-    
-    .sidebar-header {
-      padding: 15px 5px;
-      
-      h2, .user-avatar {
-        display: none;
-      }
-    }
-    
-    .menu-item {
-      span, .notification-badge {
-        display: none;
-      }
-      
-      mat-icon {
-        margin-right: 0;
-      }
-    }
-    
-    .sidebar-footer {
-      display: none;
-    }
-  }
-  
-  .modern-carousel {
-    .carousel-track {
-      height: 250px;
-    }
-    
-    .slide-overlay {
-      padding: 15px !important;
-      
-      h3 {
-        font-size: 1.2rem !important;
-      }
-    }
-  }
-  
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .services-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+// Styles appliqués quand un modal est ouvert
+.modal-open {
+  overflow: hidden !important; /* Empêche le défilement du corps lorsque le modal est ouvert */
+  // Pas besoin de changer le z-index de la sidebar ici, les règles ci-dessus sont suffisantes
 }

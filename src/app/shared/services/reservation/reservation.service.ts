@@ -530,14 +530,14 @@ sortByDate(reservations: any[], ordre: 'asc' | 'desc' = 'desc'): any[] {
  */
 formatStatutPourAffichage(statut: string): string {
   const statutsMap: { [key: string]: string } = {
-    'en_attente': 'En attente',
-    'pending': 'En attente',
     'confirmee': 'Confirmée',
     'confirmed': 'Confirmée',
+    'terminee': 'Terminée',
+    'completed': 'Terminée',
     'annulee': 'Annulée',
     'cancelled': 'Annulée',
-    'terminee': 'Terminée',
-    'completed': 'Terminée'
+    'non_presentee': 'Non présenté',
+    'no_show': 'Non présenté'
   };
   
   return statutsMap[statut?.toLowerCase()] || statut || 'Inconnu';
@@ -630,5 +630,24 @@ getTempsDepuisCreation(dateCreation: string | Date): string {
     console.warn('Erreur calcul temps:', error);
     return 'récemment';
   }
+}
+/**
+ * ✅ NOUVEAU : Marquer client comme non présenté
+ */
+marquerNonPresentee(reservationId: number, motif?: string): Observable<any> {
+  console.log(`Marquage non présenté réservation ${reservationId}`);
+  
+  const statusData = {
+    statut: 'non_presentee',
+    motifAnnulation: motif || 'Client non présenté',
+    updatedAt: new Date().toISOString()
+  };
+  
+  return this.http.put<any>(`${this.apiUrl}/${reservationId}/no-show`, statusData).pipe(
+    tap(updatedReservation => {
+      console.log(`Réservation ${reservationId} marquée non présentée:`, updatedReservation);
+    }),
+    catchError(this.handleError)
+  );
 }
 }

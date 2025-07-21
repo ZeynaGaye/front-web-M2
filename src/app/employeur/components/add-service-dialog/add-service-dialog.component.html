@@ -1,1 +1,82 @@
-<p>add-service-dialog works!</p>
+<div class="service-dialog">
+  <div class="dialog-header">
+    <h2>
+      <i class="material-icons">{{ isEditMode ? 'edit' : 'add_business' }}</i>
+      {{ isEditMode ? 'Modifier le service' : 'Ajouter un service' }}
+    </h2>
+    <button type="button" class="close-button" (click)="onCancel()">
+      <i class="material-icons">close</i>
+    </button>
+  </div>
+  <form [formGroup]="serviceForm" (ngSubmit)="onSubmit()" class="service-form">
+    <div class="input-group">
+      <i class="material-icons">content_cut</i>
+      <input 
+        type="text" 
+        placeholder="Nom du service (ex: Coupe et brushing)" 
+        formControlName="nom"
+        maxlength="100">
+      <small *ngIf="serviceForm.get('nom')?.invalid && serviceForm.get('nom')?.touched">
+        Le nom du service est requis (min 2 caractères)
+      </small>
+    </div>
+
+    <!-- Description -->
+    <div class="input-group">
+      <i class="material-icons">description</i>
+      <textarea 
+        placeholder="Description du service..." 
+        formControlName="description"
+        maxlength="300"
+        rows="3">
+      </textarea>
+      <small *ngIf="serviceForm.get('description')?.invalid && serviceForm.get('description')?.touched">
+        La description est requise (min 5 caractères)
+      </small>
+    </div>
+
+    <!-- Prix et Durée -->
+    <div class="form-row">
+      <div class="input-group half-width">
+        <i class="material-icons">AFA</i>
+        <input 
+          type="number" 
+          placeholder="Prix en cfa" 
+          formControlName="prix"
+          min="0.01"
+          step="0.01">
+        <small *ngIf="serviceForm.get('prix')?.invalid && serviceForm.get('prix')?.touched">
+          Prix requis 
+        </small>
+      </div>
+
+      <div class="input-group half-width">
+        <i class="material-icons">schedule</i>
+        <input 
+          type="number" 
+          placeholder="Durée en minutes" 
+          formControlName="dureeEnMinutes"
+          min="1"
+          max="600">
+        <small *ngIf="serviceForm.get('dureeEnMinutes')?.invalid && serviceForm.get('dureeEnMinutes')?.touched">
+          Durée requise (min 1 minute)
+        </small>
+      </div>
+    </div>
+
+    <!-- Boutons -->
+    <div class="form-actions">
+      <button type="button" class="cancel-btn" (click)="onCancel()">
+        <i class="material-icons">cancel</i>
+        Annuler
+      </button>
+      
+      <button type="submit" class="submit-btn" [disabled]="!serviceForm.valid">
+        <i class="material-icons">{{ isEditMode ? 'save' : 'add' }}</i>
+        {{ isEditMode ? 'Enregistrer' : 'Ajouter' }}
+        <!-- {{ !serviceForm.valid ? ' (INVALIDE)' : ' (OK)' }} -->
+      </button>
+    </div>
+
+  </form>
+</div>

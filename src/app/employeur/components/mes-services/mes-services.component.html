@@ -38,12 +38,12 @@
 
     <mat-card *ngFor="let service of services" class="service-card">
       <mat-card-header>
-        <mat-card-title>{{ service.name }}</mat-card-title>
+        <mat-card-title>{{ service.nom }}</mat-card-title>
       </mat-card-header>
       <mat-card-content>
         <p>{{ service.description }}</p>
-        <p class="price">{{ service.price | currency:'EUR' }}</p>
-        <p class="duration">Durée: {{ service.duration }} minutes</p>
+        <p class="price">{{ service.prix | currency:'CFA' }}</p>
+        <p class="duration">Durée: {{ service.dureeEnMinutes }} minutes</p>
       </mat-card-content>
       <mat-card-actions>
         <button mat-button color="primary" (click)="editService(service)">

@@ -24,7 +24,7 @@ import { FormsModule } from '@angular/forms';
     MatButtonModule,
     MatIconModule,
     FormsModule,
-    ReactiveFormsModule // ✅ AJOUTÉ pour le formulaire de contact
+    ReactiveFormsModule 
   ],
   standalone: true,
   animations: [
@@ -45,7 +45,7 @@ import { FormsModule } from '@angular/forms';
       })),
       transition('collapsed <=> expanded', animate('400ms cubic-bezier(0.4, 0.0, 0.2, 1)'))
     ]),
-    // ✅ NOUVELLE animation pour la modal de contact
+    // Animation pour la modal de contact
     trigger('modalAnimation', [
       state('closed', style({ 
         opacity: 0,
@@ -62,6 +62,10 @@ import { FormsModule } from '@angular/forms';
   ]
 })
 export class ClientSectionComponent implements OnInit, OnDestroy {
+[x: string]: any;
+  // ==========================================
+  // PROPRIÉTÉS DE BASE
+  // ==========================================
   activeFeature = 0;
   isExpanded = false;
   allFreelances: Freelance[] = [];
@@ -78,12 +82,17 @@ export class ClientSectionComponent implements OnInit, OnDestroy {
   paginatedFreelances: Freelance[] = [];
   showFreelancesSection: boolean = false;
 
-  // ✅ NOUVELLES propriétés pour le formulaire de contact
+  // ==========================================
+  // PROPRIÉTÉS POUR LE CONTACT
+  // ==========================================
   showContactModal: boolean = false;
   selectedFreelanceForContact: Freelance | null = null;
   contactForm: FormGroup;
   isSubmittingContact: boolean = false;
 
+  // ==========================================
+  // DONNÉES STATIQUES
+  // ==========================================
   features = [
     { 
       id: 1, 
@@ -130,258 +139,188 @@ export class ClientSectionComponent implements OnInit, OnDestroy {
   private interval: any;
   isBrowser: boolean;
 
+  // ==========================================
+  // CONSTRUCTEUR
+  // ==========================================
   constructor(
     private router: Router,
     private freelanceService: FreelanceService,
-    private fb: FormBuilder, // ✅ AJOUTÉ pour le FormBuilder
+    private fb: FormBuilder,
     @Inject(PLATFORM_ID) platformId: Object
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
     
-    // ✅ INITIALISATION du formulaire de contact
+    // Initialisation du formulaire de contact
     this.contactForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
       email: ['', [Validators.required, Validators.email]],
       subject: ['', [Validators.required, Validators.minLength(5)]],
       message: ['', [Validators.required, Validators.minLength(10)]],
-      freelanceId: [''] // ✅ Champ caché pour identifier le freelance contacté
+      freelanceId: ['']
     });
   }
 
+  // ==========================================
+  // LIFECYCLE HOOKS
+  // ==========================================
   ngOnInit() {
     if (this.isBrowser) {
       this.startRotation();
     }
+    console.log('ClientSectionComponent initialisé');
   }
+
+  ngOnDestroy() {
+    if (this.isBrowser) {
+      clearInterval(this.interval);
+      // Rétablir le scroll au cas où la modal serait ouverte
+      if (typeof document !== 'undefined') {
+        document.body.style.overflow = 'auto';
+      }
+    }
+  }
+
+  // ==========================================
+  // MÉTHODES POUR LES FEATURES
+  // ==========================================
   
-  toggleFreelancesSection() {
-    this.showFreelancesSection = !this.showFreelancesSection;
-    
-    if (this.showFreelancesSection && this.allFreelances.length === 0) {
-      this.loadAllFreelances();
-    }
-    
-    if (this.showFreelancesSection) {
-      setTimeout(() => {
-        const freelanceSection = document.querySelector('.freelance-list-section');
-        if (freelanceSection) {
-          freelanceSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      }, 400);
-    } else {
-      setTimeout(() => {
-        this.activeFeature = 1;
-        const featureDisplay = document.querySelector('.feature-display');
-        if (featureDisplay) {
-          featureDisplay.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      }, 100);
-    }
-  }
-
-  loadAllFreelances() {
-    this.loadingFreelances = true;
-    this.freelanceService.getAllFreelances().subscribe({
-      next: (freelances: Freelance[]) => {
-        this.allFreelances = freelances;
-        this.filteredFreelances = [...freelances];
-        this.totalPages = Math.ceil(this.filteredFreelances.length / this.itemsPerPage);
-        this.updatePaginatedFreelances();
-        this.loadingFreelances = false;
-      },
-      error: (error: any) => {
-        console.error('Erreur lors du chargement des freelances:', error);
-        this.loadingFreelances = false;
-      }
-    });
-  }
-
-  viewFreelancePortfolio(freelanceId: number) {
-    this.selectedFreelanceId = freelanceId;
-    this.showPortfolio = true;
-    
-    setTimeout(() => {
-      const portfolioElement = document.getElementById('freelance-portfolio');
-      if (portfolioElement) {
-        portfolioElement.scrollIntoView({ behavior: 'smooth' });
-      }
-    }, 100);
-  }
-
-  closePortfolio() {
-    this.showPortfolio = false;
-    this.selectedFreelanceId = null;
-  }
-
-  // ==========================================
-  // 📧 NOUVELLES MÉTHODES POUR LE CONTACT
-  // ==========================================
-
   /**
-   * ✅ NOUVEAU : Ouvre la modal de contact pour un freelance
+   * Change la feature active et reset le timer de rotation
    */
-  contactFreelance(freelance: Freelance, event: Event) {
-    event.preventDefault();
-    event.stopPropagation();
-    
-    console.log('Ouverture du formulaire de contact pour:', freelance.prenom, freelance.nom);
-    
-    // Stocker le freelance sélectionné
-    this.selectedFreelanceForContact = freelance;
-    
-    // Pré-remplir le formulaire
-    this.contactForm.patchValue({
-      subject: `Demande de prestation - ${freelance.prenom} ${freelance.nom}`,
-      freelanceId: freelance.id,
-      name: '', // Sera rempli par l'utilisateur
-      email: '', // Sera rempli par l'utilisateur
-      message: `Bonjour ${freelance.prenom},\n\nJe souhaiterais en savoir plus sur vos services.\n\nCordialement.`
-    });
-    
-    // Afficher la modal
-    this.showContactModal = true;
-    
-    // Empêcher le scroll en arrière-plan
-    if (this.isBrowser) {
-      document.body.style.overflow = 'hidden';
-    }
-  }
-
-  /**
-   * ✅ NOUVEAU : Ferme la modal de contact
-   */
-  closeContactModal() {
-    this.showContactModal = false;
-    this.selectedFreelanceForContact = null;
-    this.contactForm.reset();
-    
-    // Rétablir le scroll
-    if (this.isBrowser) {
-      document.body.style.overflow = 'auto';
-    }
-  }
-
-  /**
-   * ✅ NOUVEAU : Soumet le formulaire de contact
-   */
-  onSubmitContact() {
-    if (this.contactForm.invalid) {
-      // Marquer tous les champs comme touchés pour afficher les erreurs
-      Object.keys(this.contactForm.controls).forEach(key => {
-        this.contactForm.get(key)?.markAsTouched();
-      });
-      return;
-    }
-
-    this.isSubmittingContact = true;
-    const formData = this.contactForm.value;
-
-    console.log('Envoi du message de contact:', formData);
-
-    // Simuler l'envoi (remplacez par votre service)
-    setTimeout(() => {
-      this.isSubmittingContact = false;
-      
-      // Afficher un message de succès
-      alert(`Merci ${formData.name} ! Votre message a été envoyé à ${this.selectedFreelanceForContact?.prenom}. Vous recevrez une réponse sous peu.`);
-      
-      // Fermer la modal
-      this.closeContactModal();
-      
-      // TODO: Intégrer avec votre service de messagerie
-      // this.messageService.sendContactMessage(formData).subscribe({
-      //   next: (response) => {
-      //     this.showSuccessMessage();
-      //     this.closeContactModal();
-      //   },
-      //   error: (error) => {
-      //     this.showErrorMessage();
-      //   }
-      // });
-      
-    }, 2000); // Simulation d'une requête réseau
-  }
-
-  /**
-   * ✅ NOUVEAU : Vérifie si un champ a une erreur
-   */
-  hasFieldError(fieldName: string): boolean {
-    const field = this.contactForm.get(fieldName);
-    return !!(field && field.invalid && field.touched);
-  }
-
-  /**
-   * ✅ NOUVEAU : Obtient le message d'erreur pour un champ
-   */
-  getFieldError(fieldName: string): string {
-    const field = this.contactForm.get(fieldName);
-    if (!field || !field.errors) return '';
-
-    if (field.errors['required']) {
-      return `${this.getFieldLabel(fieldName)} est requis.`;
-    }
-    if (field.errors['email']) {
-      return 'Veuillez entrer une adresse e-mail valide.';
-    }
-    if (field.errors['minlength']) {
-      const requiredLength = field.errors['minlength'].requiredLength;
-      return `${this.getFieldLabel(fieldName)} doit contenir au moins ${requiredLength} caractères.`;
-    }
-    
-    return 'Ce champ contient une erreur.';
-  }
-
-  /**
-   * ✅ UTILITAIRE : Obtient le label d'un champ
-   */
-  private getFieldLabel(fieldName: string): string {
-    const labels: { [key: string]: string } = {
-      name: 'Le nom',
-      email: 'L\'e-mail',
-      subject: 'Le sujet',
-      message: 'Le message'
-    };
-    return labels[fieldName] || 'Ce champ';
-  }
-
-  // ==========================================
-  // 🔄 MÉTHODES EXISTANTES (INCHANGÉES)
-  // ==========================================
-
-  startRotation() {
-    this.interval = setInterval(() => {
-      this.activeFeature = (this.activeFeature + 1) % this.features.length;
-    }, 4000);
-  }
-
   setActiveFeature(index: number) {
+    console.log('Changement de feature active vers:', index);
     this.activeFeature = index;
     this.resetTimer();
+    
+    // Si on clique sur "Explorez les portfolios" (index 1)
+    if (index === 1) {
+      console.log('Feature "Explorez les portfolios" sélectionnée');
+    }
   }
 
+  /**
+   * Démarre la rotation automatique des features
+   */
+  startRotation() {
+    if (this.isBrowser) {
+      this.interval = setInterval(() => {
+        this.activeFeature = (this.activeFeature + 1) % this.features.length;
+      }, 4000);
+    }
+  }
+
+  /**
+   * Reset le timer de rotation automatique
+   */
   resetTimer() {
     if (this.isBrowser) {
       clearInterval(this.interval);
       this.startRotation();
     }
   }
-  
+
+  /**
+   * Toggle l'état d'expansion (non utilisé actuellement)
+   */
   toggleExpand() {
     this.isExpanded = !this.isExpanded;
   }
 
+  // ==========================================
+  // MÉTHODES POUR LES FREELANCES
+  // ==========================================
+
+  /**
+   * ✅ CORRIGÉ : Toggle l'affichage de la section freelances
+   */
+  toggleFreelancesSection() {
+    console.log('Toggle freelances section. État actuel:', this.showFreelancesSection);
+    
+    this.showFreelancesSection = !this.showFreelancesSection;
+    
+    console.log('Nouvel état:', this.showFreelancesSection);
+    
+    // Charger les freelances si la section est ouverte et qu'il n'y en a pas
+    if (this.showFreelancesSection && this.allFreelances.length === 0) {
+      console.log('Chargement des freelances...');
+      this.loadAllFreelances();
+    }
+    
+    // Scroll vers la section si elle est ouverte
+    if (this.showFreelancesSection && this.isBrowser) {
+      setTimeout(() => {
+        const freelanceSection = document.querySelector('.freelance-list-section');
+        if (freelanceSection) {
+          freelanceSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 500); // Augmenté le délai pour laisser le temps à l'animation
+    }
+  }
+
+  /**
+   * ✅ CORRIGÉ : Charge tous les freelances
+   */
+  loadAllFreelances() {
+    console.log('Début du chargement des freelances...');
+    this.loadingFreelances = true;
+    
+    try {
+      this.freelanceService.getAllFreelances().subscribe({
+        next: (freelances: Freelance[]) => {
+          console.log('Freelances chargés:', freelances.length);
+          this.allFreelances = freelances;
+          this.filteredFreelances = [...freelances];
+          this.totalPages = Math.ceil(this.filteredFreelances.length / this.itemsPerPage);
+          this.currentPage = 1; // Reset de la page courante
+          this.updatePaginatedFreelances();
+          this.loadingFreelances = false;
+        },
+        error: (error: any) => {
+          console.error('Erreur lors du chargement des freelances:', error);
+          this.loadingFreelances = false;
+          this.allFreelances = [];
+          this.filteredFreelances = [];
+          this.totalPages = 0;
+          this.paginatedFreelances = [];
+        }
+      });
+    } catch (error) {
+      console.error('Erreur critique:', error);
+      this.loadingFreelances = false;
+    }
+  }
+
+  /**
+   * ✅ CORRIGÉ : Met à jour la liste paginée
+   */
+  updatePaginatedFreelances() {
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = Math.min(startIndex + this.itemsPerPage, this.filteredFreelances.length);
+    this.paginatedFreelances = this.filteredFreelances.slice(startIndex, endIndex);
+    
+    console.log(`Page ${this.currentPage}: affichage de ${startIndex + 1} à ${endIndex} sur ${this.filteredFreelances.length}`);
+  }
+
+  /**
+   * ✅ CORRIGÉ : Filtre les freelances selon le terme de recherche et le filtre actif
+   */
   filterFreelances() {
+    console.log('Filtrage avec terme:', this.searchTerm, 'et filtre:', this.activeFilter);
+    
     let result = [...this.allFreelances];
     
+    // Filtrage par terme de recherche
     if (this.searchTerm.trim() !== '') {
       const term = this.searchTerm.toLowerCase().trim();
       result = result.filter(freelance => 
         freelance.prenom?.toLowerCase().includes(term) || 
         freelance.nom?.toLowerCase().includes(term) ||
-         (freelance.competences && freelance.competences.toLowerCase().includes(term))
+        (freelance.competences && freelance.competences.toLowerCase().includes(term)) ||
+        (freelance.adresse && freelance.adresse.toLowerCase().includes(term))
       );
     }
     
+    // Filtrage par catégorie
     if (this.activeFilter !== 'all') {
       result = result.filter(freelance => 
         freelance.competences && freelance.competences.toLowerCase().includes(this.activeFilter.toLowerCase())
@@ -390,16 +329,15 @@ export class ClientSectionComponent implements OnInit, OnDestroy {
     
     this.filteredFreelances = result;
     this.totalPages = Math.ceil(this.filteredFreelances.length / this.itemsPerPage);
-    this.currentPage = 1;
+    this.currentPage = 1; // Reset à la page 1 lors du filtrage
     this.updatePaginatedFreelances();
+    
+    console.log('Résultats filtrés:', this.filteredFreelances.length);
   }
 
-  updatePaginatedFreelances() {
-    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    const endIndex = Math.min(startIndex + this.itemsPerPage, this.filteredFreelances.length);
-    this.paginatedFreelances = this.filteredFreelances.slice(startIndex, endIndex);
-  }
-
+  /**
+   * Change la page courante
+   */
   changePage(pageNumber: number) {
     if (pageNumber < 1 || pageNumber > this.totalPages) {
       return;
@@ -407,26 +345,37 @@ export class ClientSectionComponent implements OnInit, OnDestroy {
     this.currentPage = pageNumber;
     this.updatePaginatedFreelances();
     
-    const element = document.querySelector('.freelance-list-section');
-    if (element) {
-      element.scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'start' 
-      });
+    if (this.isBrowser) {
+      const element = document.querySelector('.freelance-list-section');
+      if (element) {
+        element.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        });
+      }
     }
   }
 
+  /**
+   * Définit le filtre actif
+   */
   setFilter(filter: string) {
     this.activeFilter = filter;
     this.filterFreelances();
   }
 
+  /**
+   * Remet à zéro tous les filtres
+   */
   resetFilters() {
     this.searchTerm = '';
     this.activeFilter = 'all';
     this.filterFreelances();
   }
 
+  /**
+   * Retourne les numéros de page à afficher
+   */
   getPageNumbers(): number[] {
     const pages: number[] = [];
     const maxPagesToShow = 5;
@@ -452,6 +401,13 @@ export class ClientSectionComponent implements OnInit, OnDestroy {
     return pages;
   }
 
+  // ==========================================
+  // MÉTHODES UTILITAIRES
+  // ==========================================
+
+  /**
+   * Extrait la ville d'une adresse
+   */
   extractCity(address: string): string {
     if (!address) return '';
     
@@ -463,12 +419,18 @@ export class ClientSectionComponent implements OnInit, OnDestroy {
     return address;
   }
 
+  /**
+   * Formate un numéro de téléphone
+   */
   formatPhone(phone: string): string {
     if (!phone) return '';
     
     return phone.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5');
   }
 
+  /**
+   * Retourne la catégorie principale d'un freelance
+   */
   getMainCategory(competences: string): string {
     if (!competences) return 'Beauté';
     
@@ -480,11 +442,178 @@ export class ClientSectionComponent implements OnInit, OnDestroy {
     return 'Beauté';
   }
 
-  ngOnDestroy() {
+  // ==========================================
+  // MÉTHODES POUR LE PORTFOLIO
+  // ==========================================
+
+  /**
+   * Affiche le portfolio d'un freelance
+   */
+  viewFreelancePortfolio(freelanceId: number) {
+    this.selectedFreelanceId = freelanceId;
+    this.showPortfolio = true;
+    
     if (this.isBrowser) {
-      clearInterval(this.interval);
-      // Rétablir le scroll au cas où la modal serait ouverte
+      setTimeout(() => {
+        const portfolioElement = document.getElementById('freelance-portfolio');
+        if (portfolioElement) {
+          portfolioElement.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    }
+  }
+
+  /**
+   * Ferme l'affichage du portfolio
+   */
+  closePortfolio() {
+    this.showPortfolio = false;
+    this.selectedFreelanceId = null;
+  }
+
+  // ==========================================
+  // MÉTHODES POUR LE CONTACT
+  // ==========================================
+
+  /**
+   * ✅ Ouvre la modal de contact pour un freelance
+   */
+  contactFreelance(freelance: Freelance, event: Event) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    console.log('Ouverture du formulaire de contact pour:', freelance.prenom, freelance.nom);
+    
+    this.selectedFreelanceForContact = freelance;
+    
+    // Pré-remplir le formulaire
+    this.contactForm.patchValue({
+      subject: `Demande de prestation - ${freelance.prenom} ${freelance.nom}`,
+      freelanceId: freelance.id,
+      name: '',
+      email: '',
+      message: `Bonjour ${freelance.prenom},\n\nJe souhaiterais en savoir plus sur vos services.\n\nCordialement.`
+    });
+    
+    this.showContactModal = true;
+    
+    // Empêcher le scroll seulement si on est dans le navigateur
+    if (this.isBrowser && typeof document !== 'undefined') {
+      document.body.style.overflow = 'hidden';
+    }
+  }
+
+  /**
+   * ✅ Ferme la modal de contact
+   */
+  closeContactModal() {
+    this.showContactModal = false;
+    this.selectedFreelanceForContact = null;
+    this.contactForm.reset();
+    
+    // Rétablir le scroll seulement si on est dans le navigateur
+    if (this.isBrowser && typeof document !== 'undefined') {
       document.body.style.overflow = 'auto';
     }
+  }
+
+  /**
+   * ✅ Soumet le formulaire de contact
+   */
+  onSubmitContact() {
+    if (this.contactForm.invalid) {
+      Object.keys(this.contactForm.controls).forEach(key => {
+        this.contactForm.get(key)?.markAsTouched();
+      });
+      return;
+    }
+
+    this.isSubmittingContact = true;
+    const formData = this.contactForm.value;
+
+    console.log('Envoi du message de contact:', formData);
+
+    // Simulation avec gestion d'erreur
+    setTimeout(() => {
+      try {
+        this.isSubmittingContact = false;
+        
+        const message = `Merci ${formData.name} ! Votre message a été envoyé à ${this.selectedFreelanceForContact?.prenom}. Vous recevrez une réponse sous peu.`;
+        
+        if (this.isBrowser) {
+          alert(message);
+        } else {
+          console.log(message);
+        }
+        
+        this.closeContactModal();
+      } catch (error) {
+        console.error('Erreur lors de l\'envoi:', error);
+        this.isSubmittingContact = false;
+      }
+    }, 2000);
+  }
+
+  /**
+   * ✅ Vérifie si un champ a une erreur
+   */
+  hasFieldError(fieldName: string): boolean {
+    const field = this.contactForm.get(fieldName);
+    return !!(field && field.invalid && field.touched);
+  }
+
+  /**
+   * ✅ Obtient le message d'erreur pour un champ
+   */
+  getFieldError(fieldName: string): string {
+    const field = this.contactForm.get(fieldName);
+    if (!field || !field.errors) return '';
+
+    if (field.errors['required']) {
+      return `${this.getFieldLabel(fieldName)} est requis.`;
+    }
+    if (field.errors['email']) {
+      return 'Veuillez entrer une adresse e-mail valide.';
+    }
+    if (field.errors['minlength']) {
+      const requiredLength = field.errors['minlength'].requiredLength;
+      return `${this.getFieldLabel(fieldName)} doit contenir au moins ${requiredLength} caractères.`;
+    }
+    
+    return 'Ce champ contient une erreur.';
+  }
+
+  /**
+   * ✅ Obtient le label d'un champ
+   */
+  private getFieldLabel(fieldName: string): string {
+    const labels: { [key: string]: string } = {
+      name: 'Le nom',
+      email: 'L\'e-mail',
+      subject: 'Le sujet',
+      message: 'Le message'
+    };
+    return labels[fieldName] || 'Ce champ';
+  }
+
+  // ==========================================
+  // MÉTHODE DE DEBUG (temporaire)
+  // ==========================================
+
+  /**
+   * ✅ Méthode pour déboguer l'état de la section freelances
+   */
+  debugFreelanceSection() {
+    console.log('=== DEBUG FREELANCE SECTION ===');
+    console.log('showFreelancesSection:', this.showFreelancesSection);
+    console.log('allFreelances.length:', this.allFreelances.length);
+    console.log('filteredFreelances.length:', this.filteredFreelances.length);
+    console.log('paginatedFreelances.length:', this.paginatedFreelances.length);
+    console.log('loadingFreelances:', this.loadingFreelances);
+    console.log('currentPage:', this.currentPage);
+    console.log('totalPages:', this.totalPages);
+    console.log('activeFeature:', this.activeFeature);
+    console.log('features[activeFeature]:', this.features[this.activeFeature]);
+    console.log('================================');
   }
 }

@@ -1,7 +1,7 @@
 import { Injectable, inject, PLATFORM_ID, Inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, throwError, from, of } from 'rxjs';
-import { catchError, tap, switchMap } from 'rxjs/operators';
+import { catchError, tap, switchMap, share } from 'rxjs/operators';
 import { KeycloakService } from 'keycloak-angular';
 import { Router } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
@@ -41,13 +41,17 @@ export class AuthService {
   private apiUrl = `${environment.apiUrl}/auth`;
   private currentUserSubject = new BehaviorSubject<any>(null);
   private refreshTokenTimeout: any;
+  
+  // ✅ NOUVELLES PROPRIÉTÉS pour éviter les appels multiples
+  private isRefreshing = false;
+  private refreshTokenSubject = new BehaviorSubject<any>(null);
 
   public currentUser$ = this.currentUserSubject.asObservable();
 
   constructor(@Inject(PLATFORM_ID) platformId: Object) {
     this.isBrowser = isPlatformBrowser(platformId);
     
-    console.log('AuthService constructor - initializing without triggering modals');
+    console.log('🔧 AuthService constructor - initializing');
     
     // Charger l'utilisateur depuis le localStorage au démarrage (uniquement côté navigateur)
     if (this.isBrowser) {
@@ -57,9 +61,9 @@ export class AuthService {
           const user = JSON.parse(storedUser);
           this.currentUserSubject.next(user);
           this.setupRefreshTokenTimer(user);
-          console.log('User restored from localStorage:', user.email);
+          console.log('✅ User restored from localStorage:', user.email);
         } catch (error) {
-          console.error('Error parsing stored user data:', error);
+          console.error('❌ Error parsing stored user data:', error);
           // Nettoyer les données corrompues
           localStorage.removeItem('currentUser');
         }
@@ -68,13 +72,13 @@ export class AuthService {
   }
 
   login(credentials: LoginCredentials): Observable<any> {
-    console.log('Tentative de connexion avec:', credentials.email);
+    console.log('🔐 Tentative de connexion avec:', credentials.email);
     
     return this.http
       .post<AuthResponse>(`${this.apiUrl}/login`, credentials)
       .pipe(
         tap((response) => {
-          console.log('Authentification réussie via API pour:', response.email);
+          console.log('✅ Authentification réussie via API pour:', response.email);
 
           if (!response || !response.accesToken) {
             throw new Error('Token non reçu dans la réponse');
@@ -83,7 +87,7 @@ export class AuthService {
           // Stocker les informations de l'utilisateur et le token (uniquement côté navigateur)
           if (this.isBrowser) {
             localStorage.setItem('currentUser', JSON.stringify(response));
-            console.log('User data saved to localStorage');
+            console.log('💾 User data saved to localStorage');
           }
           
           this.currentUserSubject.next(response);
@@ -98,7 +102,7 @@ export class AuthService {
           );
         }),
         catchError((error) => {
-          console.error("Erreur d'authentification:", error);
+          console.error("❌ Erreur d'authentification:", error);
           return throwError(
             () =>
               error.error?.message || 
@@ -110,7 +114,7 @@ export class AuthService {
   }
 
   logout(): Observable<any> {
-    console.log('Logout process started');
+    console.log('🚪 Logout process started');
     
     // Nettoyer le localStorage
     this.clearLocalStorage();
@@ -118,7 +122,7 @@ export class AuthService {
     // Rediriger l'utilisateur
     this.router.navigate(['/accueil']);
     
-    console.log('Logout completed successfully');
+    console.log('✅ Logout completed successfully');
     
     // Retourner un Observable de succès
     return of({ message: 'Déconnexion réussie' });
@@ -126,7 +130,7 @@ export class AuthService {
 
   private clearLocalStorage(): void {
     if (this.isBrowser) {
-      console.log('Clearing localStorage and user session');
+      console.log('🧹 Clearing localStorage and user session');
       
       // Liste de toutes les clés à supprimer
       const keysToRemove = [
@@ -135,7 +139,7 @@ export class AuthService {
         'refresh_token',
         'user_role',
         'user_id',
-        'beautyHubSearchParams' // Optionnel: nettoyer aussi les paramètres de recherche
+        'beautyHubSearchParams'
       ];
       
       keysToRemove.forEach(key => {
@@ -145,24 +149,44 @@ export class AuthService {
     
     this.currentUserSubject.next(null);
     this.clearRefreshTokenTimer();
+    
+    // ✅ Réinitialiser les flags de rafraîchissement
+    this.isRefreshing = false;
+    this.refreshTokenSubject.next(null);
   }
 
+  // ✅ MÉTHODE CORRIGÉE avec protection contre les appels multiples
   refreshToken(): Observable<any> {
     const currentUser = this.currentUserSubject.value;
     if (!currentUser) {
-      console.error('No current user found for token refresh');
+      console.error('❌ No current user found for token refresh');
       return throwError(() => new Error("Pas d'utilisateur connecté"));
     }
 
-    console.log('Refreshing token for user:', currentUser.email);
+    // ✅ Si un rafraîchissement est déjà en cours, retourner l'Observable existant
+    if (this.isRefreshing) {
+      console.log('⏳ Token refresh already in progress, waiting...');
+      return this.refreshTokenSubject.asObservable().pipe(
+        switchMap((token) => {
+          if (token) {
+            return of(token);
+          }
+          return throwError(() => new Error('Token refresh failed'));
+        })
+      );
+    }
+
+    console.log('🔄 Starting token refresh for user:', currentUser.email);
+    this.isRefreshing = true;
 
     return this.http
       .post<AuthResponse>(`${this.apiUrl}/refresh-token`, {
         refreshToken: currentUser.refreshToken,
       })
       .pipe(
+        share(), // ✅ Partager l'Observable pour éviter les appels multiples
         tap((response) => {
-          console.log('Token refreshed successfully for:', currentUser.email);
+          console.log('✅ Token refreshed successfully for:', currentUser.email);
           
           // Mettre à jour l'utilisateur avec les nouveaux tokens
           const updatedUser = {
@@ -186,10 +210,19 @@ export class AuthService {
 
           // Réinitialiser le timer de rafraîchissement
           this.setupRefreshTokenTimer(updatedUser);
+          
+          // ✅ Notifier les observateurs en attente
+          this.refreshTokenSubject.next(response);
+          this.isRefreshing = false;
         }),
         catchError((error) => {
-          console.error('Erreur lors du rafraîchissement du token:', error);
-          console.log('Forcing logout due to token refresh failure');
+          console.error('❌ Erreur lors du rafraîchissement du token:', error);
+          console.log('🚪 Forcing logout due to token refresh failure');
+          
+          // ✅ Réinitialiser les flags en cas d'erreur
+          this.isRefreshing = false;
+          this.refreshTokenSubject.next(null);
+          
           this.logout();
           return throwError(() => error);
         })
@@ -209,13 +242,13 @@ export class AuthService {
     const currentUser = this.currentUserSubject.value;
     if (currentUser && currentUser.role) {
       const userRoles = [currentUser.role.toString()];
-      console.log('Redirection basée sur le rôle:', userRoles);
+      console.log('🔀 Redirection basée sur le rôle:', userRoles);
 
       const redirectUrl =
         this.roleRedirectService.getRedirectUrlForRole(userRoles);
       this.router.navigate([redirectUrl]);
     } else {
-      console.log('No user role found, redirecting to home');
+      console.log('🏠 No user role found, redirecting to home');
       this.router.navigate(['/accueil']);
     }
   }
@@ -223,15 +256,11 @@ export class AuthService {
   // ✅ MÉTHODES MODALES CORRIGÉES - Avec logging et protection
   triggerLoginModal() {
     if (!this.isBrowser) {
-      console.log('Not in browser environment, cannot trigger login modal');
       return;
     }
     
-    console.log('triggerLoginModal called from AuthService');
-    
     // ✅ Vérifier si l'utilisateur n'est pas déjà connecté
     if (this.isAuthenticated()) {
-      console.log('User already authenticated, not showing login modal');
       return;
     }
     
@@ -240,15 +269,11 @@ export class AuthService {
 
   triggerRegisterModal() {
     if (!this.isBrowser) {
-      console.log('Not in browser environment, cannot trigger register modal');
       return;
     }
     
-    console.log('triggerRegisterModal called from AuthService');
-    
     // ✅ Vérifier si l'utilisateur n'est pas déjà connecté
     if (this.isAuthenticated()) {
-      console.log('User already authenticated, not showing register modal');
       return;
     }
     
@@ -289,14 +314,13 @@ export class AuthService {
           keycloakInstance.tokenParsed = this.parseJwtToken(accessToken);
           keycloakInstance.refreshTokenParsed = this.parseJwtToken(refreshToken);
           
-          console.log('Keycloak initialisé avec tokens obtenus via API');
           resolve(true);
         } catch (e) {
-          console.error('Erreur lors du parsing des tokens:', e);
+          console.error('❌ Erreur lors du parsing des tokens:', e);
           resolve(false);
         }
       } else {
-        console.error("Impossible d'accéder à l'instance Keycloak");
+        console.error("❌ Impossible d'accéder à l'instance Keycloak");
         resolve(false);
       }
     });
@@ -331,11 +355,12 @@ export class AuthService {
       
       return JSON.parse(jsonPayload);
     } catch (error) {
-      console.error('Erreur lors du parsing du token JWT:', error);
+      console.error('❌ Erreur lors du parsing du token JWT:', error);
       throw new Error('Token JWT invalide');
     }
   }
 
+  // ✅ MÉTHODE CORRIGÉE avec timing plus approprié
   private setupRefreshTokenTimer(user: any): void {
     // Effacer tout timer existant
     this.clearRefreshTokenTimer();
@@ -344,28 +369,38 @@ export class AuthService {
     try {
       const jwtToken = this.parseJwtToken(user.accesToken);
       const expiresAt = jwtToken.exp * 1000; // Convertir en millisecondes
-      const timeout = expiresAt - Date.now() - 60 * 1000; // Rafraîchir 1 minute avant expiration
+      const now = Date.now();
+      
+      // ✅ Rafraîchir 2 minutes avant expiration (au lieu de 5)
+      const refreshBufferMs = 2 * 60 * 1000; // 2 minutes
+      const timeout = expiresAt - now - refreshBufferMs;
+
+      console.log(`⏰ Token expires at: ${new Date(expiresAt).toLocaleTimeString()}`);
+      console.log(`🕐 Current time: ${new Date(now).toLocaleTimeString()}`);
+      console.log(`⏱️ Refresh scheduled in: ${Math.max(0, timeout / 1000)} seconds`);
 
       if (timeout > 0) {
-        console.log(`Token refresh scheduled in ${timeout / 1000} seconds`);
         this.refreshTokenTimeout = setTimeout(() => {
-          console.log('Rafraîchissement automatique du token');
+          console.log('🔄 Automatic token refresh triggered');
           this.refreshToken().subscribe({
             next: () => {
-              console.log('Automatic token refresh successful');
+              console.log('✅ Automatic token refresh successful');
             },
             error: (error) => {
-              console.error('Automatic token refresh failed:', error);
+              console.error('❌ Automatic token refresh failed:', error);
             }
           });
         }, timeout);
       } else {
-        console.warn('Token déjà expiré, rafraîchissement immédiat');
-        this.refreshToken().subscribe();
+        console.warn('⚠️ Token déjà expiré ou expire très bientôt, rafraîchissement immédiat');
+        // ✅ Ajouter un délai pour éviter la boucle immédiate
+        setTimeout(() => {
+          this.refreshToken().subscribe();
+        }, 1000); // Attendre 1 seconde
       }
     } catch (e) {
       console.error(
-        'Erreur lors de la configuration du timer de rafraîchissement:',
+        '❌ Erreur lors de la configuration du timer de rafraîchissement:',
         e
       );
     }
@@ -375,7 +410,33 @@ export class AuthService {
     if (this.refreshTokenTimeout) {
       clearTimeout(this.refreshTokenTimeout);
       this.refreshTokenTimeout = null;
-      console.log('Token refresh timer cleared');
+      console.log('🗑️ Token refresh timer cleared');
+    }
+  }
+
+  // ✅ MÉTHODE UTILITAIRE pour débugger les problèmes de token
+  debugTokenInfo(): void {
+    const user = this.currentUserSubject.value;
+    if (!user) {
+      console.log('🔍 No user found');
+      return;
+    }
+
+    try {
+      const jwtToken = this.parseJwtToken(user.accesToken);
+      const expiresAt = jwtToken.exp * 1000;
+      const now = Date.now();
+      const timeLeft = expiresAt - now;
+
+      // console.log('🔍 TOKEN DEBUG INFO:');
+      // console.log('├── User:', user.email);
+      // console.log('├── Current time:', new Date(now).toLocaleTimeString());
+      // console.log('├── Token expires:', new Date(expiresAt).toLocaleTimeString());
+      // console.log('├── Time left:', Math.floor(timeLeft / 1000), 'seconds');
+      // console.log('├── Is refreshing:', this.isRefreshing);
+      // console.log('└── Timer active:', !!this.refreshTokenTimeout);
+    } catch (e) {
+      console.error('❌ Error debugging token:', e);
     }
   }
 }

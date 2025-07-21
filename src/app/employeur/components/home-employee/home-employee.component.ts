@@ -1,5 +1,3 @@
-
-
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, inject, OnInit, Output, ViewEncapsulation } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
@@ -19,7 +17,7 @@ import { MesSalonsComponent } from "../mes-salons/mes-salons.component";
 import { OffreEmploisService } from '../../services/OffreEmploisService/offre-emplois-service.service';
 import { FormsModule } from '@angular/forms';
 import { Candidature, CandidatureService } from '../../../freelance/services/candidatures.service';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
 import { ReservationsComponent } from '../../../shared/components/reservations/reservations.component';
 
 // Interface pour les salons pour le typage approprié
@@ -76,14 +74,14 @@ interface RecentOffer {
     OffreEmploisComponent,
     MesSalonsComponent,
     ReservationsComponent
-  
   ],
   templateUrl: './home-employee.component.html',
   styleUrl: './home-employee.component.scss',
   encapsulation: ViewEncapsulation.None
 })
 export class HomeEmployeeComponent implements OnInit {
-[x: string]: any;
+  [x: string]: any;
+
   // ===== PROPRIÉTÉS PRINCIPALES =====
   sidebarOpen = true;
   showCreationForm = false;
@@ -92,13 +90,27 @@ export class HomeEmployeeComponent implements OnInit {
   showServicesList = false;
   showCandidatures = false;
   showOffresManager = false;
-  showReservations = false; // ⭐ NOUVEAU
-  
+  showReservations = false;
+
+  // ✅ NOUVELLES PROPRIÉTÉS POUR L'AFFICHAGE OPTIMISÉ
+  showCandidaturesModal = false;
+  selectedOfferTitle = '';
+  selectedOfferId: number | null = null;
+  modalCandidatures: Candidature[] = [];
+
+  // Filtres et recherche
+  currentFilter = {
+    status: '',
+    sortBy: 'date-desc',
+    searchQuery: ''
+  };
+  viewMode: 'cards' | 'list' = 'cards';
+  filteredOffers: RecentOffer[] = [];
+
   // ===== STATISTIQUES ET DONNÉES =====
   offreCount = 0;
   newMessages = 3; // À connecter avec un service de messages
-  visitorStats = 128; // À connecter avec un service d'analytics
-  reservationStats = 56; // À connecter avec un service de réservations
+  reservationStats = 5; // À connecter avec un service de réservations
   offreCountTrend = 15; // Tendance en pourcentage
   
   // ⭐ NOUVELLES STATS RÉSERVATIONS
@@ -130,6 +142,17 @@ export class HomeEmployeeComponent implements OnInit {
   public headerService = inject(HeaderService);
   
   @Output() closeModalEvent = new EventEmitter<void>();
+
+  // ===== EXPANDED MENU ITEMS =====
+  expandedMenuItems: { [key: string]: boolean } = {
+    dashboard: false,
+    salons: false,
+    createSalon: false,
+    offres: false,
+    candidatures: false,
+    reservations: false,
+    messages: false
+  };
   
   constructor(
     private salonService: SalonService,
@@ -143,61 +166,39 @@ export class HomeEmployeeComponent implements OnInit {
     this.loadSalons();
     // Charger les offres avec leurs candidatures
     this.loadOffresWithCandidatures();
+    this.filteredOffers = [...this.recentOffers];
   }
 
   // ==========================================
-  // 📅 NOUVELLES MÉTHODES POUR LES RÉSERVATIONS
+  // 📅 GESTION DES RÉSERVATIONS
   // ==========================================
 
-  /**
-   * ✅ Ouvre la section réservations
-   */
   openReservations(): void {
+    this.resetAllSections();
     this.currentSection = 'reservations';
     this.pageTitle = 'Réservations';
     this.showReservations = true;
-    
-    // Fermer les autres sections
-    this.showSalonsList = false;
-    this.showCreationForm = false;
-    this.showOffreEmploiForm = false;
-    this.showCandidatures = false;
-    this.showOffresManager = false;
-    
     console.log('Section réservations ouverte');
   }
 
-  /**
-   * ✅ Ferme la section réservations
-   */
   closeReservations(): void {
     this.showReservations = false;
-    this.navigateTo('dashboard');
+    this.currentSection = 'dashboard';
+    this.pageTitle = 'Tableau de bord';
     console.log('Section réservations fermée');
   }
 
-  /**
-   * ✅ Reçoit les mises à jour de stats depuis le composant réservations
-   */
   onReservationStatsUpdated(stats: any): void {
     this.pendingReservationsCount = stats.pendingReservationsCount || 0;
     this.confirmedReservationsCount = stats.confirmedReservationsCount || 0;
     this.todayReservationsCount = stats.todayReservationsCount || 0;
     this.totalRevenue = stats.totalRevenue || 0;
-    
-    // Mettre à jour les stats du dashboard si nécessaire
     this.reservationStats = stats.confirmedReservationsCount + stats.pendingReservationsCount;
-    
     console.log('Stats réservations mises à jour:', stats);
   }
 
-  /**
-   * ✅ Reçoit les notifications de changement de réservation
-   */
   onReservationUpdated(event: any): void {
     console.log('Réservation mise à jour:', event);
-    
-    // Ici vous pouvez ajouter des notifications toast
     switch (event.action) {
       case 'confirmed':
         this.showNotification('Réservation confirmée avec succès', 'success');
@@ -214,23 +215,206 @@ export class HomeEmployeeComponent implements OnInit {
     }
   }
 
-  /**
-   * ✅ Affiche une notification (à adapter selon votre système)
-   */
   private showNotification(message: string, type: 'success' | 'warning' | 'error' = 'success'): void {
     console.log(`${type.toUpperCase()}: ${message}`);
-    // Ici vous pouvez intégrer votre système de notifications
-    // Exemple avec ngx-toastr :
-    // this.toastr.success(message);
   }
 
   // ==========================================
-  // 📅 MÉTHODES EXISTANTES MODIFIÉES
+  // 📋 GESTION DES CANDIDATURES 
   // ==========================================
 
   /**
-   * ✅ Modifiée pour inclure les réservations
+   * ✅ Ouvre le modal des candidatures pour une offre spécifique
    */
+  openCandidaturesModal(offer: RecentOffer): void {
+    if (!offer.id || offer.applicationsCount === 0) return;
+    
+    this.selectedOfferId = offer.id;
+    this.selectedOfferTitle = `Candidatures - ${offer.title}`;
+    this.modalCandidatures = this.candidatures[offer.id] || [];
+    this.showCandidaturesModal = true;
+    
+    // Si les candidatures ne sont pas encore chargées
+    if (this.modalCandidatures.length === 0) {
+      this.loadCandidaturesForOffer(offer.id);
+    }
+  }
+
+  /**
+   * ✅ Ferme le modal des candidatures
+   */
+  closeCandidaturesModal(event?: MouseEvent): void {
+    if (event && event.target !== event.currentTarget) return;
+    
+    this.showCandidaturesModal = false;
+    this.selectedOfferId = null;
+    this.selectedOfferTitle = '';
+    this.modalCandidatures = [];
+  }
+
+  /**
+   * ✅ Retourne les initiales d'un candidat
+   */
+  getCandidateInitials(candidature: Candidature): string {
+    const nom = this.getCandidateName(candidature);
+    return nom.split(' ')
+              .map(n => n.charAt(0))
+              .join('')
+              .toUpperCase()
+              .slice(0, 2);
+  }
+
+  /**
+   * ✅ Retourne le nom du candidat depuis les données disponibles
+   */
+  getCandidateName(candidature: Candidature): string {
+    // Essayer d'abord le nomCandidat normalisé
+    if (candidature.nomCandidat && typeof candidature.nomCandidat === 'string') {
+      return candidature.nomCandidat;
+    }
+    
+    // Essayer d'extraire depuis l'objet freelance
+    if (candidature.freelance) {
+      if (candidature.freelance.nom && candidature.freelance.prenom) {
+        return `${candidature.freelance.prenom} ${candidature.freelance.nom}`;
+      }
+      if (candidature.freelance.nomComplet) {
+        return candidature.freelance.nomComplet;
+      }
+      if (candidature.freelance.name) {
+        return candidature.freelance.name;
+      }
+    }
+    
+    // Nom générique avec ID
+    return `Candidat #${candidature.id || 'X'}`;
+  }
+
+  /**
+   * ✅ Retourne l'email du candidat depuis les données disponibles
+   */
+  getCandidateEmail(candidature: Candidature): string {
+    // Essayer d'abord l'emailCandidat normalisé
+    if (candidature.emailCandidat && typeof candidature.emailCandidat === 'string') {
+      return candidature.emailCandidat;
+    }
+    
+    // Essayer d'extraire depuis l'objet freelance
+    if (candidature.freelance && candidature.freelance.email) {
+      return candidature.freelance.email;
+    }
+    
+    // Email générique
+    const nom = this.getCandidateName(candidature);
+    const email = nom.toLowerCase()
+                     .replace(/\s+/g, '.')
+                     .replace(/[^a-z.0-9]/g, '');
+    
+    return `${email}@email.com`;
+  }
+
+  /**
+   * ✅ Formate le statut d'une candidature
+   */
+  formatCandidatureStatus(status: string | undefined): string {
+    const statusMap: { [key: string]: string } = {
+      'Nouveau': 'Nouveau',
+      'nouveau': 'Nouveau',
+      'Contacté': 'Contacté',
+      'contacté': 'Contacté',
+      'Entretien': 'Entretien',
+      'entretien': 'Entretien',
+      'Embauché': 'Embauché',
+      'embauché': 'Embauché',
+      'Refusé': 'Refusé',
+      'refusé': 'Refusé'
+    };
+    
+    return statusMap[status || 'nouveau'] || 'Nouveau';
+  }
+
+  /**
+   * ✅ Contacter un candidat
+   */
+  contactCandidate(candidature: Candidature): void {
+    const email = this.getCandidateEmail(candidature);
+    const nom = this.getCandidateName(candidature);
+    const offerTitle = this.getOfferTitleById(candidature.offreEmploiId || 0);
+    
+    const subject = `Concernant votre candidature - ${offerTitle}`;
+    const body = `Bonjour ${nom.split(' ')[0]},\n\nNous avons bien reçu votre candidature pour le poste "${offerTitle}" et souhaitons vous contacter.\n\nCordialement,\nL'équipe BeautyHub`;
+    
+    const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.open(mailtoLink);
+  }
+
+  /**
+   * ✅ Ouvrir les détails complets d'un candidat
+   */
+  openCandidateDetails(candidature: Candidature): void {
+    // Fermer le modal des candidatures
+    this.closeCandidaturesModal();
+    
+    // Ouvrir le modal de détails existant
+    this.selectedCandidature = {
+      ...candidature,
+      nomCandidat: this.getCandidateName(candidature),
+      emailCandidat: this.getCandidateEmail(candidature)
+    };
+  }
+
+  /**
+   * ✅ Éditer une offre
+   */
+  editOffer(offerId: number): void {
+    console.log('Édition de l\'offre:', offerId);
+    // Implémentez la logique d'édition
+  }
+
+  /**
+   * ✅ Partager une offre
+   */
+  shareOffer(offerId: number): void {
+    const offer = this.recentOffers.find(o => o.id === offerId);
+    if (offer) {
+      const shareText = `Découvrez cette offre d'emploi : ${offer.title} à ${offer.location}`;
+      if (navigator.share) {
+        navigator.share({
+          title: offer.title,
+          text: shareText,
+          url: window.location.href
+        });
+      } else {
+        navigator.clipboard.writeText(shareText).then(() => {
+          console.log('Lien copié dans le presse-papier');
+        });
+      }
+    }
+  }
+
+  /**
+   * ✅ Vérifie s'il y a des filtres actifs
+   */
+  hasActiveFilters(): boolean {
+    return !!(this.currentFilter.searchQuery.trim() || 
+              this.currentFilter.status || 
+              this.currentFilter.sortBy !== 'date-desc');
+  }
+
+  // ==========================================
+  // 📋 GESTION DES OFFRES ET CANDIDATURES (ADAPTÉ)
+  // ==========================================
+
+  contactCandidat(candidature: any): void {
+    const email = candidature.emailCandidat || this.getCandidateEmail(candidature);
+    if (email) {
+      const subject = `Concernant votre candidature - ${this.getOfferTitleById(candidature.offreEmploiId || 0)}`;
+      const nom = candidature.nomCandidat || this.getCandidateName(candidature);
+      const body = `Bonjour ${nom.split(' ')[0]},\n\nNous avons bien reçu votre candidature et souhaitons vous contacter.\n\nCordialement,`;
+      window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    }
+  }
+
   navigateTo(section: string): void {
     if (this.currentSection === section) {
       this.currentSection = 'dashboard';
@@ -250,9 +434,6 @@ export class HomeEmployeeComponent implements OnInit {
     }
   }
 
-  /**
-   * ✅ Modifiée pour inclure les réservations
-   */
   getPageTitle(section: string): string {
     switch (section) {
       case 'dashboard': return 'Tableau de bord';
@@ -260,37 +441,19 @@ export class HomeEmployeeComponent implements OnInit {
       case 'create-salon': return 'Créer un Salon';
       case 'offres': return 'Offres d\'emploi';
       case 'candidatures': return 'Candidatures';
-      case 'reservations': return 'Réservations'; // ⭐ NOUVEAU
+      case 'reservations': return 'Réservations';
       case 'messages': return 'Messages';
       default: return 'Tableau de bord';
     }
   }
 
   /**
-   * ✅ Modifiée pour inclure les réservations dans expandedMenuItems
-   */
-  expandedMenuItems: { [key: string]: boolean } = {
-    dashboard: false,
-    salons: false,
-    createSalon: false,
-    offres: false,
-    candidatures: false,
-    reservations: false, // ⭐ NOUVEAU
-    messages: false
-  };
-
-  // ==========================================
-  // 📅 MÉTHODES EXISTANTES (INCHANGÉES)
-  // ==========================================
-
-  /**
-   * NOUVELLE MÉTHODE : Charge les offres avec leurs candidatures associées
+   * ✅ MÉTHODE ADAPTÉE : Charge les offres avec leurs candidatures
    */
   loadOffresWithCandidatures(): void {
     this.loadingCandidatures = true;
     this.candidaturesError = null;
 
-    // Charger les offres et toutes les candidatures en parallèle
     forkJoin({
       offres: this.offreEmploisService.getMyOffresEmplois(),
       candidatures: this.candidatureService.getAllCandidatures()
@@ -299,13 +462,8 @@ export class HomeEmployeeComponent implements OnInit {
         this.offresEmploi = data.offres;
         this.offreCount = data.offres.length;
         
-        // Grouper les candidatures par offre
         this.groupCandidaturesByOffer(data.candidatures);
-        
-        // Mettre à jour le nombre de candidatures pour chaque offre
         this.updateOffersCandidaturesCount();
-        
-        // Formater les offres récentes pour l'affichage
         this.formatRecentOffers();
         
         this.loadingCandidatures = false;
@@ -314,16 +472,11 @@ export class HomeEmployeeComponent implements OnInit {
         console.error('Erreur lors du chargement des offres et candidatures:', error);
         this.candidaturesError = 'Impossible de charger les données.';
         this.loadingCandidatures = false;
-        
-        // Fallback: charger au moins les offres
         this.loadOffresOnly();
       }
     });
   }
 
-  /**
-   * Méthode de fallback si le chargement complet échoue
-   */
   private loadOffresOnly(): void {
     this.offreEmploisService.getMyOffresEmplois().subscribe({
       next: (offres: OffreEmploi[]) => {
@@ -337,9 +490,6 @@ export class HomeEmployeeComponent implements OnInit {
     });
   }
 
-  /**
-   * Groupe les candidatures par offre d'emploi
-   */
   private groupCandidaturesByOffer(candidatures: Candidature[]): void {
     this.candidatures = candidatures.reduce((acc, candidature) => {
       const offreId = candidature.offreEmploiId;
@@ -351,9 +501,6 @@ export class HomeEmployeeComponent implements OnInit {
     }, {} as { [offreId: number]: Candidature[] });
   }
 
-  /**
-   * Met à jour le nombre de candidatures pour chaque offre
-   */
   private updateOffersCandidaturesCount(): void {
     this.offresEmploi.forEach(offre => {
       if (offre.id) {
@@ -362,30 +509,22 @@ export class HomeEmployeeComponent implements OnInit {
     });
   }
 
-  /**
-   * Formate les offres récentes pour l'affichage
-   */
   private formatRecentOffers(): void {
     this.recentOffers = this.offresEmploi.slice(0, 10).map(offre => ({
       id: offre.id || 0,
       title: offre.titre || 'Titre non défini',
       location: offre.lieu || 'Lieu non défini',
       date: offre.datePublication || new Date(),
-      applicationsCount: offre.candidaturesCount || 0, // Utilise le nombre réel
+      applicationsCount: offre.candidaturesCount || 0,
       status: this.getOfferStatus(offre)
     }));
+    this.filterAndSortOffers();
   }
 
-  /**
-   * Retourne le nombre réel de candidatures pour une offre
-   */
   getCandidaturesCountForOffer(offerId: number): number {
     return this.candidatures[offerId]?.length || 0;
   }
 
-  /**
-   * Retourne le nombre de nouvelles candidatures pour une offre
-   */
   getNewCandidaturesCount(offerId: number): number {
     return this.candidatures[offerId]?.filter(c => 
       c.status === 'Nouveau' || !c.status
@@ -393,10 +532,9 @@ export class HomeEmployeeComponent implements OnInit {
   }
 
   /**
-   * MÉTHODE AMÉLIORÉE : Charge les candidatures d'une offre spécifique
+   * ✅ MÉTHODE ADAPTÉE : Charge les candidatures pour une offre
    */
   loadCandidaturesForOffer(offerId: number): void {
-    // Si les candidatures sont déjà chargées, pas besoin de refaire l'appel
     if (this.candidatures[offerId] && this.candidatures[offerId].length > 0) {
       return;
     }
@@ -409,17 +547,22 @@ export class HomeEmployeeComponent implements OnInit {
         this.candidatures[offerId] = data;
         this.loadingCandidatures = false;
         
-        // Mettre à jour le count dans l'offre correspondante
+        // Mettre à jour le modal si il est ouvert pour cette offre
+        if (this.selectedOfferId === offerId) {
+          this.modalCandidatures = data;
+        }
+        
         const offre = this.offresEmploi.find(o => o.id === offerId);
         if (offre) {
           offre.candidaturesCount = data.length;
         }
         
-        // Mettre à jour les offres récentes aussi
         const recentOffer = this.recentOffers.find(o => o.id === offerId);
         if (recentOffer) {
           recentOffer.applicationsCount = data.length;
         }
+        
+        this.filterAndSortOffers();
       },
       error: (error) => {
         console.error('Erreur lors du chargement des candidatures:', error);
@@ -430,7 +573,7 @@ export class HomeEmployeeComponent implements OnInit {
   }
 
   /**
-   * MÉTHODE AMÉLIORÉE : Charge toutes les candidatures et met à jour les compteurs
+   * ✅ MÉTHODE ADAPTÉE : Charge toutes les candidatures
    */
   loadAllCandidatures(): void {
     this.loadingCandidatures = true;
@@ -440,7 +583,7 @@ export class HomeEmployeeComponent implements OnInit {
       next: (data: Candidature[]) => {
         this.groupCandidaturesByOffer(data);
         this.updateOffersCandidaturesCount();
-        this.formatRecentOffers(); // Remet à jour les offres récentes
+        this.formatRecentOffers();
         this.loadingCandidatures = false;
       },
       error: (error) => {
@@ -451,14 +594,9 @@ export class HomeEmployeeComponent implements OnInit {
     });
   }
 
-  /**
-   * Recharge toutes les données (offres + candidatures)
-   */
   refreshAllData(): void {
     this.loadOffresWithCandidatures();
   }
-
-  // ===== MÉTHODES EXISTANTES (inchangées) =====
 
   viewCandidatureDetails(candidature: Candidature): void {
     this.selectedCandidature = candidature;
@@ -474,21 +612,20 @@ export class HomeEmployeeComponent implements OnInit {
   }
 
   openCandidatures(): void {
+    this.resetAllSections();
+    
     this.currentSection = 'candidatures';
     this.pageTitle = 'Candidatures';
     this.showCandidatures = true;
-    this.showSalonsList = false;
-    this.showCreationForm = false;
-    this.showOffreEmploiForm = false;
-    this.showOffresManager = false;
-    this.showReservations = false; // ⭐ AJOUTÉ
     
-    // Si les candidatures ne sont pas encore chargées, les charger
     if (Object.keys(this.candidatures).length === 0) {
       this.loadAllCandidatures();
     }
   }
 
+  /**
+   * ✅ MÉTHODE ADAPTÉE : Met à jour le statut d'une candidature
+   */
   updateCandidatureStatus(candidatureId: number, newStatus: string): void {
     let candidatureToUpdate: Candidature | null = null;
     let offreId: number | null = null;
@@ -514,7 +651,6 @@ export class HomeEmployeeComponent implements OnInit {
             this.candidatures[offreId as number][index] = data;
           }
           
-          // Mettre à jour la candidature sélectionnée si c'est la même
           if (this.selectedCandidature && this.selectedCandidature.id === candidatureId) {
             this.selectedCandidature = data;
           }
@@ -528,23 +664,22 @@ export class HomeEmployeeComponent implements OnInit {
 
   closeCandidatures(): void {
     this.showCandidatures = false;
+    this.currentSection = 'dashboard';
+    this.pageTitle = 'Tableau de bord';
   }
 
   navigateToOffresManager(): void {
+    this.resetAllSections();
+    
     this.currentSection = 'offres';
     this.pageTitle = 'Offres d\'emploi';
     this.showOffresManager = true;
-    
-    this.showSalonsList = false;
-    this.showCreationForm = false;
-    this.showOffreEmploiForm = false;
-    this.showCandidatures = false;
-    this.showReservations = false; // ⭐ AJOUTÉ
   }
 
   closeOffresManager(): void {
     this.showOffresManager = false;
-    this.navigateTo('dashboard');
+    this.currentSection = 'dashboard';
+    this.pageTitle = 'Tableau de bord';
   }
 
   toggleSidebar(): void {
@@ -560,24 +695,24 @@ export class HomeEmployeeComponent implements OnInit {
   }
   
   openSalonsList(): void {
-    if (this.showSalonsList) {
-      this.showSalonsList = false;
-      this.navigateTo('dashboard');
-    } else {
-      this.currentSection = 'salons';
-      this.pageTitle = 'Mes Salons';
-      this.showSalonsList = true;
-      this.showCreationForm = false;
-      this.showOffreEmploiForm = false;
-      this.showCandidatures = false;
-      this.showOffresManager = false;
-      this.showReservations = false; // ⭐ AJOUTÉ
-      
-      Object.keys(this.expandedMenuItems).forEach(key => {
-        this.expandedMenuItems[key] = false;
-      });
-      this.expandedMenuItems['salons'] = true;
-    }
+    this.resetAllSections();
+    
+    this.currentSection = 'salons';
+    this.pageTitle = 'Mes Salons';
+    this.showSalonsList = true;
+    
+    console.log('Section salons ouverte');
+  }
+
+  private resetAllSections(): void {
+    this.showSalonsList = false;
+    this.showCreationForm = false;
+    this.showOffreEmploiForm = false;
+    this.showCandidatures = false;
+    this.showOffresManager = false;
+    this.showReservations = false;
+    this.showServicesList = false;
+    this.showCandidaturesModal = false;
   }
 
   getOfferTitleById(offerId: number): string {
@@ -607,35 +742,38 @@ export class HomeEmployeeComponent implements OnInit {
 
   closeSalonsList(): void {
     this.showSalonsList = false;
+    this.currentSection = 'dashboard';
+    this.pageTitle = 'Tableau de bord';
     this.loadSalons();
   }
 
   openCreationForm(): void {
+    this.resetAllSections();
+    
     this.currentSection = 'create-salon';
     this.pageTitle = 'Créer un Salon';
     this.showCreationForm = true;
-    this.showSalonsList = false;
-    this.showOffreEmploiForm = false;
-    this.showReservations = false; // ⭐ AJOUTÉ
   }
 
   closeCreationForm(): void {
     this.showCreationForm = false;
+    this.currentSection = 'dashboard';
+    this.pageTitle = 'Tableau de bord';
     this.loadSalons();
   }
   
   openOffreEmploiForm(): void {
+    this.resetAllSections();
+    
     this.currentSection = 'offres';
     this.pageTitle = 'Publier une Offre';
     this.showOffreEmploiForm = true;
-    this.showSalonsList = false;
-    this.showCreationForm = false;
-    this.showReservations = false; // ⭐ AJOUTÉ
   }
 
   closeOffreEmploiForm(): void {
     this.showOffreEmploiForm = false;
-    // Recharger les offres avec les candidatures après création d'une nouvelle offre
+    this.currentSection = 'dashboard';
+    this.pageTitle = 'Tableau de bord';
     this.loadOffresWithCandidatures();
   }
   
@@ -656,8 +794,6 @@ export class HomeEmployeeComponent implements OnInit {
       });
   }
 
-  // ===== MÉTHODES AUXILIAIRES =====
-  
   processSalonData(salon: any): Salon {
     return {
       id: salon.id || 0,
@@ -695,5 +831,107 @@ export class HomeEmployeeComponent implements OnInit {
   
   get username(): string {
     return this.headerService.username() || 'Utilisateur';
+  }
+
+  // ===== MÉTHODES DE FILTRAGE =====
+  filterAndSortOffers(): void {
+    let filtered = [...this.recentOffers];
+
+    // Filtrage par recherche
+    if (this.currentFilter.searchQuery.trim()) {
+      const query = this.currentFilter.searchQuery.toLowerCase();
+      filtered = filtered.filter(offer => 
+        offer.title.toLowerCase().includes(query) ||
+        offer.location.toLowerCase().includes(query)
+      );
+    }
+
+    // Filtrage par statut
+    if (this.currentFilter.status) {
+      filtered = filtered.filter(offer => 
+        offer.status.toLowerCase() === this.currentFilter.status.toLowerCase()
+      );
+    }
+
+    // Tri
+    switch (this.currentFilter.sortBy) {
+      case 'date-desc':
+        filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        break;
+      case 'date-asc':
+        filtered.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        break;
+      case 'applications':
+        filtered.sort((a, b) => b.applicationsCount - a.applicationsCount);
+        break;
+      case 'title':
+        filtered.sort((a, b) => a.title.localeCompare(b.title));
+        break;
+    }
+
+    this.filteredOffers = filtered;
+  }
+
+  onFilterChange(filterType: string, value: string): void {
+    switch (filterType) {
+      case 'search':
+        this.currentFilter.searchQuery = value;
+        break;
+      case 'status':
+        this.currentFilter.status = value;
+        break;
+      case 'sort':
+        this.currentFilter.sortBy = value;
+        break;
+    }
+    this.filterAndSortOffers();
+  }
+
+  setViewMode(mode: 'cards' | 'list'): void {
+    this.viewMode = mode;
+  }
+
+  resetFilters(): void {
+    this.currentFilter = {
+      status: '',
+      sortBy: 'date-desc',
+      searchQuery: ''
+    };
+    this.filterAndSortOffers();
+  }
+
+  // ===== MÉTHODES UTILITAIRES SUPPLÉMENTAIRES =====
+
+  /**
+   * ✅ Export simple des candidatures avec votre service
+   */
+  exportCandidatures(): void {
+    this.candidatureService.getAllCandidatures().subscribe({
+      next: (candidatures) => {
+        this.candidatureService.exportToCsv(candidatures);
+        this.showNotification('Export réussi', 'success');
+      },
+      error: (error) => {
+        console.error('Erreur lors de l\'export:', error);
+        this.showNotification('Erreur lors de l\'export', 'error');
+      }
+    });
+  }
+
+  /**
+   * ✅ Recherche dans les candidatures
+   */
+  searchCandidatures(query: string): void {
+    if (query.length < 2) return;
+    
+    this.candidatureService.searchCandidatures(query).subscribe({
+      next: (results) => {
+        console.log('Résultats de recherche:', results);
+        // Ici vous pouvez mettre à jour l'affichage avec les résultats
+      },
+      error: (error) => {
+        console.error('Erreur de recherche:', error);
+      }
+    });
   }
 }

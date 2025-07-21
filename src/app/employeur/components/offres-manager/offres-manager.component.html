@@ -1,201 +1,288 @@
-<!-- offres-manager.component.html -->
+
 <div class="offres-manager-container">
+  
+  <!-- 📋 HEADER -->
   <div class="header">
     <h1>Gestion des Offres d'Emploi</h1>
-    <button mat-raised-button color="#A4B1BD" (click)="openOffreEmploiForm()">
-      <mat-icon>add</mat-icon> Nouvelle Offre
+    <button mat-raised-button (click)="openOffreEmploiForm()" aria-label="Créer une nouvelle offre d'emploi">
+      <mat-icon>add_circle</mat-icon>
+      <span>Nouvelle Offre</span>
     </button>
   </div>
 
-  <!-- Banner Image Carousel -->
-  <div class="banner-carousel">
-    <div class="carousel-container">
-      <img
-        [src]="bannerImages[currentBannerIndex]"
-        alt=""
-        class="banner-image"
-      />
-      <div class="carousel-controls">
-        <button mat-mini-fab color="primary" (click)="previousBanner()">
-          <mat-icon>navigate_before</mat-icon>
-        </button>
-        <button mat-mini-fab color="primary" (click)="nextBanner()">
-          <mat-icon>navigate_next</mat-icon>
-        </button>
+  <!-- 📊 SECTION PRINCIPALE -->
+  <div class="table-container">
+    
+    <!-- 📈 BARRE DE PROGRESSION -->
+    <mat-spinner 
+      *ngIf="isLoading" 
+      mode="indeterminate"
+      class="loading-bar"
+      color="primary">
+    </mat-spinner>
+
+    <!-- 🎯 STATISTIQUES -->
+    <div class="stats-overview" *ngIf="!isLoading && offres.length > 0">
+      <div class="stat-card">
+        <div class="stat-icon">
+          <mat-icon>work_outline</mat-icon>
+        </div>
+        <div class="stat-content">
+          <span class="stat-number">{{ offres.length }}</span>
+          <span class="stat-label">Offre{{ offres.length > 1 ? 's' : '' }} totale{{ offres.length > 1 ? 's' : '' }}</span>
+        </div>
       </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon active">
+          <mat-icon>trending_up</mat-icon>
+        </div>
+        <div class="stat-content">
+          <span class="stat-number">{{ getActiveOffresCount() }}</span>
+          <span class="stat-label">Active{{ getActiveOffresCount() > 1 ? 's' : '' }}</span>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon candidates">
+          <mat-icon>people</mat-icon>
+        </div>
+        <div class="stat-content">
+          <span class="stat-number">{{ getTotalCandidatures() }}</span>
+          <span class="stat-label">Candidature{{ getTotalCandidatures() > 1 ? 's' : '' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 🃏 GRILLE DES OFFRES -->
+    <div class="job-grid" *ngIf="!isLoading && offres.length > 0">
+      <div class="job-card" 
+           *ngFor="let offre of paginatedOffres; trackBy: trackByOffreId"
+           [attr.data-status]="offre.status">
+
+        <!-- 📋 HEADER DE CARTE -->
+        <div class="job-card-header">
+          <div class="job-icon">
+            <mat-icon>{{ getJobIcon(offre.typeContrat) }}</mat-icon>
+          </div>
+          <h2 class="job-title" [title]="offre.titre">{{ offre.titre }}</h2>
+        </div>
+
+        <!-- 📊 INFOS -->
+        <div class="job-info-container">
+          <div class="job-info-item">
+            <div class="info-label"><mat-icon>business_center</mat-icon>Type de Contrat</div>
+            <div class="info-value">{{ offre.typeContrat || 'Non spécifié' }}</div>
+          </div>
+
+          <div class="job-info-item">
+            <div class="info-label"><mat-icon>location_on</mat-icon>Lieu</div>
+            <div class="info-value">{{ offre.lieu || 'Non spécifié' }}</div>
+          </div>
+
+          <div class="job-info-item">
+            <div class="info-label"><mat-icon>event</mat-icon>Date Limite</div>
+            <div class="info-value" [class.expired]="isExpired(offre.dateLimite)">
+              {{ formatDate(offre.dateLimite) }}
+              <span *ngIf="isExpired(offre.dateLimite)" class="expired-badge">
+                <mat-icon>warning</mat-icon> Expirée
+              </span>
+            </div>
+          </div>
+
+          <div class="job-info-item">
+            <div class="info-label"><mat-icon>schedule</mat-icon>Publié le</div>
+            <div class="info-value">{{ formatDate(offre.datePublication) }}</div>
+          </div>
+
+          <!-- ✅ CANDIDATURES COUNT -->
+          <div class="job-info-item candidates-info">
+            <div class="info-label"><mat-icon>people</mat-icon>Candidatures</div>
+            <div class="info-value">
+              <span class="candidates-count">{{ offre.candidaturesCount || 0 }}</span>
+              <span class="candidates-label">candidature{{ (offre.candidaturesCount || 0) > 1 ? 's' : '' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ⚡ ACTIONS -->
+        <div class="job-actions">
+          <div class="status-section">
+            <span class="status-badge" [ngClass]="offre.status.toLowerCase()">
+              {{ getStatusDisplayName(offre.status) }}
+            </span>
+          </div>
+
+          <div class="action-buttons">
+            <!-- ✅ BOUTON CANDIDATURES CORRIGÉ -->
+            <button mat-icon-button 
+                    class="candidates-button"
+                    aria-label="Voir les candidatures"
+                    (click)="viewCandidates(offre.id ?? 0)"
+                    [disabled]="!offre.candidaturesCount || offre.candidaturesCount === 0">
+              <mat-icon>people</mat-icon>
+              <span *ngIf="offre.candidaturesCount && offre.candidaturesCount > 0" 
+                    class="candidates-count">{{ offre.candidaturesCount }}</span>
+            </button>
+
+            <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Actions">
+              <mat-icon>settings</mat-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- 📝 MENU -->
+        <mat-menu #menu="matMenu" class="job-actions-menu">
+          <button mat-menu-item (click)="updateOffreStatus(offre.id!, 'ACTIVE')" *ngIf="offre.status !== 'ACTIVE'">
+            <mat-icon color="primary">play_circle</mat-icon>
+            <span>Activer</span>
+          </button>
+          <button mat-menu-item (click)="updateOffreStatus(offre.id!, 'FERMÉE')" *ngIf="offre.status !== 'FERMÉE'">
+            <mat-icon color="accent">pause_circle</mat-icon>
+            <span>Fermer</span>
+          </button>
+          <button mat-menu-item (click)="duplicateOffre(offre)">
+            <mat-icon>content_copy</mat-icon>
+            <span>Dupliquer</span>
+          </button>
+          <mat-divider></mat-divider>
+          <button mat-menu-item (click)="deleteOffre(offre.id ?? 0)" class="delete-action">
+            <mat-icon color="warn">delete</mat-icon>
+            <span>Supprimer</span>
+          </button>
+        </mat-menu>
+      </div>
+    </div>
+
+    <!-- 📭 ÉTAT VIDE -->
+    <div *ngIf="!isLoading && offres.length === 0" class="no-data">
+      <div class="no-data-animation"><mat-icon>work_off</mat-icon></div>
+      <h3>Aucune offre d'emploi</h3>
+      <p>Vous n'avez pas encore publié d'offres. Créez votre première offre pour commencer !</p>
+      <button mat-raised-button color="primary" (click)="openOffreEmploiForm()" class="cta-button">
+        <mat-icon>add_circle</mat-icon>
+        <span>Publier ma première offre</span>
+      </button>
+    </div>
+
+    <!-- 📄 PAGINATION -->
+    <div class="pagination-controls" *ngIf="totalPages > 1">
+      <button mat-mini-fab (click)="previousPage()" [disabled]="currentPage === 0" aria-label="Page précédente">
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+      <div class="page-info">
+        Page <strong>{{ currentPage + 1 }}</strong> sur <strong>{{ totalPages }}</strong>
+        ({{ paginatedOffres.length }} sur {{ offres.length }})
+      </div>
+      <button mat-mini-fab (click)="nextPage()" [disabled]="currentPage === totalPages - 1" aria-label="Page suivante">
+        <mat-icon>chevron_right</mat-icon>
+      </button>
     </div>
   </div>
-
-  <!-- Job Offers Section -->
-  <mat-card>
-    <mat-progress-bar *ngIf="isLoading" mode="indeterminate"></mat-progress-bar>
-
-    <div class="table-container">
-      <div class="job-grid">
-        <mat-card class="job-card" *ngFor="let offre of paginatedOffres">
-          <div class="job-card-header">
-            <div class="job-icon">
-              <mat-icon>work</mat-icon>
-            </div>
-            <h2 class="job-title">{{ offre.titre }}</h2>
-          </div>
-
-          <div class="job-info-container">
-            <div class="job-info-item">
-              <div class="info-label">Type de Contrat</div>
-              <div class="info-value">{{ offre.typeContrat }}</div>
-            </div>
-
-            <div class="job-info-item">
-              <div class="info-label">Lieu</div>
-              <div class="info-value">{{ offre.lieu }}</div>
-            </div>
-
-            <div class="job-info-item">
-              <div class="info-label">Date Limite</div>
-              <div
-                class="info-value"
-                [class.expired]="isExpired(offre.dateLimite)"
-              >
-                {{ formatDate(offre.dateLimite) }}
-                <span *ngIf="isExpired(offre.dateLimite)" class="expired-badge"
-                  >Expirée</span
-                >
-              </div>
-            </div>
-
-          
-          </div>
-
-          <div class="job-actions">
-            <div class="job-info-item">
-              <div class="info-value">
-                <span class="status-badge" [ngClass]="offre.status">{{
-                  offre.status
-                }}</span>
-              </div>
-            </div>
-            <button
-              mat-icon-button
-              [matMenuTriggerFor]="menu"
-              aria-label="Actions"
-              class="action-button"
-            >
-              <mat-icon>more_vert</mat-icon>
-            </button>
-            <mat-menu #menu="matMenu">
-              <button
-                mat-menu-item
-                (click)="offre.id && updateOffreStatus(offre.id, 'ACTIVE')"
-                *ngIf="offre.status !== 'ACTIVE'"
-              >
-                <mat-icon>play_arrow</mat-icon>
-                <span>Activer</span>
-              </button>
-              <button
-                mat-menu-item
-                (click)="offre.id && updateOffreStatus(offre.id, 'FERMÉE')"
-                *ngIf="offre.status !== 'FERMÉE'"
-              >
-                <mat-icon>pause</mat-icon>
-                <span>Fermer</span>
-              </button>
-              <button mat-menu-item (click)="deleteOffre(offre.id ?? 0)">
-                <mat-icon>delete</mat-icon>
-                <span>Supprimer</span>
-              </button>
-            </mat-menu>
-
-            <button
-              mat-icon-button
-              aria-label="Voir les candidatures"
-              class="candidates-button"
-              (click)="viewCandidates(offre.id ?? 0)"
-            >
-              <mat-icon>people</mat-icon>
-              <span class="candidates-count" *ngIf="offre.candidaturesCount">{{
-                offre.candidaturesCount
-              }}</span>
-            </button>
-          </div>
-        </mat-card>
-      </div>
-
-      <div *ngIf="!isLoading && offres.length === 0" class="no-data">
-        <p>Vous n'avez pas encore publié d'offres d'emploi.</p>
-        <button
-          mat-raised-button
-          color="primary"
-          (click)="openOffreEmploiForm()"
-        >
-          Publier votre première offre
-        </button>
-      </div>
-
-      <!-- Pagination Controls -->
-      <div class="pagination-controls" *ngIf="totalPages > 1">
-        <button
-          mat-mini-fab
-          color="primary"
-          (click)="previousPage()"
-          [disabled]="currentPage === 0"
-        >
-          <mat-icon>navigate_before</mat-icon>
-        </button>
-        <span class="page-indicator">
-          Page {{ currentPage + 1 }} / {{ totalPages }}
-        </span>
-        <button
-          mat-mini-fab
-          color="primary"
-          (click)="nextPage()"
-          [disabled]="currentPage === totalPages - 1"
-        >
-          <mat-icon>navigate_next</mat-icon>
-        </button>
-      </div>
-    </div>
-  </mat-card>
 </div>
 
-<!-- Candidates Dialog -->
+<!-- ✅ DIALOGUE CANDIDATURES CORRIGÉ -->
 <ng-template #candidatesDialog>
-  <h2 mat-dialog-title>Candidatures</h2>
-  <div mat-dialog-content>
-    <div class="candidates-list" *ngIf="selectedOffreCandidatures.length > 0">
-      <mat-list>
-        <mat-list-item *ngFor="let candidature of selectedOffreCandidatures">
-          <div class="candidate-item">
-            <div class="candidate-avatar">
-              <mat-icon>person</mat-icon>
+  <div class="candidates-dialog-header">
+    <h2 mat-dialog-title><mat-icon>people</mat-icon> Candidatures reçues</h2>
+    <button mat-icon-button mat-dialog-close><mat-icon>close</mat-icon></button>
+  </div>
+  
+  <div mat-dialog-content class="candidates-dialog-content">
+    <!-- Loading -->
+    <div *ngIf="isLoadingCandidatures" class="loading-candidates">
+      <mat-progress-spinner diameter="40"></mat-progress-spinner>
+      <p>Chargement des candidatures...</p>
+    </div>
+
+    <!-- Candidatures -->
+    <div *ngIf="!isLoadingCandidatures && selectedOffreCandidatures.length > 0">
+      <div class="candidates-header">
+        <p class="candidates-count-info">
+          {{ selectedOffreCandidatures.length }} candidature{{ selectedOffreCandidatures.length > 1 ? 's' : '' }} reçue{{ selectedOffreCandidatures.length > 1 ? 's' : '' }}
+        </p>
+      </div>
+      
+      <div *ngFor="let candidature of selectedOffreCandidatures; trackBy: trackByCandidatureId">
+        <div class="candidate-item" (click)="viewCandidatureDetails(candidature)">
+          <div class="candidate-avatar"><mat-icon>person</mat-icon></div>
+          <div class="candidate-info">
+            <h4 class="candidate-name">{{ candidature.nomCandidat || 'Candidat inconnu' }}</h4>
+            <p class="candidate-email">
+              <mat-icon>email</mat-icon> 
+              {{ candidature.emailCandidat || 'Email non disponible' }}
+            </p>
+            <p class="candidate-date">
+              <mat-icon>schedule</mat-icon> 
+              Postulé le {{ formatDate(candidature.datePostulation || candidature.dateCandidature) }}
+            </p>
+            <div class="candidate-status">
+              <span class="status-indicator" [ngClass]="(candidature.status || 'nouvelle').toLowerCase()">
+                {{ candidature.status || 'Nouvelle' }}
+              </span>
             </div>
-            <div class="candidate-info">
-              <p class="candidate-name">{{ candidature.nomCandidat }}</p>
-              <p class="candidate-email">{{ candidature.emailCandidat }}</p>
-              <p class="candidate-date">
-                Postuler le: {{ formatDate(candidature.datePostulation) }}
-              </p>
+            <!-- ✅ MESSAGE DE CANDIDATURE -->
+            <div *ngIf="candidature.message" class="candidate-message">
+              <p><strong>Message :</strong> {{ candidature.message }}</p>
             </div>
-            <div class="candidate-actions">
-              <button
-                mat-icon-button
-                color="primary"
-                (click)="viewCandidatureDetails(candidature.id)"
-              >
-                <mat-icon>visibility</mat-icon>
-              </button>
+            <!-- ✅ TARIF PROPOSÉ -->
+            <div *ngIf="candidature.tarifPropose" class="candidate-tarif">
+              <p><strong>Tarif proposé :</strong> {{ candidature.tarifPropose }}€</p>
             </div>
           </div>
-        </mat-list-item>
-      </mat-list>
+          <div class="candidate-actions">
+            <button mat-icon-button (click)="viewCandidatureDetails(candidature); $event.stopPropagation()">
+              <mat-icon>visibility</mat-icon>
+            </button>
+            <button mat-icon-button *ngIf="candidature.cv" (click)="downloadCV(candidature); $event.stopPropagation()">
+              <mat-icon>download</mat-icon>
+            </button>
+            <!-- ✅ BOUTONS DE STATUT -->
+            <button mat-icon-button 
+                    *ngIf="candidature.status !== 'ACCEPTÉE'"
+                    (click)="updateCandidatureStatus(candidature, 'ACCEPTÉE'); $event.stopPropagation()"
+                    title="Accepter">
+              <mat-icon style="color: green;">check_circle</mat-icon>
+            </button>
+            <button mat-icon-button 
+                    *ngIf="candidature.status !== 'REFUSÉE'"
+                    (click)="updateCandidatureStatus(candidature, 'REFUSÉE'); $event.stopPropagation()"
+                    title="Refuser">
+              <mat-icon style="color: red;">cancel</mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="no-candidates" *ngIf="selectedOffreCandidatures.length === 0">
-      <mat-icon>person_off</mat-icon>
-      <p>Aucune candidature pour cette offre</p>
+
+    <!-- Aucune candidature -->
+    <div *ngIf="!isLoadingCandidatures && selectedOffreCandidatures.length === 0" class="no-candidates">
+      <div class="no-candidates-animation">
+        <mat-icon>person_off</mat-icon>
+      </div>
+      <h4>Aucune candidature</h4>
+      <p>Cette offre n'a pas encore reçu de candidatures.</p>
     </div>
   </div>
-  <div mat-dialog-actions align="end">
-    <button mat-button mat-dialog-close>Fermer</button>
+  
+  <div mat-dialog-actions align="end" class="candidates-dialog-actions">
+    <button mat-button mat-dialog-close>
+      <mat-icon>close</mat-icon> Fermer
+    </button>
   </div>
 </ng-template>
-<app-offre-emplois *ngIf="showOffreEmploiForm" (closeModalEvent)="closeOffreEmploiForm()"></app-offre-emplois>
+
+<!-- 📝 FORMULAIRE OFFRE -->
+<app-offre-emplois 
+  *ngIf="showOffreEmploiForm" 
+  (closeModalEvent)="closeOffreEmploiForm()"
+  class="offre-creation-modal">
+</app-offre-emplois>
+
+<!-- 🔄 OVERLAY DE CHARGEMENT -->
+<div class="global-loading-overlay" *ngIf="isLoading">
+  <div class="loading-content">
+    <mat-progress-spinner mode="indeterminate" diameter="60" color="primary"></mat-progress-spinner>
+    <p>Chargement de vos offres...</p>
+  </div>
+</div>

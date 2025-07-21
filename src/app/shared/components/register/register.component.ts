@@ -4,6 +4,7 @@ import { RegisterService, SignupRequest } from '../../services/register.service'
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { GeocodingService } from '../../../core/servces/GeocodingService/geocoding-service.service';
 
 @Component({
   selector: 'app-register',
@@ -14,53 +15,46 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 })
 export class RegisterComponent implements OnInit {
   @Output() close = new EventEmitter<void>();
-  @Output() switchToLoginEvent = new EventEmitter<void>(); // Nouvel événement pour basculer vers la connexion
-  
+  @Output() switchToLoginEvent = new EventEmitter<void>();
+
   registerForm!: FormGroup;
   currentStep = 1;
   errorMessage = '';
   isLoading = false;
-  
-  // Types d'utilisateurs
+
   roles = ['CLIENT', 'FREELANCE', 'EMPLOYEUR'];
   sexeOptions = [
-  { value: 'MASCULIN', label: 'Homme' },
-  { value: 'FEMININ', label: 'Femme' }
-];
-  
+    { value: 'MASCULIN', label: 'Homme' },
+    { value: 'FEMININ', label: 'Femme' }
+  ];
+
   constructor(
     private fb: FormBuilder,
     private authService: RegisterService,
     private router: Router,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private geocodingService: GeocodingService
   ) {}
 
   ngOnInit(): void {
     this.registerForm = this.fb.group({
-      // Étape 1 - Informations de base
       nom: ['', Validators.required],
       prenom: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
-
-      // Étape 2 - Informations complémentaires
       telephone: ['', [Validators.pattern(/^\d{9}$/)]],
       adresse: [''],
       role: ['', Validators.required],
       sexe: ['', Validators.required],
-
-      // Étape 3 - Mot de passe et sécurité
       motDePasse: ['', [
-        Validators.required, 
+        Validators.required,
         Validators.minLength(6),
         Validators.pattern(/^(?=.*\d).+$/)
       ]],
       confirmPassword: ['', Validators.required],
-      
-    }, { 
-      validators: this.checkPasswords 
+    }, {
+      validators: this.checkPasswords
     });
 
-    // Écouter les changements de rôle pour ajuster le formulaire dynamiquement
     this.registerForm.get('role')?.valueChanges.subscribe(role => {
       if (role) {
         this.updateFormFields(role);
@@ -68,25 +62,21 @@ export class RegisterComponent implements OnInit {
     });
   }
 
-  // Validateur personnalisé pour la concordance des mots de passe
   checkPasswords(group: AbstractControl): { [key: string]: boolean } | null {
     const password = group.get('motDePasse')?.value;
     const confirmPassword = group.get('confirmPassword')?.value;
     return password === confirmPassword ? null : { notMatching: true };
   }
 
-  // Mise à jour des champs du formulaire selon le rôle
   updateFormFields(role: string | null): void {
     if (!role) return;
 
-    // Suppression des champs spécifiques existants
     ['description', 'preferences', 'competences', 'experiences', 'portfolio'].forEach(field => {
       if (this.registerForm.contains(field)) {
         this.registerForm.removeControl(field);
       }
     });
 
-    // Ajout des champs spécifiques selon le rôle
     switch (role) {
       case 'EMPLOYEUR':
         this.registerForm.addControl('description', this.fb.control('', Validators.required));
@@ -102,7 +92,6 @@ export class RegisterComponent implements OnInit {
     }
   }
 
-  // Navigation entre les étapes
   nextStep(): void {
     if (this.currentStep === 1 && this.validateStep1()) {
       this.currentStep++;
@@ -115,7 +104,6 @@ export class RegisterComponent implements OnInit {
     this.currentStep--;
   }
 
-  // Validation par étape
   validateStep1(): boolean {
     return this.validateControls(['nom', 'prenom', 'email']);
   }
@@ -126,7 +114,7 @@ export class RegisterComponent implements OnInit {
 
   validateControls(controlNames: string[]): boolean {
     let valid = true;
-    
+
     controlNames.forEach(controlName => {
       const control = this.registerForm.get(controlName);
       if (control && control.invalid) {
@@ -134,11 +122,10 @@ export class RegisterComponent implements OnInit {
         valid = false;
       }
     });
-    
+
     return valid;
   }
 
-  // Soumission du formulaire
   onSubmit(): void {
     if (this.registerForm.invalid) {
       return;
@@ -147,44 +134,59 @@ export class RegisterComponent implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
 
-  // Création de l'objet de requête à partir du formulaire
-const signupRequest: SignupRequest = {
-  email: this.registerForm.value.email,
-  motDePasse: this.registerForm.value.motDePasse,  
-  nom: this.registerForm.value.nom,                
-  prenom: this.registerForm.value.prenom,          
-  telephone: this.registerForm.value.telephone || '',
-  adresse: this.registerForm.value.adresse || '',
-  role: this.registerForm.value.role,
-  sexe: this.registerForm.value.sexe
-};
-    // Ajouter les champs spécifiques s'ils existent
+    const signupRequest: SignupRequest = {
+      email: this.registerForm.value.email,
+      motDePasse: this.registerForm.value.motDePasse,
+      nom: this.registerForm.value.nom,
+      prenom: this.registerForm.value.prenom,
+      telephone: this.registerForm.value.telephone || '',
+      adresse: this.registerForm.value.adresse || '',
+      role: this.registerForm.value.role,
+      sexe: this.registerForm.value.sexe
+    };
+
     if (this.registerForm.value.description) signupRequest.description = this.registerForm.value.description;
     if (this.registerForm.value.preferences) signupRequest.preferences = this.registerForm.value.preferences;
     if (this.registerForm.value.competences) signupRequest.competences = this.registerForm.value.competences;
     if (this.registerForm.value.experiences) signupRequest.experiences = this.registerForm.value.experiences;
     if (this.registerForm.value.portfolio) signupRequest.portfolio = this.registerForm.value.portfolio;
 
-    console.log('Envoi de la demande d\'inscription:', signupRequest);
+    if (signupRequest.adresse) {
+      this.geocodingService.getCoordinates(signupRequest.adresse).subscribe({
+        next: coords => {
+          if (coords) {
+            signupRequest.latitude = coords.lat;
+            signupRequest.longitude = coords.lon;
+            console.log('Coordonnées trouvées:', coords);
+          } else {
+            console.warn('Adresse non trouvée par le géocodage');
+          }
+          this.sendSignupRequest(signupRequest);
+        },
+        error: err => {
+          console.error('Erreur géocodage:', err);
+          this.sendSignupRequest(signupRequest);
+        }
+      });
+    } else {
+      this.sendSignupRequest(signupRequest);
+    }
+  }
 
+  private sendSignupRequest(signupRequest: SignupRequest) {
     this.authService.signup(signupRequest).subscribe({
       next: (response) => {
         this.isLoading = false;
-        console.log('Inscription réussie:', response);
-        
         this.snackBar.open('Inscription réussie! Bienvenue!', 'Fermer', {
           duration: 3000,
           panelClass: ['success-snackbar']
         });
-        
         this.closeModal();
         this.router.navigate(['/dashboard']);
       },
       error: (error) => {
         this.isLoading = false;
-        console.error('Erreur d\'inscription:', error);
         this.errorMessage = error.message || 'Une erreur est survenue lors de l\'inscription';
-        
         this.snackBar.open(this.errorMessage, 'Fermer', {
           duration: 5000,
           panelClass: ['error-snackbar']
@@ -196,10 +198,8 @@ const signupRequest: SignupRequest = {
   closeModal(): void {
     this.close.emit();
   }
-  
-  // Méthode pour basculer vers le formulaire de connexion
+
   switchToLogin(): void {
-    console.log('Demande de basculement vers le formulaire de connexion');
     this.switchToLoginEvent.emit();
   }
 }

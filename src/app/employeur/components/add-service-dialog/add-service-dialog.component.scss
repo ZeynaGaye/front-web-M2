@@ -1,0 +1,306 @@
+// Variables reprises de votre design
+$primary-color: #f5a393;
+$secondary-color: #a4b1bd;
+$text-dark: #333;
+$text-light: #6b7280;
+$border-color: #e5e7eb;
+$error-color: #ef4444;
+$focus-color: #fb8f71;
+
+.service-dialog {
+  max-width: 450px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  
+  // ✅ OPTIMISATIONS POUR UN AFFICHAGE NET
+  transform: translateZ(0); // Force GPU acceleration
+  backface-visibility: hidden; // Prevent blurring
+  -webkit-font-smoothing: antialiased; // Smooth fonts on webkit
+  -moz-osx-font-smoothing: grayscale; // Smooth fonts on firefox
+
+  .dialog-header {
+    background: linear-gradient(135deg, $primary-color 0%, lighten($primary-color, 10%) 100%);
+    color: white;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
+    // ✅ Assurer la netteté du header
+    -webkit-font-smoothing: antialiased;
+
+    h2 {
+      margin: 0;
+      font-size: 1.4rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      line-height: 1.2; // ✅ Améliore la netteté du texte
+
+      i.material-icons {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        padding: 8px;
+        font-size: 20px;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1; // ✅ Icônes bien centrées
+      }
+    }
+
+    .close-button {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease; // ✅ Transition plus rapide
+      color: white;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: rotate(90deg);
+      }
+
+      i.material-icons {
+        font-size: 20px;
+        line-height: 1; // ✅ Icône bien centrée
+      }
+    }
+  }
+
+  .service-form {
+    padding: 25px;
+
+    .input-group {
+      position: relative;
+      margin-bottom: 1.5rem;
+
+      &.half-width {
+        width: calc(50% - 8px);
+      }
+
+      i.material-icons {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%); // ✅ Centrage précis
+        color: #9ca3af;
+        font-size: 20px;
+        z-index: 1;
+        line-height: 1; // ✅ Évite les décalages
+      }
+
+      input,
+      textarea {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 2.5rem;
+        border: 1px solid $border-color;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        line-height: 1.5; // ✅ Hauteur de ligne optimisée
+        outline: none;
+        transition: all 0.2s ease; // ✅ Transition plus rapide
+        font-family: inherit;
+        resize: none;
+        box-sizing: border-box; // ✅ Évite les débordements
+        
+        // ✅ OPTIMISATIONS POUR LA NETTETÉ
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+
+        &:focus {
+          border-color: $focus-color;
+          box-shadow: 0 0 0 3px rgba(251, 143, 113, 0.1); // ✅ Ombre plus légère
+          outline: none;
+        }
+
+        &::placeholder {
+          color: #9ca3af;
+          opacity: 1; // ✅ Assure l'opacité du placeholder
+        }
+      }
+
+      textarea {
+        min-height: 80px;
+        resize: vertical; // ✅ Permet redimensionnement vertical uniquement
+        
+        & ~ i.material-icons {
+          top: 1.25rem; // ✅ Position ajustée pour textarea
+          transform: none;
+        }
+      }
+
+      small {
+        color: $error-color;
+        font-size: 12px;
+        display: block;
+        margin-top: 5px;
+        padding-left: 0.5rem;
+        line-height: 1.3; // ✅ Hauteur optimisée pour les messages
+      }
+    }
+
+    .form-row {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 1.5rem;
+
+      .input-group {
+        margin-bottom: 0;
+      }
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 2rem;
+
+      .cancel-btn,
+      .submit-btn {
+        flex: 1;
+        padding: 12px 16px;
+        border: none;
+        border-radius: 6px;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease; // ✅ Transition plus rapide
+        line-height: 1.2; // ✅ Hauteur optimisée
+        
+        // ✅ OPTIMISATIONS POUR LA NETTETÉ
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+
+        i.material-icons {
+          font-size: 18px;
+          line-height: 1; // ✅ Icônes bien alignées
+        }
+      }
+
+      .cancel-btn {
+        background-color: transparent;
+        color: $secondary-color;
+        border: 1px solid $secondary-color;
+
+        &:hover {
+          background-color: rgba($secondary-color, 0.1);
+          transform: translateY(-1px);
+        }
+      }
+
+      .submit-btn {
+        background-color: $primary-color;
+        color: white;
+
+        &:disabled {
+          background-color: $secondary-color;
+          cursor: not-allowed;
+          transform: none;
+        }
+
+        &:hover:not(:disabled) {
+          background-color: darken($primary-color, 8%);
+          transform: translateY(-1px); // ✅ Mouvement plus subtil
+          box-shadow: 0 4px 12px rgba($primary-color, 0.25); // ✅ Ombre plus légère
+        }
+      }
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 600px) {
+  .service-dialog {
+    max-width: 95vw;
+    margin: 10px;
+
+    .dialog-header {
+      padding: 16px;
+
+      h2 {
+        font-size: 1.2rem;
+
+        i.material-icons {
+          width: 32px;
+          height: 32px;
+          font-size: 18px;
+        }
+      }
+
+      .close-button {
+        width: 32px;
+        height: 32px;
+
+        i.material-icons {
+          font-size: 18px;
+        }
+      }
+    }
+
+    .service-form {
+      padding: 20px;
+
+      .form-row {
+        flex-direction: column;
+        gap: 0;
+
+        .input-group.half-width {
+          width: 100%;
+          margin-bottom: 1.5rem;
+        }
+      }
+
+      .form-actions {
+        .cancel-btn,
+        .submit-btn {
+          padding: 10px 14px;
+          font-size: 14px;
+        }
+      }
+    }
+  }
+}
+
+// Animation d'entrée optimisée
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) translateZ(0); // ✅ Mouvement plus subtil
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) translateZ(0);
+  }
+}
+
+.service-dialog {
+  animation: slideIn 0.25s ease-out; // ✅ Animation plus rapide
+}
+
+// ✅ STYLES GLOBAUX POUR AMÉLIORER LA NETTETÉ
+* {
+  box-sizing: border-box;
+}
+
+// ✅ Optimisation spécifique pour les icônes Material
+i.material-icons {
+  font-feature-settings: 'liga';
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}

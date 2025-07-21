@@ -86,7 +86,10 @@ export class PortfolioComponent implements OnInit, OnDestroy, AfterViewInit {
   
   // ✅ NOUVEAU : État de chargement séparé pour les infos freelance
   freelanceInfoLoading: boolean = false;
-  
+  imagesInitialized: { [itemId: number]: boolean } = {};
+  imagesErrors: { [itemId: number]: string } = {};
+  portfolioImages: { [itemId: number]: any[] } = {};
+  loadingStates: { [key: string]: boolean } = {};
   // Propriétés pour le contact
   showContactModal: boolean = false;
   selectedFreelanceForContact: Freelance | null = null;
@@ -624,19 +627,55 @@ Cordialement.`;
     });
   }
 
-  isLikedByUser(itemId: number): boolean {
-    return this.userLikes.has(itemId);
+isLikedByUser(itemId: number): boolean {
+  // ✅ Mode dashboard freelance : ne peut pas aimer son propre travail
+  if (!this.clientMode) {
+    return false;
   }
-
-  loadUserLikes(): void {
-    this.portfolioService.getUserLikes().subscribe({
-      next: (likedItemsIds) => {
+  
+  // ✅ Mode client non connecté : ne peut pas avoir aimé
+  if (!this.authManager.isAuthenticated()) {
+    return false;
+  }
+  
+  // ✅ Mode client connecté : vérifier s'il a déjà aimé cet élément
+  return this.userLikes.has(itemId);
+}
+ loadUserLikes(): void {
+  // ✅ Charger les likes utilisateur SEULEMENT si :
+  // 1. On est en mode CLIENT (on consulte les portfolios depuis la page d'accueil)
+  // 2. ET l'utilisateur est connecté (pour savoir ce qu'il a déjà aimé)
+  
+  if (!this.clientMode) {
+    console.log('🏠 Mode dashboard freelance - pas de chargement des likes utilisateur');
+    this.userLikes.clear();
+    return;
+  }
+  
+  if (!this.authManager.isAuthenticated()) {
+    console.log('👤 Client non connecté - peut voir mais pas aimer');
+    this.userLikes.clear();
+    return;
+  }
+  
+  console.log('🔄 Client connecté - chargement des likes pour savoir ce qu\'il a déjà aimé...');
+  
+  this.portfolioService.getUserLikes().subscribe({
+    next: (likedItemsIds) => {
+      console.log('✅ Likes utilisateur chargés:', likedItemsIds.length, 'éléments');
+      this.userLikes.clear();
+      likedItemsIds.forEach(id => this.userLikes.add(id));
+    },
+    error: (error) => {
+      console.error('❌ Erreur chargement user likes:', error);
+      
+      if (error.status === 401) {
+        console.log('🔒 Erreur 401 - nettoyage des likes locaux');
         this.userLikes.clear();
-        likedItemsIds.forEach(id => this.userLikes.add(id));
-      },
-      error: (error) => console.error('Error loading user likes', error)
-    });
-  }
+      }
+    }
+  });
+}
 
   openAddPortfolioDialog(): void {
     if (this.clientMode) {
@@ -762,4 +801,6 @@ Cordialement.`;
       document.body.style.overflow = 'auto';
     }
   }
+
+  
 }

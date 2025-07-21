@@ -1,152 +1,258 @@
 <mat-sidenav-container class="beauty-container">
-  <!-- Sidebar élégant -->
   <mat-sidenav #sidenav mode="side" [(opened)]="sidebarOpen" class="beauty-sidebar">
     <div class="sidebar-header">
       <div class="user-avatar">
-        <img src="assets/images/beauty-avatar.png" alt="Votre avatar">
+        <img src="assets/images/logo (2).png" alt="Votre avatar">
       </div>
-      <h2>Mon Espace Beauté</h2>
+      <div *ngIf="currentUser" class="user-info-sidebar">
+        <p class="user-name">{{ currentUser.prenom }} {{ currentUser.nom }}</p>
+        <p class="user-email">{{ currentUser.email }}</p>
+        <p class="user-role">{{ currentUser.role }}</p>
+      </div>
     </div>
-    
+
     <mat-nav-list class="beauty-menu">
-      <a mat-list-item (click)="navigateToOpportunities()" class="menu-item">
+      <a mat-list-item (click)="backToHome()" class="menu-item" [class.active]="!showPortfolio && !showOpportunities && !showServices">
+        <mat-icon class="menu-icon">home</mat-icon>
+        <span>Accueil</span>
+      </a>
+      <a mat-list-item (click)="navigateToOpportunities()" class="menu-item" [class.active]="showOpportunities">
         <mat-icon class="menu-icon">spa</mat-icon>
         <span>Opportunités</span>
       </a>
-      <a mat-list-item (click)="showPortfolio = true" class="menu-item active">
+      <a mat-list-item (click)="navigateToPortfolio()" class="menu-item" [class.active]="showPortfolio">
         <mat-icon class="menu-icon">brush</mat-icon>
         <span>Mon Portfolio</span>
       </a>
-      <a mat-list-item class="menu-item">
-        <mat-icon class="menu-icon">face</mat-icon>
-        <span>Mes Clients</span>
+      
+      <a mat-list-item (click)="navigateToServices()" class="menu-item" [class.active]="showServices">
+        <mat-icon class="menu-icon">design_services</mat-icon>
+        <span>Mes Services</span>
       </a>
-      <a mat-list-item class="menu-item">
-        <mat-icon class="menu-icon">chat_bubble</mat-icon>
-        <span>Messages</span>
-        <span class="notification-badge">3</span>
+      <a mat-list-item (click)="navigateToAvailability()" class="menu-item">
+        <mat-icon class="menu-icon">calendar_month</mat-icon>
+        <span>Disponibilités</span>
       </a>
-      <a mat-list-item class="menu-item">
-        <mat-icon class="menu-icon">settings</mat-icon>
-        <span>Paramètres</span>
-      </a>
-      <!-- <a mat-list-item class="menu-item" >
-        <mat-icon class="menu-icon">logout</mat-icon>
-        <span>Déconnexion</span>
-      </a> -->
+      <a mat-list-item (click)="navigateToReservations()" class="menu-item">
+        <mat-icon class="menu-icon">event</mat-icon>
+        <span>Mes Réservations</span>
+      </a> 
     </mat-nav-list>
-    
-  
   </mat-sidenav>
 
-  <!-- Contenu Principal -->
   <mat-sidenav-content>
-    <!-- Barre de navigation moderne -->
     <mat-toolbar class="beauty-toolbar">
       <button mat-icon-button (click)="toggleSidebar()" class="menu-button">
         <mat-icon>menu</mat-icon>
       </button>
       
-      <div class="search-bar">
-        <mat-icon>search</mat-icon>
-        <input placeholder="Rechercher clients, services...">
+      <!-- ✅ Titre avec nom/prénom correct -->
+      <div class="toolbar-title">
+        <span *ngIf="isAuthenticated; else notConnected">
+          Bienvenue, {{ userFullName }}
+        </span>
+        <ng-template #notConnected>
+          <span>Veuillez vous connecter</span>
+        </ng-template>
       </div>
       
       <div class="toolbar-actions">
-        <button mat-icon-button class="notification-button">
-          <mat-icon>notifications</mat-icon>
-          <span class="notification-badge">2</span>
-        </button>
-        <button mat-icon-button class="user-button">
-          <mat-icon>account_circle</mat-icon>
-        </button>
+        <!-- ✅ Actions seulement si connecté -->
+        <ng-container *ngIf="isAuthenticated; else loginAction">
+          <button mat-icon-button>
+            <mat-icon>notifications</mat-icon>
+          </button>
+          <button mat-icon-button [matMenuTriggerFor]="userMenu">
+            <mat-icon>account_circle</mat-icon>
+          </button>
+          
+          <!-- Menu utilisateur -->
+          <mat-menu #userMenu="matMenu">
+            <div class="user-menu-header">
+              <strong>{{ userFullName }}</strong>
+              <br>
+              <small>{{ userEmail }}</small>
+              <br>
+              <small class="user-role-badge">{{ userRole }}</small>
+            </div>
+            <mat-divider></mat-divider>
+            <button mat-menu-item>
+              <mat-icon>person</mat-icon>
+              <span>Mon Profil</span>
+            </button>
+            <button mat-menu-item>
+              <mat-icon>settings</mat-icon>
+              <span>Paramètres</span>
+            </button>
+            <mat-divider></mat-divider>
+            <button mat-menu-item (click)="logout()">
+              <mat-icon>logout</mat-icon>
+              <span>Se déconnecter</span>
+            </button>
+          </mat-menu>
+        </ng-container>
+        
+        <!-- ✅ Bouton de connexion si pas connecté -->
+        <ng-template #loginAction>
+          <button mat-raised-button color="primary" (click)="forceLogin()">
+            <mat-icon>login</mat-icon>
+            Se connecter
+          </button>
+        </ng-template>
       </div>
     </mat-toolbar>
 
-    <!-- Contenu -->
-    <div class="beauty-content" *ngIf="!showPortfolio">
-      <div class="welcome-section">
-        <h1>Bonjour, {{username}}!</h1>
-        <p>Découvrez les dernières tendances beauté et gérez votre activité</p>
-      </div>
-
-      <!-- Carousel Beauté -->
-      <div class="beauty-carousel">
-        <div id="beautyCarousel" class="carousel slide" data-bs-ride="carousel">
-          <div class="carousel-inner">
-            <div *ngFor="let image of beautyImages; let i = index" 
-                 class="carousel-item" [class.active]="i === 0">
-              <img [src]="image.url" class="d-block w-100" [alt]="image.title">
-              <div class="carousel-caption">
-                <h3>{{image.title}}</h3>
-                <p>{{image.description}}</p>
-              </div>
+    <!-- ✅ Message si pas connecté -->
+    <div *ngIf="!isAuthenticated" class="not-connected-message">
+      <mat-card class="warning-card">
+        <mat-card-content>
+          <div class="warning-content">
+            <mat-icon>warning</mat-icon>
+            <div>
+              <h3>Connexion requise</h3>
+              <p>Vous devez être connecté pour accéder à votre espace freelance.</p>
+              <button mat-raised-button color="primary" (click)="forceLogin()">
+                <mat-icon>login</mat-icon>
+                Se connecter maintenant
+              </button>
             </div>
           </div>
-          <button class="carousel-control-prev" type="button" data-bs-target="#beautyCarousel" data-bs-slide="prev">
-            <mat-icon>chevron_left</mat-icon>
-          </button>
-          <button class="carousel-control-next" type="button" data-bs-target="#beautyCarousel" data-bs-slide="next">
-            <mat-icon>chevron_right</mat-icon>
-          </button>
-        </div>
-      </div>
-      
-      <!-- Cartes Statistiques -->
-      <div class="stats-grid">
-        <mat-card class="beauty-card">
-          <div class="card-icon">
-            <mat-icon>event_available</mat-icon>
-          </div>
-          <mat-card-title>12</mat-card-title>
-          <p>Réservations cette semaine</p>
-        </mat-card>
-        
-        <mat-card class="beauty-card">
-          <div class="card-icon">
-            <mat-icon>star</mat-icon>
-          </div>
-          <mat-card-title>4.9</mat-card-title>
-          <p>Note moyenne</p>
-        </mat-card>
-        
-        <mat-card class="beauty-card">
-          <div class="card-icon">
-            <mat-icon>attach_money</mat-icon>
-          </div>
-          <mat-card-title>€1,240</mat-card-title>
-          <p>Revenus ce mois</p>
-        </mat-card>
-      </div>
-      
-      <!-- Section Services -->
-      <div class="services-section">
-        <h2>Mes Services Populaires</h2>
-        <div class="services-grid">
-          <div class="service-item" *ngFor="let service of popularServices">
-            <div class="service-icon">
-              <mat-icon>{{service.icon}}</mat-icon>
-            </div>
-            <h3>{{service.name}}</h3>
-            <p>{{service.price}}</p>
-          </div>
-        </div>
-      </div>
+        </mat-card-content>
+      </mat-card>
     </div>
 
-    <!-- Section Portfolio intégrée -->
-    <div *ngIf="showPortfolio" class="portfolio-section">
-      <div class="section-header">
-        <button mat-icon-button (click)="showPortfolio = false" class="back-button">
-          <mat-icon>arrow_back</mat-icon>
-        </button>
-        <h2>Mon Portfolio</h2>
-        <!-- <button mat-flat-button color="primary" class="add-button">
-          <mat-icon>add</mat-icon> Ajouter
-        </button> -->
+    <!-- Contenu principal (seulement si connecté) -->
+    <div *ngIf="isAuthenticated">
+      <!-- ✅ DASHBOARD ÉPURÉ - Accueil -->
+      <div class="dashboard-home" *ngIf="!showPortfolio && !showOpportunities && !showServices">
+        <!-- Message de bienvenue personnalisé -->
+        <div class="dashboard-welcome">
+          <!-- <h2>Bonjour {{ currentUser?.prenom || 'Freelance' }} ! 👋</h2> -->
+          <p>Bienvenue sur votre tableau de bord. Consultez vos statistiques et gérez votre activité depuis le menu.</p>
+        </div>
+
+        <!-- ✅ CARTES DE STATISTIQUES PRINCIPALES (gardées car utiles) -->
+        <div class="dashboard-cards">
+          <mat-card class="beauty-card" (click)="navigateToReservations()">
+            <div class="card-icon">
+              <mat-icon>event</mat-icon>
+            </div>
+            <mat-card-title>12</mat-card-title>
+            <p>Réservations cette semaine</p>
+          </mat-card>
+          
+          <mat-card class="beauty-card">
+            <div class="card-icon">
+              <mat-icon>star</mat-icon>
+            </div>
+            <mat-card-title>4.9</mat-card-title>
+            <p>Note moyenne</p>
+          </mat-card>
+          
+          <mat-card class="beauty-card">
+            <div class="card-icon">
+              <mat-icon>CFA</mat-icon>
+            </div>
+            <mat-card-title>124000CFA</mat-card-title>
+            <p>Revenus ce mois</p>
+          </mat-card>
+        </div>
+
+        <!-- ✅ SECTION ACTIVITÉ RÉCENTE (valeur ajoutée) -->
+        <div class="recent-activity">
+          <h3>Activité récente</h3>
+          <mat-card class="activity-card">
+            <mat-card-content>
+              <div class="activity-item">
+                <mat-icon color="accent">schedule</mat-icon>
+                <div class="activity-text">
+                  <strong>Nouvelle réservation</strong>
+                  <p>Rendez-vous maquillage le 15 juillet à 14h00</p>
+                </div>
+                <span class="activity-time">Il y a 2h</span>
+              </div>
+              
+              <mat-divider></mat-divider>
+              
+              <div class="activity-item">
+                <mat-icon color="primary">star</mat-icon>
+                <div class="activity-text">
+                  <strong>Nouvel avis client</strong>
+                  <p>⭐⭐⭐⭐⭐ "Service parfait, je recommande !"</p>
+                </div>
+                <span class="activity-time">Hier</span>
+              </div>
+              
+              <mat-divider></mat-divider>
+              
+              <div class="activity-item">
+                <mat-icon color="warn">design_services</mat-icon>
+                <div class="activity-text">
+                  <strong>Service mis à jour</strong>
+                  <p>Tarifs "Maquillage soirée" modifiés</p>
+                </div>
+                <span class="activity-time">Il y a 3 jours</span>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+
+        <!-- ✅ CONSEILS RAPIDES -->
+        <div class="quick-tips">
+          <h3>💡 Conseil du jour</h3>
+          <mat-card class="tip-card">
+            <mat-card-content>
+              <p><strong>Optimisez votre profil :</strong> Ajoutez des photos de vos réalisations dans votre portfolio pour attirer plus de clients !</p>
+              <button mat-stroked-button color="primary" (click)="navigateToPortfolio()">
+                Voir mon portfolio
+              </button>
+            </mat-card-content>
+          </mat-card>
+        </div>
       </div>
-      
-      <app-portfolio></app-portfolio>
+
+      <!-- Portfolio -->
+      <div *ngIf="showPortfolio" class="portfolio-section">
+        <div class="section-header">
+          <button mat-icon-button (click)="backToHome()">
+            <mat-icon>arrow_back</mat-icon>
+          </button>
+          <h2>Mon Portfolio</h2>
+        </div>
+        <div class="section-content">
+          <app-portfolio></app-portfolio>
+        </div>
+      </div>
+
+     <div *ngIf="showOpportunities" class="opportunities-section">
+  <div class="section-header">
+    <button mat-icon-button (click)="backToHome()">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <h2>Opportunités</h2>
+  </div>
+  <div class="section-content">
+    <!-- 🔧 CORRECTION : Ajouter freelanceId -->
+    <app-opportunites-emploi 
+      [freelanceId]="currentUser?.id"
+      [compactMode]="false"
+      [showHeader]="true">
+    </app-opportunites-emploi>
+  </div>
+</div>
+
+      <!-- ✅ Mes Services Freelance -->
+      <div *ngIf="showServices" class="services-section">
+        <div class="section-header">
+          <button mat-icon-button (click)="backToHome()">
+            <mat-icon>arrow_back</mat-icon>
+          </button>
+          <h2>Mes Services</h2>
+        </div>
+        <div class="section-content">
+          <app-mes-services-freelance (closeModalEvent)="backToHome()"></app-mes-services-freelance>
+        </div>
+      </div>
     </div>
   </mat-sidenav-content>
 </mat-sidenav-container>

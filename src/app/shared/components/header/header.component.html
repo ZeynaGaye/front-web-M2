@@ -201,10 +201,11 @@
         </div>
       </div>
       
-      <!-- Panneau de recherche avancée -->
+      <!-- ✅ PANNEAU DE RECHERCHE AVANCÉE AMÉLIORÉ -->
       <div class="advanced-search-panel" *ngIf="showAdvancedSearch">
+        <!-- Critères généraux -->
         <div class="search-option">
-          <label>Budget</label>
+          <label>Budget maximum</label>
           <div class="budget-slider">
             <input type="range" [(ngModel)]="budgetRange" min="2000" max="100000" step="1000" />
             <span>{{budgetRange}} CFA</span>
@@ -234,6 +235,65 @@
             <span>{{userLocation}}</span>
             <button class="change-location" (click)="clearLocation()">Modifier</button>
           </div>
+        </div>
+
+        <!-- ✅ NOUVEAUX CRITÈRES SPÉCIFIQUES AUX FREELANCES -->
+        <div class="freelance-criteria" *ngIf="showFreelanceCriteria()">
+          <div class="criteria-header">
+            <h4><i class="fas fa-user-tie"></i> Critères Freelances</h4>
+            <button class="clear-freelance-btn" (click)="clearOnlyFreelanceCriteria()" 
+                    *ngIf="hasFreelanceCriteria()">
+              Effacer
+            </button>
+          </div>
+          
+          <div class="criteria-toggles">
+            <label class="toggle-option">
+              <input type="checkbox" [(ngModel)]="disponibleWeekend" />
+              <span class="toggle-text">
+                <i class="fas fa-calendar-weekend"></i>
+                Disponible weekend
+              </span>
+            </label>
+            
+            <label class="toggle-option">
+              <input type="checkbox" [(ngModel)]="disponibleSoir" />
+              <span class="toggle-text">
+                <i class="fas fa-moon"></i>
+                Disponible soirée
+              </span>
+            </label>
+            
+            <label class="toggle-option">
+              <input type="checkbox" [(ngModel)]="deplacementInclus" />
+              <span class="toggle-text">
+                <i class="fas fa-car"></i>
+                Déplacement inclus
+              </span>
+            </label>
+          </div>
+          
+          <div class="search-option">
+            <label>Expérience minimum</label>
+            <select [(ngModel)]="experienceMin">
+              <option [value]="undefined">Peu importe</option>
+              <option [value]="1">1+ ans</option>
+              <option [value]="3">3+ ans</option>
+              <option [value]="5">5+ ans</option>
+              <option [value]="10">10+ ans</option>
+            </select>
+          </div>
+        </div>
+        
+        <!-- Boutons d'action -->
+        <div class="search-actions">
+          <button class="clear-all-btn" (click)="clearAdvancedCriteria()">
+            Tout effacer
+          </button>
+          <button class="search-advanced-btn" (click)="searchSalonsAdvanced()">
+            <i class="fas fa-search"></i>
+            Rechercher
+          </button>
         </div>
       </div>
     </div>
@@ -319,7 +379,7 @@
   </div>
 </div>
 
-<!-- Salons display section - visible si un service est sélectionné -->
+<!-- ✅ SECTION D'AFFICHAGE DES RÉSULTATS AMÉLIORÉE -->
 <div *ngIf="selectedService" class="salons-section">
   <!-- Loading indicator -->
   <div class="loading-indicator" *ngIf="isLoading">
@@ -349,59 +409,75 @@
     </div>
   </div>
   
-  <!-- Affichage des cartes de salon/freelance -->
+  <!-- ✅ AFFICHAGE DES CARTES CORRIGÉ -->
   <div class="salons-grid" [class.list-view]="viewMode === 'list'" *ngIf="!isLoading && filteredSalons.length > 0">
-    <div class="salon-card" *ngFor="let salon of filteredSalons">
-      <!-- Badge de type de professionnel -->
-      <div class="provider-badge" [ngClass]="salon.type || 'salon'">
-        <i class="fas" [ngClass]="getProviderIcon(salon.type)"></i>
-        {{ getProviderLabel(salon.type) }}
+    <div class="salon-card" *ngFor="let provider of filteredSalons">
+      <!-- ✅ Badge de type de professionnel -->
+      <div class="provider-badge" [ngClass]="provider.type || 'salon'">
+        <i class="fas" [ngClass]="getProviderIcon(provider.type)"></i>
+        {{ getProviderLabel(provider.type) }}
       </div>
       
-      <!-- Image du salon/freelance -->
+      <!-- ✅ Image du provider avec gestion d'erreurs -->
       <div class="salon-image">
-        <img [src]="salon.imageUrl || 'assets/images/salon.jpg'" [alt]="salon.nom">
-        <div class="image-overlay" *ngIf="salon.type === 'freelance'">
+        <img [src]="provider.imageUrl || (provider.type === 'freelance' ? 'assets/images/freelance-default.jpg' : 'assets/images/salon-default.jpg')" 
+             [alt]="provider.nom"
+             (error)="onImageError($event, provider)"
+             (load)="onImageLoad($event, provider)">
+        <div class="image-overlay" *ngIf="provider.type === 'freelance'">
           <i class="fas fa-user-tie"></i>
         </div>
       </div>
       
-      <!-- Informations du salon/freelance -->
+      <!-- ✅ Informations du provider -->
       <div class="salon-info">
-        <h3 class="salon-name">{{ salon.nom }}</h3>
-        <p class="salon-address">{{ salon.adresse }}</p>
+        <h3 class="salon-name">{{ provider.nom }}</h3>
+        <p class="salon-address">{{ provider.adresse }}</p>
         
         <!-- Star rating system -->
         <div class="salon-rating">
           <div class="stars">
-            <i class="fas fa-star" *ngFor="let star of getStarArray(salon.rating)"></i>
-            <i class="fas fa-star-half-alt" *ngIf="hasHalfStar(salon.rating)"></i>
+            <i class="fas fa-star" *ngFor="let star of getStarArray(provider.rating)"></i>
+            <i class="fas fa-star-half-alt" *ngIf="hasHalfStar(provider.rating)"></i>
           </div>
-          <span class="rating-value">{{ salon.rating }}</span>
-          <span class="review-count">({{ salon.reviewCount }} avis)</span>
+          <span class="rating-value">{{ provider.rating }}</span>
+          <span class="review-count">({{ provider.reviewCount }} avis)</span>
         </div>
         
         <!-- Services tags -->
         <div class="salon-services">
-          <span class="service-tag" *ngFor="let service of salon.services.slice(0, 3)">{{ service }}</span>
-          <span class="more-services" *ngIf="salon.services.length > 3">+{{ salon.services.length - 3 }}</span>
+          <span class="service-tag" *ngFor="let service of provider.services.slice(0, 3)">{{ service }}</span>
+          <span class="more-services" *ngIf="provider.services.length > 3">+{{ provider.services.length - 3 }}</span>
         </div>
         
-        <!-- Informations spécifiques aux freelances -->
-        <div class="freelance-info" *ngIf="salon.type === 'freelance'">
-          <div class="experience" *ngIf="salon.experience">
+        <!-- ✅ INFORMATIONS SPÉCIFIQUES AUX FREELANCES AMÉLIORÉES -->
+        <div class="freelance-info" *ngIf="provider.type === 'freelance'">
+          <div class="experience" *ngIf="provider.experience || provider.anneesExperience">
             <i class="fas fa-clock"></i>
-            {{ salon.experience }} ans d'expérience
+            {{ provider.experience || provider.anneesExperience }} ans d'expérience
           </div>
-          <div class="availability" *ngIf="salon.availability">
+          <div class="availability" *ngIf="provider.availability">
             <i class="fas fa-calendar-check"></i>
-            {{ salon.availability }}
+            {{ provider.availability }}
+          </div>
+          
+          <!-- ✅ BADGES FREELANCES -->
+          <div class="freelance-badges">
+            <span class="badge weekend" *ngIf="provider.disponibleWeekend">
+              <i class="fas fa-calendar-weekend"></i> Weekend
+            </span>
+            <span class="badge evening" *ngIf="provider.disponibleSoir">
+              <i class="fas fa-moon"></i> Soirée
+            </span>
+            <span class="badge transport" *ngIf="provider.deplacementInclus">
+              <i class="fas fa-car"></i> Déplacement inclus
+            </span>
           </div>
         </div>
         
-        <!-- Action button -->
-        <button class="voir-salon-btn" (click)="openSalonDetailDialog(salon.id)">
-          {{ salon.type === 'freelance' ? 'Voir le profil' : 'Voir le salon' }}
+        <!-- ✅ BOUTON D'ACTION INTELLIGENT CORRIGÉ -->
+        <button class="voir-salon-btn" (click)="openDetailDialog(provider)">
+          {{ provider.type === 'freelance' ? 'Voir le profil' : 'Voir le salon' }}
         </button>
       </div>
     </div>
@@ -450,12 +526,3 @@
     </app-register>
   </div>
 </div>
-
-<!-- ✅ Debug info (à supprimer en production) -->
-<!-- <div *ngIf="!isPageLoading" class="debug-info" style="position: fixed; bottom: 10px; right: 10px; background: rgba(0,0,0,0.8); color: white; padding: 10px; font-size: 12px; border-radius: 4px; z-index: 10000;" 
-     [style.display]="'none'">
-  <div>Login Modal: {{ showLoginModal }}</div>
-  <div>Register Modal: {{ showRegisterModal }}</div>
-  <div>Page Loading: {{ isPageLoading }}</div>
-  <div>Is Authenticated: {{ isLoggedIn }}</div>
-</div> -->

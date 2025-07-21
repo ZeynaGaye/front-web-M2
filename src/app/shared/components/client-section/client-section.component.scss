@@ -1,9 +1,613 @@
 /* ==========================================
-🚨 MODAL DE CONTACT - VERSION SANS VARIABLES SCSS
-(Copiez-collez ceci directement dans votre fichier CSS)
+   VARIABLES ET STYLES DE BASE
 ========================================== */
+$primary-color: #F5A393;
+$secondary-color: #A4B1BD;
+$text-color: #333;
+$text-light: #666;
+$success-color: #28a745;
+$error-color: #dc3545;
 
-/* Modal de contact overlay */
+.client-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.client-header {
+  text-align: center;
+  margin-bottom: 60px;
+
+  .main-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: $text-color;
+    margin-bottom: 20px;
+    line-height: 1.2;
+
+    .highlight {
+      color: $primary-color;
+      position: relative;
+      
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: -5px;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: linear-gradient(90deg, $primary-color, lighten($primary-color, 10%));
+        border-radius: 2px;
+      }
+    }
+  }
+
+  .subtitle {
+    font-size: 1.2rem;
+    color: $text-light;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+}
+
+/* ==========================================
+   ✅ NOUVELLE SECTION PRINCIPALE SIMPLIFIÉE
+========================================== */
+.main-content-section {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  margin-bottom: 40px;
+  overflow: hidden;
+}
+
+.content-wrapper {
+  display: flex;
+  align-items: center;
+  min-height: 500px;
+
+  .text-content {
+    flex: 1;
+    padding: 50px;
+
+    h3 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: $text-color;
+      margin-bottom: 20px;
+      line-height: 1.2;
+    }
+
+    .description {
+      font-size: 1.1rem;
+      color: $text-light;
+      line-height: 1.6;
+      margin-bottom: 30px;
+    }
+
+    .benefits-list {
+      margin-bottom: 40px;
+
+      .benefit-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 15px;
+        font-size: 1rem;
+        color: $text-color;
+
+        i {
+          color: $primary-color;
+          font-size: 24px;
+          background: rgba($primary-color, 0.1);
+          padding: 8px;
+          border-radius: 50%;
+        }
+
+        span {
+          font-weight: 500;
+        }
+      }
+    }
+
+    .main-action {
+      .discover-btn {
+        background: linear-gradient(135deg, $primary-color, darken($primary-color, 10%));
+        color: white;
+        border: none;
+        padding: 16px 32px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        box-shadow: 0 8px 25px rgba($primary-color, 0.3);
+
+        &:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 12px 35px rgba($primary-color, 0.4);
+        }
+
+        &:active {
+          transform: translateY(-1px);
+        }
+
+        i {
+          font-size: 20px;
+        }
+      }
+
+      .action-hint {
+        margin-top: 10px;
+        font-size: 0.9rem;
+        color: $text-light;
+        font-style: italic;
+      }
+    }
+  }
+
+  .visual-content {
+    flex: 1;
+    padding: 30px;
+
+    .hero-image {
+      position: relative;
+      border-radius: 15px;
+      overflow: hidden;
+      height: 400px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .image-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba($primary-color, 0.1), rgba($primary-color, 0.3));
+        display: flex;
+        align-items: flex-end;
+        justify-content: flex-end;
+        padding: 30px;
+
+        .stats-badge {
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(10px);
+          padding: 20px;
+          border-radius: 12px;
+          text-align: center;
+          box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+
+          .stat-number {
+            display: block;
+            font-size: 2rem;
+            font-weight: 700;
+            color: $primary-color;
+            line-height: 1;
+          }
+
+          .stat-label {
+            display: block;
+            font-size: 0.9rem;
+            color: $text-color;
+            font-weight: 500;
+            margin-top: 5px;
+          }
+        }
+      }
+    }
+  }
+}
+
+/* ==========================================
+   SECTION DES FREELANCES
+========================================== */
+.freelance-list-section {
+  transition: all 0.5s ease;
+  
+  &.hidden {
+    max-height: 0;
+    overflow: hidden;
+  }
+}
+
+.freelances-content {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+  margin-top: 40px;
+}
+
+.search-filter-container {
+  margin-bottom: 40px;
+
+  .search-bar {
+    position: relative;
+    margin-bottom: 20px;
+
+    i {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: $text-light;
+      font-size: 20px;
+    }
+
+    input {
+      width: 100%;
+      padding: 15px 15px 15px 45px;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+
+      &:focus {
+        outline: none;
+        border-color: $primary-color;
+        box-shadow: 0 0 0 4px rgba($primary-color, 0.1);
+      }
+    }
+  }
+
+  .filter-chips {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+
+    .filter-label {
+      font-weight: 600;
+      color: $text-color;
+      margin-right: 10px;
+    }
+
+    .chip {
+      padding: 8px 16px;
+      background: #f5f5f5;
+      border: 1px solid #e0e0e0;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba($primary-color, 0.1);
+        border-color: $primary-color;
+      }
+
+      &.active {
+        background: $primary-color;
+        color: white;
+        border-color: $primary-color;
+      }
+    }
+  }
+}
+
+.loading-container {
+  text-align: center;
+  padding: 60px 20px;
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid $primary-color;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+  }
+
+  p {
+    color: $text-light;
+    font-size: 1.1rem;
+  }
+}
+
+.freelance-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 30px;
+  margin-bottom: 40px;
+}
+
+.freelance-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  border: 1px solid #f0f0f0;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+  }
+
+  .card-image {
+    height: 200px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+
+    .card-category {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      background: $primary-color;
+      color: white;
+      padding: 5px 12px;
+      border-radius: 15px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+  }
+
+  .card-content {
+    padding: 25px;
+
+    h4 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: $text-color;
+      margin-bottom: 10px;
+    }
+
+    .card-location {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      color: $text-light;
+      margin-bottom: 20px;
+      font-size: 0.9rem;
+
+      i {
+        font-size: 16px;
+        color: $primary-color;
+      }
+    }
+
+    .card-divider {
+      height: 1px;
+      background: #e0e0e0;
+      margin: 20px 0;
+    }
+
+    .card-contact {
+      margin-bottom: 25px;
+
+      .contact-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: $text-light;
+        font-size: 0.9rem;
+
+        i {
+          color: $primary-color;
+          font-size: 16px;
+        }
+      }
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 10px;
+
+      .portfolio-btn,
+      .contact-btn {
+        flex: 1;
+        padding: 10px 16px;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+
+        i {
+          font-size: 16px;
+        }
+      }
+
+      .portfolio-btn {
+        background: rgba($primary-color, 0.1);
+        color: $primary-color;
+        border: 1px solid rgba($primary-color, 0.3);
+
+        &:hover {
+          background: $primary-color;
+          color: white;
+        }
+      }
+
+      .contact-btn {
+        background: $primary-color;
+        color: white;
+
+        &:hover {
+          background: darken($primary-color, 10%);
+          transform: translateY(-1px);
+        }
+      }
+    }
+  }
+}
+
+/* ==========================================
+   PAGINATION
+========================================== */
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 20px;
+
+  .page-btn {
+    width: 40px;
+    height: 40px;
+    border: 1px solid #e0e0e0;
+    background: white;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover:not(.disabled) {
+      background: $primary-color;
+      color: white;
+      border-color: $primary-color;
+    }
+
+    &.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    i {
+      font-size: 18px;
+    }
+  }
+
+  .page-indicator {
+    display: flex;
+    gap: 5px;
+
+    .page-number {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #e0e0e0;
+      background: white;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 500;
+
+      &:hover {
+        background: rgba($primary-color, 0.1);
+        border-color: $primary-color;
+      }
+
+      &.active {
+        background: $primary-color;
+        color: white;
+        border-color: $primary-color;
+      }
+    }
+  }
+}
+
+.results-info {
+  text-align: center;
+  color: $text-light;
+  font-size: 0.9rem;
+}
+
+/* ==========================================
+   ÉTATS VIDES
+========================================== */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+
+  i {
+    font-size: 4rem;
+    color: $text-light;
+    margin-bottom: 20px;
+    display: block;
+  }
+
+  p {
+    font-size: 1.1rem;
+    color: $text-light;
+    margin-bottom: 30px;
+  }
+
+  .reset-btn {
+    background: $primary-color;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background: darken($primary-color, 10%);
+      transform: translateY(-2px);
+    }
+  }
+}
+
+/* ==========================================
+   PORTFOLIO
+========================================== */
+.portfolio-container {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+  margin-top: 40px;
+
+  .portfolio-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e0e0e0;
+
+    .close-button {
+      background: rgba($primary-color, 0.1);
+      color: $primary-color;
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: $primary-color;
+        color: white;
+      }
+    }
+
+    h3 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: $text-color;
+      margin: 0;
+    }
+  }
+}
+
+/* ==========================================
+   MODAL DE CONTACT
+========================================== */
 .contact-modal-overlay {
   position: fixed;
   top: 0;
@@ -18,11 +622,9 @@
   z-index: 9999;
   padding: 20px;
   box-sizing: border-box;
-  
   transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
 
-/* Container principal de la modal */
 .contact-modal-container {
   background: #ffffff;
   border-radius: 20px;
@@ -34,9 +636,8 @@
   max-height: 90vh;
   overflow-y: auto;
   position: relative;
-  
   transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-  
+
   &::before {
     content: '';
     position: absolute;
@@ -60,20 +661,13 @@
   &::-webkit-scrollbar-thumb {
     background: rgba(251, 143, 113, 0.3);
     border-radius: 3px;
-    
+
     &:hover {
       background: rgba(251, 143, 113, 0.5);
     }
   }
-
-  @media (max-width: 768px) {
-    margin: 10px;
-    max-height: 95vh;
-    border-radius: 12px;
-  }
 }
 
-/* Header de la modal */
 .contact-modal-header {
   display: flex;
   align-items: flex-start;
@@ -141,24 +735,8 @@
       font-size: 20px;
     }
   }
-
-  @media (max-width: 768px) {
-    padding: 24px 24px 20px;
-    border-radius: 12px 12px 0 0;
-
-    .contact-header-info h2 {
-      font-size: 1.4rem;
-    }
-
-    .close-modal-btn {
-      width: 38px;
-      height: 38px;
-      margin-left: 12px;
-    }
-  }
 }
 
-/* Formulaire de contact */
 .contact-form {
   padding: 32px;
   position: relative;
@@ -242,17 +820,8 @@
       }
     }
   }
-
-  @media (max-width: 768px) {
-    padding: 24px;
-
-    .form-group {
-      margin-bottom: 20px;
-    }
-  }
 }
 
-/* Actions de la modal */
 .contact-modal-actions {
   display: flex;
   gap: 12px;
@@ -323,21 +892,8 @@
       gap: 8px;
     }
   }
-
-  @media (max-width: 768px) {
-    flex-direction: column-reverse;
-    gap: 12px;
-
-    .cancel-btn,
-    .send-btn {
-      width: 100%;
-      justify-content: center;
-      padding: 14px 24px;
-    }
-  }
 }
 
-/* Spinner */
 .spinner-small {
   width: 16px;
   height: 16px;
@@ -347,13 +903,6 @@
   animation: spin 0.8s linear infinite;
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* Footer info */
 .contact-info-footer {
   background: linear-gradient(to bottom right, #fff8f6, rgba(251, 143, 113, 0.03));
   padding: 20px 32px;
@@ -378,15 +927,116 @@
       color: #fb8f71;
     }
   }
+}
 
-  @media (max-width: 768px) {
-    padding: 18px 24px;
-    border-radius: 0 0 12px 12px;
+/* ==========================================
+   ANIMATIONS
+========================================== */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 
-/* Améliorations pour mobile */
-@media (max-width: 480px) {
+@keyframes errorPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.01); }
+  100% { transform: scale(1); }
+}
+
+.form-group input.error,
+.form-group textarea.error {
+  animation: errorPulse 0.3s ease-in-out;
+}
+
+/* ==========================================
+   RESPONSIVE DESIGN
+========================================== */
+@media (max-width: 768px) {
+  .client-container {
+    padding: 20px 15px;
+  }
+
+  .client-header {
+    .main-title {
+      font-size: 2rem;
+    }
+
+    .subtitle {
+      font-size: 1rem;
+    }
+  }
+
+  .content-wrapper {
+    flex-direction: column;
+    min-height: auto;
+
+    .text-content {
+      padding: 30px 20px;
+
+      h3 {
+        font-size: 1.8rem;
+      }
+
+      .description {
+        font-size: 1rem;
+      }
+
+      .benefits-list {
+        .benefit-item {
+          font-size: 0.9rem;
+
+          i {
+            font-size: 20px;
+            padding: 6px;
+          }
+        }
+      }
+
+      .main-action {
+        .discover-btn {
+          padding: 14px 28px;
+          font-size: 1rem;
+          justify-content: center;
+          width: 100%;
+        }
+      }
+    }
+
+    .visual-content {
+      padding: 20px;
+
+      .hero-image {
+        height: 250px;
+
+        .image-overlay {
+          padding: 20px;
+
+          .stats-badge {
+            padding: 15px;
+
+            .stat-number {
+              font-size: 1.5rem;
+            }
+
+            .stat-label {
+              font-size: 0.8rem;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .freelances-content {
+    padding: 20px;
+  }
+
+  .freelance-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
   .contact-modal-overlay {
     padding: 8px;
   }
@@ -399,12 +1049,18 @@
   .contact-modal-header {
     border-radius: 12px 12px 0 0;
     padding: 20px;
+    flex-direction: column;
+    gap: 15px;
 
     .contact-header-info h2 {
       font-size: 1.2rem;
       flex-direction: column;
       align-items: flex-start;
       gap: 8px;
+    }
+
+    .close-modal-btn {
+      align-self: flex-end;
     }
   }
 
@@ -426,50 +1082,20 @@
     }
   }
 
+  .contact-modal-actions {
+    flex-direction: column-reverse;
+    gap: 12px;
+
+    .cancel-btn,
+    .send-btn {
+      width: 100%;
+      justify-content: center;
+      padding: 14px 24px;
+    }
+  }
+
   .contact-info-footer {
     border-radius: 0 0 12px 12px;
     padding: 16px 20px;
-  }
-}
-
-/* États d'interaction */
-.form-group input.error,
-.form-group textarea.error {
-  animation: errorPulse 0.3s ease-in-out;
-}
-
-@keyframes errorPulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.01); }
-  100% { transform: scale(1); }
-}
-
-.contact-form .form-group {
-  &:focus-within label {
-    color: #fb8f71;
-    
-    i.material-icons {
-      color: #fb8f71;
-    }
-  }
-}
-
-.contact-modal-actions button {
-  position: relative;
-  overflow: hidden;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    transition: left 0.5s;
-  }
-
-  &:hover::before {
-    left: 100%;
   }
 }

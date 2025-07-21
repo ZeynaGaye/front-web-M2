@@ -2,6 +2,19 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { catchError, Observable, of } from 'rxjs';
 
+// Interface pour les candidatures
+export interface CandidatureDTO {
+  id: number;
+  nomCandidat: string;
+  emailCandidat: string;
+  datePostulation: string;
+  cv?: string;
+  lettreMotivation?: string;
+  status: string;
+  freelanceId?: number;
+  offreEmploiId?: number;
+}
+
 export interface OffreEmploi {
   datePublication: Date;
   candidatures: any;
@@ -15,7 +28,7 @@ export interface OffreEmploi {
   typeContrat: string;
   salaire: string;
   dateLimite: string;
-  candidaturesCount: number;
+  candidaturesCount?: number; // Optionnel car peut venir du backend
 }
 
 @Injectable({
@@ -76,12 +89,45 @@ export class OffreEmploisService {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
-  // Ajouter cette méthode au service OffreEmploisService
+  // Count my job offers
   countMyOffresEmplois(): Observable<number> {
     return this.http.get<number>(`${this.apiUrl}/count`).pipe(
       catchError(error => {
         console.error('Error counting offers', error);
         return of(0); // Retourne 0 en cas d'erreur
+      })
+    );
+  }
+
+  // 🆕 NOUVELLE MÉTHODE : Récupérer les candidatures d'une offre
+  getCandidaturesByOffreId(offreId: number): Observable<CandidatureDTO[]> {
+    return this.http.get<CandidatureDTO[]>(`${this.apiUrl}/${offreId}/candidatures`).pipe(
+      catchError(error => {
+        console.error('Error fetching candidatures for offre', offreId, error);
+        return of([]); // Retourne un tableau vide en cas d'erreur
+      })
+    );
+  }
+
+  // 🆕 NOUVELLE MÉTHODE : Récupérer une candidature spécifique
+  getCandidatureById(offreId: number, candidatureId: number): Observable<CandidatureDTO> {
+    return this.http.get<CandidatureDTO>(`${this.apiUrl}/${offreId}/candidatures/${candidatureId}`).pipe(
+      catchError(error => {
+        console.error('Error fetching candidature details', candidatureId, error);
+        throw error;
+      })
+    );
+  }
+
+  // 🆕 NOUVELLE MÉTHODE : Mettre à jour le statut d'une candidature
+  updateCandidatureStatus(offreId: number, candidatureId: number, status: string): Observable<CandidatureDTO> {
+    return this.http.put<CandidatureDTO>(
+      `${this.apiUrl}/${offreId}/candidatures/${candidatureId}/status`, 
+      { status }
+    ).pipe(
+      catchError(error => {
+        console.error('Error updating candidature status', candidatureId, error);
+        throw error;
       })
     );
   }

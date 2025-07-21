@@ -1,8 +1,8 @@
 export interface ServiceSalon {
     id: number;
-    name: string;
+    nom: string;
     description: string;
-    price: number;
-    duration: number;
+    prix: number;
+    dureeEnMinutes: number;
     salonId: number;
   }

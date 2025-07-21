@@ -1,6 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { AccueilComponent } from './shared/components/accueil/accueil.component';
-import { HeaderComponent } from './shared/components/header/header.component';
+// import { AccueilComponent } from './shared/components/accueil/accueil.component';
+  import { HeaderComponent } from './shared/components/header/header.component';
 import { FooterComponent } from './shared/components/footer/footer.component';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { KeycloakService } from 'keycloak-angular';
@@ -19,6 +19,7 @@ export class AppComponent implements OnInit {
   private roleRedirectService = inject(RoleRedirectService);
   private router = inject(Router);
   private headerService = inject(HeaderService);
+  title: any;
 
   ngOnInit() {
     this.headerService.checkAuthStatus();

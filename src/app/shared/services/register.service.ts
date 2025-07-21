@@ -14,13 +14,14 @@ export interface SignupRequest {
   sexe: string;
   // Type d'utilisateur
   role: string; 
-  
   // Attributs spécifiques
   description?: string;        // Pour EMPLOYEUR
   preferences?: string;        // Pour CLIENT
   competences?: string;        // Pour FREELANCE
   experiences?: string;        // Pour FREELANCE
-  portfolio?: string;          // Pour FREELANCE
+  portfolio?: string; 
+  latitude?: number;
+  longitude?: number;         // Pour FREELANCE
 }
 
 // Interface pour la requête de connexion

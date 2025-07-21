@@ -3,7 +3,10 @@
     <span class="close" (click)="closeModal()">&times;</span>
     <h2>Créez votre Salon en Quelques Étapes</h2>
     <p>Remplissez les informations de votre salon pour commencer à attirer des clients et des talents.</p>
-
+<div *ngIf="isSubmitting" class="loading-overlay">
+      <div class="spinner"></div>
+      <p>Envoi en cours...</p>
+    </div>
     <!-- Indicateurs d'étapes -->
     <div class="step-indicators">
       <div class="step" [class.active]="currentStep >= 1"></div>

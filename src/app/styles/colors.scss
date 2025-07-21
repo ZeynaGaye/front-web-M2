@@ -7,3 +7,24 @@ $primary-text: #ffffff;
 $secondary-main:#A4B1BD;
 $secondary-lighter: #e5e7eb;
 $secondary-darker: #6b7280;
+
+
+// src/styles/_variables.scss
+
+// Palette principale
+$white: #ffffff;
+$black: #000000;
+$primary-color: #fb8f71;         // ou $primary-main
+$primary-lighter: #ffd7cc;
+$primary-darker: #f36a4a;
+$primary-text: #ffffff;
+
+// Couleurs secondaires
+$secondary-color: #A4B1BD;       // ou $secondary-main
+$secondary-lighter: #e5e7eb;
+$secondary-darker: #6b7280;
+
+// Autres
+$text-dark: #333333;
+$light-color: #f9f9f9;
+$shadow: 0 4px 10px rgba(0, 0, 0, 0.1);

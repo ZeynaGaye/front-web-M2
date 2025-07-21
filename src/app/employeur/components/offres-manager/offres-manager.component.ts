@@ -1,43 +1,29 @@
-import { Component, OnInit, ViewChild, TemplateRef } from '@angular/core';
-import { OffreEmploisService, OffreEmploi } from '../../services/OffreEmploisService/offre-emplois-service.service';
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { CommonModule } from '@angular/common';
+import { Component, OnInit, TemplateRef, ViewChild } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatDividerModule } from '@angular/material/divider';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatListModule } from '@angular/material/list';
-import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { RouterModule } from '@angular/router';
-import { ConfirmDialogComponent } from './confirm-dialog';
-import { MatTableModule } from '@angular/material/table';
 import { MatMenuModule } from '@angular/material/menu';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatDialogModule } from '@angular/material/dialog';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTableModule } from '@angular/material/table';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { RouterModule } from '@angular/router';
 import { OffreEmploisComponent } from '../offre-emplois/offre-emplois.component';
-
-interface Candidature {
-  id: number;
-  nomCandidat: string;
-  emailCandidat: string;
-  datePostulation: string;
-  cv?: string;
-  lettreMotivation?: string;
-  status: string;
-}
-
-
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { forkJoin } from 'rxjs';
+import { Candidature, CandidatureService } from '../../../freelance/services/candidatures.service';
+import { OffreEmploi, OffreEmploisService } from '../../services/OffreEmploisService/offre-emplois-service.service';
+import { ConfirmDialogComponent } from './confirm-dialog';
 
 @Component({
   selector: 'app-offres-manager',
-  templateUrl: './offres-manager.component.html',
-  styleUrls: ['./offres-manager.component.scss'],
-  standalone: true,
-  imports: [
-    CommonModule,
+  imports: [CommonModule,
     MatCardModule,
     MatIconModule,
     MatListModule,
@@ -48,10 +34,17 @@ interface Candidature {
     RouterModule,
     MatTableModule,
     MatMenuModule, 
-    MatProgressBarModule,
+    MatProgressSpinnerModule,
     MatDialogModule,
-    OffreEmploisComponent,
-  ]
+    MatTooltipModule,
+    MatDividerModule,
+    MatProgressSpinnerModule,
+    OffreEmploisComponent
+],
+  templateUrl: './offres-manager.component.html',
+ styleUrls: ['./offres-manager.component.scss'],
+ standalone:true
+
 })
 export class OffresManagerComponent implements OnInit {
   @ViewChild('candidatesDialog') candidatesDialog!: TemplateRef<any>;
@@ -66,52 +59,28 @@ export class OffresManagerComponent implements OnInit {
   totalPages = 0;
   paginatedOffres: OffreEmploi[] = [];
   
-  // Candidatures
+  // ✅ Candidatures avec le bon type
   selectedOffreCandidatures: Candidature[] = [];
   dialogRef: MatDialogRef<any> | null = null;
-  
-  // Banner carousel - images de beauté
-  bannerImages: string[] = [
-    'https://images.unsplash.com/photo-1593642633270-c4e8c1f2b3a5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80', // soins de la peau
-    'https://images.unsplash.com/photo-1560750588-73207b1ef5b8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80', // produits de beauté
-    'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80', // maquillage
-    'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80', // coiffure
-  ];
-  currentBannerIndex = 0;
-  bannerInterval: any;
+  isLoadingCandidatures = false;
 
   constructor(
     private offreEmploisService: OffreEmploisService,
+    private candidatureService: CandidatureService, // ✅ Injection du bon service
     private dialog: MatDialog,
     private snackBar: MatSnackBar
   ) {}
 
   ngOnInit() {
     this.loadOffres();
-    this.startBannerCarousel();
-  }
-
-  ngOnDestroy() {
-    this.stopBannerCarousel();
   }
 
   loadOffres() {
     this.isLoading = true;
+    
     this.offreEmploisService.getMyOffresEmplois().subscribe({
       next: (offres) => {
-        // Dans un cas réel, vous récupéreriez le nombre de candidatures depuis votre API
-        // Ici on simule des candidatures aléatoires pour la démonstration
-        this.offres = offres.map(offre => ({
-          ...offre,
-          experienceRequise: offre.experienceRequise || '',
-          status: offre.status || 'OUVERT',
-          candidaturesCount: this.getRandomCandidatureCount()
-        }));
-        this.isLoading = false;
-        // Vérifier les dates limites pour les offres actives
-        this.checkExpiredOffres();
-        // Initialiser la pagination
-        this.initPagination();
+        this.loadOffresWithCandidatesCount(offres);
       },
       error: (error) => {
         console.error('Erreur lors du chargement des offres:', error);
@@ -123,63 +92,133 @@ export class OffresManagerComponent implements OnInit {
     });
   }
 
-  // Méthode pour la démo - Générer un nombre aléatoire de candidatures
-  getRandomCandidatureCount(): number {
-    // 30% de chance d'avoir 0 candidature
-    if (Math.random() < 0.3) return 0;
-    // Sinon entre 1 et 12 candidatures
-    return Math.floor(Math.random() * 12) + 1;
+  // ✅ MÉTHODE CORRIGÉE : Utilise le bon service CandidatureService
+  private loadOffresWithCandidatesCount(offres: OffreEmploi[]) {
+    if (offres.length === 0) {
+      this.offres = [];
+      this.isLoading = false;
+      this.initPagination();
+      return;
+    }
+
+    // Créer un tableau d'observables pour récupérer le nombre de candidatures
+    const candidaturesRequests = offres.map(offre => 
+      this.candidatureService.getCandidaturesByOffre(offre.id!) // ✅ Utilise candidatureService
+    );
+
+    forkJoin(candidaturesRequests).subscribe({
+      next: (candidaturesArrays) => {
+        this.offres = offres.map((offre, index) => ({
+          ...offre,
+          experienceRequise: offre.experienceRequise || '',
+          status: offre.status || 'OUVERT',
+          candidaturesCount: candidaturesArrays[index].length // ✅ Nombre réel de candidatures
+        }));
+        
+        console.log('✅ Offres chargées avec candidatures:', this.offres);
+        this.isLoading = false;
+        this.checkExpiredOffres();
+        this.initPagination();
+      },
+      error: (error) => {
+        console.error('❌ Erreur lors du chargement du nombre de candidatures:', error);
+        this.offres = offres.map(offre => ({
+          ...offre,
+          experienceRequise: offre.experienceRequise || '',
+          status: offre.status || 'OUVERT',
+          candidaturesCount: 0 
+        }));
+        
+        this.isLoading = false;
+        this.checkExpiredOffres();
+        this.initPagination();
+      }
+    });
   }
 
-  // Méthodes pour gérer les candidatures
+  // ✅ MÉTHODE CORRIGÉE : Utilise le bon service
   viewCandidates(offreId: number) {
     const offre = this.offres.find(o => o.id === offreId);
-    if (!offre) return;
-    
-    // Simuler le chargement des candidatures
-    this.selectedOffreCandidatures = [];
-    if (offre.candidaturesCount && offre.candidaturesCount > 0) {
-      // Générer des candidatures fictives pour la démonstration
-      for (let i = 0; i < offre.candidaturesCount; i++) {
-        this.selectedOffreCandidatures.push(this.generateFakeCandidature(i, offreId));
-      }
+    if (!offre) {
+      this.snackBar.open('Offre introuvable', 'Fermer', { duration: 3000 });
+      return;
     }
     
-    // Ouvrir la boîte de dialogue
-    this.dialogRef = this.dialog.open(this.candidatesDialog, {
-      width: '500px',
-      data: { offreId: offreId, offreTitre: offre.titre }
+    this.isLoadingCandidatures = true;
+    this.selectedOffreCandidatures = [];
+    
+    // ✅ Utilise candidatureService au lieu d'offreEmploisService
+    this.candidatureService.getCandidaturesByOffre(offreId).subscribe({
+      next: (candidatures) => {
+        // ✅ Mapper les candidatures pour ajouter les données d'affichage manquantes
+        this.selectedOffreCandidatures = candidatures.map(candidature => ({
+          ...candidature,
+          nomCandidat: candidature.freelance?.nom || `Freelance ${candidature.freelanceId}`,
+          emailCandidat: candidature.freelance?.email || 'Email non disponible',
+          datePostulation: candidature.dateCandidature || new Date()
+        }));
+        
+        console.log('✅ Candidatures chargées:', this.selectedOffreCandidatures);
+        this.isLoadingCandidatures = false;
+        
+        // Ouvrir la boîte de dialogue
+        this.dialogRef = this.dialog.open(this.candidatesDialog, {
+          width: '600px',
+          maxHeight: '80vh',
+          data: { 
+            offreId: offreId, 
+            offreTitre: offre.titre,
+            candidaturesCount: candidatures.length
+          }
+        });
+      },
+      error: (error) => {
+        console.error('❌ Erreur lors du chargement des candidatures:', error);
+        this.isLoadingCandidatures = false;
+        this.snackBar.open('Erreur lors du chargement des candidatures', 'Fermer', {
+          duration: 3000
+        });
+      }
     });
   }
 
-  // Méthode pour la démo - Générer une candidature fictive
-  generateFakeCandidature(index: number, offreId: number): Candidature {
-    const names = ['Jean Dupont', 'Marie Laurent', 'Sophie Martin', 'Thomas Bernard', 'Julie Petit', 'Nicolas Durand'];
-    const randomName = names[Math.floor(Math.random() * names.length)];
-    const randomEmail = randomName.toLowerCase().replace(' ', '.') + '@email.com';
-    
-    // Générer une date de postulation entre aujourd'hui et il y a 30 jours
-    const today = new Date();
-    const randomDaysAgo = Math.floor(Math.random() * 30);
-    const randomDate = new Date(today.getTime() - randomDaysAgo * 24 * 60 * 60 * 1000);
-    
-    return {
-      id: offreId * 100 + index,
-      nomCandidat: randomName,
-      emailCandidat: randomEmail,
-      datePostulation: randomDate.toISOString(),
-      status: Math.random() > 0.5 ? 'NOUVELLE' : 'CONSULTÉE'
-    };
-  }
+  // ✅ MÉTHODE CORRIGÉE : Mise à jour du statut de candidature
+  updateCandidatureStatus(candidature: Candidature, newStatus: string) {
+    if (!candidature.id) {
+      this.snackBar.open('Impossible de mettre à jour le statut', 'Fermer', {
+        duration: 3000
+      });
+      return;
+    }
 
-  viewCandidatureDetails(candidatureId: number) {
-    // Implémentation fictive pour la démonstration
-    this.snackBar.open('Affichage des détails de la candidature', 'OK', {
-      duration: 2000
+    const updatedCandidature = { ...candidature, status: newStatus };
+    
+    this.candidatureService.updateCandidature(candidature.id, updatedCandidature).subscribe({
+      next: (updated) => {
+        const index = this.selectedOffreCandidatures.findIndex(c => c.id === candidature.id);
+        if (index !== -1) {
+          this.selectedOffreCandidatures[index] = {
+            ...updated,
+            nomCandidat: candidature.nomCandidat,
+            emailCandidat: candidature.emailCandidat,
+            datePostulation: candidature.datePostulation
+          };
+        }
+        
+        this.snackBar.open(`Statut mis à jour vers "${newStatus}"`, 'OK', {
+          duration: 3000
+        });
+      },
+      error: (error) => {
+        console.error('Erreur lors de la mise à jour du statut:', error);
+        this.snackBar.open('Erreur lors de la mise à jour du statut', 'Fermer', {
+          duration: 3000
+        });
+      }
     });
   }
 
-  // Méthodes de pagination
+  // Resto des méthodes inchangées...
   initPagination() {
     this.totalPages = Math.ceil(this.offres.length / this.itemsPerPage);
     this.currentPage = 0;
@@ -206,34 +245,11 @@ export class OffresManagerComponent implements OnInit {
     }
   }
 
-  // Méthodes pour le carrousel de bannière
-  startBannerCarousel() {
-    this.bannerInterval = setInterval(() => {
-      this.nextBanner();
-    }, 5000); // Change banner every 5 seconds
-  }
-
-  stopBannerCarousel() {
-    if (this.bannerInterval) {
-      clearInterval(this.bannerInterval);
-    }
-  }
-
-  nextBanner() {
-    this.currentBannerIndex = (this.currentBannerIndex + 1) % this.bannerImages.length;
-  }
-
-  previousBanner() {
-    this.currentBannerIndex = (this.currentBannerIndex - 1 + this.bannerImages.length) % this.bannerImages.length;
-  }
-
-  // Vérifier les offres expirées
   checkExpiredOffres() {
     const today = new Date();
     this.offres.forEach(offre => {
       const dateLimite = new Date(offre.dateLimite);
       if (offre.status !== 'FERMÉE' && dateLimite < today) {
-        // Mettre à jour automatiquement le statut des offres expirées
         if (offre.id !== undefined) {
           this.updateOffreStatus(offre.id, 'FERMÉE');
         }
@@ -241,23 +257,19 @@ export class OffresManagerComponent implements OnInit {
     });
   }
 
-  // Mettre à jour le statut d'une offre
   updateOffreStatus(offreId: number, newStatus: string) {
     const offre = this.offres.find(o => o.id === offreId);
     if (!offre) return;
 
-    // CORRECTION: S'assurer que toutes les propriétés requises sont présentes
     const updatedOffre: OffreEmploi = {
       ...offre,
       status: newStatus,
-      // S'assurer que ces propriétés existent, sinon les initialiser
       datePublication: offre.datePublication || new Date(),
       candidatures: offre.candidatures || []
     };
     
     this.offreEmploisService.updateOffreEmploi(offreId, updatedOffre).subscribe({
       next: (response) => {
-        // Mettre à jour l'offre localement
         const index = this.offres.findIndex(o => o.id === offreId);
         if (index !== -1) {
           this.offres[index] = { ...offre, ...response };
@@ -265,7 +277,6 @@ export class OffresManagerComponent implements OnInit {
         this.snackBar.open(`Offre "${offre.titre}" : statut mis à jour`, 'OK', {
           duration: 3000
         });
-        // Mettre à jour les offres paginées
         this.updatePaginatedOffres();
       },
       error: (error) => {
@@ -277,12 +288,10 @@ export class OffresManagerComponent implements OnInit {
     });
   }
 
-  // Supprimer une offre
   deleteOffre(offreId: number) {
     const offre = this.offres.find(o => o.id === offreId);
     if (!offre) return;
 
-    // Option: Ajouter une boîte de dialogue de confirmation
     const confirmRef = this.dialog.open(ConfirmDialogComponent, {
       width: '350px',
       data: { title: 'Confirmer la suppression', message: `Êtes-vous sûr de vouloir supprimer l'offre "${offre.titre}" ?` }
@@ -292,12 +301,10 @@ export class OffresManagerComponent implements OnInit {
       if (result) {
         this.offreEmploisService.deleteOffreEmploi(offreId).subscribe({
           next: () => {
-            // Supprimer l'offre de la liste locale
             this.offres = this.offres.filter(o => o.id !== offreId);
             this.snackBar.open(`Offre "${offre.titre}" supprimée avec succès`, 'OK', {
               duration: 3000
             });
-            // Mettre à jour la pagination
             this.initPagination();
           },
           error: (error) => {
@@ -311,12 +318,12 @@ export class OffresManagerComponent implements OnInit {
     });
   }
 
-  // Formater la date pour l'affichage
-  formatDate(date: string): string {
-    return new Date(date).toLocaleDateString('fr-FR');
+  formatDate(date: string | Date | undefined): string {
+    if (!date) return 'Date non définie';
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    return dateObj.toLocaleDateString('fr-FR');
   }
 
-  // Vérifier si une offre est expirée
   isExpired(dateLimite: string): boolean {
     return new Date(dateLimite) < new Date();
   }
@@ -327,6 +334,77 @@ export class OffresManagerComponent implements OnInit {
 
   closeOffreEmploiForm() {
     this.showOffreEmploiForm = false;
-    this.loadOffres(); // Recharger la liste après création
+    this.loadOffres();
+  }
+
+  // ✅ Méthodes d'affichage corrigées
+  getActiveOffresCount(): number {
+    return this.offres.filter(offre => 
+      offre.status === 'ACTIVE' || offre.status === 'OUVERT'
+    ).length;
+  }
+
+  getTotalCandidatures(): number {
+    return this.offres.reduce((total, offre) => 
+      total + (offre.candidaturesCount || 0), 0
+    );
+  }
+
+  getJobIcon(typeContrat: string): string {
+    const iconMap: { [key: string]: string } = {
+      'CDI': 'work',
+      'CDD': 'schedule',
+      'Stage': 'school',
+      'Freelance': 'person',
+      'Temps partiel': 'schedule',
+      'Mission': 'assignment',
+      'Contrat pro': 'business_center'
+    };
+    return iconMap[typeContrat] || 'work_outline';
+  }
+
+  getStatusDisplayName(status: string): string {
+    const statusMap: { [key: string]: string } = {
+      'ACTIVE': 'Active',
+      'OUVERT': 'Ouverte',
+      'FERMÉE': 'Fermée',
+      'FERMÉ': 'Fermée',
+      'ARCHIVÉE': 'Archivée',
+      'BROUILLON': 'Brouillon'
+    };
+    return statusMap[status] || status;
+  }
+
+  trackByOffreId(index: number, offre: OffreEmploi): any {
+    return offre.id || index;
+  }
+
+  trackByCandidatureId(index: number, candidature: Candidature): any {
+    return candidature.id || index;
+  }
+
+  duplicateOffre(offre: OffreEmploi): void {
+    this.snackBar.open('Fonctionnalité de duplication en cours de développement', 'OK', {
+      duration: 3000
+    });
+  }
+
+  downloadCV(candidature: Candidature): void {
+    if (candidature.cv) {
+      this.snackBar.open(`CV de ${candidature.nomCandidat} téléchargé`, 'OK', {
+        duration: 3000
+      });
+    } else {
+      this.snackBar.open('Aucun CV disponible pour ce candidat', 'OK', {
+        duration: 3000
+      });
+    }
+  }
+
+  viewCandidatureDetails(candidature: Candidature) {
+    console.log('Détails de la candidature:', candidature);
+    this.snackBar.open('Détails affichés dans la console', 'OK', {
+      duration: 2000
+    });
   }
 }
