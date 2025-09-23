@@ -230,6 +230,17 @@
                 margin: 0;
                 color: #333;
               }
+              
+              .service-category {
+                display: inline-block;
+                background-color: #F5A393;
+                color: white;
+                padding: 4px 12px;
+                border-radius: 12px;
+                font-size: 0.8rem;
+                font-weight: 500;
+                margin-top: 8px;
+              }
             }
             
             .service-details {
@@ -419,6 +430,277 @@
 }
 
 // Styles pour les onglets actifs/inactifs
-.presentation-tab, .services-tab, .photos-tab {
+.presentation-tab, .services-tab, .photos-tab, .reviews-tab {
   min-height: 300px;
+}
+
+/* --- SECTION AVIS --- */
+.reviews-tab {
+  .reviews-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #eee;
+    
+    h3 {
+      color: #F5A393;
+      font-size: 1.4em;
+      margin: 0;
+    }
+    
+    .rating-summary {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      
+      .average-rating {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        
+        .rating-value {
+          font-size: 1.8em;
+          font-weight: bold;
+          color: #F5A393;
+        }
+        
+        .stars {
+          font-size: 1.2em;
+          color: #ffc107;
+        }
+      }
+      
+      .review-count {
+        color: #666;
+        font-size: 0.9em;
+        background: #f5f5f5;
+        padding: 4px 8px;
+        border-radius: 12px;
+      }
+    }
+  }
+
+  .loading-container {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+    
+    mat-spinner {
+      margin: 0 auto 15px;
+    }
+    
+    p {
+      margin: 0;
+      font-size: 0.9em;
+    }
+  }
+
+  .loading-spinner, .empty-state {
+    text-align: center;
+    padding: 50px 20px;
+    color: #666;
+    
+    mat-spinner {
+      margin: 0 auto 20px;
+    }
+    
+    mat-icon {
+      font-size: 48px;
+      height: 48px;
+      width: 48px;
+      color: #A4B1BD;
+      margin-bottom: 15px;
+    }
+    
+    p {
+      font-size: 1.1em;
+    }
+  }
+
+  .reviews-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+
+    .review-item {
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      padding: 20px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+      }
+
+      .review-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 15px;
+
+        .reviewer-info {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+
+          .reviewer-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            overflow: hidden;
+            flex-shrink: 0;
+
+            img {
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+            }
+          }
+
+          .reviewer-details {
+            .reviewer-name {
+              font-size: 1.1em;
+              color: #333;
+              margin: 0 0 4px 0;
+              font-weight: 600;
+            }
+
+            .review-date {
+              font-size: 0.85em;
+              color: #666;
+            }
+          }
+        }
+
+        .review-rating {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+
+          .stars {
+            display: flex;
+            gap: 2px;
+
+            i {
+              color: #ffd700;
+              font-size: 16px;
+            }
+          }
+
+          .rating-value {
+            font-size: 0.9em;
+            color: #333;
+            font-weight: 600;
+          }
+        }
+      }
+
+      .review-content {
+        .review-comment {
+          color: #333;
+          line-height: 1.6;
+          margin-bottom: 12px;
+          font-size: 0.95em;
+        }
+
+        .review-service {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          color: #666;
+          font-size: 0.85em;
+          background-color: #f9f9f9;
+          padding: 8px 12px;
+          border-radius: 6px;
+          width: fit-content;
+
+          mat-icon {
+            font-size: 16px;
+            height: 16px;
+            width: 16px;
+            color: #A4B1BD;
+          }
+        }
+      }
+    }
+  }
+}
+
+/* Responsive pour les avis */
+@media (max-width: 768px) {
+  .reviews-tab {
+    .reviews-list {
+      .review-item {
+        padding: 15px;
+
+        .review-header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 10px;
+
+          .reviewer-info {
+            .reviewer-avatar {
+              width: 40px;
+              height: 40px;
+            }
+          }
+
+          .review-rating {
+            align-self: flex-end;
+          }
+        }
+      }
+    }
+  }
+}
+
+/* Styles spécifiques pour les cartes d'avis */
+.avis-card {
+  .reservation-header {
+    .service-info {
+      .client-info, .provider-info {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 5px;
+        font-size: 0.9em;
+        color: #666;
+        
+        mat-icon {
+          font-size: 1.1em;
+          color: #999;
+        }
+      }
+    }
+    
+    .avis-rating {
+      text-align: right;
+      
+      .stars {
+        font-size: 1.1em;
+        color: #ffc107;
+        margin-bottom: 4px;
+      }
+      
+      small {
+        color: #999;
+        font-size: 0.8em;
+      }
+    }
+  }
+  
+  .avis-comment {
+    font-style: italic;
+    color: #444;
+    line-height: 1.5;
+    margin-top: 15px;
+    padding: 10px;
+    background: #f9f9f9;
+    border-radius: 8px;
+    border-left: 3px solid #F5A393;
+  }
 }

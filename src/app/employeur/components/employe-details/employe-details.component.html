@@ -1,0 +1,151 @@
+<div class="employe-details-dialog">
+  <!-- En-tête du modal -->
+  <div class="dialog-header">
+    <div class="header-content">
+      <div class="avatar-section">
+        <div class="avatar-circle">
+          <i class="fas fa-user"></i>
+        </div>
+      </div>
+      <div class="header-info">
+        <h2 class="employe-name">{{ employeComplet?.nomComplet || employe.nomComplet }}</h2>
+        <div class="statut-badge" [ngClass]="getStatutClass(employeComplet?.statut || employe.statut)">
+          <i class="fas statut-icon" [class]="getStatutIcon(employeComplet?.statut || employe.statut)"></i>
+          {{ getStatutLabel(employeComplet?.statut || employe.statut) }}
+        </div>
+      </div>
+    </div>
+    <button mat-icon-button (click)="fermer()" class="close-button" aria-label="Fermer">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <mat-divider></mat-divider>
+
+  <!-- Spinner de chargement -->
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Chargement des détails...</p>
+  </div>
+
+  <!-- Contenu des détails -->
+  <div class="dialog-content" *ngIf="!loading && employeComplet">
+    
+    <!-- Informations personnelles -->
+    <div class="info-section">
+      <h3 class="section-title">
+        <i class="fas fa-user-circle"></i>
+        Informations personnelles
+      </h3>
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Nom complet</label>
+          <span class="value">{{ employeComplet.nomComplet }}</span>
+        </div>
+        <div class="info-item">
+          <label>Email</label>
+          <span class="value email-value">
+            <i class="fas fa-envelope"></i>
+            <a [href]="'mailto:' + employeComplet.email">{{ employeComplet.email }}</a>
+          </span>
+        </div>
+        <div class="info-item" *ngIf="employeComplet.telephone">
+          <label>Téléphone</label>
+          <span class="value phone-value">
+            <i class="fas fa-phone"></i>
+            <a [href]="'tel:' + employeComplet.telephone">{{ employeComplet.telephone }}</a>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <!-- Informations professionnelles -->
+    <div class="info-section">
+      <h3 class="section-title">
+        <i class="fas fa-briefcase"></i>
+        Informations professionnelles
+      </h3>
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Statut</label>
+          <span class="value">
+            <div class="statut-badge" [ngClass]="getStatutClass(employeComplet.statut)">
+              <i class="fas statut-icon" [class]="getStatutIcon(employeComplet.statut)"></i>
+              {{ getStatutLabel(employeComplet.statut) }}
+            </div>
+          </span>
+        </div>
+        <div class="info-item" *ngIf="employeComplet.typeContrat">
+          <label>Type de contrat</label>
+          <span class="value">{{ getTypeContratLabel(employeComplet.typeContrat) }}</span>
+        </div>
+        <div class="info-item" *ngIf="employeComplet.horaires">
+          <label>Horaires</label>
+          <span class="value">
+            <i class="fas fa-clock"></i>
+            {{ employeComplet.horaires }}
+          </span>
+        </div>
+        <div class="info-item" *ngIf="employeComplet.dateEmbauche">
+          <label>Date d'embauche</label>
+          <span class="value">
+            <i class="fas fa-calendar-alt"></i>
+            {{ employeComplet.dateEmbauche | date:'dd/MM/yyyy' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <!-- Spécialités -->
+    <div class="info-section">
+      <h3 class="section-title">
+        <i class="fas fa-star"></i>
+        Spécialités
+        <span class="specialites-count">({{ employeComplet.specialites.length || 0 }})</span>
+      </h3>
+      <div class="specialites-container" *ngIf="employeComplet.specialites && employeComplet.specialites.length > 0">
+        <div class="specialites-chips">
+          <div 
+            *ngFor="let specialite of employeComplet.specialites" 
+            class="specialite-chip">
+            <i class="fas fa-check-circle"></i>
+            {{ formatSpecialiteName(specialite) }}
+          </div>
+        </div>
+      </div>
+      <div class="no-specialites" *ngIf="!employeComplet.specialites || employeComplet.specialites.length === 0">
+        <i class="fas fa-info-circle"></i>
+        Aucune spécialité définie
+      </div>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <!-- Informations système -->
+    <!-- <div class="info-section">
+      <h3 class="section-title">
+        <i class="fas fa-info-circle"></i>
+        Informations système
+      </h3>
+      <div class="info-grid">
+        <div class="info-item">
+          <label>ID Employé</label>
+          <span class="value code-value">{{ employeComplet.id }}</span>
+        </div>
+      </div>
+    </div> -->
+
+  </div>
+
+  <!-- Actions -->
+  <div class="dialog-actions">
+    <button mat-button (click)="fermer()" class="cancel-button">
+      <i class="fas fa-times"></i>
+      Fermer
+    </button>
+  </div>
+</div>

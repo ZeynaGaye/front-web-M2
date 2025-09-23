@@ -1,21 +1,14 @@
 <div class="reservations-container">
-  <!-- ==========================================
-  📊 EN-TÊTE MODERNE
-  ========================================== -->
+  <!-- ✅ EN-TÊTE DE PAGE -->
   <div class="page-header">
     <div class="header-content">
       <h2><i class="fas fa-calendar-check"></i> Réservations</h2>
       <p>Gérez vos réservations en temps réel</p>
     </div>
-    <button class="back-button" (click)="closeReservations()">
-      <i class="fas fa-arrow-left"></i> Retour
-    </button>
   </div>
-  
+
   <div class="page-content">
-    <!-- ==========================================
-    📊 STATISTIQUES MODERNES
-    ========================================== -->
+    <!-- ✅ STATISTIQUES MODERNES -->
     <div class="stats-modern">
       <div class="stat-card-modern confirmed">
         <div class="stat-icon">
@@ -23,10 +16,10 @@
         </div>
         <div class="stat-info">
           <span class="stat-number">{{ confirmedReservationsCount }}</span>
-          <span class="stat-label">En attente</span>
+          <span class="stat-label">Confirmées</span>
         </div>
       </div>
-      
+
       <div class="stat-card-modern completed">
         <div class="stat-icon">
           <i class="fas fa-check-circle"></i>
@@ -36,7 +29,7 @@
           <span class="stat-label">Terminées</span>
         </div>
       </div>
-      
+
       <div class="stat-card-modern today">
         <div class="stat-icon">
           <i class="fas fa-calendar-day"></i>
@@ -46,7 +39,7 @@
           <span class="stat-label">Aujourd'hui</span>
         </div>
       </div>
-      
+
       <div class="stat-card-modern revenue">
         <div class="stat-icon">
           <i class="fas fa-coins"></i>
@@ -57,44 +50,104 @@
         </div>
       </div>
     </div>
-    
-    <!-- ==========================================
-    🔍 FILTRES MODERNES
-    ========================================== -->
+
+    <!-- ✅ SECTION AVIS -->
+    <div class="avis-section">
+      <div class="section-header">
+        <h3><i class="fas fa-star"></i> Avis Clients</h3>
+        <button class="toggle-button" (click)="toggleAvisSection()">
+          <i class="fas" [ngClass]="showAvisSection ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+          {{ showAvisSection ? 'Masquer' : 'Afficher' }} les avis
+        </button>
+      </div>
+
+      <div class="avis-content" *ngIf="showAvisSection">
+        <!-- Loading -->
+        <div class="loading-state" *ngIf="loadingAvis">
+          <i class="fas fa-spinner fa-spin"></i>
+          <p>Chargement des avis...</p>
+        </div>
+
+        <!-- Error -->
+        <div class="error-state" *ngIf="avisError">
+          <i class="fas fa-exclamation-circle"></i>
+          <p>{{ avisError }}</p>
+          <button (click)="loadAvis()">Réessayer</button>
+        </div>
+
+        <!-- Avis List -->
+        <div class="avis-grid" *ngIf="!loadingAvis && !avisError && avis.length > 0">
+          <div class="avis-card" *ngFor="let avisItem of avis">
+            <div class="avis-header">
+              <div class="avis-rating">
+                <span class="stars">{{ formatStars(avisItem.note) }}</span>
+                <span class="rating-number">({{ avisItem.note }}/5)</span>
+              </div>
+              <span class="avis-date">{{ getRelativeTime(avisItem.dateAvis) }}</span>
+            </div>
+            
+            <div class="avis-service">
+              <strong>{{ avisItem.nomService }}</strong>
+              <span class="prestataire-type">
+                <i class="fas" [ngClass]="avisItem.typePrestataire === 'salon' ? 'fa-store' : 'fa-user'"></i>
+                {{ avisItem.nomPrestataire }}
+              </span>
+            </div>
+
+            <p class="avis-commentaire" *ngIf="avisItem.commentaire">
+              "{{ avisItem.commentaire }}"
+            </p>
+
+            <div class="avis-footer">
+              <span class="client-info">{{ avisItem.nomClient || 'Client anonyme' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty state -->
+        <div class="empty-avis" *ngIf="!loadingAvis && !avisError && avis.length === 0">
+          <i class="fas fa-star-half-alt"></i>
+          <h4>Aucun avis pour le moment</h4>
+          <p>Les avis de vos clients apparaîtront ici après leurs réservations.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ✅ FILTRES MODERNES -->
     <div class="filters-modern">
       <div class="search-modern">
         <i class="fas fa-search"></i>
-        <input type="text" 
-               placeholder="Rechercher..." 
-               [(ngModel)]="searchTerm" 
+        <input type="text"
+               placeholder="Rechercher par client, service, email..."
+               [(ngModel)]="searchTerm"
                (ngModelChange)="filterReservations()">
       </div>
-      
+
       <div class="filter-chips">
         <select [(ngModel)]="statusFilter" (ngModelChange)="filterReservations()">
           <option value="">Tous les statuts</option>
           <option value="confirmee">Confirmée</option>
           <option value="terminee">Terminée</option>
-          <option value="annulee">Annulée</option>
           <option value="non_presentee">Non présenté</option>
+          <option value="annulee">Annulée</option>
         </select>
-        
-        <select [(ngModel)]="salonFilter" (ngModelChange)="filterReservations()">
+
+        <select *ngIf="salons.length > 0" [(ngModel)]="salonFilter" (ngModelChange)="filterReservations()">
           <option value="">Tous les salons</option>
           <option *ngFor="let salon of salons" [value]="salon.id">{{ salon.nom }}</option>
         </select>
-        
-        <input type="date" 
-               [(ngModel)]="dateFilter" 
+
+        <input type="date"
+               [(ngModel)]="dateFilter"
                (ngModelChange)="filterReservations()">
-        
-        <button class="clear-filters" 
-                *ngIf="hasActiveFilters()" 
+
+        <button class="clear-filters"
+                *ngIf="hasActiveFilters()"
                 (click)="clearFilters()">
           <i class="fas fa-times"></i> Effacer
         </button>
       </div>
-      
+
       <div class="view-toggle-modern">
         <button [class.active]="viewMode === 'cards'" (click)="setViewMode('cards')">
           <i class="fas fa-grip-horizontal"></i>
@@ -104,17 +157,16 @@
         </button>
       </div>
     </div>
-    
-    <!-- ==========================================
-    🔄 ÉTATS DE CHARGEMENT
-    ========================================== -->
+
+    <!-- ✅ ÉTAT DE CHARGEMENT -->
     <div class="loading-modern" *ngIf="loadingReservations">
       <div class="spinner-modern">
         <i class="fas fa-spinner fa-spin"></i>
       </div>
       <p>Chargement des réservations...</p>
     </div>
-    
+
+    <!-- ✅ ÉTAT D'ERREUR -->
     <div class="error-modern" *ngIf="reservationsError && !loadingReservations">
       <i class="fas fa-exclamation-triangle"></i>
       <h3>Erreur de chargement</h3>
@@ -123,23 +175,29 @@
         <i class="fas fa-sync-alt"></i> Réessayer
       </button>
     </div>
-    
-    <!-- ==========================================
-    🎴 VUE CARTES MODERNE
-    ========================================== -->
-    <div class="reservations-grid-modern" 
-         *ngIf="!loadingReservations && !reservationsError && viewMode === 'cards'">
-      
-      <div class="reservation-card-modern" 
+
+    <!-- ✅ MESSAGE AUCUNE RÉSERVATION -->
+    <div class="no-reservations" 
+         *ngIf="!loadingReservations && !reservationsError && filteredReservations.length === 0">
+      <i class="fas fa-calendar-times"></i>
+      <h3>Aucune réservation</h3>
+      <p *ngIf="hasActiveFilters()">Aucune réservation ne correspond à vos critères de recherche.</p>
+      <p *ngIf="!hasActiveFilters()">Vous n'avez pas encore de réservations. Elles apparaîtront ici dès qu'un client réservera vos services.</p>
+    </div>
+
+    <!-- ✅ VUE EN CARTES MODERNE -->
+    <div class="reservations-grid-modern"
+         *ngIf="!loadingReservations && !reservationsError && viewMode === 'cards' && filteredReservations.length > 0">
+
+      <div class="reservation-card-modern"
            *ngFor="let reservation of filteredReservations; trackBy: trackByReservationId"
-           [attr.data-status]="reservation.statut">
-        
-        <!-- Indicateur de statut -->
+           [attr.data-status]="reservation.statut"
+           (click)="viewReservationDetails(reservation)">
+
         <div class="status-indicator" [attr.data-status]="reservation.statut"></div>
-        
-        <!-- Contenu principal -->
+
         <div class="card-content">
-          <!-- Service & Prix -->
+          <!-- Service -->
           <div class="service-section">
             <div class="service-icon">
               <i class="fas fa-cut"></i>
@@ -152,285 +210,353 @@
               </div>
             </div>
           </div>
-          
-          <!-- Date & Heure -->
+
+          <!-- Date et Heure -->
           <div class="datetime-section">
-            <div class="date-info">
-              <i class="fas fa-calendar"></i>
-              <span>{{ formatDate(reservation.datePrestation) }}</span>
-            </div>
-            <div class="time-info">
-              <i class="fas fa-clock"></i>
-              <span>{{ formatTime(reservation.datePrestation) }}</span>
-            </div>
+            <i class="fas fa-calendar"></i>
+            <span>{{ formatDate(reservation.datePrestation) }}</span>
           </div>
-          
+
+          <div class="datetime-section">
+            <i class="fas fa-clock"></i>
+            <span>{{ formatTime(reservation.datePrestation) }}</span>
+          </div>
+
           <!-- Client -->
           <div class="client-section">
             <i class="fas fa-user"></i>
-            <span>{{ reservation.clientNom || 'Client #' + reservation.clientId }}</span>
+            <div>
+              <span>{{ reservation.clientNom }} {{ reservation.clientPrenom }}</span>
+              <span class="client-detail-sub" *ngIf="reservation.clientEmail">
+                <i class="fas fa-envelope"></i>
+                <a [href]="'mailto:' + reservation.clientEmail">{{ reservation.clientEmail }}</a>
+              </span>
+              <span class="client-detail-sub" *ngIf="reservation.clientTelephone">
+                <i class="fas fa-phone"></i>
+                <a [href]="'tel:' + reservation.clientTelephone">{{ reservation.clientTelephone }}</a>
+              </span>
+            </div>
           </div>
-          
+
+          <!-- Prestataire (si pas freelance) -->
+          <div class="provider-section" *ngIf="!isFreelance && getServiceProviderName(reservation) !== 'Prestataire inconnu'">
+            <i class="fas" [ngClass]="{'fa-store': reservation.salonId, 'fa-user-tie': reservation.freelanceId}"></i>
+            <span>{{ getServiceProviderName(reservation) }}</span>
+          </div>
+
           <!-- Statut -->
           <div class="status-section">
+            <i class="fas fa-info-circle"></i>
             <span class="status-badge" [attr.data-status]="reservation.statut">
               {{ getStatusLabel(reservation.statut) }}
             </span>
           </div>
-        </div>
-        
-        <!-- Actions -->
-        <div class="card-actions" *ngIf="reservation.statut === 'confirmee'">
-          <button class="btn-action complete" 
-                  (click)="completeReservation(reservation.id)"
-                  [disabled]="loadingReservations">
-            <i class="fas fa-check"></i>
-            <span>Terminer</span>
-          </button>
-          
-          <button class="btn-action cancel" 
-                  (click)="cancelReservation(reservation.id)"
-                  [disabled]="loadingReservations">
-            <i class="fas fa-ban"></i>
-            <span>Annuler</span>
-          </button>
-          
-          <button class="btn-action no-show" 
-                  (click)="markNoShow(reservation.id)"
-                  [disabled]="loadingReservations">
-            <i class="fas fa-user-times"></i>
-            <span>Absent</span>
-          </button>
-        </div>
-        
-        <div class="card-actions" *ngIf="reservation.statut !== 'confirmee'">
-          <button class="btn-action view" 
-                  (click)="viewReservationDetails(reservation)">
-            <i class="fas fa-eye"></i>
-            <span>Détails</span>
-          </button>
+
+          <!-- Actions -->
+          <div class="card-actions">
+            <!-- ✅ BOUTONS CLIENT SEULEMENT -->
+            <ng-container *ngIf="isClient">
+              <!-- Terminer (CLIENT SEULEMENT) -->
+              <button class="action-button complete"
+                      *ngIf="reservation.statut === 'confirmee'"
+                      (click)="completeReservation(reservation.id); $event.stopPropagation()"
+                      title="Marquer comme terminée">
+                <i class="fas fa-check-circle"></i> Terminer
+              </button>
+              
+              <!-- Annuler (CLIENT SEULEMENT) -->
+              <button class="action-button cancel"
+                      *ngIf="reservation.statut === 'confirmee'"
+                      (click)="cancelReservation(reservation.id); $event.stopPropagation()"
+                      title="Annuler la réservation">
+                <i class="fas fa-times"></i> Annuler
+              </button>
+            </ng-container>
+            
+            <!-- ✅ BOUTONS EMPLOYEUR/FREELANCE SEULEMENT -->
+            <ng-container *ngIf="!isClient">
+              <!-- Non présenté (EMPLOYEUR/FREELANCE SEULEMENT) -->
+              <button class="action-button no-show"
+                      *ngIf="reservation.statut === 'confirmee'"
+                      (click)="markNoShow(reservation.id); $event.stopPropagation()"
+                      title="Marquer comme non présenté">
+                <i class="fas fa-user-slash"></i> Absent
+              </button>
+            </ng-container>
+            
+            <!-- Détails -->
+            <button class="action-button view-details"
+                    (click)="viewReservationDetails(reservation); $event.stopPropagation()"
+                    title="Voir les détails">
+              <i class="fas fa-eye"></i> Détails
+            </button>
+          </div>
         </div>
       </div>
     </div>
-    
-    <!-- ==========================================
-    📋 VUE LISTE MODERNE
-    ========================================== -->
-    <div class="reservations-list-modern" 
-         *ngIf="!loadingReservations && !reservationsError && viewMode === 'list'">
-      
+
+    <!-- ✅ VUE EN LISTE MODERNE -->
+    <div class="reservations-list-modern"
+         *ngIf="!loadingReservations && !reservationsError && viewMode === 'list' && filteredReservations.length > 0">
+
       <!-- En-tête -->
       <div class="list-header-modern">
-        <div class="col-service"><i class="fas fa-cut"></i> Service</div>
-        <div class="col-client"><i class="fas fa-user"></i> Client</div>
-        <div class="col-datetime"><i class="fas fa-calendar-clock"></i> Date & Heure</div>
-        <div class="col-price"><i class="fas fa-tag"></i> Prix</div>
-        <div class="col-status"><i class="fas fa-info-circle"></i> Statut</div>
-        <div class="col-actions"><i class="fas fa-cog"></i> Actions</div>
+        <div><i class="fas fa-cut"></i> Service</div>
+        <div><i class="fas fa-user"></i> Client</div>
+        <div><i class="fas fa-envelope"></i> Contact</div>
+        <div *ngIf="!isFreelance"><i class="fas fa-store"></i> Prestataire</div>
+        <div><i class="fas fa-map-marker-alt"></i> Adresse</div>
+        <div><i class="fas fa-calendar"></i> Date/Heure</div>
+        <div><i class="fas fa-tag"></i> Prix</div>
+        <div><i class="fas fa-info-circle"></i> Statut</div>
+        <div><i class="fas fa-cogs"></i> Actions</div>
       </div>
-      
+
       <!-- Lignes -->
-      <div class="list-item-modern" 
+      <div class="list-item-modern"
            *ngFor="let reservation of filteredReservations; trackBy: trackByReservationId"
            [attr.data-status]="reservation.statut">
-        
+
+        <!-- Service -->
         <div class="col-service">
           <strong>{{ reservation.serviceNom }}</strong>
           <small>{{ reservation.serviceDuree }}min</small>
         </div>
-        
+
+        <!-- Client -->
         <div class="col-client">
-          {{ reservation.clientNom || 'Client #' + reservation.clientId }}
+          {{ reservation.clientNom }} {{ reservation.clientPrenom }}
         </div>
-        
+
+        <!-- Contact -->
+        <div class="col-contact">
+          <div *ngIf="reservation.clientTelephone">
+            <i class="fas fa-phone"></i>
+            <a [href]="'tel:' + reservation.clientTelephone">{{ reservation.clientTelephone }}</a>
+          </div>
+          <div *ngIf="reservation.clientEmail">
+            <i class="fas fa-envelope"></i>
+            <a [href]="'mailto:' + reservation.clientEmail">{{ reservation.clientEmail }}</a>
+          </div>
+        </div>
+
+        <!-- Prestataire -->
+        <div class="col-provider" *ngIf="!isFreelance">
+          {{ getServiceProviderName(reservation) }}
+        </div>
+
+        <!-- Adresse -->
+        <div class="col-address">
+          {{ reservation.clientAdresse || 'Non renseignée' }}
+        </div>
+
+        <!-- Date/Heure -->
         <div class="col-datetime">
           <div class="datetime-compact">
             <span class="date">{{ formatDate(reservation.datePrestation) }}</span>
             <span class="time">{{ formatTime(reservation.datePrestation) }}</span>
           </div>
         </div>
-        
+
+        <!-- Prix -->
         <div class="col-price">
           <span class="price-amount">{{ reservation.servicePrix | number:'1.0-0' }} CFA</span>
         </div>
-        
+
+        <!-- Statut -->
         <div class="col-status">
           <span class="status-pill" [attr.data-status]="reservation.statut">
             {{ getStatusLabel(reservation.statut) }}
           </span>
         </div>
-        
-        <div class="col-actions">
-          <div class="action-buttons-modern">
-            <button *ngIf="reservation.statut === 'confirmee'" 
-                    class="btn-mini complete" 
-                    (click)="completeReservation(reservation.id)"
-                    [disabled]="loadingReservations"
-                    title="Terminer">
-              <i class="fas fa-check"></i>
-            </button>
-            
-            <button *ngIf="reservation.statut === 'confirmee'" 
-                    class="btn-mini cancel" 
-                    (click)="cancelReservation(reservation.id)"
-                    [disabled]="loadingReservations"
-                    title="Annuler">
-              <i class="fas fa-ban"></i>
-            </button>
-            
-            <button *ngIf="reservation.statut === 'confirmee'" 
-                    class="btn-mini no-show" 
-                    (click)="markNoShow(reservation.id)"
-                    [disabled]="loadingReservations"
-                    title="Non présenté">
-              <i class="fas fa-user-times"></i>
-            </button>
-            
-            <button class="btn-mini view" 
-                    (click)="viewReservationDetails(reservation)"
-                    title="Voir détails">
-              <i class="fas fa-eye"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- ==========================================
-    📭 ÉTAT VIDE MODERNE
-    ========================================== -->
-    <div class="empty-modern" 
-         *ngIf="!loadingReservations && !reservationsError && filteredReservations.length === 0">
-      <div class="empty-icon">
-        <i class="fas fa-calendar-times"></i>
-      </div>
-      <h3>Aucune réservation</h3>
-      <p *ngIf="hasActiveFilters()">Aucun résultat pour ces filtres</p>
-      <p *ngIf="!hasActiveFilters()">Aucune réservation pour le moment</p>
-      
-      <div class="empty-actions">
-        <button *ngIf="hasActiveFilters()" (click)="clearFilters()">
-          <i class="fas fa-filter"></i> Effacer les filtres
-        </button>
-        <button (click)="loadReservations()">
-          <i class="fas fa-sync-alt"></i> Actualiser
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
 
-<!-- ==========================================
-📝 MODAL MODERNE
-========================================== -->
-<div class="modal-modern" *ngIf="selectedReservation" (click)="closeReservationModal($event)">
-  <div class="modal-content-modern">
-    <!-- En-tête -->
-    <div class="modal-header-modern">
-      <h2>
-        <i class="fas fa-calendar-check"></i>
-        Réservation #{{ selectedReservation.id }}
-      </h2>
-      <button class="close-btn" (click)="closeReservationModal()">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-    
-    <!-- Corps -->
-    <div class="modal-body-modern">
-      <div class="info-grid">
-        <!-- Service -->
-        <div class="info-card">
-          <div class="info-header">
-            <i class="fas fa-cut"></i>
-            <h4>Service</h4>
-          </div>
-          <div class="info-content">
-            <h3>{{ selectedReservation.serviceNom }}</h3>
-            <div class="meta-info">
-              <span><i class="fas fa-clock"></i> {{ selectedReservation.serviceDuree }}min</span>
-              <span><i class="fas fa-tag"></i> {{ selectedReservation.servicePrix | number:'1.0-0' }} CFA</span>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Client -->
-        <div class="info-card">
-          <div class="info-header">
-            <i class="fas fa-user"></i>
-            <h4>Client</h4>
-          </div>
-          <div class="info-content">
-            <h3>{{ selectedReservation.clientNom || 'Client #' + selectedReservation.clientId }}</h3>
-            <div class="contact-info" *ngIf="selectedReservation.clientEmail || selectedReservation.clientTelephone">
-              <a *ngIf="selectedReservation.clientEmail" [href]="'mailto:' + selectedReservation.clientEmail">
-                <i class="fas fa-envelope"></i> {{ selectedReservation.clientEmail }}
-              </a>
-              <a *ngIf="selectedReservation.clientTelephone" [href]="'tel:' + selectedReservation.clientTelephone">
-                <i class="fas fa-phone"></i> {{ selectedReservation.clientTelephone }}
-              </a>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Date & Heure -->
-        <div class="info-card">
-          <div class="info-header">
-            <i class="fas fa-calendar-alt"></i>
-            <h4>Rendez-vous</h4>
-          </div>
-          <div class="info-content">
-            <h3>{{ formatFullDate(selectedReservation.datePrestation) }}</h3>
-            <div class="time-highlight">
-              <i class="fas fa-clock"></i> {{ formatTime(selectedReservation.datePrestation) }}
-            </div>
-          </div>
-        </div>
-        
-        <!-- Salon -->
-        <div class="info-card">
-          <div class="info-header">
-            <i class="fas fa-store"></i>
-            <h4>Salon</h4>
-          </div>
-          <div class="info-content">
-            <h3>{{ getSalonName(selectedReservation.salonId) }}</h3>
-            <p>{{ getSalonAddress(selectedReservation.salonId) }}</p>
-          </div>
+        <!-- Actions -->
+        <div class="col-actions">
+          <!-- ✅ BOUTONS CLIENT SEULEMENT -->
+          <ng-container *ngIf="isClient">
+            <!-- Terminer (CLIENT SEULEMENT) -->
+            <button class="action-button complete"
+                    *ngIf="reservation.statut === 'confirmee'"
+                    (click)="completeReservation(reservation.id); $event.stopPropagation()"
+                    title="Terminer">
+              <i class="fas fa-check-circle"></i>
+            </button>
+            
+            <!-- Annuler (CLIENT SEULEMENT) -->
+            <button class="action-button cancel"
+                    *ngIf="reservation.statut === 'confirmee'"
+                    (click)="cancelReservation(reservation.id); $event.stopPropagation()"
+                    title="Annuler">
+              <i class="fas fa-times"></i>
+            </button>
+          </ng-container>
+          
+          <!-- ✅ BOUTONS EMPLOYEUR/FREELANCE SEULEMENT -->
+          <ng-container *ngIf="!isClient">
+            <!-- Non présenté (EMPLOYEUR/FREELANCE SEULEMENT) -->
+            <button class="action-button no-show"
+                    *ngIf="reservation.statut === 'confirmee'"
+                    (click)="markNoShow(reservation.id); $event.stopPropagation()"
+                    title="Non présenté">
+              <i class="fas fa-user-slash"></i>
+            </button>
+          </ng-container>
+          
+          <!-- Détails -->
+          <button class="action-button details"
+                  (click)="viewReservationDetails(reservation); $event.stopPropagation()"
+                  title="Détails">
+            <i class="fas fa-eye"></i>
+          </button>
         </div>
       </div>
-      
-      <!-- Notes si présentes -->
-      <div class="notes-section" *ngIf="selectedReservation.notes">
-        <h4><i class="fas fa-sticky-note"></i> Notes du client</h4>
-        <p>{{ selectedReservation.notes }}</p>
-      </div>
     </div>
-    
-    <!-- Actions -->
-    <div class="modal-footer-modern">
-      <button class="btn-secondary" (click)="closeReservationModal()">
-        <i class="fas fa-times"></i> Fermer
-      </button>
-      
-      <div class="action-group" *ngIf="selectedReservation.statut === 'confirmee'">
-        <button class="btn-cancel" 
-                (click)="cancelReservation(selectedReservation.id)"
-                [disabled]="loadingReservations">
-          <i class="fas fa-ban"></i> Annuler
-        </button>
-        
-        <button class="btn-no-show" 
-                (click)="markNoShow(selectedReservation.id)"
-                [disabled]="loadingReservations">
-          <i class="fas fa-user-times"></i> Absent
-        </button>
-        
-        <button class="btn-complete" 
-                (click)="completeReservation(selectedReservation.id)"
-                [disabled]="loadingReservations">
-          <i class="fas fa-check"></i> Terminer
-        </button>
+
+    <!-- ✅ MODAL DE DÉTAILS MODERNE -->
+    <div class="modal-modern" *ngIf="selectedReservation" (click)="closeReservationModal($event)">
+      <div class="modal-content-modern" (click)="$event.stopPropagation()">
+        <div class="modal-header-modern">
+          <h2>
+            <i class="fas fa-calendar-check"></i>
+            Réservation #{{ selectedReservation.id }}
+          </h2>
+          <button class="close-btn" (click)="closeReservationModal()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <div class="modal-body-modern">
+          <div class="info-grid">
+            <!-- Service -->
+            <div class="info-card">
+              <div class="info-header service-color">
+                <i class="fas fa-cut"></i>
+                <h4>Service</h4>
+              </div>
+              <div class="info-content">
+                <h3>{{ selectedReservation.serviceNom }}</h3>
+                <div class="meta-info">
+                  <span><i class="fas fa-clock"></i> {{ selectedReservation.serviceDuree }}min</span>
+                  <span><i class="fas fa-tag"></i> {{ selectedReservation.servicePrix | number:'1.0-0' }} CFA</span>
+                </div>
+                <p *ngIf="selectedReservation.serviceDescription">{{ selectedReservation.serviceDescription }}</p>
+              </div>
+            </div>
+
+            <!-- Client -->
+            <div class="info-card">
+              <div class="info-header client-color">
+                <i class="fas fa-user"></i>
+                <h4>Client</h4>
+              </div>
+              <div class="info-content">
+                <h3>{{ selectedReservation.clientNom }} {{ selectedReservation.clientPrenom }}</h3>
+                <p *ngIf="selectedReservation.clientEmail">
+                  <i class="fas fa-envelope"></i>
+                  <a [href]="'mailto:' + selectedReservation.clientEmail">{{ selectedReservation.clientEmail }}</a>
+                </p>
+                <p *ngIf="selectedReservation.clientTelephone">
+                  <i class="fas fa-phone"></i>
+                  <a [href]="'tel:' + selectedReservation.clientTelephone">{{ selectedReservation.clientTelephone }}</a>
+                </p>
+                <p *ngIf="selectedReservation.clientAdresse">
+                  <i class="fas fa-map-marker-alt"></i> {{ selectedReservation.clientAdresse }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Date & Heure -->
+            <div class="info-card">
+              <div class="info-header datetime-color">
+                <i class="fas fa-calendar-alt"></i>
+                <h4>Date & Heure</h4>
+              </div>
+              <div class="info-content">
+                <p>
+                  <i class="fas fa-calendar-day"></i> {{ formatFullDate(selectedReservation.datePrestation) }}
+                </p>
+                <p>
+                  <i class="fas fa-clock"></i> {{ formatTime(selectedReservation.datePrestation) }}
+                </p>
+                <p>
+                  <i class="fas fa-calendar-plus"></i> Créée le {{ formatFullDate(selectedReservation.dateCreation) }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Statut & Prestataire -->
+            <div class="info-card">
+              <div class="info-header status-provider-color">
+                <i class="fas fa-info-circle"></i>
+                <h4>Statut & Prestataire</h4>
+              </div>
+              <div class="info-content">
+                <p>
+                  Statut: <span class="status-badge" [attr.data-status]="selectedReservation.statut">
+                    {{ getStatusLabel(selectedReservation.statut) }}
+                  </span>
+                </p>
+                <p *ngIf="selectedReservation.salonId">
+                  <i class="fas fa-store"></i> Salon: {{ selectedReservation.salonNom }}
+                  <span *ngIf="selectedReservation.salonAdresse" class="sub-info">
+                    <i class="fas fa-map-marker-alt"></i> {{ selectedReservation.salonAdresse }}
+                  </span>
+                </p>
+                <p *ngIf="selectedReservation.freelanceId">
+                  <i class="fas fa-user-tie"></i> Freelance: {{ selectedReservation.freelanceNom }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Notes -->
+          <div *ngIf="selectedReservation.notes" class="notes-section">
+            <strong><i class="fas fa-sticky-note"></i> Notes:</strong>
+            <p>{{ selectedReservation.notes }}</p>
+          </div>
+
+          <!-- Actions du modal -->
+          <div class="modal-actions">
+            <!-- ✅ BOUTONS CLIENT SEULEMENT -->
+            <ng-container *ngIf="isClient">
+              <!-- Terminer (CLIENT SEULEMENT) -->
+              <button class="action-button complete"
+                      *ngIf="selectedReservation.statut === 'confirmee'"
+                      (click)="completeReservation(selectedReservation.id)">
+                <i class="fas fa-check-circle"></i> Terminer
+              </button>
+              
+              <!-- Annuler (CLIENT SEULEMENT) -->
+              <button class="action-button cancel"
+                      *ngIf="selectedReservation.statut === 'confirmee'"
+                      (click)="cancelReservation(selectedReservation.id)">
+                <i class="fas fa-times"></i> Annuler
+              </button>
+            </ng-container>
+            
+            <!-- ✅ BOUTONS EMPLOYEUR/FREELANCE SEULEMENT -->
+            <ng-container *ngIf="!isClient">
+              <!-- Confirmer (FREELANCE SEULEMENT) -->
+              <button class="action-button complete"
+                      *ngIf="isFreelance && selectedReservation.statut === 'confirmee'"
+                      (click)="confirmReservation(selectedReservation.id)">
+                <i class="fas fa-check"></i> Confirmer
+              </button>
+              
+              <!-- Non présenté (EMPLOYEUR/FREELANCE SEULEMENT) -->
+              <button class="action-button no-show"
+                      *ngIf="selectedReservation.statut === 'confirmee'"
+                      (click)="markNoShow(selectedReservation.id)">
+                <i class="fas fa-user-slash"></i> Absent
+              </button>
+            </ng-container>
+            
+            <!-- Fermer (TOUS) -->
+            <button class="action-button close-modal" (click)="closeReservationModal()">
+              <i class="fas fa-times"></i> Fermer
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>

@@ -1,0 +1,322 @@
+<div class="services-container">
+  <!-- Header moderne -->
+  <div class="header">
+    <div class="header-icon">
+      <mat-icon>business_center</mat-icon>
+    </div>
+    <h2>Mes Services Freelance</h2>
+    <p class="subtitle">Gérez vos prestations et développez votre activité au Sénégal</p>
+  </div>
+
+  <!-- Statistiques élégantes -->
+  <div *ngIf="stats && stats.nombreServices > 0" class="stats-section">
+    <div class="stats-card">
+      <div class="stats-icon">
+        <mat-icon>analytics</mat-icon>
+      </div>
+      <div class="stats-content">
+        <div class="stats-title">Votre activité en un coup d'œil</div>
+        <div class="stats-message">{{ getStatsMessage() }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chargement moderne -->
+  <div *ngIf="loading" class="loading">
+    <mat-spinner diameter="60"></mat-spinner>
+    <div class="loading-content">
+      <h3>Chargement en cours</h3>
+      <p>Récupération de vos services...</p>
+    </div>
+  </div>
+
+  <!-- Erreur stylisée -->
+  <div *ngIf="error && !loading" class="error-message">
+    <div class="error-icon">
+      <mat-icon>error_outline</mat-icon>
+    </div>
+    <div class="error-content">
+      <h3>Une erreur s'est produite</h3>
+      <p>{{ error }}</p>
+    </div>
+  </div>
+
+  <!-- Liste des services -->
+  <div *ngIf="!loading && !error && freelanceId" class="services-list">
+    
+    <!-- Aucun service - Design moderne -->
+    <div *ngIf="services.length === 0" class="no-services">
+      <div class="no-services-visual">
+        <div class="no-services-icon">
+          <mat-icon>work_outline</mat-icon>
+        </div>
+        <div class="floating-elements">
+          <div class="floating-icon">
+            <mat-icon>payments</mat-icon>
+          </div>
+          <div class="floating-icon">
+            <mat-icon>schedule</mat-icon>
+          </div>
+          <div class="floating-icon">
+            <mat-icon>location_on</mat-icon>
+          </div>
+        </div>
+      </div>
+      
+      <div class="no-services-content">
+        <h3>Créez vos premières prestations</h3>
+        <p>
+          Commencez par définir les services que vous proposez à vos clients sénégalais. 
+          Configurez vos tarifs en francs CFA, zones d'intervention et conditions.
+        </p>
+        
+        <button mat-raised-button color="primary" (click)="openAddServiceDialog()" class="cta-button">
+          <mat-icon>add_business</mat-icon> 
+          Créer ma première prestation
+        </button>
+        
+        <div class="quick-tips">
+          <div class="tip-item">
+            <mat-icon>tips_and_updates</mat-icon>
+            <span>Définissez des prix compétitifs</span>
+          </div>
+          <div class="tip-item">
+            <mat-icon>schedule</mat-icon>
+            <span>Soyez flexible sur les horaires</span>
+          </div>
+          <div class="tip-item">
+            <mat-icon>location_city</mat-icon>
+            <span>Couvrez plusieurs zones de Dakar</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Services existants - Header d'actions -->
+    <div *ngIf="services.length > 0" class="services-actions">
+      <div class="actions-left">
+        <button mat-raised-button color="primary" (click)="openAddServiceDialog()" class="primary-action">
+          <mat-icon>add_business</mat-icon> 
+          Nouvelle prestation
+        </button>
+        
+        <button mat-stroked-button (click)="refreshServices()" class="secondary-action">
+          <mat-icon>refresh</mat-icon>
+          Actualiser
+        </button>
+      </div>
+      
+      <div class="services-stats">
+        <div class="stat-item">
+          <mat-icon>inventory</mat-icon>
+          <span>{{ services.length }} prestation{{ services.length > 1 ? 's' : '' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grille des services modernisée -->
+    <div class="services-grid" *ngIf="services.length > 0">
+      <div *ngFor="let service of services; trackBy: trackByServiceId" class="service-card">
+        
+        <!-- Header de la carte moderne -->
+        <div class="card-header">
+          <div class="header-left">
+            <div class="service-icon">
+              <mat-icon>{{ getCategorieIcon(service.categorie) }}</mat-icon>
+            </div>
+            <div class="header-info">
+              <h3 class="service-title">{{ service.nom }}</h3>
+              <div class="service-category">
+                <mat-icon>style</mat-icon>
+                <span>{{ service.categorie }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="header-actions">
+            <button mat-icon-button (click)="duplicateService(service)" 
+                    matTooltip="Dupliquer ce service"
+                    class="action-btn duplicate-btn">
+              <mat-icon>content_copy</mat-icon>
+            </button>
+          </div>
+        </div>
+        
+        <!-- Contenu principal -->
+        <div class="card-content">
+          <div class="description" *ngIf="service.description">
+            <mat-icon>description</mat-icon>
+            <p>{{ service.description }}</p>
+          </div>
+          
+          <!-- Informations principales -->
+          <div class="service-details">
+            
+            <!-- Prix et durée - Mise en avant -->
+            <div class="price-duration-card">
+              <div class="price-section">
+                <div class="price-icon">
+                  <mat-icon>account_balance_wallet</mat-icon>
+                </div>
+                <div class="price-info">
+                  <span class="price-label">Tarif</span>
+                  <span class="price-value">{{ service.prixFormatte }}</span>
+                </div>
+              </div>
+              
+              <div class="duration-section">
+                <div class="duration-icon">
+                  <mat-icon>timer</mat-icon>
+                </div>
+                <div class="duration-info">
+                  <span class="duration-label">Durée</span>
+                  <span class="duration-value">{{ service.dureeFormatee }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Type d'intervention -->
+            <div class="intervention-card">
+              <mat-icon>{{ getTypeInterventionIcon(service.typeIntervention) }}</mat-icon>
+              <div class="intervention-info">
+                <span class="intervention-label">Lieu d'intervention</span>
+                <span class="intervention-value">{{ service.typeInterventionLabel }}</span>
+              </div>
+            </div>
+
+            <!-- Coût déplacement -->
+            <div *ngIf="hasDeplacementCost(service)" class="deplacement-card">
+              <mat-icon>local_taxi</mat-icon>
+              <div class="deplacement-info">
+                <span class="deplacement-label">Transport</span>
+                <span class="deplacement-value">{{ formatPrice(service.supplementDeplacementKm!) }} CFA par kilomètre</span>
+              </div>
+            </div>
+
+            <!-- Tags des avantages -->
+            <div class="service-benefits" *ngIf="getServiceTags(service).length > 0">
+              <div class="benefits-header">
+                <mat-icon>verified</mat-icon>
+                <span>Inclus dans la prestation</span>
+              </div>
+              <div class="benefits-list">
+                <div *ngFor="let tag of getServiceTags(service)" class="benefit-tag">
+                  <mat-icon>check_circle</mat-icon>
+                  <span>{{ tag }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Actions modernisées -->
+        <div class="card-actions">
+          <button mat-button (click)="editService(service)" 
+                  class="edit-btn"
+                  [attr.aria-label]="'Modifier ' + service.nom">
+            <mat-icon>edit</mat-icon> 
+            <span>Modifier</span>
+          </button>
+          
+          <button mat-button (click)="deleteService(service.id)" 
+                  class="delete-btn"
+                  [attr.aria-label]="'Supprimer ' + service.nom">
+            <mat-icon>delete_outline</mat-icon> 
+            <span>Supprimer</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section conseils modernisée -->
+  <div *ngIf="services.length > 0" class="tips-section">
+    <div class="tips-card">
+      <div class="tips-header">
+        <div class="tips-icon">
+          <mat-icon>psychology</mat-icon>
+        </div>
+        <div class="tips-title">
+          <h3>Conseils pour optimiser vos prestations</h3>
+          <p>Maximisez votre succès au Sénégal</p>
+        </div>
+      </div>
+      
+      <div class="tips-content">
+        <div class="tip-card">
+          <div class="tip-icon">
+            <mat-icon>photo_camera</mat-icon>
+          </div>
+          <div class="tip-text">
+            <strong>Portfolio visuel</strong>
+            <span>Ajoutez des photos avant/après de vos meilleures réalisations</span>
+          </div>
+        </div>
+        
+        <div class="tip-card">
+          <div class="tip-icon">
+            <mat-icon>tune</mat-icon>
+          </div>
+          <div class="tip-text">
+            <strong>Tarifs flexibles</strong>
+            <span>Proposez des fourchettes de prix en CFA pour différents budgets</span>
+          </div>
+        </div>
+        
+        <div class="tip-card">
+          <div class="tip-icon">
+            <mat-icon>inventory_2</mat-icon>
+          </div>
+          <div class="tip-text">
+            <strong>Inclusions claires</strong>
+            <span>Précisez ce qui est inclus (matériel, déplacement dans Dakar)</span>
+          </div>
+        </div>
+        
+        <div class="tip-card">
+          <div class="tip-icon">
+            <mat-icon>schedule_send</mat-icon>
+          </div>
+          <div class="tip-text">
+            <strong>Horaires étendus</strong>
+            <span>Soyez disponible en soirée et weekend pour plus de clients</span>
+          </div>
+        </div>
+        
+        <div class="tip-card">
+          <div class="tip-icon">
+            <mat-icon>trending_up</mat-icon>
+          </div>
+          <div class="tip-text">
+            <strong>Mise à jour régulière</strong>
+            <span>Adaptez vos tarifs selon l'évolution du marché sénégalais</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions rapides modernisées -->
+  <div *ngIf="services.length > 0" class="quick-actions">
+    <div class="quick-actions-container">
+      <button mat-stroked-button (click)="exportServices()" class="export-btn">
+        <mat-icon>file_download</mat-icon>
+        <span>Exporter mes services</span>
+      </button>
+      
+      <button mat-stroked-button (click)="shareServices()" class="share-btn">
+        <mat-icon>share</mat-icon>
+        <span>Partager</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ✅ Modal corrigé -->
+<app-add-service-freelance-dialog 
+  *ngIf="showAddServiceDialog" 
+  [modalData]="modalData"
+  (serviceCreated)="onServiceCreated($event)"
+  (serviceUpdated)="onServiceUpdated($event)"
+  (closeModalEvent)="closeAddServiceDialog()">
+</app-add-service-freelance-dialog>

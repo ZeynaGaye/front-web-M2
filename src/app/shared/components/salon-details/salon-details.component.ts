@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit, PLATFORM_ID, Optional } from '@angular/core';
+import {Component, Inject, OnInit, PLATFORM_ID, Optional, inject} from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatTabsModule } from '@angular/material/tabs';
@@ -17,6 +17,7 @@ import { ServiceSalonService } from '../../../employeur/services/service-salon.s
 import { AuthService } from '../../../core/servces/auth.service';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
+import {ReservationService} from '../../services/reservation/reservation.service';
 interface UploadResponse {
   photos: any[];
   total: number;
@@ -77,7 +78,8 @@ export class SalonDetailsComponent implements OnInit {
   isLoggedIn = false;
   isBrowser: boolean;
   salonId: number = 0;
-
+  recentAvis: any[] = [];
+  isLoadingAvis = false;
   constructor(
     @Optional() public dialogRef: MatDialogRef<SalonDetailsComponent>,
     @Optional() @Inject(MAT_DIALOG_DATA) public data: { salonId: number } | null,
@@ -87,6 +89,7 @@ export class SalonDetailsComponent implements OnInit {
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
     @Inject(PLATFORM_ID) private platformId: Object,
+    private reservationService: ReservationService,
     private router: Router
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
@@ -99,7 +102,7 @@ export class SalonDetailsComponent implements OnInit {
     } else {
       this.isLoggedIn = false;
     }
-    
+
     if (this.salonId > 0) {
       this.loadSalonDetails();
     } else {
@@ -109,16 +112,17 @@ export class SalonDetailsComponent implements OnInit {
 
   loadSalonDetails(): void {
     console.log('🏢 Chargement des détails du salon avec ID:', this.salonId);
-    
+
     this.salonService.getSalonById(this.salonId).subscribe({
       next: (salon) => {
         console.log('✅ Salon récupéré:', salon);
-        
+
         this.salon = salon;
-        
+
         if (salon) {
           this.loadSalonServices();
           this.loadSalonPhotos();
+          this.loadSalonAvis();
         } else {
           this.errorMessage = 'Salon non trouvé';
         }
@@ -133,11 +137,11 @@ export class SalonDetailsComponent implements OnInit {
   loadSalonServices(): void {
     console.log('🛎️ Chargement des services pour le salon ID:', this.salonId);
     this.isLoadingServices = true;
-    
+
     this.serviceSalonService.getServicesBySalon(this.salonId).subscribe({
       next: (services) => {
         console.log('✅ Services récupérés:', services);
-        
+
         if (!services) {
           console.warn('⚠️ La réponse services est undefined ou null');
           this.services = [];
@@ -147,9 +151,19 @@ export class SalonDetailsComponent implements OnInit {
         } else {
           this.services = services;
         }
-        
+
         this.isLoadingServices = false;
         console.log(`📊 Nombre de services chargés: ${this.services.length}`);
+        
+        // Debug: Afficher la structure du premier service
+        if (this.services.length > 0) {
+          console.log('🔍 Structure du premier service:', this.services[0]);
+          console.log('🏷️ Nom:', this.services[0].nomService);
+          console.log('🏷️ Catégorie:', this.services[0].categorieService);
+          console.log('⏰ Durée (string):', this.services[0].duree);
+          console.log('⏰ Durée (minutes):', this.services[0].dureeEnMinutes);
+          console.log('💰 Prix:', this.services[0].prix);
+        }
       },
       error: (error) => {
         console.error('❌ Erreur lors du chargement des services:', error);
@@ -164,35 +178,35 @@ export class SalonDetailsComponent implements OnInit {
 loadSalonPhotos(): void {
   console.log('📸 Début chargement photos pour salon ID:', this.salonId);
   this.isLoadingPhotos = true;
-  
+
   // ✅ Cast explicite pour éviter l'erreur TypeScript
   (this.salonService.getSalonPhotos(this.salonId) as Observable<any>).subscribe({
     next: (response: any) => {
       console.log('📥 Réponse photos brute:', response);
-      
+
       // ✅ Gérer les différents formats de réponse
       let photos: any[] = [];
-      
+
       // Vérifier si response est un objet avec photos
       if (response && typeof response === 'object' && !Array.isArray(response) && 'photos' in response) {
         photos = Array.isArray(response.photos) ? response.photos : [];
         console.log(`✅ Format objet détecté: ${photos.length} photos`);
-      } 
+      }
       // Vérifier si response est directement un tableau
       else if (Array.isArray(response)) {
         photos = response;
         console.log(`✅ Format tableau détecté: ${photos.length} photos`);
-      } 
+      }
       // Fallback
       else {
         console.warn('⚠️ Format de réponse photos non reconnu:', response);
         photos = [];
       }
-      
+
       // ✅ Traitement et validation des photos
       this.photos = this.processPhotos(photos);
       this.isLoadingPhotos = false;
-      
+
       console.log(`📊 Photos finales chargées: ${this.photos.length}`);
     },
     error: (error) => {
@@ -202,15 +216,51 @@ loadSalonPhotos(): void {
     }
   });
 }
+
+  loadSalonAvis(): void {
+    console.log('⭐ Chargement des avis pour le salon ID:', this.salonId);
+    this.isLoadingAvis = true;
+
+    this.reservationService.getAvisBySalon(this.salonId).subscribe({
+      next: (avis) => {
+        console.log('✅ Avis récupérés:', avis);
+        console.log('✅ Structure du premier avis:', avis[0]);
+        
+        if (!avis) {
+          console.warn('⚠️ La réponse avis est undefined ou null');
+          this.recentAvis = [];
+        } else if (!Array.isArray(avis)) {
+          console.warn('⚠️ La réponse avis n\'est pas un tableau:', avis);
+          this.recentAvis = [];
+        } else {
+          // Trier les avis par date de création (plus récents en premier)
+          this.recentAvis = avis.sort((a, b) => {
+            const dateA = new Date(a.dateCreation || a.createdAt);
+            const dateB = new Date(b.dateCreation || b.createdAt);
+            return dateB.getTime() - dateA.getTime();
+          });
+        }
+
+        this.isLoadingAvis = false;
+        console.log(`📊 Nombre d'avis chargés: ${this.recentAvis.length}`);
+      },
+      error: (error) => {
+        console.error('❌ Erreur lors du chargement des avis:', error);
+        this.recentAvis = [];
+        this.isLoadingAvis = false;
+      }
+    });
+  }
+
   // ✅ NOUVELLE MÉTHODE - Traitement des photos avec URLs
   private processPhotos(photos: any[]): any[] {
     if (!Array.isArray(photos)) return [];
-    
+
     return photos
       .filter(photo => photo && (photo.url || photo.imageUrl))
       .map(photo => {
         const originalUrl = photo.url || photo.imageUrl || photo.src;
-        
+
         return {
           ...photo,
           url: originalUrl, // URL originale
@@ -224,29 +274,29 @@ loadSalonPhotos(): void {
   // ✅ MÉTHODE DE TRAITEMENT D'URL D'IMAGE
   private processImageUrl(imageUrl: string): string {
     if (!imageUrl) return 'assets/images/salon-placeholder.jpg';
-    
+
     console.log('🔧 Traitement URL image:', imageUrl);
-    
+
     // Si c'est déjà une URL complète
     if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
       return imageUrl;
     }
-    
+
     // Si c'est un chemin relatif /uploads
     if (imageUrl.startsWith('/uploads/')) {
       return `http://localhost:8081${imageUrl}`;
     }
-    
+
     // Si c'est juste un nom de fichier
     if (!imageUrl.includes('/')) {
       return `http://localhost:8081/uploads/${imageUrl}`;
     }
-    
+
     // Si c'est un chemin assets
     if (imageUrl.startsWith('/assets/') || imageUrl.startsWith('assets/')) {
       return imageUrl;
     }
-    
+
     // Fallback
     return `http://localhost:8081/uploads/${imageUrl}`;
   }
@@ -254,24 +304,24 @@ loadSalonPhotos(): void {
   // ✅ GESTIONNAIRE D'ERREUR D'IMAGE
   onImageError(event: any, photo: any): void {
     console.warn('❌ Erreur chargement image:', event.target.src);
-    
+
     // Essayer l'URL originale si on utilisait l'URL traitée
     if (event.target.src === photo.processedUrl && photo.url !== photo.processedUrl) {
       console.log('🔄 Tentative avec URL originale');
       event.target.src = photo.url;
       return;
     }
-    
+
     // Essayer des fallbacks
     const fallbacks = [
       'assets/images/salon-placeholder.jpg',
       'assets/images/default-salon.jpg',
       'assets/images/no-image.jpg'
     ];
-    
+
     const currentSrc = event.target.src;
     const currentIndex = fallbacks.findIndex(fallback => currentSrc.includes(fallback));
-    
+
     if (currentIndex < fallbacks.length - 1) {
       event.target.src = fallbacks[currentIndex + 1];
     } else {
@@ -291,9 +341,9 @@ loadSalonPhotos(): void {
   private createImagePlaceholder(imgElement: HTMLImageElement): void {
     const container = imgElement.parentElement;
     if (!container) return;
-    
+
     imgElement.style.display = 'none';
-    
+
     const placeholder = document.createElement('div');
     placeholder.className = 'image-placeholder';
     placeholder.style.cssText = `
@@ -308,7 +358,7 @@ loadSalonPhotos(): void {
       font-weight: bold;
     `;
     placeholder.textContent = '📷';
-    
+
     container.style.position = 'relative';
     container.appendChild(placeholder);
   }
@@ -320,7 +370,7 @@ loadSalonPhotos(): void {
     console.log('- Photos loading:', this.isLoadingPhotos);
     console.log('- Photos array:', this.photos);
     console.log('- Photos count:', this.photos.length);
-    
+
     // Test des URLs
     this.photos.forEach((photo, index) => {
       console.log(`Test photo ${index + 1}:`, photo.processedUrl);
@@ -343,7 +393,7 @@ loadSalonPhotos(): void {
     const fullStars = Math.floor(rating || 0);
     return new Array(fullStars);
   }
-  
+
   hasHalfStar(rating: number): boolean {
     return ((rating || 0) % 1) >= 0.5;
   }
@@ -355,37 +405,53 @@ loadSalonPhotos(): void {
   setActiveTab(tab: string): void {
     console.log(`🔄 Changement d'onglet: ${this.activeTab} → ${tab}`);
     this.activeTab = tab;
-    
+
     // Charger les données spécifiques à l'onglet si nécessaire
     if (tab === 'photos' && this.photos.length === 0 && !this.isLoadingPhotos) {
       console.log('📸 Rechargement des photos pour l\'onglet');
       this.loadSalonPhotos();
     }
+    
+    if (tab === 'reviews' && this.recentAvis.length === 0 && !this.isLoadingAvis) {
+      console.log('⭐ Rechargement des avis pour l\'onglet');
+      this.loadSalonAvis();
+    }
   }
 
   bookService(service: any): void {
     if (!this.isBrowser) return;
-    
+
     if (!this.isLoggedIn) {
       if (this.dialogRef) {
         this.dialogRef.close();
       }
-      
+
       this.authService.triggerLoginModal();
-      
+
       this.snackBar.open('Veuillez vous connecter pour réserver un service', 'Fermer', {
         duration: 5000,
         panelClass: ['warning-snackbar']
       });
-      
+
       return;
     }
 
     const dialogRef = this.dialog.open(BookingDialogComponent, {
-      width: '500px',
+      width: '550px',
+      maxWidth: '90vw',
+      height: 'auto',
+      maxHeight: '90vh',
+      position: {
+        top: '5vh'
+      },
+      panelClass: ['booking-dialog-panel'],
+      disableClose: true,
+      autoFocus: false,
+      restoreFocus: false,
       data: {
         service: service,
-        salon: this.salon
+        salon: this.salon,
+        type: 'salon'
       }
     });
 
@@ -400,5 +466,38 @@ loadSalonPhotos(): void {
         });
       }
     });
+  }
+
+  /**
+   * ✅ Formater note en étoiles
+   */
+  formatStars(rating: number): string {
+    return this.reservationService.formatRatingStars(rating);
+  }
+
+  /**
+   * ✅ Obtenir le temps relatif
+   */
+  getRelativeTime(date: string | Date): string {
+    return this.reservationService.getTempsDepuisCreation(date);
+  }
+
+  /**
+   * ✅ Calculer la note moyenne du salon
+   */
+  getAverageRating(): number {
+    if (!this.recentAvis || this.recentAvis.length === 0) {
+      return 0;
+    }
+    
+    const total = this.recentAvis.reduce((sum, avis) => sum + (avis.note || 0), 0);
+    return Math.round((total / this.recentAvis.length) * 10) / 10; // Arrondi à 1 décimale
+  }
+
+  /**
+   * ✅ Obtenir le nombre total d'avis
+   */
+  getTotalReviews(): number {
+    return this.recentAvis ? this.recentAvis.length : 0;
   }
 }

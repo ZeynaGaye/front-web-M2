@@ -1,0 +1,818 @@
+// Définition des variables de couleur
+$primary-color: #F5A393;
+$secondary-color: #A4B1BD;
+$text-color: #333;
+$light-text-color: #666;
+$background-light: #f9f9f9;
+$border-color: #eee;
+$shadow-light: rgba(0, 0, 0, 0.05);
+$shadow-medium: rgba(0, 0, 0, 0.1);
+
+:host {
+  display: block; // Assure que le composant prend sa propre disposition
+  --primary-color: #{$primary-color};
+  --secondary-color: #{$secondary-color};
+  --text-color: #{$text-color};
+  --light-text-color: #{$light-text-color};
+  --background-light: #{$background-light};
+  --border-color: #{$border-color};
+  --shadow-light: #{$shadow-light};
+  --shadow-medium: #{$shadow-medium};
+}
+
+// Styles du dialogue (MatDialog)
+.freelance-detail-dialog {
+  background-color: white;
+  border-radius: 12px;
+  overflow: hidden; // Cache le débordement des images, etc.
+  box-shadow: 0 8px 24px var(--shadow-medium);
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh; // Limite la hauteur du dialogue à 90% de la vue
+  max-width: 800px; // Largeur maximale pour les grands écrans
+  width: 95%; // Prend 95% de la largeur disponible sur les petits écrans
+  margin: auto; // Centre le dialogue
+  position: relative; // Pour positionner le bouton de fermeture
+
+  @media (max-width: 768px) {
+    border-radius: 0; // Pleine largeur sur mobile
+    max-width: 100vw;
+    height: 100vh; // Pleine hauteur sur mobile
+    max-height: 100vh;
+    overflow-y: auto; // Permet le défilement du contenu
+  }
+}
+
+.dialog-header {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 100; // Assure que le bouton de fermeture est au-dessus
+}
+
+.close-button {
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px var(--shadow-light);
+  color: var(--text-color);
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.9);
+    transform: scale(1.1);
+    transition: transform 0.2s ease-in-out;
+  }
+
+  mat-icon {
+    font-size: 20px;
+    height: 20px;
+    width: 20px;
+  }
+}
+
+.dialog-content {
+  flex-grow: 1;
+  overflow-y: auto; // Permet le défilement du contenu interne
+  padding-bottom: 20px; // Espace en bas pour le défilement
+}
+
+/* --- SECTION HERO (Haut de page du freelance) --- */
+.freelance-hero {
+  position: relative;
+  background-color: var(--background-light);
+  padding-bottom: 20px; // Espace sous l'avatar et l'info overlay
+  border-bottom: 1px solid var(--border-color);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  .freelance-cover {
+    width: 100%;
+    background-color: var(--secondary-color); // Une couleur unie si pas d'image de couverture
+    height: 120px; // Hauteur fixe pour la zone de "couverture"
+    display: flex;
+    justify-content: center;
+    align-items: flex-end; // Aligne l'avatar en bas
+
+    @media (max-width: 768px) {
+      height: 90px;
+    }
+  }
+
+  .freelance-avatar {
+    position: relative;
+    top: 50px; // Déplace l'avatar vers le bas pour chevaucher la couverture
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 5px solid white;
+    overflow: hidden;
+    box-shadow: 0 4px 10px var(--shadow-medium);
+    background-color: #ccc; // Fallback couleur
+
+    @media (max-width: 768px) {
+      width: 90px;
+      height: 90px;
+      top: 40px;
+    }
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  .freelance-info-overlay {
+    margin-top: 60px; // Espace après l'avatar
+    text-align: center;
+    padding: 0 20px;
+
+    .freelance-name-section {
+      margin-bottom: 10px;
+
+      .freelance-name {
+        font-size: 2em;
+        font-weight: 700;
+        color: var(--text-color);
+        margin: 0;
+      }
+
+      .freelance-specialty {
+        font-size: 1.1em;
+        color: var(--light-text-color);
+        margin-top: 5px;
+      }
+    }
+
+    .freelance-rating {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 15px;
+
+      .stars {
+        color: gold;
+        font-size: 1.2em;
+        margin-right: 8px;
+
+        i {
+          margin: 0 1px;
+        }
+      }
+
+      .rating-value {
+        font-weight: bold;
+        color: var(--text-color);
+      }
+
+      .review-count {
+        color: var(--light-text-color);
+        margin-left: 5px;
+      }
+    }
+
+    .freelance-meta {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      font-size: 0.95em;
+      color: var(--light-text-color);
+      flex-wrap: wrap; // Permet de passer à la ligne sur mobile
+
+      p {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        mat-icon {
+          font-size: 18px;
+          margin-right: 5px;
+          color: var(--secondary-color);
+        }
+      }
+    }
+  }
+
+  .quick-actions {
+    margin-top: 20px;
+    padding: 0 20px 20px;
+    width: 100%;
+    box-sizing: border-box;
+
+    .contact-btn {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 10px 25px;
+      font-size: 1em;
+      border-radius: 8px;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+
+      &:hover {
+        background-color: darken($primary-color, 10%);
+        transform: translateY(-2px);
+      }
+
+      mat-icon {
+        margin-right: 8px;
+      }
+    }
+  }
+}
+
+/* --- NAVIGATION PAR ONGLETS --- */
+.navigation-tabs {
+  display: flex;
+  justify-content: center;
+  background-color: white;
+  border-bottom: 1px solid var(--border-color);
+  padding: 10px 0;
+  margin-bottom: 20px;
+  position: sticky;
+  top: 0; // Pour coller en haut du scroll si le dialogue est grand
+  z-index: 50; // Moins que le bouton de fermeture, plus que le contenu
+
+  .tab {
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--light-text-color);
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+    gap: 8px;
+
+    mat-icon {
+      font-size: 20px;
+      height: 20px;
+      width: 20px;
+    }
+
+    &:hover {
+      color: var(--primary-color);
+    }
+
+    &.active {
+      color: var(--primary-color);
+      border-bottom-color: var(--primary-color);
+    }
+
+    @media (max-width: 600px) {
+      padding: 8px 12px;
+      font-size: 0.9em;
+      span {
+        display: none; // Cache le texte pour les très petits écrans, ne garde que l'icône
+      }
+    }
+  }
+}
+
+/* --- CONTENU DES ONGLETS --- */
+.tab-content {
+  padding: 0 20px; // Espacement horizontal
+  padding-bottom: 40px; // Espace généreux en bas du contenu
+  // Les animations slideIn sont appliquées ici par le .ts
+}
+
+.info-section {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px var(--shadow-light);
+  margin-bottom: 20px;
+
+  h3 {
+    color: var(--primary-color);
+    font-size: 1.4em;
+    margin-top: 0;
+    margin-bottom: 15px;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 10px;
+  }
+
+  p {
+    color: var(--text-color);
+    line-height: 1.6;
+    margin-bottom: 10px;
+  }
+
+  .freelance-description {
+    white-space: pre-wrap; // Préserve les sauts de ligne si votre description en contient
+  }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); // Colonnes flexibles
+    gap: 20px;
+
+    .info-item {
+      display: flex;
+      align-items: flex-start; // Aligne l'icône et le texte en haut
+      gap: 15px;
+      background-color: var(--background-light);
+      padding: 15px;
+      border-radius: 6px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+
+      mat-icon {
+        font-size: 28px;
+        height: 28px;
+        width: 28px;
+        color: var(--secondary-color);
+        flex-shrink: 0; // Empêche l'icône de rétrécir
+      }
+
+      .info-text {
+        h4 {
+          margin: 0 0 5px;
+          font-size: 1em;
+          color: var(--text-color);
+          font-weight: 600;
+        }
+        p {
+          margin: 0;
+          font-size: 0.9em;
+          color: var(--light-text-color);
+          word-break: break-word; // Empêche le dépassement du texte long
+        }
+      }
+    }
+  }
+}
+
+/* --- SECTION SERVICES --- */
+.services-tab {
+  h3 {
+    color: var(--primary-color);
+    font-size: 1.4em;
+    margin-top: 0;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 10px;
+  }
+
+  .loading-spinner, .empty-state {
+    text-align: center;
+    padding: 50px 20px;
+    color: var(--light-text-color);
+    mat-spinner {
+      margin: 0 auto 20px;
+    }
+    mat-icon {
+      font-size: 48px;
+      height: 48px;
+      width: 48px;
+      color: var(--secondary-color);
+      margin-bottom: 15px;
+    }
+    p {
+      font-size: 1.1em;
+    }
+  }
+
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+
+    .service-card {
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px var(--shadow-light);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+      &:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 16px var(--shadow-medium);
+      }
+
+      .service-content {
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+      }
+
+      .service-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 10px;
+
+        .service-name {
+          font-size: 1.3em;
+          color: var(--text-color);
+          margin: 0;
+        }
+
+        .service-category {
+          background-color: var(--secondary-color);
+          color: white;
+          padding: 4px 10px;
+          border-radius: 5px;
+          font-size: 0.8em;
+          font-weight: 600;
+        }
+      }
+
+      .service-details {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 15px;
+        font-size: 0.95em;
+        color: var(--light-text-color);
+
+        .service-duration, .service-price {
+          display: flex;
+          align-items: center;
+          mat-icon {
+            font-size: 18px;
+            height: 18px;
+            width: 18px;
+            margin-right: 5px;
+            color: var(--secondary-color);
+          }
+          span {
+            font-weight: 500;
+          }
+        }
+        .service-price span {
+          color: var(--primary-color);
+          font-weight: bold;
+        }
+      }
+
+      .service-description {
+        font-size: 0.9em;
+        color: var(--light-text-color);
+        margin-bottom: 15px;
+        line-height: 1.5;
+        flex-grow: 1; // Permet à la description de prendre de l'espace si elle est longue
+      }
+
+      .service-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 20px;
+
+        .location-option {
+          background-color: #e0e0e0;
+          color: var(--light-text-color);
+          padding: 5px 10px;
+          border-radius: 20px;
+          font-size: 0.8em;
+          display: flex;
+          align-items: center;
+          gap: 5px;
+
+          i {
+            font-size: 14px;
+          }
+        }
+      }
+
+      .service-actions {
+        text-align: right;
+
+        .book-button {
+          background-color: var(--primary-color);
+          color: white;
+          padding: 8px 18px;
+          font-size: 0.9em;
+          border-radius: 6px;
+
+          &:hover {
+            background-color: darken($primary-color, 10%);
+          }
+          mat-icon {
+            margin-right: 5px;
+          }
+        }
+      }
+    }
+  }
+}
+
+/* --- SECTION PORTFOLIO (juste le conteneur) --- */
+.portfolio-tab {
+  // Le style de l'app-portfolio est géré dans son propre SCSS
+  padding: 0; // app-portfolio gérera son propre padding
+}
+
+/* --- ETATS DE CHARGEMENT ET D'ERREUR --- */
+.loading-container, .error-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px; // Hauteur minimale pour l'affichage
+  padding: 20px;
+  text-align: center;
+  color: var(--light-text-color);
+
+  mat-spinner {
+    margin-bottom: 20px;
+  }
+
+  mat-icon {
+    font-size: 48px;
+    height: 48px;
+    width: 48px;
+    color: #f44336; // Rouge pour les erreurs
+    margin-bottom: 15px;
+  }
+
+  p {
+    font-size: 1.1em;
+    margin-bottom: 20px;
+  }
+
+  button {
+    background-color: var(--primary-color);
+    color: white;
+    &:hover {
+      background-color: darken($primary-color, 10%);
+    }
+  }
+}
+
+// Styles additionnels pour les snackbars (si non gérés globalement)
+.success-snackbar {
+  background-color: #4CAF50 !important; // Vert de succès
+  color: white !important;
+}
+
+.warning-snackbar {
+  background-color: #FFC107 !important; // Jaune d'avertissement
+  color: #333 !important;
+}
+
+.error-snackbar {
+  background-color: #F44336 !important; // Rouge d'erreur
+  color: white !important;
+}
+/* ✅ AJOUTEZ ce CSS dans votre freelance-details.component.scss */
+
+.service-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+
+  .location-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: #f0f0f0;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #666;
+    
+    i {
+      font-size: 11px;
+    }
+  }
+
+  /* ✅ NOUVEAU: Styles spécifiques pour le déplacement */
+  .displacement-info {
+    font-weight: 600;
+    
+    &.displacement-included {
+      background: #e8f5e8;
+      color: #2e7d32;
+      border: 1px solid #c8e6c9;
+      
+      i {
+        color: #4caf50;
+      }
+    }
+    
+    &.displacement-not-included {
+      background: #ffebee;
+      color: #d32f2f;
+      border: 1px solid #ffcdd2;
+      
+      i {
+        color: #f44336;
+      }
+    }
+  }
+
+  /* ✅ NOUVEAU: Styles pour les disponibilités */
+  .availability-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: #e3f2fd;
+    color: #1976d2;
+    border: 1px solid #bbdefb;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 500;
+    
+    i {
+      font-size: 11px;
+      color: #2196f3;
+    }
+  }
+}
+
+/* --- SECTION AVIS --- */
+.reviews-tab {
+  h3 {
+    color: var(--primary-color);
+    font-size: 1.4em;
+    margin-top: 0;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 10px;
+  }
+
+  .loading-spinner, .empty-state {
+    text-align: center;
+    padding: 50px 20px;
+    color: var(--light-text-color);
+    
+    mat-spinner {
+      margin: 0 auto 20px;
+    }
+    
+    mat-icon {
+      font-size: 48px;
+      height: 48px;
+      width: 48px;
+      color: var(--secondary-color);
+      margin-bottom: 15px;
+    }
+    
+    p {
+      font-size: 1.1em;
+    }
+  }
+
+  .reviews-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+
+    .review-item {
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px var(--shadow-light);
+      padding: 20px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px var(--shadow-medium);
+      }
+
+      .review-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 15px;
+
+        .reviewer-info {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+
+          .reviewer-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            overflow: hidden;
+            flex-shrink: 0;
+
+            img {
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+            }
+          }
+
+          .reviewer-details {
+            .reviewer-name {
+              font-size: 1.1em;
+              color: var(--text-color);
+              margin: 0 0 4px 0;
+              font-weight: 600;
+            }
+
+            .review-date {
+              font-size: 0.85em;
+              color: var(--light-text-color);
+            }
+          }
+        }
+
+        .review-rating {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+
+          .stars {
+            display: flex;
+            gap: 2px;
+
+            i {
+              color: #ffd700;
+              font-size: 16px;
+            }
+          }
+
+          .rating-value {
+            font-size: 0.9em;
+            color: var(--text-color);
+            font-weight: 600;
+          }
+        }
+      }
+
+      .review-content {
+        .review-comment {
+          color: var(--text-color);
+          line-height: 1.6;
+          margin-bottom: 12px;
+          font-size: 0.95em;
+        }
+
+        .review-service {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          color: var(--light-text-color);
+          font-size: 0.85em;
+          background-color: var(--background-light);
+          padding: 8px 12px;
+          border-radius: 6px;
+          width: fit-content;
+
+          mat-icon {
+            font-size: 16px;
+            height: 16px;
+            width: 16px;
+            color: var(--secondary-color);
+          }
+        }
+      }
+    }
+  }
+}
+
+/* ✅ RESPONSIVE: Adaptation mobile */
+@media (max-width: 768px) {
+  .service-options {
+    gap: 6px;
+    
+    .location-option,
+    .displacement-info,
+    .availability-option {
+      font-size: 11px;
+      padding: 4px 8px;
+      
+      i {
+        font-size: 10px;
+      }
+    }
+  }
+
+  .reviews-tab {
+    .reviews-list {
+      .review-item {
+        padding: 15px;
+
+        .review-header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 10px;
+
+          .reviewer-info {
+            .reviewer-avatar {
+              width: 40px;
+              height: 40px;
+            }
+          }
+
+          .review-rating {
+            align-self: flex-end;
+          }
+        }
+      }
+    }
+  }
+}

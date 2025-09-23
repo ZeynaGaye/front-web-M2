@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Output, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { OffreEmploisService } from '../../services/OffreEmploisService/offre-emplois-service.service';
+import { OffreEmploisService, Salon } from '../../services/OffreEmploisService/offre-emplois-service.service';
 
 
 @Component({
@@ -11,7 +11,7 @@ import { OffreEmploisService } from '../../services/OffreEmploisService/offre-em
   templateUrl: './offre-emplois.component.html',
   styleUrls: ['./offre-emplois.component.scss'],
 })
-export class OffreEmploisComponent {
+export class OffreEmploisComponent implements OnInit {
   @Output() closeModalEvent = new EventEmitter<void>();
   currentStep = 1;
   offreEmploiForm: FormGroup;
@@ -19,26 +19,57 @@ export class OffreEmploisComponent {
   submitError = '';
   submitSuccess = false;
   offreCount = 0;
+  salons: Salon[] = [];
+  loadingSalons = false;
 
   constructor(
     private fb: FormBuilder,
     private offreEmploisService: OffreEmploisService
   ) {
     this.offreEmploiForm = this.fb.group({
-      titre: ['', Validators.required],
-      description: ['', Validators.required],
-      competences: ['', Validators.required],
-      lieu: ['', Validators.required],
+      titre: ['', [Validators.required, Validators.maxLength(255)]],
+      description: ['', [Validators.required, Validators.maxLength(1000)]],
+      competences: ['', [Validators.required, Validators.maxLength(255)]],
+      lieu: ['', [Validators.required, Validators.maxLength(255)]],
       typeContrat: ['', Validators.required],
-      salaire: ['', Validators.required],
+      salaire: ['', [Validators.required, Validators.maxLength(255)]],
       dateLimite: ['', Validators.required],
-      experienceRequise: ['', Validators.required],
+      experienceRequise: ['', [Validators.required, Validators.maxLength(255)]],
+      salonId: ['', Validators.required], // NOUVEAU : sélection de salon obligatoire
     });
   }
 
 
-  onInit() {
+  ngOnInit() {
     this.loadOffresCount();
+    this.loadSalons();
+  }
+
+  loadSalons() {
+    this.loadingSalons = true;
+    // Désactiver le control pendant le chargement
+    this.offreEmploiForm.get('salonId')?.disable();
+    
+    this.offreEmploisService.getMySalons().subscribe({
+      next: (salons) => {
+        this.salons = salons;
+        this.loadingSalons = false;
+        // Réactiver le control après le chargement
+        this.offreEmploiForm.get('salonId')?.enable();
+        
+        // Si un seul salon, le sélectionner automatiquement
+        if (salons.length === 1) {
+          this.offreEmploiForm.patchValue({ salonId: salons[0].id });
+        }
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement des salons:', error);
+        this.loadingSalons = false;
+        // Réactiver le control même en cas d'erreur
+        this.offreEmploiForm.get('salonId')?.enable();
+        this.submitError = 'Erreur lors du chargement des salons. Assurez-vous d\'avoir au moins un salon.';
+      }
+    });
   }
   loadOffresCount() {
     this.offreEmploisService.getMyOffresEmplois().subscribe({
@@ -54,7 +85,7 @@ export class OffreEmploisComponent {
   nextStep() {
     // Vérifier si l'étape actuelle est valide
     const etapesValidation: { [key: number]: string[] } = {
-      1: ['titre', 'description'],
+      1: ['titre', 'description', 'salonId'], // NOUVEAU : salon requis dès l'étape 1
       2: ['competences', 'lieu', 'experienceRequise'],
       3: ['typeContrat', 'salaire', 'dateLimite']
     };
@@ -93,8 +124,14 @@ export class OffreEmploisComponent {
       experienceRequise: 'Non spécifié' // Valeur par défaut
     };
       
-      // Utiliser le service pour créer l'offre d'emploi
-      this.offreEmploisService.createOffreEmploi(this.offreEmploiForm.value)
+      // Utiliser le nouveau service pour créer l'offre avec salon
+      const formValue = this.offreEmploiForm.value;
+      const salonId = formValue.salonId;
+      
+      // Supprimer salonId du formValue car il sera passé séparément
+      const { salonId: _, ...offreData } = formValue;
+      
+      this.offreEmploisService.createOffreEmploiWithSalon(offreData, salonId)
         .subscribe({
           next: (response) => {
             console.log('Offre publiée avec succès:', response);

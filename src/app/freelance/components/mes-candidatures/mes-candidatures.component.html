@@ -1,0 +1,99 @@
+
+<div class="mes-candidatures-container">
+  <!-- Header -->
+  <div class="header-section">
+    <h1>
+      <mat-icon>work</mat-icon>
+      Mes Candidatures
+    </h1>
+    <button mat-icon-button (click)="refreshCandidatures()" class="refresh-btn" title="Actualiser">
+      <mat-icon>refresh</mat-icon>
+    </button>
+  </div>
+
+  <!-- Chargement -->
+  <div *ngIf="isLoading" class="loading-section">
+    <mat-progress-spinner mode="indeterminate" diameter="50"></mat-progress-spinner>
+    <p>Chargement de vos candidatures...</p>
+  </div>
+
+  <!-- Liste des candidatures -->
+  <div *ngIf="!isLoading && candidatures.length > 0" class="candidatures-grid">
+    <mat-card *ngFor="let candidature of candidatures" class="candidature-card">
+      <mat-card-header>
+        <div class="candidature-header-content">
+          <div class="offre-info">
+            <mat-card-title class="offre-titre">
+              {{ candidature['offreTitre'] || 'Offre sans titre' }}
+            </mat-card-title>
+            <mat-card-subtitle class="offre-details">
+              {{ candidature['employeurNom'] || 'Employeur non spécifié' }}
+              <span *ngIf="candidature['lieu']"> • {{ candidature['lieu'] }}</span>
+            </mat-card-subtitle>
+          </div>
+          
+          <div class="status-badge-container">
+            <span class="status-badge" [ngClass]="getStatusBadgeClass(candidature.status)">
+              <mat-icon class="status-icon">{{ getStatusIcon(candidature.status) }}</mat-icon>
+              {{ getStatusDisplayName(candidature.status) }}
+            </span>
+          </div>
+        </div>
+      </mat-card-header>
+      
+      <mat-card-content>
+        <div class="candidature-details">
+          <div class="detail-row">
+            <mat-icon class="detail-icon">schedule</mat-icon>
+            <span class="detail-label">Candidature envoyée le :</span>
+            <span class="detail-value">{{ formatDate(candidature.dateCandidature) }}</span>
+          </div>
+          
+          <div class="detail-row" *ngIf="candidature.tarifPropose">
+            <mat-icon class="detail-icon">attach_money</mat-icon>
+            <span class="detail-label">Tarif proposé :</span>
+            <span class="detail-value">{{ candidature.tarifPropose | number:'1.0-0' }} CFA</span>
+          </div>
+          
+          <div class="detail-row" *ngIf="candidature.disponibilite">
+            <mat-icon class="detail-icon">calendar_today</mat-icon>
+            <span class="detail-label">Disponible le :</span>
+            <span class="detail-value">{{ formatDate(candidature.disponibilite) }}</span>
+          </div>
+          
+          <div class="detail-row message-row" *ngIf="candidature.message">
+            <mat-icon class="detail-icon">message</mat-icon>
+            <div class="message-content">
+              <span class="detail-label">Message :</span>
+              <p class="message-text">{{ candidature.message }}</p>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+      
+      <mat-card-actions align="end" class="candidature-actions">
+        <button mat-stroked-button *ngIf="candidature.status === 'ACCEPTEE'" color="primary" class="contact-btn">
+          <mat-icon>phone</mat-icon>
+          Contacter l'employeur
+        </button>
+        
+        <button mat-button class="details-btn">
+          <mat-icon>visibility</mat-icon>
+          Voir l'offre
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+  <!-- État vide -->
+  <div *ngIf="!isLoading && candidatures.length === 0" class="empty-state">
+    <mat-icon class="empty-icon">work_off</mat-icon>
+    <h3>Aucune candidature</h3>
+    <p>Vous n'avez pas encore envoyé de candidatures.</p>
+    <p>Parcourez les offres d'emploi pour commencer à postuler !</p>
+    <button mat-raised-button color="primary" class="browse-offers-btn">
+      <mat-icon>search</mat-icon>
+      Parcourir les offres
+    </button>
+  </div>
+</div>

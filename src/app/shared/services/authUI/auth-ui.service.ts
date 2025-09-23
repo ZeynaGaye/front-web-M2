@@ -5,6 +5,9 @@ import { Subject } from 'rxjs';
   providedIn: 'root'
 })
 export class AuthUIService {
+  closeRegisterModal() {
+    throw new Error('Method not implemented.');
+  }
   // ✅ Utilisez Subject au lieu de BehaviorSubject pour éviter l'émission automatique
   private showLoginModalSubject = new Subject<boolean>();
   private showRegisterModalSubject = new Subject<boolean>();

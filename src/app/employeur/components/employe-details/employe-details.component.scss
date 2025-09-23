@@ -1,0 +1,311 @@
+.employe-details-dialog {
+  max-width: 600px;
+  width: 100%;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+
+  .dialog-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px;
+    background: linear-gradient(135deg, #fb8f71 0%, #f36a4a 100%);
+    color: white;
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+
+      .avatar-section {
+        .avatar-circle {
+          width: 60px;
+          height: 60px;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.2);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 24px;
+          border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+      }
+
+      .header-info {
+        .employe-name {
+          margin: 0 0 8px 0;
+          font-size: 24px;
+          font-weight: 600;
+        }
+
+        .statut-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 6px 12px;
+          border-radius: 20px;
+          font-size: 12px;
+          font-weight: 500;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          background: rgba(255, 255, 255, 0.15);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+      }
+    }
+
+    .close-button {
+      color: white;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+    }
+  }
+
+  .loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    gap: 16px;
+
+    p {
+      margin: 0;
+      color: #6b7280;
+      font-size: 14px;
+    }
+  }
+
+  .dialog-content {
+    padding: 0;
+    max-height: 70vh;
+    overflow-y: auto;
+
+    .info-section {
+      padding: 24px;
+
+      .section-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0 0 20px 0;
+        font-size: 18px;
+        font-weight: 600;
+        color: #333333;
+
+        i {
+          color: #fb8f71;
+          width: 20px;
+        }
+
+        .specialites-count {
+          font-size: 14px;
+          font-weight: 400;
+          color: #6b7280;
+        }
+      }
+
+      .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+
+        .info-item {
+          label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #6b7280;
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+          }
+
+          .value {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #333333;
+            line-height: 1.4;
+
+            &.email-value,
+            &.phone-value {
+              a {
+                color: #fb8f71;
+                text-decoration: none;
+                
+                &:hover {
+                  text-decoration: underline;
+                }
+              }
+
+              i {
+                color: #A4B1BD;
+                font-size: 12px;
+              }
+            }
+
+            &.code-value {
+              font-family: 'Courier New', monospace;
+              background: #f9f9f9;
+              padding: 4px 8px;
+              border-radius: 4px;
+              font-size: 12px;
+              border: 1px solid #e0e0e0;
+            }
+
+            .statut-badge {
+              display: inline-flex;
+              align-items: center;
+              gap: 6px;
+              padding: 6px 12px;
+              border-radius: 20px;
+              font-size: 11px;
+              font-weight: 500;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+
+              &.statut-actif {
+                background: #e8f5e8;
+                color: #4caf50;
+                border: 1px solid #4caf50;
+              }
+
+              &.statut-inactif {
+                background: #ffebee;
+                color: #e57373;
+                border: 1px solid #e57373;
+              }
+
+              &.statut-conge {
+                background: #fff3e0;
+                color: #ffc107;
+                border: 1px solid #ffc107;
+              }
+
+              &.statut-suspendu {
+                background: #ffd7cc;
+                color: #f36a4a;
+                border: 1px solid #f36a4a;
+              }
+            }
+          }
+        }
+      }
+
+      .specialites-container {
+        .specialites-chips {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+
+          .specialite-chip {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 12px;
+            background: #ffd7cc;
+            border: 1px solid #fb8f71;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #f36a4a;
+            font-weight: 500;
+
+            i {
+              color: #4caf50;
+              font-size: 10px;
+            }
+          }
+        }
+      }
+
+      .no-specialites {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 16px;
+        background: #f9f9f9;
+        border-radius: 8px;
+        color: #6b7280;
+        font-style: italic;
+        font-size: 14px;
+        border: 1px solid #e0e0e0;
+
+        i {
+          color: #A4B1BD;
+        }
+      }
+    }
+  }
+
+  .dialog-actions {
+    padding: 20px 24px;
+    background: #f9f9f9;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: flex-end;
+
+    .cancel-button {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border: 1px solid #A4B1BD;
+      background: white;
+      color: #6b7280;
+      border-radius: 6px;
+      font-weight: 500;
+
+      &:hover {
+        background: #f9f9f9;
+        border-color: #fb8f71;
+        color: #fb8f71;
+      }
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .employe-details-dialog {
+    margin: 16px;
+    max-width: calc(100vw - 32px);
+
+    .dialog-header {
+      padding: 16px;
+
+      .header-content {
+        gap: 12px;
+
+        .avatar-section .avatar-circle {
+          width: 50px;
+          height: 50px;
+          font-size: 20px;
+        }
+
+        .header-info .employe-name {
+          font-size: 20px;
+        }
+      }
+    }
+
+    .dialog-content .info-section {
+      padding: 16px;
+
+      .info-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+    }
+
+    .dialog-actions {
+      padding: 16px;
+    }
+  }
+}

@@ -28,9 +28,10 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipListbox, MatChipsModule } from '@angular/material/chips';
-import { DragDropDirective } from '../../../freelanca/directives/drag-drop/drag-drop.directive';
+
 import { switchMap, of, forkJoin, finalize, catchError } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { DragDropDirective } from '../../directives/drag-drop/drag-drop.directive';
 @Component({
   selector: 'app-edit-portfolio-item-dialog',
   templateUrl: './edit-portfolio-item-dialog.component.html',

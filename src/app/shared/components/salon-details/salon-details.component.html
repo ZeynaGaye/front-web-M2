@@ -7,7 +7,7 @@
   </div>
 
   <!-- Contenu principal -->
-  <div class="dialog-content" *ngIf="salon; else loading">
+  <div class="dialog-content" *ngIf="salon; else loading" >
     <!-- Partie supérieure avec image et infos principales -->
     <div class="salon-hero" @fadeIn>
       <div class="salon-cover" [style.background-image]="'url(' + (salon.photoProfil || 'assets/images/salon-default.jpg') + ')'">
@@ -30,17 +30,21 @@
 
     <!-- Navigation avec les onglets -->
     <div class="navigation-tabs">
-      <div class="tab" [class.active]="activeTab === 'presentation'" (click)="setActiveTab('presentation')">
+      <div class="tab" [class.active]="activeTab === 'presentation'" (click)="setActiveTab('presentation'); $event.stopPropagation()">
         <mat-icon>info</mat-icon>
         <span>Présentation</span>
       </div>
-      <div class="tab" [class.active]="activeTab === 'services'" (click)="setActiveTab('services')">
+      <div class="tab" [class.active]="activeTab === 'services'" (click)="setActiveTab('services'); $event.stopPropagation()">
         <mat-icon>spa</mat-icon>
         <span>Services</span>
       </div>
-      <div class="tab" [class.active]="activeTab === 'photos'" (click)="setActiveTab('photos')">
+      <div class="tab" [class.active]="activeTab === 'photos'" (click)="setActiveTab('photos'); $event.stopPropagation()">
         <mat-icon>photo_library</mat-icon>
         <span>Photos</span>
+      </div>
+      <div class="tab" [class.active]="activeTab === 'reviews'" (click)="setActiveTab('reviews'); $event.stopPropagation()">
+        <mat-icon>star</mat-icon>
+        <span>Avis</span>
       </div>
     </div>
 
@@ -54,7 +58,9 @@
         </div>
 
         <div class="info-section">
-          <h3>Informations pratiques</h3>
+          <h3>Informations pratiques
+            
+          </h3>
           <div class="info-grid">
             <div class="info-item">
               <mat-icon>schedule</mat-icon>
@@ -70,13 +76,13 @@
                 <p>{{ salon.telephone || 'Non disponible' }}</p>
               </div>
             </div>
-            <div class="info-item">
+            <!-- <div class="info-item">
               <mat-icon>payments</mat-icon>
               <div class="info-text">
                 <h4>Gamme de prix</h4>
                 <p>{{ salon.gammeDePrice || 'Non spécifiée' }}</p>
               </div>
-            </div>
+            </div> -->
             <div class="info-item" *ngIf="salon.specialites">
               <mat-icon>stars</mat-icon>
               <div class="info-text">
@@ -91,27 +97,28 @@
       <!-- Onglet Services -->
       <div *ngIf="activeTab === 'services'" class="services-tab">
         <h3>Nos services</h3>
-        
+
         <div *ngIf="isLoadingServices" class="loading-spinner">
           <mat-spinner diameter="40"></mat-spinner>
           <p>Chargement des services...</p>
         </div>
-        
+
         <div *ngIf="!isLoadingServices && services.length === 0" class="empty-state">
           <mat-icon>spa</mat-icon>
           <p>Aucun service n'est disponible pour le moment.</p>
         </div>
-        
+
         <div *ngIf="!isLoadingServices && services.length > 0" class="services-grid">
           <div class="service-card" *ngFor="let service of services" @serviceAnimation>
             <div class="service-content">
               <div class="service-header">
-                <h4 class="service-name">{{ service.nom }}</h4>
+                <h4 class="service-name">{{ service.nomService }}</h4>
+                <span class="service-category" *ngIf="service.categorieService">{{ service.categorieService }}</span>
               </div>
               <div class="service-details">
-                <div class="service-duration">
+                <div class="service-duration" *ngIf="service.dureeEnMinutes">
                   <mat-icon>schedule</mat-icon>
-                  <span>{{ service.duree }} min</span>
+                  <span>{{ service.dureeEnMinutes }} min</span>
                 </div>
                 <div class="service-price">
                   <span>{{ service.prix | currency:'XOF':'' }} CFA</span>
@@ -121,7 +128,7 @@
                 {{ service.description }}
               </p>
               <div class="service-actions">
-                <button mat-raised-button color="primary" class="book-button" (click)="bookService(service)">
+                <button mat-raised-button color="primary" class="book-button" (click)="bookService(service); $event.stopPropagation()">
                   <mat-icon>event_available</mat-icon>
                   Réserver
                 </button>
@@ -134,17 +141,17 @@
       <!-- Onglet Galerie Photos -->
       <div *ngIf="activeTab === 'photos'" class="photos-tab">
         <h3>Galerie photos</h3>
-        
+
         <div *ngIf="isLoadingPhotos" class="loading-spinner">
           <mat-spinner diameter="40"></mat-spinner>
           <p>Chargement des photos...</p>
         </div>
-        
+
         <div *ngIf="!isLoadingPhotos && photos.length === 0" class="empty-state">
           <mat-icon>photo_library</mat-icon>
           <p>Aucune photo n'est disponible pour le moment.</p>
         </div>
-        
+
         <div *ngIf="!isLoadingPhotos && photos.length > 0" class="photo-gallery">
           <div class="gallery-grid">
             <div class="photo-item" *ngFor="let photo of photos" @fadeIn>
@@ -155,9 +162,65 @@
           </div>
         </div>
       </div>
+
+      <!-- Onglet Avis -->
+      <div *ngIf="activeTab === 'reviews'" class="reviews-tab">
+        <div class="reviews-header">
+          <h3>Avis clients</h3>
+          <div class="rating-summary" *ngIf="recentAvis.length > 0">
+            <div class="average-rating">
+              <span class="rating-value">{{ getAverageRating() }}</span>
+              <div class="stars">{{ formatStars(getAverageRating()) }}</div>
+            </div>
+            <span class="review-count">{{ getTotalReviews() }} avis</span>
+          </div>
+        </div>
+
+        <!-- Chargement des avis -->
+        <div *ngIf="isLoadingAvis" class="loading-container">
+          <mat-spinner diameter="40"></mat-spinner>
+          <p>Chargement des avis...</p>
+        </div>
+
+        <!-- Liste des avis -->
+        <div *ngIf="!isLoadingAvis && recentAvis.length > 0" class="reservations-grid">
+          <mat-card class="reservation-card avis-card" *ngFor="let avis of recentAvis">
+            <mat-card-content>
+              <div class="reservation-header">
+                <div class="service-info">
+                  <h4>{{ avis.nomService || 'Service' }}</h4>
+                  <!-- <div class="provider-info" *ngIf="avis.nomPrestataire">
+                    <mat-icon>{{ avis.salonId ? 'store' : 'person' }}</mat-icon>
+                    {{ avis.nomPrestataire }}
+                  </div> -->
+                  <div class="client-info" *ngIf="avis.nomClient">
+                    <mat-icon>person</mat-icon>
+                    {{ avis.nomClient }}
+                  </div>
+                </div>
+                <div class="avis-rating">
+                  <div class="stars">{{ formatStars(avis.note) }}</div>
+                  <small>{{ getRelativeTime(avis.dateCreation || avis.dateAvis) }}</small>
+                </div>
+              </div>
+
+              <p class="avis-comment" *ngIf="avis.commentaire">
+                "{{ avis.commentaire }}"
+              </p>
+            </mat-card-content>
+          </mat-card>
+        </div>
+
+        <!-- Aucun avis -->
+        <div *ngIf="!isLoadingAvis && recentAvis.length === 0" class="empty-state">
+          <mat-icon>star_border</mat-icon>
+          <p>Aucun avis disponible pour le moment.</p>
+          <p style="font-size: 0.9em; margin-top: 10px; color: #666;">Soyez le premier à laisser un avis après votre visite !</p>
+        </div>
+      </div>
     </div>
   </div>
-  
+
   <!-- État de chargement -->
   <ng-template #loading>
     <div class="loading-container">
@@ -165,7 +228,7 @@
       <p>Chargement des informations du salon...</p>
     </div>
   </ng-template>
-  
+
   <!-- Message d'erreur -->
   <div *ngIf="errorMessage" class="error-message">
     <mat-icon>error</mat-icon>

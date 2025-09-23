@@ -176,10 +176,7 @@ export class AuthInterceptor implements HttpInterceptor {
       )) ||
 
       // ✅ Réservation (POST autorisé)
-      (method === 'POST' && (
-        path === '/api/reservations/create' ||
-        path.includes('/api/reservations/create')
-      )) ||
+  
 
       // ✅ Fichiers statiques (toujours publics)
       path.includes('/uploads/') ||

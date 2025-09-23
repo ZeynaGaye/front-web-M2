@@ -11,6 +11,9 @@ $gray-dark: #666;
 $success-color: #4caf50;
 $error-color: #f44336;
 $warning-color: #ff9800;
+$text-dark: #333;
+$secondary:#9ca3af;
+
 
 $border-radius: 12px;
 $box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
@@ -46,19 +49,19 @@ $transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
 
 /* Modal overlay */
 .modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
   background-color: rgba(0, 0, 0, 0.6);
-  z-index: 1000;
+  z-index: 999999 !important;
   @include flex-center;
   backdrop-filter: blur(8px);
   animation: fadeIn 0.4s ease-out forwards;
   overflow-y: auto;
   padding: 1rem;
-  
+
   /* Modal content */
   .modal-content {
     background-color: $white;
@@ -74,11 +77,11 @@ $transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
     display: flex;
     flex-direction: column;
     transition: $transition;
-    
+
     &:hover {
       box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
     }
-    
+
     /* Modal header */
     .modal-header {
       padding: 1rem 1.5rem; // Réduit de 1.5rem 2rem
@@ -88,19 +91,19 @@ $transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
       justify-content: space-between;
       align-items: center;
       position: relative;
-      
+
       .modal-title {
         display: flex;
         align-items: center;
         gap: 0.8rem; // Réduit de 1rem
-        
+
         h2 {
           margin: 0;
           font-size: 1.5rem; // Réduit de 1.8rem
           font-weight: 600;
           letter-spacing: -0.5px;
         }
-        
+
         .status-badge {
           padding: 0.2rem 0.8rem; // Réduit
           border-radius: 20px;
@@ -109,13 +112,13 @@ $transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
           text-transform: uppercase;
           letter-spacing: 0.5px;
           background-color: rgba($white, 0.2);
-          
+
           &.open { background-color: $success-color; }
           &.closed { background-color: $error-color; }
           &.pending { background-color: $warning-color; }
         }
       }
-      
+
       .close-btn {
         font-size: 1.8rem; // Réduit de 2rem
         cursor: pointer;
@@ -125,21 +128,22 @@ $transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
         border: none;
         padding: 0.4rem; // Réduit
         line-height: 1;
-        
+
         &:hover {
           color: $white;
           transform: rotate(90deg) scale(1.1);
         }
       }
     }
-    
+
     /* Modal body */
     .modal-body {
       padding: 1.5rem; // Réduit de 2rem
       overflow-y: auto;
       flex-grow: 1;
       background-color: $gray-light;
-      
+      max-height: calc(85vh - 80px); // Hauteur du modal moins le header
+
       /* Info section */
       .info-section {
         background-color: $white;
@@ -148,28 +152,28 @@ $transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
         margin-bottom: 1.5rem; // Réduit de 2rem
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
         transition: $transition;
-        
+
         &:hover {
           @include hover-effect;
         }
-        
+
         .info-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); // Réduit de 200px
           gap: 1.2rem; // Réduit de 1.5rem
-          
+
           .info-item {
             display: flex;
             align-items: flex-start;
             gap: 0.8rem; // Réduit de 1rem
-            
+
             .icon {
               font-size: 1.3rem; // Réduit de 1.5rem
               color: $primary-color;
               flex-shrink: 0;
               margin-top: 0.2rem;
             }
-            
+
             div {
               h4 {
                 margin: 0 0 0.2rem 0; // Réduit de 0.3rem
@@ -179,7 +183,7 @@ $transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
                 text-transform: uppercase;
                 letter-spacing: 0.5px;
               }
-              
+
               p {
                 margin: 0;
                 color: $black;
@@ -190,27 +194,8 @@ $transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
           }
         }
       }
-      
-      mat-raised-button{
-        background: linear-gradient(135deg, $primary-color, $primary-dark);
-        color: $white;
-        border-radius: 8px;
-        padding: 0.8rem 1.5rem; // Réduit
-        font-size: 0.9rem; // Réduit de 1rem
-        font-weight: 600;
-        cursor: pointer;
-        transition: $transition;
-        
-        &:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba($primary-color, 0.3);
-        }
-        
-        &:active {
-          transform: translateY(0);
-        }
-      }
-      
+
+
       /* Description section */
       .description-section, .skills-section {
         background-color: $white;
@@ -219,11 +204,11 @@ $transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
         margin-bottom: 1.5rem; // Réduit de 2rem
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
         transition: $transition;
-        
+
         &:hover {
           @include hover-effect;
         }
-        
+
         h3 {
           color: $primary-color;
           margin: 0 0 0.8rem 0; // Réduit de 1rem
@@ -231,7 +216,7 @@ $transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
           font-weight: 600;
           position: relative;
           padding-bottom: 0.4rem; // Réduit
-          
+
           &::after {
             content: '';
             position: absolute;
@@ -243,7 +228,7 @@ $transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
             border-radius: 3px;
           }
         }
-        
+
         p {
           color: $gray-dark;
           line-height: 1.6; // Réduit de 1.7
@@ -251,7 +236,7 @@ $transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
           font-size: 0.95rem; // Ajout pour réduire la taille du texte
         }
       }
-      
+
       /* Skills section */
       .skills-section {
         .skills-list {
@@ -259,7 +244,7 @@ $transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
           flex-wrap: wrap;
           gap: 0.6rem; // Réduit de 0.8rem
           margin-top: 0.8rem; // Réduit de 1rem
-          
+
           .skill-tag {
             display: inline-block;
             padding: 0.4rem 0.8rem; // Réduit
@@ -269,7 +254,7 @@ $transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
             font-size: 0.85rem; // Réduit de 0.9rem
             font-weight: 500;
             transition: $transition;
-            
+
             &:hover {
               background-color: $primary-color;
               color: $white;
@@ -278,134 +263,252 @@ $transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
           }
         }
       }
-      
-      /* Application section */
-      .application-section {
+
+      /* Salon section */
+      .salon-section {
         background-color: $white;
         border-radius: $border-radius;
-        padding: 1.2rem; // Réduit de 1.5rem
+        padding: 1.2rem;
+        margin-bottom: 1.5rem;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
         transition: $transition;
-        
+        border-left: 4px solid $primary-color;
+
         &:hover {
           @include hover-effect;
         }
-        
+
         h3 {
           color: $primary-color;
-          margin: 0 0 1.2rem 0; // Réduit de 1.5rem
-          font-size: 1.2rem; // Réduit de 1.3rem
+          margin: 0 0 1rem 0;
+          font-size: 1.2rem;
           font-weight: 600;
-        }
-        
-        .form-group {
-          margin-bottom: 1.2rem; // Réduit de 1.5rem
-          
-          label {
-            display: block;
-            margin-bottom: 0.4rem; // Réduit
-            color: $gray-dark;
-            font-weight: 500;
-            font-size: 0.9rem; // Réduit de 0.95rem
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+
+          mat-icon {
+            font-size: 1.4rem;
+            width: 1.4rem;
+            height: 1.4rem;
           }
-          
-          input, textarea {
-            width: 100%;
-            padding: 0.7rem 0.9rem; // Réduit
-            border: 2px solid $gray-medium;
-            border-radius: 8px;
-            font-size: 0.95rem; // Réduit de 1rem
-            transition: $transition;
-            background-color: $gray-light;
-            
-            &:focus {
-              border-color: $primary-color;
-              background-color: $white;
-              box-shadow: 0 0 0 3px rgba($primary-color, 0.2);
-              outline: none;
+        }
+
+        .salon-details {
+          .salon-header {
+            h4 {
+              color: $text-dark;
+              font-size: 1.1rem;
+              font-weight: 600;
+              margin: 0 0 1rem 0;
+              padding: 0.5rem;
+              background: rgba($primary-color, 0.05);
+              border-radius: 8px;
             }
           }
-          
-          textarea {
-            min-height: 100px; // Réduit de 120px
-            resize: vertical;
-          }
-          
-          small {
-            display: block;
-            margin-top: 0.3rem;
-            font-size: 0.75rem; // Réduit de 0.8rem
-            color: $error-color;
-            opacity: 0;
-            transition: $transition;
-            height: 0;
-            
-            &.show {
-              opacity: 1;
-              height: auto;
-            }
-          }
-        }
-        
-        .form-row {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 1.2rem; // Réduit de 1.5rem
-          
-          @media (max-width: 600px) {
-            grid-template-columns: 1fr;
-          }
-        }
-        
-        .submit-section {
-          margin-top: 1.5rem; // Réduit de 2rem
-          text-align: center;
-          
-          .submit-btn {
-            background: linear-gradient(135deg, $primary-color, $primary-dark);
-            color: $white;
-            border: none;
-            padding: 0.8rem 1.5rem; // Réduit
+
+          .salon-info-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background: rgba($gray-light, 0.3);
             border-radius: 8px;
-            font-size: 0.9rem; // Réduit de 1rem
-            font-weight: 600;
-            cursor: pointer;
             transition: $transition;
-            min-width: 180px; // Réduit de 200px
-            position: relative;
-            overflow: hidden;
-            
+
             &:hover {
-              transform: translateY(-2px);
-              box-shadow: 0 6px 20px rgba($primary-color, 0.3);
+              background: rgba($primary-color, 0.05);
             }
-            
-            &:active {
-              transform: translateY(0);
+
+            .salon-icon {
+              color: $primary-color;
+              font-size: 1.2rem;
+              width: 1.2rem;
+              height: 1.2rem;
+              margin-top: 0.2rem;
+              flex-shrink: 0;
             }
-            
-            &:disabled {
-              background: $gray-medium;
-              cursor: not-allowed;
-              transform: none;
-              box-shadow: none;
+
+            div {
+              flex: 1;
+
+              h5 {
+                margin: 0 0 0.3rem 0;
+                font-size: 0.9rem;
+                font-weight: 600;
+                color: $primary-dark;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+              }
+
+              p {
+                margin: 0;
+                color: $gray-dark;
+                line-height: 1.5;
+                font-size: 0.9rem;
+              }
             }
-            
-            .spinner {
-              display: inline-block;
-              width: 1rem;
-              height: 1rem;
-              border: 2px solid rgba($white, 0.3);
-              border-radius: 50%;
-              border-top-color: $white;
-              animation: spin 0.8s linear infinite;
-              margin-left: 0.5rem;
-              vertical-align: middle;
+
+            &:last-child {
+              margin-bottom: 0;
             }
           }
         }
       }
-      
+
+      /* Application section */
+      .application-section {
+        background-color: $white;
+        border-radius: $border-radius;
+        padding: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        transition: $transition;
+
+        &:hover {
+          @include hover-effect;
+        }
+
+        h3 {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          color: $primary-color;
+          margin: 0 0 1.5rem 0;
+          font-size: 1.3rem;
+          font-weight: 600;
+
+          mat-icon {
+            font-size: 1.5rem;
+            color: $primary-color;
+            margin-right: 0.25rem;
+          }
+        }
+
+        .application-content {
+          .application-intro {
+            background: linear-gradient(135deg, rgba($primary-color, 0.05) 0%, rgba($primary-color, 0.1) 100%);
+            border-left: 4px solid $primary-color;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-radius: 8px;
+
+            p {
+              margin: 0;
+              //color: $text-dark;
+              font-size: 0.95rem;
+              line-height: 1.5;
+              font-style: italic;
+            }
+          }
+
+          .apply-button {
+            width: 100%;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 12px;
+            background: linear-gradient(135deg, $primary-color 0%, $primary-dark 100%);
+            box-shadow: 0 4px 15px rgba($primary-color, 0.3);
+            transition: all 0.3s ease;
+
+            mat-icon {
+              margin-right: 0.5rem;
+              font-size: 1.2rem;
+            }
+
+            &:hover:not(:disabled) {
+              transform: translateY(-2px);
+              box-shadow: 0 6px 20px rgba($primary-color, 0.4);
+            }
+
+            &:active:not(:disabled) {
+              transform: translateY(0);
+            }
+          }
+        }
+
+        .application-form {
+          .form-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+
+            mat-icon {
+              color: $primary-color;
+              font-size: 1.3rem;
+            }
+
+            h4 {
+              margin: 0;
+              color: $text-dark;
+              font-size: 1.1rem;
+              font-weight: 600;
+            }
+          }
+
+          .full-width {
+            width: 100%;
+            margin-bottom: 1rem;
+          }
+
+          .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+
+            @media (max-width: 600px) {
+              grid-template-columns: 1fr;
+            }
+          }
+
+          .submit-section {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+
+            .submit-button {
+              flex: 1;
+              padding: 0.8rem 1.5rem;
+              font-size: 1rem;
+              font-weight: 600;
+              border-radius: 8px;
+              background: linear-gradient(135deg, $primary-color 0%, $primary-dark 100%);
+
+              mat-icon {
+                margin-right: 0.5rem;
+              }
+
+              &:hover:not(:disabled) {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba($primary-color, 0.3);
+              }
+            }
+
+            .cancel-button {
+              padding: 0.8rem 1rem;
+              color: $secondary;
+              border: 1px solid $secondary;
+              border-radius: 8px;
+
+              mat-icon {
+                margin-right: 0.25rem;
+              }
+
+              &:hover:not(:disabled) {
+                background-color: rgba($secondary, 0.1);
+              }
+            }
+
+            @media (max-width: 600px) {
+              flex-direction: column;
+            }
+          }
+        }
+      }
+
       /* Success message */
       .success-message {
         background-color: rgba($success-color, 0.1);
@@ -414,7 +517,7 @@ $transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
         padding: 1.5rem; // Réduit de 2rem
         text-align: center;
         animation: pulse 1.5s infinite;
-        
+
         .success-icon {
           display: inline-block;
           width: 50px; // Réduit de 60px
@@ -427,13 +530,13 @@ $transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
           margin-bottom: 1.2rem; // Réduit de 1.5rem
           animation: fadeIn 0.5s ease-out;
         }
-        
+
         h3 {
           color: $success-color;
           margin: 0 0 0.4rem 0; // Réduit
           font-size: 1.3rem; // Réduit de 1.5rem
         }
-        
+
         p {
           color: darken($success-color, 20%);
           margin: 0;
@@ -449,28 +552,28 @@ $transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
 @media (max-width: 768px) {
   .modal-overlay {
     padding: 0.8rem; // Réduit de 1rem
-    
+
     .modal-content {
       max-height: 95vh;
       max-width: 95%; // Ajout pour mobile
-      
+
       .modal-header {
         padding: 0.8rem; // Réduit de 1rem
-        
+
         .modal-title {
           flex-direction: column;
           align-items: flex-start;
           gap: 0.4rem; // Réduit
-          
+
           h2 {
             font-size: 1.2rem; // Réduit de 1.4rem
           }
         }
       }
-      
+
       .modal-body {
         padding: 0.8rem; // Réduit de 1rem
-        
+
         .info-section .info-grid {
           grid-template-columns: 1fr;
           gap: 1rem; // Réduit
@@ -488,12 +591,12 @@ $transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
   background: #e8f5e9;
   border-radius: 4px;
   color: #2e7d32;
-  
+
   .icon {
     color: #43a047;
     font-size: 1.1rem; // Réduit
   }
-  
+
   p {
     margin: 0;
     font-size: 0.9rem; // Ajout pour réduire la taille
@@ -525,13 +628,13 @@ button[disabled] {
   background-color: #e8f5e9;
   border-radius: 4px;
   border-left: 3px solid #4caf50; // Réduit de 4px
-  
+
   .icon {
     color: #4caf50;
     margin-right: 6px; // Réduit de 8px
     font-size: 1.1rem; // Ajout
   }
-  
+
   p {
     margin: 0;
     color: #2e7d32;
@@ -543,4 +646,393 @@ button[disabled] {
 /* Style pour le bouton de candidature */
 .apply-button {
   transition: all 0.3s ease;
+}
+
+/* ===============================================
+   💼 DESIGN MODERNE DU FORMULAIRE DE CANDIDATURE
+=============================================== */
+.application-form-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.7) 100%);
+  backdrop-filter: blur(12px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: overlayFadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+  .form-overlay {
+    background: $white;
+    border-radius: 20px;
+    box-shadow: 
+      0 25px 70px rgba(0, 0, 0, 0.25),
+      0 10px 25px rgba(0, 0, 0, 0.15),
+      0 0 0 1px rgba(255, 255, 255, 0.05);
+    max-width: 650px;
+    width: 100%;
+    max-height: 85vh;
+    overflow: hidden;
+    position: relative;
+    animation: formSlideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform-origin: center;
+  }
+
+  .application-form {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+
+    .form-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 2rem;
+      background: linear-gradient(135deg, $primary-color 0%, $primary-dark 100%);
+      color: $white;
+      border-radius: 20px 20px 0 0;
+      position: relative;
+      overflow: hidden;
+      
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: 
+          radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+          radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+        pointer-events: none;
+      }
+
+      .header-icon {
+        background: rgba($white, 0.2);
+        border-radius: 50%;
+        width: 56px;
+        height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        z-index: 1;
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba($white, 0.3);
+        transition: all 0.3s ease;
+        
+        &:hover {
+          transform: scale(1.05);
+          background: rgba($white, 0.3);
+        }
+
+        mat-icon {
+          font-size: 28px;
+          width: 28px;
+          height: 28px;
+        }
+      }
+
+      .header-content {
+        flex: 1;
+        position: relative;
+        z-index: 1;
+
+        h3 {
+          margin: 0 0 0.5rem 0;
+          font-size: 1.4rem;
+          font-weight: 700;
+          letter-spacing: -0.5px;
+          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        p {
+          margin: 0;
+          opacity: 0.9;
+          font-size: 0.95rem;
+          font-weight: 400;
+          line-height: 1.4;
+        }
+      }
+
+      .close-form-btn {
+        background: rgba($white, 0.2);
+        color: $white;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        border: 2px solid rgba($white, 0.3);
+        position: relative;
+        z-index: 1;
+        transition: all 0.3s ease;
+        
+        &:hover {
+          background: rgba($white, 0.3);
+          transform: rotate(90deg) scale(1.1);
+        }
+        
+        mat-icon {
+          font-size: 20px;
+        }
+      }
+    }
+
+    .error-banner {
+      background: #ffebee;
+      color: #c62828;
+      padding: 1rem 1.5rem;
+      border-left: 4px solid #f44336;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+    }
+
+    .form-body {
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.75rem;
+      background: linear-gradient(to bottom, #fafafa 0%, $white 100%);
+      overflow-y: auto;
+      max-height: calc(85vh - 200px);
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        position: relative;
+
+        .form-label {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          font-weight: 600;
+          font-size: 1rem;
+          color: $text-dark;
+          margin-bottom: 0.5rem;
+
+          mat-icon {
+            font-size: 20px;
+            width: 20px;
+            height: 20px;
+            color: $primary-color;
+            background: rgba($primary-color, 0.1);
+            padding: 4px;
+            border-radius: 6px;
+          }
+        }
+
+        .readonly-field {
+          .readonly-input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #e8e8e8;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            color: $gray-dark;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: not-allowed;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+          }
+        }
+
+        .custom-field {
+          
+          width: 100%;
+
+          ::ng-deep .mat-mdc-form-field-outline {
+            border-radius: 12px;
+          }
+
+          ::ng-deep .mat-mdc-form-field-focus-overlay {
+            border-radius: 12px;
+          }
+
+          ::ng-deep .mat-mdc-text-field-wrapper {
+            border-radius: 12px;
+          }
+
+          ::ng-deep .mat-mdc-form-field-outline-thick {
+            border-color: $primary-color !important;
+            border-width: 2px;
+          }
+
+          ::ng-deep .mat-mdc-form-field.mat-focused .mat-mdc-form-field-outline-thick {
+            border-color: $primary-color !important;
+          }
+
+          ::ng-deep .mat-mdc-form-field.mat-focused .mat-mdc-floating-label {
+            color: $primary-color !important;
+          }
+
+          ::ng-deep .mat-mdc-input-element {
+            padding: 14px 16px;
+            font-size: 1rem;
+          }
+        }
+
+        &.message-group {
+          .custom-field {
+            ::ng-deep textarea {
+              min-height: 100px;
+              resize: vertical;
+            }
+          }
+        }
+      }
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 1rem;
+      padding: 2rem;
+      border-top: 1px solid #f0f0f0;
+      background: linear-gradient(to top, #f8f9fa 0%, $white 100%);
+      border-radius: 0 0 20px 20px;
+      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+
+      .cancel-btn {
+        flex: 1;
+        border-radius: 12px;
+        height: 48px;
+        border: 2px solid #e0e0e0;
+        color: $gray-dark;
+        font-weight: 500;
+        transition: all 0.3s ease;
+
+        &:hover {
+          border-color: $gray-dark;
+          background: rgba($gray-dark, 0.05);
+          transform: translateY(-1px);
+        }
+
+        mat-icon {
+          margin-right: 8px;
+        }
+      }
+
+      .submit-btn {
+        flex: 2;
+        border-radius: 8px;
+        height: 44px;
+        font-weight: 600;
+        background: linear-gradient(135deg, $primary-color 0%, $primary-dark 100%);
+
+        &:hover:not([disabled]) {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba($primary-color, 0.3);
+        }
+
+        &[disabled] {
+          opacity: 0.7;
+          cursor: not-allowed;
+        }
+
+        mat-spinner {
+          margin-right: 8px;
+        }
+
+        mat-icon {
+          margin-right: 8px;
+        }
+      }
+    }
+  }
+}
+
+/* Animations modernes */
+@keyframes overlayFadeIn {
+  from { 
+    opacity: 0; 
+    backdrop-filter: blur(0px);
+  }
+  to { 
+    opacity: 1;
+    backdrop-filter: blur(12px);
+  }
+}
+
+@keyframes formSlideIn {
+  from { 
+    opacity: 0;
+    transform: translateY(40px) scale(0.95);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fadeIn {
+  from { 
+    opacity: 0; 
+  }
+  to { 
+    opacity: 1; 
+  }
+}
+
+@keyframes slideInUp {
+  from { 
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .application-form-container {
+    padding: 10px;
+
+    .form-overlay {
+      max-height: 95vh;
+    }
+
+    .application-form {
+      .form-header {
+        padding: 1rem;
+        
+        .header-icon {
+          width: 40px;
+          height: 40px;
+        }
+
+        h3 {
+          font-size: 1.1rem;
+        }
+      }
+
+      .form-body {
+        padding: 1rem;
+        gap: 1.25rem;
+      }
+
+      .form-actions {
+        padding: 1rem;
+        flex-direction: column;
+
+        .cancel-btn,
+        .submit-btn {
+          width: 100%;
+        }
+      }
+    }
+  }
 }

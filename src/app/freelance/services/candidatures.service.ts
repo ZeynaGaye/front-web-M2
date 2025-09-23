@@ -1,31 +1,10 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
-
-// ✅ Interface adaptée à votre service existant
-export interface Candidature {
-  freelance: any;
-  freelanceId: any;
-  nomCandidat: any;
-  emailCandidat: any;
-  datePostulation: any;
-  cv: any;
-  id?: number;
-  offreEmploiId: number; // Correspond au backend
-   
-  message?: string;
-  disponibilite?: string;
-  tarifPropose?: number;
-  status?: string;
-  dateCandidature?: Date;
-  
-  // ✅ Propriétés ajoutées pour l'interface améliorée
-  isLue?: boolean;
-  isNouvelle?: boolean;
-  dateCreation?: Date;
-  dateModification?: Date;
-}
+import { HttpClient } from '@angular/common/http';
+import { Observable, of, forkJoin } from 'rxjs';
+import { map, catchError, switchMap, tap } from 'rxjs/operators';
+import { FreelanceService } from './freelance.service';
+import { Candidature } from '../interfaces/candidatures.interface';
+import { NotificationService } from '../../shared/services/notification/notification.service';
 
 @Injectable({
   providedIn: 'root'
@@ -33,17 +12,52 @@ export interface Candidature {
 export class CandidatureService {
   private apiUrl = 'http://localhost:8081/api/candidatures';
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private freelanceService: FreelanceService,
+    private notificationService: NotificationService
+  ) {}
 
-  // ===== VOS MÉTHODES EXISTANTES (inchangées) =====
+  
   
   createCandidature(candidatureData: {
     offreEmploiId: number;
     message: string;
     disponibilite: string;
-    tarifPropose: number;
+    // tarifPropose: number;
   }): Observable<Candidature> {
-    return this.http.post<Candidature>(`${this.apiUrl}/create`, candidatureData);
+    return this.http.post<Candidature>(`${this.apiUrl}/create`, candidatureData).pipe(
+      tap((candidature) => {
+        // Créer une notification pour l'employeur quand une nouvelle candidature arrive
+        if (candidature && candidature.id) {
+          // Pour récupérer l'ID de l'employeur, on doit d'abord récupérer les détails de l'offre
+          this.getOffreDetails(candidatureData.offreEmploiId).subscribe({
+            next: (offre) => {
+              if (offre && offre.employeurId) {
+                const notificationData = {
+                  id: candidature.id,
+                  offreEmploiId: candidatureData.offreEmploiId,
+                  freelancePrenom: candidature.freelancePrenom || '',
+                  freelanceNom: candidature.freelanceNom || '',
+                  offreTitre: offre.titre || 'Offre d\'emploi'
+                };
+                
+                this.notificationService.createNewCandidatureNotification(offre.employeurId, notificationData).subscribe({
+                  next: () => console.log('✅ Notification employeur créée pour nouvelle candidature'),
+                  error: (error) => console.error('❌ Erreur création notification employeur:', error)
+                });
+              }
+            },
+            error: (error) => console.error('❌ Erreur récupération détails offre:', error)
+          });
+        }
+      })
+    );
+  }
+
+  // Méthode helper pour récupérer les détails d'une offre
+  private getOffreDetails(offreId: number): Observable<any> {
+    return this.http.get<any>(`http://localhost:8081/api/offres-emploi/${offreId}`);
   }
 
   getAllCandidatures(): Observable<Candidature[]> {
@@ -70,6 +84,59 @@ export class CandidatureService {
 
   getCandidaturesByOffre(offreId: number): Observable<Candidature[]> {
     return this.http.get<Candidature[]>(`${this.apiUrl}/offre/${offreId}`).pipe(
+      switchMap(candidatures => {
+        if (candidatures.length === 0) {
+          return of([]);
+        }
+
+        // Enrichir chaque candidature avec les données du freelance
+        const enrichedCandidatures = candidatures.map(candidature => {
+          // Essayer d'abord avec freelanceId
+          if (candidature.freelanceId) {
+            return this.freelanceService.getFreelanceById(candidature.freelanceId).pipe(
+              map(freelance => {
+                return {
+                  ...candidature,
+                  freelanceEmail: freelance.email || 'Email non disponible',
+                  freelanceTel: freelance.telephone || 'Téléphone non disponible',
+                  freelanceAdresse: freelance.adresse || 'Adresse non disponible',
+                  freelanceCompetences: freelance.competences ? freelance.competences.split(',').map(c => c.trim()) : [],
+                  freelanceExperience: freelance.experiences || 'Non spécifiée',
+                  freelanceDetails: freelance
+                };
+              }),
+              catchError(() => of(candidature))
+            );
+          }
+          
+          // Si pas de freelanceId, essayer de chercher par nom
+          if (candidature.freelanceNom && candidature.freelancePrenom) {
+            const searchTerm = `${candidature.freelancePrenom} ${candidature.freelanceNom}`;
+            return this.freelanceService.searchFreelances(searchTerm).pipe(
+              map(freelances => {
+                if (freelances && freelances.length > 0) {
+                  const freelance = freelances[0]; // Prendre le premier résultat
+                  return {
+                    ...candidature,
+                    freelanceEmail: freelance.email || 'Email non disponible',
+                    freelanceTel: freelance.telephone || 'Téléphone non disponible',
+                    freelanceAdresse: freelance.adresse || 'Adresse non disponible',
+                    freelanceCompetences: freelance.competences ? freelance.competences.split(',').map(c => c.trim()) : [],
+                    freelanceExperience: freelance.experiences || 'Non spécifiée',
+                    freelanceDetails: freelance
+                  };
+                }
+                return candidature;
+              }),
+              catchError(() => of(candidature))
+            );
+          }
+          
+          return of(candidature);
+        });
+
+        return forkJoin(enrichedCandidatures);
+      }),
       map(candidatures => candidatures.map(c => this.normalizeCandidature(c))),
       catchError(error => {
         console.error('Error fetching candidatures for offre', offreId, error);
@@ -99,6 +166,43 @@ export class CandidatureService {
     );
   }
 
+  // Méthode spécifique pour mettre à jour le statut avec notification au freelance
+  updateCandidatureStatus(id: number, candidature: Candidature, newStatus: string): Observable<Candidature> {
+    const oldStatus = candidature.status;
+    candidature.status = newStatus;
+    
+    return this.http.put<Candidature>(`${this.apiUrl}/${id}`, candidature).pipe(
+      map(updatedCandidature => this.normalizeCandidature(updatedCandidature)),
+      tap((updatedCandidature) => {
+        // Créer notification seulement si le statut a changé vers ACCEPTEE ou REFUSEE
+        if ((newStatus === 'ACCEPTEE' || newStatus === 'REFUSEE') && oldStatus !== newStatus) {
+          if (updatedCandidature.freelanceId) {
+            // Récupérer les détails de l'offre pour le titre
+            this.getOffreDetails(updatedCandidature.offreEmploiId || 0).subscribe({
+              next: (offre) => {
+                const notificationData = {
+                  id: updatedCandidature.id,
+                  offreEmploiId: updatedCandidature.offreEmploiId,
+                  offreTitre: offre?.titre || 'Offre d\'emploi'
+                };
+                
+                this.notificationService.createCandidatureStatusNotification(
+                  updatedCandidature.freelanceId!, 
+                  newStatus, 
+                  notificationData
+                ).subscribe({
+                  next: () => console.log('✅ Notification statut candidature créée pour freelance'),
+                  error: (error) => console.error('❌ Erreur création notification freelance:', error)
+                });
+              },
+              error: (error) => console.error('❌ Erreur récupération détails offre pour notification:', error)
+            });
+          }
+        }
+      })
+    );
+  }
+
   deleteCandidature(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
@@ -109,21 +213,43 @@ export class CandidatureService {
    * ✅ Normalise les données de candidature pour l'affichage optimisé
    */
   private normalizeCandidature(candidature: any): Candidature {
+    // Extraire le nom réel - adaptée à la structure réelle des données
+    let nomCandidat = 'Nom non disponible';
+    if (candidature.freelancePrenom && candidature.freelanceNom) {
+      nomCandidat = `${candidature.freelancePrenom} ${candidature.freelanceNom}`;
+    } else if (candidature.freelanceNom) {
+      nomCandidat = candidature.freelanceNom;
+    } else if (candidature.freelance?.prenom && candidature.freelance?.nom) {
+      nomCandidat = `${candidature.freelance.prenom} ${candidature.freelance.nom}`;
+    } else if (candidature.freelance?.nom) {
+      nomCandidat = candidature.freelance.nom;
+    } else if (candidature.nomCandidat && candidature.nomCandidat !== 'Nom non disponible') {
+      nomCandidat = candidature.nomCandidat;
+    }
+    
+    // Extraire l'email réel - le backend devrait déjà fournir freelanceEmail
+    let emailCandidat = candidature.freelanceEmail || candidature.freelance?.email || candidature.emailCandidat || 'Email non disponible';
+    
+    // Extraire le téléphone
+    let telCandidat = 'non disponible';
+    if (candidature.freelanceTelephone) {
+      telCandidat = candidature.freelanceTelephone;
+    } else if (candidature.freelanceTel) {
+      telCandidat = candidature.freelanceTel;
+    } else if (candidature.freelance?.telephone) {
+      telCandidat = candidature.freelance.telephone;
+    }
+    
     return {
       ...candidature,
       // Normaliser les dates
       dateCandidature: candidature.dateCandidature || candidature.datePostulation,
       dateCreation: candidature.dateCreation || candidature.datePostulation,
       
-      // Normaliser le nom du candidat
-      nomCandidat: candidature.nomCandidat || 
-                   this.extractNameFromFreelance(candidature.freelance) ||
-                   this.generateFakeName(candidature.id || Math.random()),
-      
-      // Normaliser l'email
-      emailCandidat: candidature.emailCandidat || 
-                     this.extractEmailFromFreelance(candidature.freelance) ||
-                     this.generateFakeEmail(candidature.nomCandidat || 'candidat'),
+      // Utiliser les vraies données extraites
+      nomCandidat: nomCandidat,
+      emailCandidat: emailCandidat,
+      telCandidat: telCandidat,
       
       // Statut par défaut
       status: candidature.status || 'Nouveau',
@@ -135,36 +261,6 @@ export class CandidatureService {
       // Valeurs par défaut
       disponibilite: candidature.disponibilite || 'Non spécifiée'
     };
-  }
-
-  /**
-   * ✅ Extrait le nom depuis l'objet freelance
-   */
-  private extractNameFromFreelance(freelance: any): string | null {
-    if (!freelance) return null;
-    
-    if (freelance.nom && freelance.prenom) {
-      return `${freelance.prenom} ${freelance.nom}`;
-    }
-    
-    if (freelance.nomComplet) {
-      return freelance.nomComplet;
-    }
-    
-    if (freelance.name) {
-      return freelance.name;
-    }
-    
-    return null;
-  }
-
-  /**
-   * ✅ Extrait l'email depuis l'objet freelance
-   */
-  private extractEmailFromFreelance(freelance: any): string | null {
-    if (!freelance) return null;
-    
-    return freelance.email || freelance.emailCandidat || null;
   }
 
   /**
@@ -180,40 +276,6 @@ export class CandidatureService {
            (maintenant.getTime() - dateCreation.getTime()) < septJoursEnMs;
   }
 
-  /**
-   * ✅ Génère un nom fictif pour les candidatures sans nom
-   */
-  private generateFakeName(seed: number): string {
-    const prenoms = [
-      'Marie', 'Sophie', 'Julie', 'Camille', 'Emma', 'Léa', 'Chloé', 'Manon', 
-      'Lucie', 'Clara', 'Sarah', 'Laura', 'Océane', 'Pauline', 'Céline'
-    ];
-    const noms = [
-      'Dubois', 'Martin', 'Leroy', 'Rousseau', 'Laurent', 'Bernard', 'Moreau', 
-      'Petit', 'Durand', 'Roux', 'Vincent', 'Michel', 'Garcia', 'Blanc', 'Guerin'
-    ];
-    
-    const prenomIndex = Math.floor(seed) % prenoms.length;
-    const nomIndex = Math.floor(seed * 10) % noms.length;
-    
-    return `${prenoms[prenomIndex]} ${noms[nomIndex]}`;
-  }
-
-  /**
-   * ✅ Génère un email fictif
-   */
-  private generateFakeEmail(nom: string): string {
-    const email = nom.toLowerCase()
-                     .replace(/\s+/g, '.')
-                     .normalize('NFD')
-                     .replace(/[\u0300-\u036f]/g, '')
-                     .replace(/[^a-z.]/g, '');
-    
-    const domains = ['email.com', 'gmail.com', 'yahoo.fr', 'outlook.com', 'hotmail.fr'];
-    const domain = domains[Math.floor(Math.random() * domains.length)];
-    
-    return `${email}@${domain}`;
-  }
 
   // ===== MÉTHODES OPTIONNELLES POUR FONCTIONNALITÉS AVANCÉES =====
 
@@ -221,7 +283,10 @@ export class CandidatureService {
    * ✅ Marque une candidature comme lue (si votre backend le supporte)
    */
   markAsRead(candidatureId: number): Observable<Candidature> {
-    return this.updateCandidature(candidatureId, { isLue: true } as Candidature);
+    return this.updateCandidature(candidatureId, { 
+      offreEmploiId: 0, // Valeur temporaire, sera écrasée par updateCandidature
+      isLue: true 
+    } as Candidature);
   }
 
   /**

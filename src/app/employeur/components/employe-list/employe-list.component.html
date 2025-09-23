@@ -1,0 +1,237 @@
+<div class="employes-container">
+  <div class="header-section">
+    <div class="header-content">
+      <div class="header-icon">
+        <i class="fas fa-users"></i>
+      </div>
+      <div class="header-text">
+        <h2>Gestion des Employés</h2>
+        <p>Gérez votre équipe et leurs informations</p>
+      </div>
+    </div>
+    <button mat-raised-button color="primary" (click)="nouvelEmploye()" aria-label="Créer un nouvel employé">
+      <i class="fas fa-user-plus"></i>
+      <span>Nouvel Employé</span>
+    </button>
+  </div>
+
+  <!-- Barre de recherche améliorée -->
+  <div class="search-container">
+    <mat-form-field class="search-field" appearance="outline">
+      <mat-label>Rechercher un employé</mat-label>
+      <i class="fas fa-search" matPrefix></i>
+      <input 
+        matInput 
+        [(ngModel)]="recherche" 
+        (input)="rechercher()" 
+        placeholder="Tapez un nom, prénom ou email..."
+        autocomplete="off">
+      <button 
+        mat-icon-button 
+        matSuffix 
+        *ngIf="recherche" 
+        (click)="viderRecherche()"
+        aria-label="Effacer la recherche">
+        <i class="fas fa-times"></i>
+      </button>
+      <mat-hint *ngIf="recherche && recherche.length > 0">
+        <i class="fas fa-info-circle"></i>
+        {{ employes.length }} résultat(s) trouvé(s)
+      </mat-hint>
+    </mat-form-field>
+  </div>
+
+  <!-- Conteneur du tableau avec scroll horizontal -->
+  <div class="table-container">
+    <!-- Indicateur de scroll pour mobile -->
+    <div class="scroll-indicator" *ngIf="isMobile()">
+      Faites défiler horizontalement pour voir toutes les colonnes
+    </div>
+
+    <table mat-table [dataSource]="employes" class="employes-table" matSort>
+      
+      <!-- Colonne Nom complet -->
+      <ng-container matColumnDef="nomComplet">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="nomComplet" arrowPosition="after">
+          <span>Nom complet</span>
+        </th>
+        <td mat-cell *matCellDef="let employe">
+          <span class="nom-complet">{{ employe.nomComplet }}</span>
+        </td>
+      </ng-container>
+
+      <!-- Colonne Email -->
+      <ng-container matColumnDef="email">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="email" arrowPosition="after">
+          <span>Email</span>
+        </th>
+        <td mat-cell *matCellDef="let employe">
+          <a [href]="'mailto:' + employe.email" class="email-link">
+            {{ employe.email }}
+          </a>
+        </td>
+      </ng-container>
+
+      <!-- Colonne Spécialités améliorée -->
+      <ng-container matColumnDef="specialites">
+        <th mat-header-cell *matHeaderCellDef>
+          <span>Spécialités</span>
+        </th>
+        <td mat-cell *matCellDef="let employe">
+          <div class="specialites-container">
+            <mat-chip-listbox class="specialites-chips" aria-label="Spécialités de l'employé">
+              <mat-chip-option 
+                *ngFor="let spec of employe.specialites.slice(0, 2); trackBy: trackBySpecialite"
+                [value]="spec"
+                class="specialite-chip">
+                {{ formatSpecialiteName(spec) }}
+              </mat-chip-option>
+            </mat-chip-listbox>
+            <span 
+              *ngIf="employe.specialites.length > 2" 
+              class="specialites-count"
+              [matTooltip]="getRestantesSpecialites(employe.specialites)"
+              matTooltipPosition="above">
+              +{{ employe.specialites.length - 2 }}
+            </span>
+          </div>
+        </td>
+      </ng-container>
+
+      <!-- Colonne Statut améliorée -->
+      <ng-container matColumnDef="statut">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="statut" arrowPosition="after">
+          <span>Statut</span>
+        </th>
+        <td mat-cell *matCellDef="let employe">
+          <span 
+            class="statut-badge" 
+            [ngClass]="getStatutClass(employe.statut)"
+            [matTooltip]="getStatutTooltip(employe.statut)"
+            matTooltipPosition="above">
+            <i class="fas statut-icon" [class]="getStatutIcon(employe.statut)"></i>
+            {{ getStatutLabel(employe.statut) }}
+          </span>
+        </td>
+      </ng-container>
+
+      <!-- Colonne Actions  -->
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>
+          <span>Actions</span>
+        </th>
+        <td mat-cell *matCellDef="let employe">
+          <button 
+            mat-icon-button 
+            [matMenuTriggerFor]="menu"
+            [attr.aria-label]="'Actions pour ' + employe.nomComplet"
+            class="actions-button">
+            <i class="fas fa-ellipsis-v"></i>
+          </button>
+          
+          <mat-menu #menu="matMenu" class="employe-actions-menu">
+            <button 
+              mat-menu-item 
+              (click)="voirEmploye(employe)"
+              aria-label="Voir les détails de l'employé">
+              <i class="fas fa-eye"></i>
+              <!-- <span>Voir détails</span> -->
+            </button>
+            
+            <button 
+              mat-menu-item 
+              (click)="modifierEmploye(employe)"
+              aria-label="Modifier l'employé">
+              <i class="fas fa-edit"></i>
+              <!-- <span>Modifier</span> -->
+            </button>
+            
+            <button 
+              mat-menu-item 
+              (click)="reactiverEmploye(employe)" 
+              *ngIf="employe.statut === 'INACTIF'"
+              aria-label="Réactiver l'employé">
+              <i class="fas fa-user-check"></i>
+              <!-- <span>Réactiver</span> -->
+            </button>
+            
+            <mat-divider *ngIf="employe.statut !== 'INACTIF'"></mat-divider>
+            
+            <button 
+              mat-menu-item 
+              (click)="archiverEmploye(employe)" 
+              *ngIf="employe.statut === 'ACTIF'"
+              aria-label="Archiver l'employé">
+              <i class="fas fa-archive"></i>
+              <!-- <span>Archiver</span> -->
+            </button>
+            
+            <button 
+              mat-menu-item 
+              (click)="supprimerEmploye(employe)" 
+              class="delete-action"
+              aria-label="Supprimer l'employé">
+              <i class="fas fa-trash-alt"></i>
+              <!-- <span>Supprimer</span> -->
+            </button>
+          </mat-menu>
+        </td>
+      </ng-container>
+
+      <!-- Définition des lignes -->
+      <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+      <tr 
+        mat-row 
+        *matRowDef="let employe; columns: displayedColumns;" 
+        class="employe-row"
+        [attr.data-employe-id]="employe.id"
+        [class.row-inactive]="employe.statut === 'INACTIF'"></tr>
+    </table>
+
+    <!-- États vides et de chargement -->
+    <div *ngIf="loading" class="loading-container">
+      <mat-spinner diameter="50"></mat-spinner>
+      <p>Chargement des employés...</p>
+      <small>Veuillez patienter</small>
+    </div>
+
+    <div *ngIf="!loading && employes.length === 0 && !recherche" class="no-results">
+      <div class="no-results-icon">
+        <i class="fas fa-user-plus"></i>
+      </div>
+      <h3>Aucun employé enregistré</h3>
+      <p>Commencez par ajouter votre premier employé</p>
+      <button mat-raised-button color="primary" (click)="nouvelEmploye()">
+        <i class="fas fa-plus"></i>
+        Ajouter un employé
+      </button>
+    </div>
+
+    <div *ngIf="!loading && employes.length === 0 && recherche" class="no-results">
+      <div class="no-results-icon">
+        <i class="fas fa-search-minus"></i>
+      </div>
+      <h3>Aucun résultat</h3>
+      <p>Aucun employé ne correspond à "{{ recherche }}"</p>
+      <button mat-button (click)="viderRecherche()">
+        <i class="fas fa-times"></i>
+        Effacer la recherche
+      </button>
+    </div>
+  </div>
+
+  <!-- Pagination améliorée -->
+  <mat-paginator 
+    *ngIf="!loading && employes.length > 0"
+    [length]="totalElements"
+    [pageSize]="pageSize"
+    [pageSizeOptions]="[5, 10, 25, 50, 100]"
+    [pageIndex]="currentPage"
+    [showFirstLastButtons]="true"
+    (page)="onPageChange($event)"
+    aria-label="Sélectionnez une page d'employés">
+    
+    <!-- Labels personnalisés -->
+    <!-- Si vous souhaitez personnaliser les labels du paginator, faites-le dans le TypeScript via MatPaginatorIntl -->
+  </mat-paginator>
+</div>

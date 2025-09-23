@@ -1,0 +1,427 @@
+/* ✨ PALETTE DE COULEURS BEAUTÉ MODERNISÉE */
+$beauty-primary: #FF6B9D;
+$beauty-primary-light: #FFB5D1;
+$beauty-primary-dark: #E91E63;
+$beauty-secondary: #9C88FF;
+$beauty-secondary-light: #C8B9FF;
+$beauty-accent: #FFD93D;
+$beauty-accent-light: #FFF4A3;
+
+$white: #FFFFFF;
+$black: #1A1A1A;
+$gray-50: #FAFAFA;
+$gray-100: #F5F5F5;
+$gray-200: #EEEEEE;
+$gray-300: #E0E0E0;
+$gray-600: #757575;
+$gray-700: #616161;
+$gray-900: #212121;
+
+$success-color: #4CAF50;
+$error-color: #F44336;
+
+/* ✨ VARIABLES GLOBALES */
+:root {
+  --beauty-gradient: linear-gradient(135deg, #{$beauty-primary} 0%, #{$beauty-secondary} 100%);
+  --beauty-gradient-soft: linear-gradient(135deg, #{$beauty-primary-light} 0%, #{$beauty-secondary-light} 100%);
+  --shadow-soft: 0 4px 20px rgba(255, 107, 157, 0.15);
+  --shadow-medium: 0 8px 32px rgba(255, 107, 157, 0.2);
+  --shadow-strong: 0 12px 40px rgba(255, 107, 157, 0.25);
+  --border-radius: 16px;
+  --border-radius-large: 24px;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ✨ CONTAINER PRINCIPAL */
+.photo-manager-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+/* ✨ SECTION PRÉVISUALISATION */
+.photo-preview-section {
+  text-align: center;
+
+  .photo-preview {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    overflow: hidden;
+    background: $gray-100;
+    border: 3px solid var(--role-color, #{$beauty-primary});
+    box-shadow: var(--shadow-soft);
+    transition: var(--transition);
+
+    &:hover {
+      transform: scale(1.05);
+      box-shadow: var(--shadow-medium);
+    }
+
+    .photo-display {
+      position: relative;
+      width: 100%;
+      height: 100%;
+
+      .profile-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: var(--transition);
+      }
+
+      .photo-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        opacity: 0;
+        transition: var(--transition);
+
+        button {
+          background: $white;
+          color: $gray-700;
+          border-radius: 50%;
+          width: 40px;
+          height: 40px;
+          transition: var(--transition);
+
+          &.edit-button:hover {
+            background: $beauty-primary;
+            color: $white;
+            transform: scale(1.1);
+          }
+
+          &.delete-button:hover {
+            background: $error-color;
+            color: $white;
+            transform: scale(1.1);
+          }
+
+          mat-icon {
+            font-size: 1.2rem;
+          }
+        }
+      }
+
+      &:hover .photo-overlay {
+        opacity: 1;
+      }
+    }
+
+    .photo-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      cursor: pointer;
+      transition: var(--transition);
+      color: $gray-600;
+
+      &:hover {
+        background: rgba(255, 107, 157, 0.05);
+        color: $beauty-primary;
+      }
+
+      .placeholder-icon {
+        font-size: 3rem;
+        width: 3rem;
+        height: 3rem;
+        margin-bottom: 0.5rem;
+        color: var(--role-color, #{$beauty-primary});
+      }
+
+      .placeholder-text {
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin: 0 0 0.25rem 0;
+      }
+
+      .click-hint {
+        font-size: 0.75rem;
+        opacity: 0.8;
+      }
+    }
+
+    .photo-loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.9);
+
+      mat-spinner {
+        margin-bottom: 1rem;
+      }
+
+      .loading-text {
+        font-size: 0.9rem;
+        color: $gray-600;
+        margin: 0;
+      }
+    }
+  }
+}
+
+/* ✨ ZONE DE DRAG & DROP */
+.drop-zone {
+  border: 2px dashed $gray-300;
+  border-radius: var(--border-radius);
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: var(--transition);
+  background: linear-gradient(135deg, rgba(255, 107, 157, 0.02) 0%, rgba(156, 136, 255, 0.02) 100%);
+
+  &:hover,
+  &.drag-over {
+    border-color: $beauty-primary;
+    background: linear-gradient(135deg, rgba(255, 107, 157, 0.08) 0%, rgba(156, 136, 255, 0.05) 100%);
+    transform: translateY(-2px);
+  }
+
+  &.has-photo {
+    opacity: 0.8;
+    
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  .drop-zone-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+
+    .drop-icon {
+      font-size: 3rem;
+      width: 3rem;
+      height: 3rem;
+      color: $beauty-primary;
+      margin-bottom: 0.5rem;
+    }
+
+    .drop-text {
+      h4 {
+        margin: 0 0 0.5rem 0;
+        color: $gray-900;
+        font-weight: 600;
+      }
+
+      p {
+        margin: 0;
+        color: $gray-600;
+
+        strong {
+          color: $beauty-primary;
+        }
+      }
+    }
+
+    .drop-info {
+      display: flex;
+      gap: 2rem;
+      margin-top: 1rem;
+
+      .info-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        color: $gray-600;
+
+        mat-icon {
+          font-size: 1.2rem;
+          color: $beauty-primary;
+        }
+      }
+    }
+  }
+}
+
+/* ✨ ACTIONS */
+.photo-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+
+  button {
+    border-radius: 25px;
+    font-weight: 600;
+    min-width: 140px;
+    transition: var(--transition);
+
+    &[color="primary"] {
+      background: var(--beauty-gradient);
+      color: $white;
+
+      &:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-medium);
+      }
+    }
+
+    &[color="warn"] {
+      border-color: $error-color;
+      color: $error-color;
+
+      &:hover:not(:disabled) {
+        background: rgba(244, 67, 54, 0.1);
+        transform: translateY(-2px);
+      }
+    }
+
+    mat-icon {
+      margin-right: 0.5rem;
+    }
+  }
+}
+
+/* ✨ CONSEILS */
+.photo-tips {
+  background: var(--beauty-gradient-soft);
+  border: 1px solid rgba(255, 107, 157, 0.1);
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+
+  h4 {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0 0 1rem 0;
+    color: $gray-900;
+    font-weight: 600;
+    font-size: 1.1rem;
+
+    mat-icon {
+      color: $beauty-accent;
+    }
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+
+    li {
+      padding: 0.5rem 0;
+      color: $gray-700;
+      font-size: 0.9rem;
+      line-height: 1.4;
+      border-bottom: 1px solid rgba(255, 107, 157, 0.1);
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      &:hover {
+        color: $beauty-primary;
+        padding-left: 0.5rem;
+        transition: var(--transition);
+      }
+    }
+  }
+}
+
+/* ✨ RESPONSIVE */
+@media (max-width: 600px) {
+  .photo-manager-container {
+    gap: 1.5rem;
+  }
+
+  .photo-preview-section .photo-preview {
+    width: 120px;
+    height: 120px;
+
+    .photo-placeholder .placeholder-icon {
+      font-size: 2.5rem;
+      width: 2.5rem;
+      height: 2.5rem;
+    }
+  }
+
+  .drop-zone {
+    padding: 1.5rem;
+
+    .drop-zone-content {
+      .drop-icon {
+        font-size: 2.5rem;
+        width: 2.5rem;
+        height: 2.5rem;
+      }
+
+      .drop-info {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: center;
+      }
+    }
+  }
+
+  .photo-actions {
+    flex-direction: column;
+    align-items: stretch;
+
+    button {
+      min-width: unset;
+    }
+  }
+}
+
+/* ✨ ANIMATIONS */
+@keyframes uploadPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.photo-preview.uploading {
+  animation: uploadPulse 2s infinite;
+}
+
+/* ✨ ÉTATS DE VALIDATION */
+.drop-zone.valid-file {
+  border-color: $success-color;
+  background: rgba(76, 175, 80, 0.1);
+  
+  .drop-icon {
+    color: $success-color;
+  }
+}
+
+.drop-zone.invalid-file {
+  border-color: $error-color;
+  background: rgba(244, 67, 54, 0.1);
+  
+  .drop-icon {
+    color: $error-color;
+  }
+}
+
+/* ✨ FOCUS ACCESSIBILITY */
+button:focus-visible {
+  outline: 2px solid $beauty-primary;
+  outline-offset: 2px;
+}
+
+.drop-zone:focus-visible {
+  outline: 2px solid $beauty-primary;
+  outline-offset: 2px;
+}

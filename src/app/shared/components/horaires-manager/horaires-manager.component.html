@@ -1,0 +1,380 @@
+<div class="container mt-4">
+  <div class="card shadow-sm mb-4">
+    <div class="card-body header-card-body">
+      <h1 class="card-title h3 mb-2">
+        <span class="icon-text">🗓️</span> Gestion de mes Disponibilités
+      </h1>
+      <p class="card-text text-muted">
+        Gérez vos horaires d'ouverture, congés et créneaux disponibles
+      </p>
+    </div>
+  </div>
+
+  <ul class="nav nav-tabs mb-4">
+    <li class="nav-item">
+      <button
+        class="nav-link"
+        [class.active]="activeTab === 'horaires'"
+        (click)="setActiveTab('horaires')"
+        aria-current="page"
+      >
+        <span class="icon-text">📋</span> Mes Horaires
+      </button>
+    </li>
+    <li class="nav-item">
+      <button
+        class="nav-link"
+        [class.active]="activeTab === 'planning'"
+        (click)="setActiveTab('planning')"
+      >
+        <span class="icon-text">📅</span> Mon Planning
+      </button>
+    </li>
+    <li class="nav-item">
+      <button
+        class="nav-link"
+        [class.active]="activeTab === 'conges'"
+        (click)="setActiveTab('conges')"
+      >
+        <span class="icon-text">🏖️</span> Congés
+      </button>
+    </li>
+    <li class="nav-item">
+      <button
+        class="nav-link"
+        [class.active]="activeTab === 'actions'"
+        (click)="setActiveTab('actions')"
+      >
+        <span class="icon-text">⚡</span> Actions Rapides
+      </button>
+    </li>
+  </ul>
+
+  <div class="tab-content">
+    <div *ngIf="activeTab === 'horaires'" class="tab-pane fade show active">
+      <div class="card shadow-sm mb-4 horaires-main-card">
+        <div class="card-body">
+          <h2 class="card-title h4 mb-3">
+            <span class="icon-text">📋</span> Mes Horaires d'Ouverture
+          </h2>
+          <p class="card-text text-muted mb-4">
+            Définissez vos horaires de travail pour chaque jour de la semaine
+          </p>
+
+          <form [formGroup]="horairesFormGroup" class="horaires-form-list">
+            <div
+              *ngFor="let day of joursSemaine"
+              [formGroupName]="day.code"
+              class="horaire-list-item d-flex align-items-center justify-content-between flex-wrap"
+            >
+              <div class="day-label col-12 col-md-2 fw-bold">{{ day.libelle }}</div>
+              <div class="toggle-control col-auto me-md-3">
+                <mat-slide-toggle
+                  [formControlName]="'estOuvert'"
+                  (change)="onEstOuvertChange(day.code, $event)"
+                  color="primary"
+                >
+                  {{
+                    horairesFormGroup.get(day.code + '.estOuvert')?.value
+                      ? 'Ouvert'
+                      : 'Fermé'
+                  }}
+                </mat-slide-toggle>
+              </div>
+
+              <div class="time-input-group col-12 col-md-3">
+                <input
+                  type="time"
+                  [formControlName]="'heureOuverture'"
+                  class="form-control"
+                  [disabled]="!horairesFormGroup.get(day.code + '.estOuvert')?.value"
+                />
+              </div>
+
+              <span class="mx-2 text-muted d-none d-md-block">à</span>
+
+              <div class="time-input-group col-12 col-md-3">
+                <input
+                  type="time"
+                  [formControlName]="'heureFermeture'"
+                  class="form-control"
+                  [disabled]="!horairesFormGroup.get(day.code + '.estOuvert')?.value"
+                />
+              </div>
+
+              <div class="duration-input-group col-12 col-md-auto ms-md-auto">
+                <input
+                  type="number"
+                  [formControlName]="'dureeCreneauMinutes'"
+                  min="15"
+                  max="120"
+                  step="15"
+                  class="form-control"
+                  [disabled]="!horairesFormGroup.get(day.code + '.estOuvert')?.value"
+                />
+                <small class="text-muted">min</small>
+              </div>
+            </div>
+          </form>
+
+          <div class="d-flex gap-3 mt-4 flex-wrap">
+            <button class="btn btn-primary" (click)="sauvegarderHoraires()">
+              💾 Sauvegarder
+            </button>
+            <button class="btn btn-secondary" (click)="copierHoraires()">
+              📋 Copier un jour
+            </button>
+            <button class="btn btn-danger" (click)="resetHoraires()">
+              🔄 Réinitialiser aux défauts
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="activeTab === 'planning'" class="tab-pane fade show active">
+      <div class="card shadow-sm mb-4">
+        <div class="card-body">
+          <h2 class="card-title h4 mb-3">
+            <span class="icon-text">📅</span> Mon Planning
+          </h2>
+          <p class="card-text text-muted mb-4">
+            Consultez vos créneaux disponibles et réservations
+          </p>
+
+          <div class="mb-4">
+            <label for="date-planning" class="form-label"
+              ><span class="icon-text">📅</span> Choisir une date :</label
+            >
+            <mat-form-field appearance="fill" class="w-100">
+              <mat-label>Date</mat-label>
+              <input
+                matInput
+                [matDatepicker]="picker"
+                [(ngModel)]="selectedPlanningDate"
+                (dateChange)="chargerPlanning()"
+              />
+              <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+              <mat-datepicker #picker></mat-datepicker>
+            </mat-form-field>
+          </div>
+
+          <div class="calendar-week mb-4">
+            <div
+              *ngFor="let day of calendarDays"
+              class="calendar-day"
+              [class.is-today]="day.isToday"
+              [class.is-available]="day.isAvailable && !day.isToday"
+              [class.not-available]="!day.isAvailable && !day.isToday"
+              (click)="selectCalendarDay(day.date)"
+            >
+              <div class="day-of-month">{{ day.dayOfMonth }}</div>
+              <div class="day-of-week-short">{{ day.dayOfWeekShort }}</div>
+              <div *ngIf="day.creneauxCount > 0" class="creneaux-count available">
+                {{ day.creneauxCount }} créneaux
+              </div>
+              <div *ngIf="day.creneauxCount === 0" class="creneaux-count not-available">
+                Fermé
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="h5 mb-3">
+              <span class="icon-text">🕐</span> Créneaux disponibles pour le
+              {{ selectedPlanningDate | date : 'fullDate' }}
+            </h3>
+            <div class="list-group creneaux-list">
+              <ng-container *ngIf="creneauxJour.length > 0; else noCreneaux">
+                <div
+                  *ngFor="let creneau of creneauxJour"
+                  class="list-group-item d-flex justify-content-between align-items-center"
+                >
+                  <span>{{ creneau.heureDebut | date : 'HH:mm' }} - {{ creneau.heureFin | date : 'HH:mm' }}</span>
+                  <span class="badge bg-success-custom">Disponible</span>
+                </div>
+              </ng-container>
+              <ng-template #noCreneaux>
+                <div class="text-center text-muted py-4">
+                  Aucun créneau disponible pour cette date.
+                </div>
+              </ng-template>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="activeTab === 'conges'" class="tab-pane fade show active">
+      <div class="card shadow-sm mb-4">
+        <div class="card-body">
+          <h2 class="card-title h4 mb-3">
+            <span class="icon-text">🏖️</span> Gestion des Congés
+          </h2>
+          <p class="card-text text-muted mb-4">
+            Ajoutez vos périodes d'indisponibilité
+          </p>
+
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label for="conge-debut" class="form-label"
+                ><span class="icon-text">📅</span> Date de début :</label
+              >
+              <input
+                type="date"
+                id="conge-debut"
+                [(ngModel)]="newConge.dateDebut"
+                class="form-control"
+              />
+            </div>
+            <div class="col-md-6">
+              <label for="conge-fin" class="form-label"
+                ><span class="icon-text">📅</span> Date de fin :</label
+              >
+              <input
+                type="date"
+                id="conge-fin"
+                [(ngModel)]="newConge.dateFin"
+                class="form-control"
+              />
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label for="conge-motif" class="form-label"
+              ><span class="icon-text">📝</span> Motif (optionnel) :</label
+            >
+            <input
+              type="text"
+              id="conge-motif"
+              [(ngModel)]="newConge.motif"
+              placeholder="Ex: Vacances d'été"
+              class="form-control"
+            />
+          </div>
+
+          <div class="d-flex gap-3 mb-4 flex-wrap">
+            <button class="btn btn-primary" (click)="ajouterConge()">
+              <span class="icon-text">➕</span> Ajouter Congé
+            </button>
+            <button class="btn btn-danger" (click)="fermerAujourdhui()">
+              <span class="icon-text">🚫</span> Fermer Aujourd'hui
+            </button>
+          </div>
+
+          <div>
+            <h3 class="h5 mb-3">
+              <span class="icon-text">📋</span> Mes Congés Programmés
+            </h3>
+            <div class="list-group">
+              <ng-container *ngIf="congesList.length > 0; else noCongesListe">
+                <div
+                  *ngFor="let conge of congesList"
+                  class="list-group-item d-flex justify-content-between align-items-center conge-item"
+                >
+                  <span
+                    >Du {{ conge.dateDebut | date : 'shortDate' }} au
+                    {{ conge.dateFin | date : 'shortDate' }}</span
+                  >
+                  <span class="text-muted fst-italic ms-3 me-auto">{{ conge.motif }}</span>
+                  <button
+                    class="btn btn-sm btn-outline-danger"
+                    (click)="supprimerConge(conge.id)"
+                  >
+                    🗑️
+                  </button>
+                </div>
+              </ng-container>
+              <ng-template #noCongesListe>
+                <div class="text-center text-muted py-4">
+                  Aucun congé programmé pour le moment.
+                </div>
+              </ng-template>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="activeTab === 'actions'" class="tab-pane fade show active">
+      <div class="card shadow-sm mb-4">
+        <div class="card-body">
+          <h2 class="card-title h4 mb-3">
+            <span class="icon-text">⚡</span> Actions Rapides
+          </h2>
+          <p class="card-text text-muted mb-4">
+            Actions courantes pour gérer vos disponibilités
+          </p>
+
+          <div class="row g-4">
+            <div class="col-md-4">
+              <div class="card h-100 action-card">
+                <div class="card-body">
+                  <h3 class="card-title h6 mb-3">
+                    <span class="icon-text">🔄</span> Horaires Standards
+                  </h3>
+                  <p class="card-text text-muted mb-4">
+                    Appliquer des horaires prédéfinis
+                  </p>
+                  <div class="d-grid gap-2">
+                    <button class="btn btn-success-custom" (click)="appliquerHoraires('bureau')">
+                      <span class="icon-text">🏢</span> Bureau (9h-18h)
+                    </button>
+                    <button class="btn btn-info-custom" (click)="appliquerHoraires('flexible')">
+                      <span class="icon-text">🕐</span> Flexible (8h-20h)
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <div class="card h-100 action-card">
+                <div class="card-body">
+                  <h3 class="card-title h6 mb-3">
+                    <span class="icon-text">📅</span> Gestion Rapide
+                  </h3>
+                  <p class="card-text text-muted mb-4">
+                    Actions rapides sur le planning
+                  </p>
+                  <div class="d-grid gap-2">
+                    <button class="btn btn-warning-custom" (click)="ouvrirWeekend()">
+                      <span class="icon-text">🏖️</span> Ouvrir Weekend
+                    </button>
+                    <button class="btn btn-danger-custom" (click)="fermerWeekend()">
+                      <span class="icon-text">🚫</span> Fermer Weekend
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <div class="card h-100 action-card">
+                <div class="card-body">
+                  <h3 class="card-title h6 mb-3">
+                    <span class="icon-text">⏰</span> Créneaux
+                  </h3>
+                  <p class="card-text text-muted mb-4">
+                    Modifier la durée des créneaux
+                  </p>
+                  <div class="d-grid gap-2">
+                    <button class="btn btn-primary" (click)="changerDureeCreneaux(30)">
+                      30 min
+                    </button>
+                    <button class="btn btn-primary" (click)="changerDureeCreneaux(60)">
+                      60 min
+                    </button>
+                    <button class="btn btn-primary" (click)="changerDureeCreneaux(90)">
+                      90 min
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

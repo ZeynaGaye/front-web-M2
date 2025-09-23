@@ -1,21 +1,35 @@
 
+// Import Angular Material prebuilt theme
+@import '@angular/material/prebuilt-themes/indigo-pink.css';
 
-@use 'swiper/css';
-@use 'swiper/css/navigation';
-@use 'swiper/css/pagination';
-@use '@angular/material' as mat;
+// ✅ IMPORT DES ICÔNES MATERIAL DESIGN
+@import 'https://fonts.googleapis.com/icon?family=Material+Icons';
+@import 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200';
+
+// Alternative: Custom theme configuration (commented for now)
+// @use '@angular/material' as mat;
+// @include mat.core();
+
+// // Define the theme object
+// $primary-palette: mat.define-palette(mat.$orange-palette, 400);
+// $accent-palette: mat.define-palette(mat.$pink-palette, A200, A100, A400);
+// $warn-palette: mat.define-palette(mat.$red-palette);
+
+// $theme: mat.define-light-theme((
+//   color: (
+//     primary: $primary-palette,
+//     accent: $accent-palette,
+//     warn: $warn-palette,
+//   ),
+//   typography: mat.define-typography-config(),
+//   density: 0,
+// ));
+
+// // Include theme styles for all components
+// @include mat.all-component-themes($theme);
 
 html {
-  @include mat.theme((
-    color: (
-      theme-type: light,
-      primary: mat.$azure-palette,
-      tertiary: mat.$blue-palette,
-    ),
-    typography: Roboto,
-    density: 0,
-  ));
-  
+  font-family: Roboto, "Helvetica Neue", sans-serif;
 }/* You can add global styles to this file, and also import other style files */
 // @import "~@fortawesome/fontawesome-free/css/all.min.css";
 // @import "tailwindcss/base";
@@ -44,8 +58,46 @@ swiper-container {
 swiper-slide {
   height: 100%;
   width: 100%;
+}
+
+/* Styles pour corriger les modaux Material Design */
+.cdk-overlay-container {
+  z-index: 1000 !important;
+}
+
+.cdk-overlay-backdrop {
+  z-index: 999 !important;
+}
+
+.cdk-overlay-pane {
+  z-index: 1001 !important;
+}
+
+.mat-mdc-dialog-container {
+  z-index: 1002 !important;
+  position: relative !important;
+}
+
+/* Assurer que les dialogs sont bien visibles */
+.mat-mdc-dialog-panel {
+  position: relative !important;
+  z-index: 1003 !important;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
+// :root {
+//   --employe-primary: #F5A393;
+//   --employe-secondary: #A4B1BD;
+//   --employe-primary-light: #F7C4B6;
+//   --employe-primary-dark: #C8836E;
+//   --employe-secondary-light: #D3E3EE;
+//   --employe-secondary-dark: #7A8C9B;
+//   --employe-white: #ffffff;
+//   --employe-dark-text: #333333;
+//   --employe-light-grey: #f8f9fa;
+//   --employe-border: #e0e0e0;
+//   --employe-error: #e57373;
+//   --employe-success: #4caf50;
+// }

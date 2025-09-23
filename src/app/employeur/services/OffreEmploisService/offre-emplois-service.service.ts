@@ -1,19 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { catchError, Observable, of } from 'rxjs';
-
-// Interface pour les candidatures
-export interface CandidatureDTO {
-  id: number;
-  nomCandidat: string;
-  emailCandidat: string;
-  datePostulation: string;
-  cv?: string;
-  lettreMotivation?: string;
-  status: string;
-  freelanceId?: number;
-  offreEmploiId?: number;
-}
+import { Candidature } from '../../../freelance/interfaces/candidatures.interface';
 
 export interface OffreEmploi {
   datePublication: Date;
@@ -28,7 +16,25 @@ export interface OffreEmploi {
   typeContrat: string;
   salaire: string;
   dateLimite: string;
-  candidaturesCount?: number; // Optionnel car peut venir du backend
+  candidaturesCount?: number;
+  // NOUVEAU : Informations salon
+  salonId?: number;
+  salonNom?: string;
+  salonAdresse?: string;
+  salonDescription?: string;
+  // Informations employeur
+  employeurId?: number;
+  employeurNom?: string;
+}
+
+export interface Salon {
+  id: number;
+  nom: string;
+  adresse: string;
+  ville: string;
+  telephone?: string;
+  description?: string;
+  status?: string;
 }
 
 @Injectable({
@@ -44,6 +50,11 @@ export class OffreEmploisService {
     return this.http.post<OffreEmploi>(`${this.apiUrl}/create`, offreEmploi);
   }
 
+  // NOUVELLE MÉTHODE : Créer une offre avec salon spécifique
+  createOffreEmploiWithSalon(offreEmploi: OffreEmploi, salonId: number): Observable<OffreEmploi> {
+    return this.http.post<OffreEmploi>(`${this.apiUrl}/create-with-salon?salonId=${salonId}`, offreEmploi);
+  }
+
   // Get all job offers
   getAllOffresEmplois(): Observable<OffreEmploi[]> {
     return this.http.get<OffreEmploi[]>(`${this.apiUrl}/all`);
@@ -57,6 +68,16 @@ export class OffreEmploisService {
   // Get job offers by employer ID
   getOffresEmploisByEmployeur(employeurId: number): Observable<OffreEmploi[]> {
     return this.http.get<OffreEmploi[]>(`${this.apiUrl}/employeur/${employeurId}`);
+  }
+
+  // NOUVELLE MÉTHODE : Récupérer les offres par salon
+  getOffresEmploisBySalon(salonId: number): Observable<OffreEmploi[]> {
+    return this.http.get<OffreEmploi[]>(`${this.apiUrl}/salon/${salonId}`).pipe(
+      catchError(error => {
+        console.error('Error fetching offers by salon', salonId, error);
+        return of([]);
+      })
+    );
   }
 
   // Get my job offers (for logged-in employer)
@@ -99,9 +120,29 @@ export class OffreEmploisService {
     );
   }
 
+  // NOUVELLE MÉTHODE : Compter les offres par salon
+  countOffresBySalon(salonId: number): Observable<number> {
+    return this.http.get<number>(`${this.apiUrl}/salon/${salonId}/count`).pipe(
+      catchError(error => {
+        console.error('Error counting offers by salon', salonId, error);
+        return of(0);
+      })
+    );
+  }
+
+  // NOUVELLE MÉTHODE : Récupérer mes salons (utilise l'endpoint salon)
+  getMySalons(): Observable<Salon[]> {
+    return this.http.get<Salon[]>('http://localhost:8081/api/salons/employeur/mes-salons').pipe(
+      catchError(error => {
+        console.error('Error fetching my salons', error);
+        return of([]);
+      })
+    );
+  }
+
   // 🆕 NOUVELLE MÉTHODE : Récupérer les candidatures d'une offre
-  getCandidaturesByOffreId(offreId: number): Observable<CandidatureDTO[]> {
-    return this.http.get<CandidatureDTO[]>(`${this.apiUrl}/${offreId}/candidatures`).pipe(
+  getCandidaturesByOffreId(offreId: number): Observable<Candidature[]> {
+    return this.http.get<Candidature[]>(`${this.apiUrl}/${offreId}/candidatures`).pipe(
       catchError(error => {
         console.error('Error fetching candidatures for offre', offreId, error);
         return of([]); // Retourne un tableau vide en cas d'erreur
@@ -110,8 +151,8 @@ export class OffreEmploisService {
   }
 
   // 🆕 NOUVELLE MÉTHODE : Récupérer une candidature spécifique
-  getCandidatureById(offreId: number, candidatureId: number): Observable<CandidatureDTO> {
-    return this.http.get<CandidatureDTO>(`${this.apiUrl}/${offreId}/candidatures/${candidatureId}`).pipe(
+  getCandidatureById(offreId: number, candidatureId: number): Observable<Candidature> {
+    return this.http.get<Candidature>(`${this.apiUrl}/${offreId}/candidatures/${candidatureId}`).pipe(
       catchError(error => {
         console.error('Error fetching candidature details', candidatureId, error);
         throw error;
@@ -120,8 +161,8 @@ export class OffreEmploisService {
   }
 
   // 🆕 NOUVELLE MÉTHODE : Mettre à jour le statut d'une candidature
-  updateCandidatureStatus(offreId: number, candidatureId: number, status: string): Observable<CandidatureDTO> {
-    return this.http.put<CandidatureDTO>(
+  updateCandidatureStatus(offreId: number, candidatureId: number, status: string): Observable<Candidature> {
+    return this.http.put<Candidature>(
       `${this.apiUrl}/${offreId}/candidatures/${candidatureId}/status`, 
       { status }
     ).pipe(

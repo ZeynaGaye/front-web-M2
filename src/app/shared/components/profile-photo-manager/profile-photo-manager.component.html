@@ -1,0 +1,100 @@
+<div class="photo-manager-container">
+  
+  <!-- Zone de prévisualisation -->
+  <div class="photo-preview-section">
+    <div class="photo-preview" [style.--role-color]="roleColor">
+      
+      <!-- Image existante -->
+      <div *ngIf="hasPhoto && !isLoading" class="photo-display">
+        <img [src]="photoPreviewUrl" [alt]="'Photo de profil'" class="profile-image">
+        <div class="photo-overlay">
+          <button mat-icon-button class="edit-button" (click)="openFileSelector()" 
+                  [disabled]="isLoading">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button class="delete-button" (click)="onDeletePhoto()" 
+                  [disabled]="isLoading">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- Placeholder sans image -->
+      <div *ngIf="!hasPhoto && !isLoading" class="photo-placeholder" (click)="openFileSelector()">
+        <mat-icon class="placeholder-icon">{{ defaultIcon }}</mat-icon>
+        <p class="placeholder-text">Aucune photo</p>
+        <span class="click-hint">Cliquer pour ajouter</span>
+      </div>
+
+      <!-- État de chargement -->
+      <div *ngIf="isLoading" class="photo-loading">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p class="loading-text">
+          {{ isUploading ? 'Upload en cours...' : 'Suppression...' }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Zone de drag & drop -->
+  <div class="drop-zone" 
+       [class.drag-over]="isDragOver"
+       [class.has-photo]="hasPhoto"
+       (dragover)="onDragOver($event)"
+       (dragleave)="onDragLeave($event)"
+       (drop)="onDrop($event)"
+       (click)="openFileSelector()">
+    
+    <div class="drop-zone-content">
+      <mat-icon class="drop-icon">cloud_upload</mat-icon>
+      
+      <div class="drop-text">
+        <h4>Glissez votre photo ici</h4>
+        <p>ou <strong>cliquez pour parcourir</strong></p>
+      </div>
+
+      <div class="drop-info">
+        <div class="info-item">
+          <mat-icon>image</mat-icon>
+          <span>Formats: {{ acceptedTypesFormatted }}</span>
+        </div>
+        <div class="info-item">
+          <mat-icon>storage</mat-icon>
+          <span>Taille max: {{ maxFileSizeFormatted }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="photo-actions" *ngIf="!isLoading">
+    <button mat-raised-button color="primary" (click)="openFileSelector()" 
+            [disabled]="isLoading">
+      <mat-icon>{{ hasPhoto ? 'edit' : 'add_a_photo' }}</mat-icon>
+      {{ hasPhoto ? 'Changer la photo' : 'Ajouter une photo' }}
+    </button>
+
+    <button *ngIf="hasPhoto" mat-stroked-button color="warn" 
+            (click)="onDeletePhoto()" [disabled]="isLoading">
+      <mat-icon>delete</mat-icon>
+      Supprimer
+    </button>
+  </div>
+
+  <!-- Conseils -->
+  <div class="photo-tips">
+    <h4>
+      <mat-icon>tips_and_updates</mat-icon>
+      Conseils pour une bonne photo de profil
+    </h4>
+    <ul>
+      <li>✅ Utilisez une photo récente et de bonne qualité</li>
+      <li>✅ Montrez votre visage clairement</li>
+      <li>✅ Évitez les photos de groupe</li>
+      <li>✅ Préférez un arrière-plan neutre</li>
+      <li *ngIf="userRole?.toLowerCase() === 'freelance'">
+        ✅ Une image professionnelle inspire confiance à vos clients
+      </li>
+    </ul>
+  </div>
+</div>

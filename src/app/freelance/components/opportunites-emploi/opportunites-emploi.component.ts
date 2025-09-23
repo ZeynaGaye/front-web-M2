@@ -62,8 +62,18 @@ export class OpportunitesEmploiComponent implements OnInit, OnDestroy {
   // ==========================================
   showOnlyApplied: boolean = false; // Pour le filtre "Déjà postulé"
   appliedOffers: number[] = []; // IDs des offres où l'utilisateur a postulé
-  candidatureStatuses = new Map<number, {status: string, date: Date}>(); // Statuts des candidatures
+  candidatureStatuses = new Map<number, {status: string, date: Date, isNew?: boolean}>(); // Statuts des candidatures
   isLoadingAppliedOffers: boolean = false;
+  
+  // ==========================================
+  // 🆕 PROPRIÉTÉS POUR LES NOTIFICATIONS DE STATUT
+  // ==========================================
+  recentStatusChanges: Array<{
+    offreId: number,
+    status: string,
+    date: Date,
+    offreTitre?: string
+  }> = [];
  
   // Subject pour gérer la désinscription
   private destroy$ = new Subject<void>();
@@ -203,12 +213,13 @@ export class OpportunitesEmploiComponent implements OnInit, OnDestroy {
    * 📋 Charger les candidatures du freelance
    */
   loadAppliedOffers(): void {
+    console.log('🔍 loadAppliedOffers called with freelanceId:', this.freelanceId);
     if (!this.freelanceId) {
-      console.warn('⚠️ ID du freelance non fourni');
+      console.warn('⚠️ ID du freelance non fourni - freelanceId:', this.freelanceId);
       return;
     }
 
-    console.log('📋 Chargement des candidatures...');
+    console.log('📋 Chargement des candidatures pour freelanceId:', this.freelanceId);
     this.isLoadingAppliedOffers = true;
     
     this.candidatureService.getCandidaturesByFreelance(this.freelanceId)
@@ -224,10 +235,26 @@ export class OpportunitesEmploiComponent implements OnInit, OnDestroy {
           (candidatures || []).forEach(candidature => {
             if (candidature.offreEmploiId) {
               this.appliedOffers.push(candidature.offreEmploiId);
+              
+              const candidatureDate = new Date(candidature.dateCandidature || Date.now());
+              const status = candidature.status || 'EN_ATTENTE';
+              const isRecentChange = this.isRecentStatusChange(candidatureDate, status);
+              
               this.candidatureStatuses.set(candidature.offreEmploiId, {
-                status: candidature.status || 'EN_ATTENTE',
-                date: new Date(candidature.dateCandidature || Date.now())
+                status: status,
+                date: candidatureDate,
+                isNew: isRecentChange
               });
+              
+              // Ajouter aux changements récents si c'est un statut important et récent
+              if (isRecentChange && (status === 'ACCEPTEE' || status === 'REFUSEE')) {
+                this.recentStatusChanges.push({
+                  offreId: candidature.offreEmploiId,
+                  status: status,
+                  date: candidatureDate,
+                  offreTitre: candidature['offreTitre'] || 'Offre d\'emploi'
+                });
+              }
             }
           });
           
@@ -375,7 +402,21 @@ export class OpportunitesEmploiComponent implements OnInit, OnDestroy {
    */
   getCandidatureStatus(offreId: number | undefined): string | null {
     if (!offreId) return null;
-    return this.candidatureStatuses.get(offreId)?.status || null;
+    const status = this.candidatureStatuses.get(offreId)?.status || null;
+    
+    // Debug logs
+    if (this.candidatureStatuses.size > 0) {
+      console.log(`🔍 getCandidatureStatus pour offre ${offreId}:`, status);
+      console.log('🗃️ Toutes les candidatures en mémoire:', 
+        Array.from(this.candidatureStatuses.entries()).map(([id, data]) => ({
+          offreId: id,
+          status: data.status,
+          date: data.date
+        }))
+      );
+    }
+    
+    return status;
   }
 
   /**
@@ -385,8 +426,8 @@ export class OpportunitesEmploiComponent implements OnInit, OnDestroy {
     const status = this.getCandidatureStatus(offreId);
     const classMap: { [key: string]: string } = {
       'EN_ATTENTE': 'status-pending',
-      'ACCEPTE': 'status-accepted', 
-      'REFUSE': 'status-rejected',
+      'ACCEPTEE': 'status-accepted', 
+      'REFUSEE': 'status-rejected',
       'EN_COURS': 'status-in-progress'
     };
     return classMap[status || ''] || 'status-unknown';
@@ -399,8 +440,8 @@ export class OpportunitesEmploiComponent implements OnInit, OnDestroy {
     const status = this.getCandidatureStatus(offreId);
     const textMap: { [key: string]: string } = {
       'EN_ATTENTE': 'En attente',
-      'ACCEPTE': 'Acceptée',
-      'REFUSE': 'Refusée', 
+      'ACCEPTEE': 'Acceptée',
+      'REFUSEE': 'Refusée', 
       'EN_COURS': 'En cours'
     };
     return textMap[status || ''] || 'Inconnu';
@@ -651,5 +692,95 @@ export class OpportunitesEmploiComponent implements OnInit, OnDestroy {
     this.maxOffersToShow = undefined;
     this.applyFilters();
     this.viewAllClick.emit();
+  }
+
+  // ==========================================
+  // 🆕 MÉTHODES POUR LES NOTIFICATIONS DE STATUT
+  // ==========================================
+
+  /**
+   * Vérifie s'il y a des changements de statut récents
+   */
+  hasRecentStatusChanges(): boolean {
+    return this.recentStatusChanges.length > 0;
+  }
+
+  /**
+   * Détermine si un changement de statut est récent (dans les 7 derniers jours)
+   */
+  private isRecentStatusChange(date: Date, status: string): boolean {
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    return date > sevenDaysAgo && (status === 'ACCEPTEE' || status === 'REFUSEE' || status === 'EN_COURS');
+  }
+
+  /**
+   * Obtient la classe CSS pour la notification globale
+   */
+  getGlobalNotificationClass(): string {
+    const acceptedCount = this.recentStatusChanges.filter(c => c.status === 'ACCEPTEE').length;
+    const rejectedCount = this.recentStatusChanges.filter(c => c.status === 'REFUSEE').length;
+    
+    if (acceptedCount > 0) {
+      return 'notification-success';
+    } else if (rejectedCount > 0) {
+      return 'notification-warning';
+    }
+    return 'notification-info';
+  }
+
+  /**
+   * Obtient le titre de la notification globale
+   */
+  getGlobalNotificationTitle(): string {
+    const acceptedCount = this.recentStatusChanges.filter(c => c.status === 'ACCEPTEE').length;
+    const rejectedCount = this.recentStatusChanges.filter(c => c.status === 'REFUSEE').length;
+    
+    if (acceptedCount > 0 && rejectedCount === 0) {
+      return acceptedCount === 1 ? 
+        '🎉 Candidature acceptée !' : 
+        `🎉 ${acceptedCount} candidatures acceptées !`;
+    } else if (rejectedCount > 0 && acceptedCount === 0) {
+      return rejectedCount === 1 ? 
+        'Mise à jour de candidature' : 
+        `${rejectedCount} mises à jour de candidatures`;
+    } else if (acceptedCount > 0 && rejectedCount > 0) {
+      return `${acceptedCount + rejectedCount} mises à jour de candidatures`;
+    }
+    return 'Nouvelles mises à jour';
+  }
+
+  /**
+   * Obtient le message de la notification globale
+   */
+  getGlobalNotificationMessage(): string {
+    const acceptedCount = this.recentStatusChanges.filter(c => c.status === 'ACCEPTEE').length;
+    const rejectedCount = this.recentStatusChanges.filter(c => c.status === 'REFUSEE').length;
+    
+    if (acceptedCount > 0 && rejectedCount === 0) {
+      return acceptedCount === 1 ? 
+        'Félicitations ! Un employeur a accepté votre candidature.' : 
+        `Félicitations ! ${acceptedCount} employeurs ont accepté vos candidatures.`;
+    } else if (rejectedCount > 0 && acceptedCount === 0) {
+      return rejectedCount === 1 ? 
+        'Une candidature a été mise à jour par l\'employeur.' : 
+        `${rejectedCount} candidatures ont été mises à jour.`;
+    } else if (acceptedCount > 0 && rejectedCount > 0) {
+      return `${acceptedCount} candidature(s) acceptée(s) et ${rejectedCount} mise(s) à jour.`;
+    }
+    return 'Consultez vos candidatures pour voir les détails.';
+  }
+
+  /**
+   * Fait défiler vers les offres avec changements de statut
+   */
+  scrollToStatusChanges(): void {
+    const firstStatusChangeElement = document.querySelector('.status-alert');
+    if (firstStatusChangeElement) {
+      firstStatusChangeElement.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'center' 
+      });
+    }
   }
 }

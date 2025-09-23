@@ -22,34 +22,36 @@ import { HeaderComponent } from '../header/header.component';
   standalone: true,
   imports: [
     CommonModule,
-    RouterModule, 
-    ProFreeComponent, 
+    RouterModule,
+    ProFreeComponent,
     HeaderComponent,
     // JobOfferComponent,
     ClientSectionComponent,
     RecommendationsComponent,
-    OpportunitesEmploiComponent // 🆕 Ajout du composant
-  ],
+    // OpportunitesEmploiComponent // 🆕 Ajout du composant
+    
+    // JobOfferComponent
+],
   templateUrl: './accueil.component.html',
   styleUrl: './accueil.component.scss'
 })
 export class AccueilComponent implements OnInit, OnDestroy {
-  
+
   private destroy$ = new Subject<void>();
-  
+
   // ==================== PROPRIÉTÉS RECOMMANDATIONS ====================
   showRecommendations = true;
   userLocation: { lat?: number, lon?: number } = {};
-  
+
   // ==================== PROPRIÉTÉS OPPORTUNITÉS D'EMPLOI ====================
   showJobOpportunities = true;
   maxJobOffersOnHomepage = 6; // Limite pour la page d'accueil
-  
+
   constructor(private router: Router) {}
 
   ngOnInit(): void {
     console.log('🏠 Composant Accueil initialisé');
-    
+
     // Essayer d'obtenir la géolocalisation
     this.getCurrentLocation();
   }
@@ -74,27 +76,27 @@ export class AccueilComponent implements OnInit, OnDestroy {
    */
   onViewAllSection(event: { section: string, data: RecommendationData[] }): void {
     console.log('🏠 Voir section:', event.section);
-    
+
     switch (event.section) {
       case 'populaires':
-        this.router.navigate(['/salons'], { 
-          queryParams: { filter: 'populaires' } 
+        this.router.navigate(['/salons'], {
+          queryParams: { filter: 'populaires' }
         });
         break;
       case 'proches':
-        this.router.navigate(['/salons'], { 
-          queryParams: { 
+        this.router.navigate(['/salons'], {
+          queryParams: {
             filter: 'proximite',
             lat: this.userLocation.lat,
             lon: this.userLocation.lon
-          } 
+          }
         });
         break;
       case 'coiffure':
       case 'manucure':
       case 'barber':
-        this.router.navigate(['/salons'], { 
-          queryParams: { service: event.section } 
+        this.router.navigate(['/salons'], {
+          queryParams: { service: event.section }
         });
         break;
       default:
@@ -124,7 +126,7 @@ export class AccueilComponent implements OnInit, OnDestroy {
    */
   onJobOfferClick(offre: OffreEmploi): void {
     console.log('💼 Clic sur offre depuis accueil:', offre.titre);
-    
+
     // Naviguer vers les détails de l'offre
     this.router.navigate(['/emploi', offre.id]);
   }
@@ -142,7 +144,7 @@ export class AccueilComponent implements OnInit, OnDestroy {
    */
   onJobFilterChange(filter: { type: string, value: string }): void {
     console.log('🔍 Changement de filtre depuis accueil:', filter);
-    
+
     // Naviguer vers la page complète avec le filtre appliqué
     this.router.navigate(['/opportunites-emploi'], {
       queryParams: { [filter.type]: filter.value }

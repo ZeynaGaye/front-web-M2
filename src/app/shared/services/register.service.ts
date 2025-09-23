@@ -12,7 +12,7 @@ export interface SignupRequest {
   telephone?: string;
   adresse?: string;
   sexe: string;
-  // Type d'utilisateur
+  ville:string
   role: string; 
   // Attributs spécifiques
   description?: string;        // Pour EMPLOYEUR

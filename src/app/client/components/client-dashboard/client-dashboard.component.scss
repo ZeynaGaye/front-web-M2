@@ -1,0 +1,1174 @@
+/* ========================================
+   CLIENT DASHBOARD - DESIGN MODERNE
+   Thème: #F5A393 (coral) + #A4B1BD (bleu-gris)
+======================================== */
+
+/* ========================================
+   NOTIFICATIONS
+======================================== */
+
+::ng-deep .notification-menu {
+  .mat-mdc-menu-panel {
+    max-width: 400px;
+    min-width: 350px;
+    padding: 0;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+}
+
+// Variables de couleurs du projet
+$primary-color: #F5A393;
+$secondary-color: #A4B1BD;
+$text-color: #333;
+$text-light: #666;
+$text-lighter: #999;
+$background: #f8f9fa;
+$white: #ffffff;
+$success: #28a745;
+$warning: #ffc107;
+$error: #dc3545;
+$info: #17a2b8;
+
+// Autres variables
+$border-radius: 12px;
+$border-radius-large: 20px;
+$box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+$box-shadow-light: 0 2px 8px rgba(0,0,0,0.05);
+$transition: all 0.3s ease;
+
+/* ========================================
+   LAYOUT PRINCIPAL
+======================================== */
+
+.dashboard {
+  background: hsl(206, 17%, 92%);
+  min-height: 100vh;
+  padding: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* ========================================
+   HEADER
+======================================== */
+
+.header {
+  background: linear-gradient(135deg, $primary-color 0%, lighten($primary-color, 10%) 100%);
+  color: white;
+  padding: 24px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: $box-shadow;
+  border-radius: 0 0 24px 24px;
+  margin-bottom: 32px;
+
+  .header-title {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    mat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+
+    .btn {
+      padding: 12px 24px;
+      border-radius: $border-radius;
+      font-weight: 600;
+      text-transform: none;
+      letter-spacing: 0.25px;
+      transition: $transition;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+
+      &.btn-outline {
+        background: rgba(255,255,255,0.2);
+        border: 1px solid rgba(255,255,255,0.3);
+        color: white;
+        backdrop-filter: blur(10px);
+
+        &:hover {
+          background: rgba(255,255,255,0.3);
+          transform: translateY(-2px);
+        }
+      }
+
+      &.btn-primary {
+        background: white;
+        color: $primary-color;
+        border: none;
+
+        &:hover {
+          background: #f8f9fa;
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+      }
+    }
+
+    .notification-badge {
+      background: $error;
+      color: white;
+      border-radius: 50%;
+      padding: 2px 6px;
+      font-size: 11px;
+      font-weight: 700;
+      min-width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: 8px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding: 20px;
+    flex-direction: column;
+    gap: 20px;
+    text-align: center;
+
+    .header-actions {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+}
+
+/* ========================================
+   ÉTATS DE CHARGEMENT ET ERREUR
+======================================== */
+
+.loading-container,
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  text-align: center;
+
+  mat-spinner {
+    margin-bottom: 24px;
+  }
+
+  .error-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: $error;
+    margin-bottom: 24px;
+  }
+
+  h3 {
+    color: $text-color;
+    margin-bottom: 16px;
+    font-size: 24px;
+    font-weight: 600;
+  }
+
+  p {
+    color: $text-light;
+    margin-bottom: 32px;
+    font-size: 16px;
+    max-width: 400px;
+  }
+}
+
+/* ========================================
+   CONTENU PRINCIPAL
+======================================== */
+
+.dashboard-content {
+  padding: 0 32px 32px;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  @media (max-width: 768px) {
+    padding: 0 16px 16px;
+  }
+}
+
+/* ========================================
+   SECTION STATISTIQUES
+======================================== */
+
+.stats-section {
+  margin-bottom: 40px;
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+
+    .stat-card {
+      background: white;
+      border-radius: $border-radius;
+      box-shadow: $box-shadow-light;
+      transition: $transition;
+      border: 1px solid transparent;
+      min-height: 100px;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: $box-shadow;
+        border-color: rgba($primary-color, 0.2);
+      }
+
+      .stat-content {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px;
+
+        .stat-icon {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+
+          mat-icon {
+            font-size: 20px;
+            width: 20px;
+            height: 20px;
+          }
+
+          &.primary-icon {
+            background: linear-gradient(135deg, $primary-color, lighten($primary-color, 10%));
+            color: white;
+          }
+
+          &.info-icon {
+            background: linear-gradient(135deg, $info, lighten($info, 10%));
+            color: white;
+          }
+
+          &.success-icon {
+            background: linear-gradient(135deg, $success, lighten($success, 10%));
+            color: white;
+          }
+
+          &.warning-icon {
+            background: linear-gradient(135deg, $warning, lighten($warning, 10%));
+            color: white;
+          }
+        }
+
+        .stat-info {
+          flex: 1;
+
+          h3 {
+            margin: 0 0 4px 0;
+            font-size: 24px;
+            font-weight: 700;
+            color: $text-color;
+            line-height: 1;
+          }
+
+          p {
+            margin: 0;
+            color: $text-light;
+            font-size: 12px;
+            font-weight: 500;
+          }
+        }
+      }
+    }
+  }
+}
+
+/* ========================================
+   PROCHAIN RENDEZ-VOUS
+======================================== */
+
+.next-appointment {
+  background: linear-gradient(135deg, $secondary-color 0%, lighten($secondary-color, 10%) 100%);
+  border-radius: $border-radius-large;
+  padding: 32px;
+  margin-bottom: 40px;
+  color: white;
+  box-shadow: $box-shadow;
+
+  .appointment-content {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 32px;
+
+    .appointment-time {
+      text-align: center;
+      
+      .appointment-date {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        opacity: 0.9;
+      }
+
+      .appointment-time-display {
+        font-size: 32px;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+
+      .appointment-countdown {
+        font-size: 14px;
+        opacity: 0.8;
+        background: rgba(255,255,255,0.2);
+        padding: 4px 12px;
+        border-radius: 20px;
+        display: inline-block;
+      }
+    }
+
+    .appointment-details {
+      h3 {
+        margin: 0 0 16px 0;
+        font-size: 24px;
+        font-weight: 700;
+      }
+
+      .appointment-provider {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+        font-size: 16px;
+        opacity: 0.9;
+
+        mat-icon {
+          font-size: 20px;
+          width: 20px;
+          height: 20px;
+        }
+      }
+    }
+
+    .appointment-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+
+      .btn-outline-white {
+        background: rgba(255,255,255,0.2);
+        border: 1px solid rgba(255,255,255,0.3);
+        color: white;
+        padding: 12px 20px;
+        border-radius: $border-radius;
+        transition: $transition;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        justify-content: center;
+        min-width: 120px;
+
+        &:hover {
+          background: rgba(255,255,255,0.3);
+          transform: translateY(-2px);
+        }
+      }
+    }
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+      text-align: center;
+      gap: 24px;
+
+      .appointment-actions {
+        flex-direction: row;
+        justify-content: center;
+      }
+    }
+  }
+}
+
+/* ========================================
+   CONTENEUR ONGLETS
+======================================== */
+
+.tabs-container {
+  background: $white;
+  border-radius: $border-radius;
+  box-shadow: $box-shadow-light;
+  margin-bottom: 40px;
+  overflow: hidden;
+
+  .main-tabs {
+    .mat-mdc-tab-header {
+      border-bottom: 1px solid #e0e0e0;
+      background: #fafafa;
+    }
+
+    .mat-mdc-tab {
+      color: $text-light;
+      font-weight: 600;
+      text-transform: none;
+      letter-spacing: 0.25px;
+
+      &.mdc-tab--active {
+        color: $primary-color;
+      }
+    }
+
+    .mat-mdc-tab-body-wrapper {
+      .tab-content {
+        padding: 32px;
+
+        h3 {
+          margin: 0 0 24px 0;
+          color: $text-color;
+          font-size: 20px;
+          font-weight: 600;
+        }
+      }
+    }
+  }
+}
+
+/* ========================================
+   GRILLE DES RÉSERVATIONS
+======================================== */
+
+.reservations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 24px;
+
+  .reservation-card {
+    background: $white;
+    border-radius: $border-radius;
+    box-shadow: $box-shadow-light;
+    transition: $transition;
+    border: 1px solid transparent;
+    overflow: hidden;
+
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: $box-shadow;
+      border-color: rgba($primary-color, 0.2);
+    }
+
+    &.history-card {
+      opacity: 0.95;
+    }
+
+    &.avis-card {
+      border-left: 4px solid $warning;
+    }
+
+    &.favorite-card {
+      border-left: 4px solid $error;
+    }
+
+    mat-card-content {
+      padding: 24px !important;
+
+      .reservation-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 20px;
+
+        .service-info {
+          h4 {
+            margin: 0 0 8px 0;
+            color: $text-color;
+            font-size: 18px;
+            font-weight: 600;
+            line-height: 1.3;
+          }
+
+          .provider-info {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: $text-light;
+            font-size: 14px;
+
+            mat-icon {
+              font-size: 16px;
+              width: 16px;
+              height: 16px;
+            }
+          }
+        }
+
+        .status-chip {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          padding: 6px 12px;
+          border-radius: 20px;
+          font-size: 12px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+
+          mat-icon {
+            font-size: 14px;
+            width: 14px;
+            height: 14px;
+          }
+
+          &.status-confirmee,
+          &.status-confirmed {
+            background: rgba($success, 0.1);
+            color: $success;
+            border: 1px solid rgba($success, 0.2);
+          }
+
+          &.status-terminee,
+          &.status-completed {
+            background: rgba($info, 0.1);
+            color: $info;
+            border: 1px solid rgba($info, 0.2);
+          }
+
+          &.status-annulee_client,
+          &.status-cancelled {
+            background: rgba($error, 0.1);
+            color: $error;
+            border: 1px solid rgba($error, 0.2);
+          }
+        }
+
+        .favorite-heart {
+          color: $error;
+          
+          mat-icon {
+            font-size: 24px;
+            width: 24px;
+            height: 24px;
+          }
+        }
+
+        .avis-rating {
+          text-align: right;
+
+          .stars {
+            color: $warning;
+            font-size: 16px;
+            margin-bottom: 4px;
+          }
+
+          small {
+            color: $text-lighter;
+            font-size: 12px;
+          }
+        }
+      }
+
+      .reservation-details {
+        margin-bottom: 20px;
+
+        .detail-item {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 8px;
+          color: $text-light;
+          font-size: 14px;
+
+          mat-icon {
+            font-size: 16px;
+            width: 16px;
+            height: 16px;
+            color: $primary-color;
+          }
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+        }
+      }
+
+      .avis-comment {
+        background: #f8f9fa;
+        padding: 16px;
+        border-radius: $border-radius;
+        font-style: italic;
+        color: $text-color;
+        margin: 16px 0;
+        border-left: 3px solid $warning;
+      }
+
+      .reservation-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+
+        button {
+          flex: 1;
+          min-width: 120px;
+          padding: 10px 16px;
+          border-radius: $border-radius;
+          font-weight: 600;
+          text-transform: none;
+          transition: $transition;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+
+          mat-icon {
+            font-size: 16px;
+            width: 16px;
+            height: 16px;
+          }
+
+          &.mat-mdc-button {
+            border: 1px solid #e0e0e0;
+            color: $text-light;
+
+            &:hover {
+              background: #f5f5f5;
+              border-color: $primary-color;
+              color: $primary-color;
+              transform: translateY(-1px);
+            }
+          }
+
+          &.mat-mdc-raised-button {
+            &[color="primary"] {
+              background: $primary-color;
+              color: white;
+
+              &:hover {
+                background: darken($primary-color, 10%);
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba($primary-color, 0.3);
+              }
+            }
+
+            &[color="warn"] {
+              background: $error;
+              color: white;
+
+              &:hover {
+                background: darken($error, 10%);
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba($error, 0.3);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+/* ========================================
+   SECTION À NOTER
+======================================== */
+
+.to-rate-section {
+  margin-bottom: 32px;
+
+  .warning-alert {
+    background: linear-gradient(135deg, rgba($warning, 0.1) 0%, rgba($warning, 0.05) 100%);
+    border: 1px solid rgba($warning, 0.2);
+    border-radius: $border-radius;
+
+    .alert-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+
+      h4 {
+        margin: 0 0 8px 0;
+        color: $text-color;
+        font-size: 18px;
+        font-weight: 600;
+      }
+
+      p {
+        margin: 0;
+        color: $text-light;
+        font-size: 14px;
+      }
+
+      .btn-white {
+        background: white;
+        color: $warning;
+        border: 1px solid $warning;
+        padding: 12px 24px;
+        border-radius: $border-radius;
+        font-weight: 600;
+        transition: $transition;
+
+        &:hover {
+          background: $warning;
+          color: white;
+          transform: translateY(-2px);
+        }
+      }
+    }
+
+    @media (max-width: 768px) {
+      .alert-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 16px;
+      }
+    }
+  }
+}
+
+/* ========================================
+   CALENDRIER
+======================================== */
+
+.calendar-widget {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+  border: 1px solid rgba(255,255,255,0.2);
+
+  .calendar-header {
+    background: linear-gradient(135deg, $primary-color 0%, lighten($primary-color, 8%) 100%);
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    margin-bottom: 0;
+
+    h3 {
+      margin: 0;
+      color: white;
+      font-size: 22px;
+      font-weight: 700;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .calendar-nav {
+      color: white;
+      background: rgba(255,255,255,0.15);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(10px);
+
+      &:hover {
+        background: rgba(255,255,255,0.25);
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      }
+
+      mat-icon {
+        font-size: 20px;
+      }
+    }
+  }
+
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0;
+    background: #f8f9fa;
+    margin: 0;
+
+    .calendar-day-header {
+      background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+      color: white;
+      padding: 16px 8px;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      
+      &:first-child {
+        border-top-left-radius: 0;
+      }
+      
+      &:last-child {
+        border-top-right-radius: 0;
+      }
+    }
+
+    .calendar-day {
+      background: white;
+      padding: 12px 8px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      min-height: 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      font-weight: 500;
+      position: relative;
+      border: 1px solid #f1f3f4;
+      border-top: none;
+      
+      &:not(:last-child) {
+        border-right: none;
+      }
+
+      &:hover {
+        background: linear-gradient(135deg, rgba($primary-color, 0.08) 0%, rgba($primary-color, 0.12) 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba($primary-color, 0.15);
+        z-index: 2;
+      }
+
+      .day-number {
+        font-size: 16px;
+        margin-bottom: 6px;
+        line-height: 1;
+        font-weight: 600;
+        color: $text-color;
+        padding: 4px;
+        border-radius: 50%;
+        transition: all 0.2s ease;
+        min-width: 24px;
+        text-align: center;
+      }
+
+      .appointment-indicators {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2px;
+        align-items: center;
+        justify-content: center;
+        max-width: 100%;
+
+        .appointment-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          flex-shrink: 0;
+
+          &.appointment-confirmed {
+            background-color: $success;
+          }
+
+          &.appointment-completed {
+            background-color: $info;
+          }
+
+          &.appointment-cancelled {
+            background-color: $error;
+          }
+
+          &.appointment-pending {
+            background-color: $warning;
+          }
+        }
+
+        .more-appointments {
+          font-size: 8px;
+          color: $text-light;
+          font-weight: 600;
+          margin-left: 2px;
+        }
+      }
+
+      &.today {
+        background: $primary-color;
+        color: white;
+        font-weight: 700;
+
+        .day-number {
+          color: white;
+        }
+
+        .appointment-dot {
+          border: 1px solid white;
+        }
+      }
+
+      &.has-appointment {
+        .day-number {
+          font-weight: 700;
+        }
+      }
+
+      &.other-month {
+        opacity: 0.3;
+
+        .day-number {
+          color: $text-lighter;
+        }
+      }
+    }
+  }
+}
+
+/* ========================================
+   ÉTATS VIDES
+======================================== */
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: $text-light;
+
+  mat-icon {
+    font-size: 80px;
+    width: 80px;
+    height: 80px;
+    color: $text-lighter;
+    margin-bottom: 24px;
+  }
+
+  h3 {
+    margin: 0 0 16px 0;
+    color: $text-color;
+    font-size: 20px;
+    font-weight: 600;
+  }
+
+  p {
+    margin: 0 0 24px 0;
+    font-size: 16px;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  button {
+    background: $primary-color;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: $border-radius;
+    font-weight: 600;
+    transition: $transition;
+
+    &:hover {
+      background: darken($primary-color, 10%);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba($primary-color, 0.3);
+    }
+  }
+}
+
+/* ========================================
+   ACTIONS RAPIDES
+======================================== */
+
+.quick-actions-section {
+  .section-title {
+    color: $text-color;
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    text-align: center;
+  }
+
+  .quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 20px;
+
+    .quick-action {
+      background: #f8cec5;
+      border: 1px solid transparent;
+      border-radius: $border-radius;
+      padding: 24px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: $transition;
+      box-shadow: $box-shadow-light;
+
+      &:hover {
+        transform: translateY(-4px);
+        box-shadow: $box-shadow;
+        border-color: rgba($primary-color, 0.2);
+      }
+
+      mat-icon {
+        font-size: 40px;
+        width: 40px;
+        height: 40px;
+        color: $primary-color;
+        margin-bottom: 16px;
+      }
+
+      h4 {
+        margin: 0 0 8px 0;
+        color: $text-color;
+        font-size: 16px;
+        font-weight: 600;
+      }
+
+      p {
+        margin: 0;
+        color: $text-light;
+        font-size: 14px;
+      }
+    }
+  }
+}
+
+/* ========================================
+   RESPONSIVE
+======================================== */
+
+@media (max-width: 768px) {
+  .dashboard-content {
+    padding: 0 16px 16px;
+  }
+
+  .stats-section .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .reservations-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+
+    .reservation-card mat-card-content {
+      padding: 20px !important;
+
+      .reservation-actions {
+        flex-direction: column;
+
+        button {
+          min-width: auto;
+        }
+      }
+    }
+  }
+
+  .quick-actions-section .quick-actions {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+
+    .quick-action {
+      padding: 20px 12px;
+
+      mat-icon {
+        font-size: 32px;
+        width: 32px;
+        height: 32px;
+        margin-bottom: 12px;
+      }
+
+      h4 {
+        font-size: 14px;
+      }
+
+      p {
+        font-size: 12px;
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    padding: 16px;
+    border-radius: 0 0 16px 16px;
+
+    .header-title h1 {
+      font-size: 20px;
+    }
+
+    .header-actions .btn {
+      padding: 10px 16px;
+      font-size: 14px;
+    }
+  }
+
+  .next-appointment {
+    padding: 20px;
+    margin-bottom: 24px;
+
+    .appointment-content {
+      gap: 20px;
+
+      .appointment-time .appointment-time-display {
+        font-size: 24px;
+      }
+
+      .appointment-details h3 {
+        font-size: 18px;
+      }
+    }
+  }
+
+  .tabs-container .main-tabs .mat-mdc-tab-body-wrapper .tab-content {
+    padding: 20px;
+
+    h3 {
+      font-size: 18px;
+      margin-bottom: 20px;
+    }
+  }
+}
+
+/* ========================================
+   ANIMATIONS
+======================================== */
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.dashboard-content > * {
+  animation: slideIn 0.6s ease-out;
+}
+
+.reservation-card {
+  animation: fadeIn 0.4s ease-out;
+}
+
+/* ========================================
+   DARK MODE SUPPORT (OPTIONNEL)
+======================================== */
+
+@media (prefers-color-scheme: dark) {
+  // Styles dark mode peuvent être ajoutés ici si nécessaire
+}

@@ -32,10 +32,15 @@ private imageBaseUrl = 'http://localhost:8081/uploads';
    * Récupère le portfolio du freelance actuellement connecté
    */
   getCurrentUserPortfolio(): Observable<PortfolioItem[]> {
-    return this.http.get<PortfolioItem[]>(`${this.apiUrl}/freelance/me`).pipe(
+    console.log('🔄 Chargement portfolio utilisateur connecté');
+    
+    // Ajouter un paramètre timestamp pour éviter le cache
+    const timestamp = new Date().getTime();
+    
+    return this.http.get<PortfolioItem[]>(`${this.apiUrl}/freelance/me?_t=${timestamp}`).pipe(
       retry(1),
       tap((items) => {
-        console.log(`Current user portfolio items fetched, count: ${items.length}`);
+        console.log(`✅ Portfolio utilisateur connecté chargé, count: ${items.length}`);
         // 🆕 DEBUG : Log des images reçues (comme dans votre salon)
         items.forEach(item => {
           console.log(`Item "${item.titre}" a ${item.images?.length || 0} images:`, 
@@ -59,12 +64,17 @@ private imageBaseUrl = 'http://localhost:8081/uploads';
    * Récupère le portfolio d'un freelance spécifique par ID
    */
   getFreelancePortfolio(freelanceId: number): Observable<PortfolioItem[]> {
+    console.log(`🔄 Chargement portfolio freelance ${freelanceId}`);
+    
+    // Ajouter un paramètre timestamp pour éviter le cache
+    const timestamp = new Date().getTime();
+    
     return this.http
-      .get<PortfolioItem[]>(`${this.apiUrl}/freelance/${freelanceId}`)
+      .get<PortfolioItem[]>(`${this.apiUrl}/freelance/${freelanceId}?_t=${timestamp}`)
       .pipe(
         retry(1),
         tap((items) => {
-          console.log(`Portfolio items fetched for freelance ${freelanceId}, count: ${items.length}`);
+          console.log(`✅ Portfolio items chargés pour freelance ${freelanceId}, count: ${items.length}`);
           // 🆕 DEBUG : Log des images reçues (comme dans votre salon)
           items.forEach(item => {
             console.log(`Item "${item.titre}" a ${item.images?.length || 0} images:`, 
@@ -197,10 +207,17 @@ private imageBaseUrl = 'http://localhost:8081/uploads';
    * Supprime un élément du portfolio
    */
   deletePortfolioItem(itemId: number): Observable<void> {
+    console.log(`🗑️ Suppression de l'élément portfolio ${itemId}`);
+    
     return this.http.delete<void>(`${this.apiUrl}/${itemId}`)
       .pipe(
-        tap(() => console.log(`Élément ${itemId} supprimé avec succès`)),
-        catchError(this.handleError)
+        tap(() => {
+          console.log(`✅ Élément ${itemId} supprimé avec succès côté serveur`);
+        }),
+        catchError((error) => {
+          console.error(`❌ Erreur suppression élément ${itemId}:`, error);
+          return this.handleError(error);
+        })
       );
   }
 

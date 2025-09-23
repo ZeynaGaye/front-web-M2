@@ -1,757 +1,444 @@
-<div class="dashboard-container">
-  <!-- Sidebar -->
-  <aside class="sidebar" [class.collapsed]="!sidebarOpen">
+<mat-sidenav-container class="beauty-container">
+  <!-- ✨ SIDEBAR -->
+  <mat-sidenav #sidenav mode="side" [(opened)]="sidebarOpen" class="beauty-sidebar">
     <div class="sidebar-header">
-      <img src="assets/images/logo (2).png" alt="BeautyHub" class="logo">
-      <h2>Espace Employer</h2>
-    </div>
-    
-    <div class="user-info">
-      <div class="user-details" *ngIf="sidebarOpen">
-        <h3>{{ username || 'Utilisateur' }}</h3>
-        <span class="user-role">Propriétaire de salon</span>
+      <div class="user-avatar">
+        <img [src]="userPhotoUrl || 'assets/images/logo (2).png'" 
+             [alt]="'Photo de ' + userFullName"
+             (error)="$any($event.target).src='assets/images/logo (2).png'">
+      </div>
+      <div *ngIf="currentUser" class="user-info-sidebar">
+        <p class="user-name">{{ currentUser.prenom }} {{ currentUser.nom }}</p>
+        <p class="user-email">{{ currentUser.email }}</p>
+        <p class="user-role">{{ currentUser.role }}</p>
       </div>
     </div>
-    
-    <nav class="sidebar-nav">
-      <ul>
-        <li [class.active]="currentSection === 'dashboard'">
-          <a (click)="navigateTo('dashboard')">
-            <i class="fas fa-tachometer-alt"></i>
-            <span *ngIf="sidebarOpen">Tableau de bord</span>
-          </a>
-        </li>
-        <li [class.active]="currentSection === 'salons'">
-          <a (click)="openSalonsList()">
-            <i class="fas fa-store"></i>
-            <span *ngIf="sidebarOpen">Mes Salons</span>
-          </a>
-        </li>
-        <li [class.active]="currentSection === 'create-salon'">
-          <a (click)="openCreationForm()">
-            <i class="fas fa-plus-circle"></i>
-            <span *ngIf="sidebarOpen">Ajouter un Salon</span>
-          </a>
-        </li>
-        <li [class.active]="currentSection === 'offres'">
-          <a (click)="navigateToOffresManager()">
-            <i class="fas fa-briefcase"></i>
-            <span *ngIf="sidebarOpen">Offres d'emploi</span>
-            <span class="badge" *ngIf="offreCount > 0 && sidebarOpen">{{ offreCount }}</span>
-          </a>
-        </li>
-        <!-- <li [class.active]="currentSection === 'candidatures'">
-          <a (click)="openCandidatures()">
-            <i class="fas fa-users"></i>
-            <span *ngIf="sidebarOpen">Candidatures</span>
-          </a>
-        </li> -->
-        <li [class.active]="currentSection === 'reservations'">
-          <a (click)="openReservations()">
-            <i class="fas fa-calendar-check"></i>
-            <span *ngIf="sidebarOpen">Réservations</span>
-            <span class="badge" *ngIf="pendingReservationsCount > 0 && sidebarOpen">
-              {{ pendingReservationsCount }}
-            </span>
-          </a>
-        </li>
-        <li [class.active]="currentSection === 'messages'">
-          <a (click)="navigateTo('messages')">
-            <i class="fas fa-comment-alt"></i>
-            <span *ngIf="sidebarOpen">Messages</span>
-            <span class="badge" *ngIf="newMessages > 0 && sidebarOpen">{{ newMessages }}</span>
-          </a>
-        </li>
-      </ul>
-    </nav>
-    
-    <button class="sidebar-toggle" (click)="toggleSidebar()">
-      <i class="fas" [class.fa-chevron-left]="sidebarOpen" [class.fa-chevron-right]="!sidebarOpen"></i>
-    </button>
-  </aside>
 
-  <!-- Main Content -->
-  <main class="main-content">
-    <!-- Header -->
-    <header class="dashboard-header">
-      <div class="header-left">
-        <button class="menu-toggle" (click)="toggleSidebar()">
-          <i class="fas fa-bars"></i>
-        </button>
-        <h1>{{ pageTitle }}</h1>
+    <mat-nav-list class="beauty-menu">
+      <a mat-list-item (click)="navigateTo('dashboard')" class="menu-item" 
+         [class.active]="currentSection === 'dashboard'">
+        <mat-icon class="menu-icon">dashboard</mat-icon>
+        <span>Accueil</span>
+      </a>
+      <a mat-list-item (click)="openSalonsList()" class="menu-item" [class.active]="showSalonsList">
+        <mat-icon class="menu-icon">store</mat-icon>
+        <span>Mes Salons</span>
+      </a>
+      <a mat-list-item (click)="openCreationForm()" class="menu-item" [class.active]="showCreationForm">
+        <mat-icon class="menu-icon">add_business</mat-icon>
+        <span>Ajouter un Salon</span>
+      </a>
+      <a mat-list-item (click)="navigateToOffresManager()" class="menu-item" [class.active]="showOffresManager">
+        <mat-icon class="menu-icon">work</mat-icon>
+        <span>Offres d'emploi</span>
+        <!-- <span class="badge" *ngIf="offreCount > 0">{{ offreCount }}</span> -->
+      </a>
+      <a mat-list-item (click)="openReservations()" class="menu-item" [class.active]="showReservations">
+        <mat-icon class="menu-icon">event</mat-icon>
+        <span>Réservations & Avis</span>
+      </a>
+      <!-- <a mat-list-item (click)="openAvailabilityManager()" class="menu-item" [class.active]="showAvailabilityManager">
+        <mat-icon class="menu-icon">schedule</mat-icon>
+        <span>Gérer Disponibilités</span>
+      </a> -->
+      <a mat-list-item (click)="navigateToProfile()" class="menu-item" [class.active]="showProfile">
+        <mat-icon class="menu-icon">person</mat-icon>
+        <span>Mon Profil</span>
+      </a>
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <!-- ✨ CONTENU PRINCIPAL -->
+  <mat-sidenav-content>
+    <!-- TOP BAR -->
+    <mat-toolbar class="beauty-toolbar">
+      <button mat-icon-button (click)="toggleSidebar()" class="menu-button">
+        <mat-icon>menu</mat-icon>
+      </button>
+      
+      <div class="toolbar-title">
+        <span *ngIf="isAuthenticated">
+          Bienvenue, {{ userFullName }} ✨
+        </span>
+
       </div>
       
-      <div class="header-right">
-        <div class="header-actions">
-          <div class="notifications">
-            <button class="icon-button">
-              <i class="fas fa-bell"></i>
-              <span class="notification-badge" *ngIf="notificationCount > 0">{{ notificationCount }}</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </header>
-
-    <!-- Dashboard Content -->
-    <div class="dashboard-content" *ngIf="currentSection === 'dashboard'">
-      <!-- Welcome Section -->
-      <section class="welcome-section">
-        <div class="welcome-card">
-          <div class="welcome-text">
-            <h2>Bienvenue, {{ username || 'Propriétaire' }}</h2>
-            <p>Gérez votre activité et développez votre salon avec BeautyHub.</p>
-            <button class="primary-button" (click)="openSalonsList()">
-              Gérer mes salons
-            </button>
-          </div>
-          <div class="welcome-image">
-            <img src="assets/images/imageHeader.png" alt="Illustration">
-          </div>
-        </div>
-      </section>
-
-      <!-- Stats Section -->
-      <section class="stats-section">
-        <div class="section-header">
-          <h2>Vue d'ensemble</h2>
-          <div class="period-selector">
-            <button [class.active]="activePeriod === 'week'" (click)="setPeriod('week')">Semaine</button>
-            <button [class.active]="activePeriod === 'month'" (click)="setPeriod('month')">Mois</button>
-            <button [class.active]="activePeriod === 'year'" (click)="setPeriod('year')">Année</button>
-          </div>
-        </div>
-
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-icon">
-              <i class="fas fa-calendar-check"></i>
+      <div class="toolbar-actions">
+        <ng-container *ngIf="isAuthenticated">
+          <button mat-icon-button [matMenuTriggerFor]="notificationMenu" 
+                  [matBadge]="unreadNotifications" 
+                  [matBadgeHidden]="unreadNotifications === 0"
+                  matBadgeColor="warn"
+                  matBadgeSize="small"
+                  class="notification-btn">
+            <mat-icon>notifications</mat-icon>
+          </button>
+          <button mat-raised-button class="btn btn-primary" [routerLink]="['/accueil']">
+            <mat-icon>home</mat-icon> Accueil
+          </button>
+          <mat-menu #notificationMenu="matMenu" class="notification-menu">
+            <div (click)="$event.stopPropagation()">
+              <app-notification-list 
+                [notifications]="notifications"
+                (notificationRead)="onNotificationRead()">
+              </app-notification-list>
             </div>
-            <div class="stat-content">
-              <span class="stat-value">{{ reservationStats }}</span>
-              <span class="stat-label">Réservations</span>
-              <div class="stat-trend up">
-                <i class="fas fa-arrow-up"></i> 
-                <span class="badge" *ngIf="pendingReservationsCount > 0 && sidebarOpen"></span>
-              </div>
-            </div>
-          </div>
-
-          <div class="stat-card">
-            <div class="stat-icon">
-              <i class="fas fa-briefcase"></i>
-            </div>
-            <div class="stat-content">
-              <span class="stat-value">{{ offreCount }}</span>
-              <span class="stat-label">Offres publiées</span>
-              <div class="stat-trend" [class.up]="offreCountTrend > 0" [class.down]="offreCountTrend < 0" *ngIf="offreCountTrend !== 0">
-                <i class="fas" [class.fa-arrow-up]="offreCountTrend > 0" [class.fa-arrow-down]="offreCountTrend < 0"></i> 
-                <span>{{ Math.abs(offreCountTrend) }}%</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="stat-card">
-            <div class="stat-icon">
-              <i class="fas fa-comment-alt"></i>
-            </div>
-            <div class="stat-content">
-              <span class="stat-value">{{ newMessages }}</span>
-              <span class="stat-label">Nouveaux messages</span>
-              <div class="stat-trend up" *ngIf="newMessages > 0">
-                <i class="fas fa-arrow-up"></i> 
-                <span>Nouveau</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Activity Section -->
-      <section class="activity-section">
-        <div class="section-header">
-          <h2>Activité récente</h2>
-          <button class="view-all-button">Voir tout</button>
-        </div>
-
-        <div class="activity-grid">
-          <!-- Salons Card -->
-          <div class="activity-card salons-card">
-            <div class="card-header">
-              <h3>Mes Salons</h3>
-              <button class="card-action" (click)="openSalonsList()">
-                <i class="fas fa-ellipsis-h"></i>
-              </button>
-            </div>
-            
-            <div class="card-content">
-              <div class="salon-preview" *ngFor="let salon of salons">
-                <div class="salon-image">
-                  <img [src]="salon.imageUrl || 'assets/images/salon-placeholder.jpg'" [alt]="salon.nom">
-                </div>
-                <div class="salon-info">
-                  <h4>{{ salon.nom }}</h4>
-                  <p>{{ salon.adresse }}</p>
-                  <div class="salon-rating">
-                    <i class="fas fa-star" *ngFor="let i of [1,2,3,4,5].slice(0, salon.rating)"></i>
-                    <i class="fas fa-star-half-alt" *ngIf="hasHalfStar(salon.rating)"></i>
-                    <i class="far fa-star" *ngFor="let i of [1,2,3,4,5].slice(0, 5-Math.ceil(salon.rating))"></i>
-                    <span>{{ salon.rating }} ({{ salon.reviewCount }} avis)</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="empty-state" *ngIf="!salons || salons.length === 0">
-                <i class="fas fa-store-slash"></i>
-                <p>Vous n'avez pas encore de salon</p>
-                <button class="primary-button" (click)="openCreationForm()">
-                  Ajouter un salon
-                </button>
-              </div>
-            </div>
-          </div>
+          </mat-menu>
           
-          <!-- Latest Offers Card -->
-          <div class="activity-card offers-card">
-            <div class="card-header">
-              <h3>Dernières offres</h3>
-              <button class="card-action" (click)="navigateToOffresManager()">
-                <i class="fas fa-ellipsis-h"></i>
-              </button>
+          <button mat-icon-button [matMenuTriggerFor]="userMenu">
+            <mat-icon>account_circle</mat-icon>
+          </button>
+          
+          <mat-menu #userMenu="matMenu">
+            <div class="user-menu-header">
+              <strong>{{ userFullName }}</strong>
+              <br>
+              <small>{{ userEmail }}</small>
+              <br>
+              <small class="user-role-badge">{{ userRole }}</small>
             </div>
-            
-            <div class="card-content">
-              <div class="offer-item" *ngFor="let offer of recentOffers">
-                <div class="offer-icon">
-                  <i class="fas fa-briefcase"></i>
+            <mat-divider></mat-divider>
+            <button mat-menu-item (click)="navigateToProfile()">
+              <mat-icon>person</mat-icon>
+              <span>Mon Profil</span>
+            </button>
+            <mat-divider></mat-divider>
+            <button mat-menu-item (click)="logout()">
+              <mat-icon>logout</mat-icon>
+              <span>Se déconnecter</span>
+            </button>
+          </mat-menu>
+        </ng-container>
+      </div>
+    </mat-toolbar>
+
+    <!-- DASHBOARD CONTENT -->
+    <div *ngIf="isAuthenticated">
+    
+      <div class="dashboard-content" *ngIf="currentSection === 'dashboard'">
+        <!--  WELCOME SECTION -->
+        <div class="welcome-section">
+          <h2>Votre espace de gestion</h2>
+          <p>Gérez vos salons, suivez vos performances et développez votre activité beauté.</p>
+        </div>
+
+        <!--  STATS CARDS -->
+        <div class="stats-grid">
+          <mat-card class="stat-card" (click)="openSalonsList()">
+            <mat-icon class="stat-icon">store</mat-icon>
+            <div class="stat-content">
+              <ng-container *ngIf="!isLoadingStats; else loadingTemplate">
+                <span class="stat-number">{{ salons.length || 0 }}</span>
+              </ng-container>
+              <ng-template #loadingTemplate>
+                <mat-icon class="loading-icon">hourglass_empty</mat-icon>
+              </ng-template>
+              <div class="stat-label">Salons gérés</div>
+            </div>
+          </mat-card>
+          
+          <mat-card class="stat-card" (click)="openReservations()">
+            <mat-icon class="stat-icon">event</mat-icon>
+            <div class="stat-content">
+              <ng-container *ngIf="!isLoadingStats; else loadingTemplate2">
+                <span class="stat-number">{{ reservationStats || 0 }}</span>
+              </ng-container>
+              <ng-template #loadingTemplate2>
+                <mat-icon class="loading-icon">hourglass_empty</mat-icon>
+              </ng-template>
+              <div class="stat-label">Réservations à venir</div>
+            </div>
+          </mat-card>
+          
+          <mat-card class="stat-card" (click)="navigateToOffresManager()">
+            <mat-icon class="stat-icon">work</mat-icon>
+            <div class="stat-content">
+              <ng-container *ngIf="!isLoadingStats; else loadingTemplate3">
+                <span class="stat-number">{{ offreCount || 0 }}</span>
+              </ng-container>
+              <ng-template #loadingTemplate3>
+                <mat-icon class="loading-icon">hourglass_empty</mat-icon>
+              </ng-template>
+              <div class="stat-label">Offres d'emploi actives</div>
+            </div>
+          </mat-card>
+          
+          <mat-card class="stat-card">
+            <mat-icon class="stat-icon">star</mat-icon>
+
+            <div class="stat-content">
+              <ng-container *ngIf="!isLoadingStats; else loadingTemplate4">
+                <span class="stat-number">{{ formattedAverageRating }}</span>
+              </ng-container>
+              <ng-template #loadingTemplate4>
+                <mat-icon class="loading-icon">hourglass_empty</mat-icon>
+              </ng-template>
+              <div class="stat-label">Note moyenne</div>
+            </div>
+          </mat-card>
+        </div>
+
+        <!--  PROCHAINS RENDEZ-VOUS -->
+        <div class="upcoming-appointments-overview" *ngIf="upcomingAppointments.length > 0">
+          <h3 class="section-title">
+            <mat-icon>schedule</mat-icon>
+            Prochains Rendez-vous
+            <span class="appointments-count">({{ upcomingAppointments.length }})</span>
+          </h3>
+          
+          <!--  AFFICHAGE DES 3 PROCHAINS RDV -->
+          <div class="appointments-list">
+            <mat-card class="appointment-card" *ngFor="let appointment of upcomingAppointments.slice(0, 3)">
+              <mat-card-content class="appointment-content">
+                <div class="appointment-header">
+                  <div class="appointment-service">
+                    <mat-icon class="service-icon">content_cut</mat-icon>
+                    <span class="service-name">{{ appointment.serviceName }}</span>
+                  </div>
+                  <span class="appointment-status-badge" [ngClass]="appointment.status.toLowerCase()">
+                    {{ appointment.status }}
+                  </span>
                 </div>
-                <div class="offer-info">
-                  <h4>{{ offer.title }}</h4>
-                  <p>{{ offer.location }}</p>
-                  <div class="offer-meta">
-                    <span><i class="fas fa-clock"></i> {{ offer.date | date }}</span>
-                    <span><i class="fas fa-user"></i> {{ offer.applicationsCount }} candidature(s)</span>
+                <div class="appointment-details">
+                  <div class="detail-item">
+                    <mat-icon>person</mat-icon>
+                    <span>{{ appointment.clientName }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <mat-icon>access_time</mat-icon>
+                    <span>{{ appointment.date | date:'dd/MM/yyyy' }} à {{ appointment.time }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <mat-icon>store</mat-icon>
+                    <span>{{ appointment.salonName }}</span>
                   </div>
                 </div>
-                <div class="offer-status" [class]="'status-' + offer.status.toLowerCase()">
-                  {{ offer.status }}
-                </div>
-              </div>
-              
-              <div class="empty-state" *ngIf="!recentOffers || recentOffers.length === 0">
-                <i class="fas fa-briefcase-medical"></i>
-                <p>Aucune offre publiée récemment</p>
-                <button class="primary-button" (click)="openOffreEmploiForm()">
-                  Publier une offre
+              </mat-card-content>
+              <mat-card-actions class="appointment-actions">
+                <button mat-button color="primary" (click)="viewAppointmentDetails(appointment.id)">
+                  <mat-icon>visibility</mat-icon>
+                  Détails
                 </button>
-              </div>
-            </div>
+              </mat-card-actions>
+            </mat-card>
+          </div>
+
+          <div class="appointments-see-all">
+            <button mat-raised-button color="primary" (click)="openReservations()">
+              <mat-icon>event</mat-icon>
+              Voir toutes les réservations
+            </button>
           </div>
         </div>
-      </section>
-    </div>
 
-    <!-- ✅ SECTION RÉSERVATIONS DANS LE LAYOUT PRINCIPAL -->
-    <div class="section-content" *ngIf="showReservations">
-      <div class="section-header-bar">
-        <button class="back-button" (click)="closeReservations()">
-          <i class="fas fa-arrow-left"></i> 
-          <span>Retour au tableau de bord</span>
-        </button>
-      </div>
-      <div class="section-body">
-        <div class="reservations-content">
-          <app-reservations 
-            [salons]="salons"
-            (closeEvent)="closeReservations()"
-            (statsUpdated)="onReservationStatsUpdated($event)"
-            (reservationUpdated)="onReservationUpdated($event)">
-          </app-reservations>
+        <!-- ✅ ÉTAT VIDE RENDEZ-VOUS -->
+        <!-- <div class="no-appointments-overview" *ngIf="upcomingAppointments.length === 0">
+          <mat-card class="empty-appointments-card">
+            <mat-card-content>
+              <div class="empty-appointments-content">
+                <mat-icon class="empty-icon">event_busy</mat-icon>
+                <h3>Aucun rendez-vous planifié</h3>
+                <p>Vos prochains rendez-vous apparaîtront ici une fois confirmés.</p>
+                <button mat-raised-button color="primary" (click)="openAvailabilityManager()">
+                  <mat-icon>schedule</mat-icon>
+                  Gérer mes disponibilités
+                </button>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div> -->
+
+        <!-- ✨ RECENT ACTIVITY
+        <div class="activity-section">
+          <h3 class="section-title">
+            <mat-icon>history</mat-icon>
+            Activité Récente
+          </h3>
+          
+          <mat-card class="activity-card">
+            <mat-card-content>
+              <ng-container *ngFor="let activity of recentActivities; let last = last">
+                <div class="activity-item">
+                  <mat-icon class="activity-icon">{{ activity.icon }}</mat-icon>
+                  <div class="activity-content">
+                    <div class="activity-title">{{ activity.title }}</div>
+                    <div class="activity-description">{{ activity.description }}</div>
+                  </div>
+                  <div class="activity-time">{{ activity.time }}</div>
+                </div>
+                <mat-divider *ngIf="!last"></mat-divider>
+              </ng-container>
+              
+              <div *ngIf="recentActivities.length === 0" class="activity-item">
+                <mat-icon class="activity-icon">hourglass_empty</mat-icon>
+                <div class="activity-content">
+                  <div class="activity-title">Chargement...</div>
+                  <div class="activity-description">Récupération de vos activités récentes</div>
+                </div>
+                <div c
+                ty-time">...</div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div> -->
+
+        <!-- ✨ QUICK ACTIONS -->
+        <div class="actions-section">
+          <h3 class="section-title">
+            <mat-icon>flash_on</mat-icon>
+            Actions Rapides
+          </h3>
+          <p class="section-subtitle">Optimisez votre activité avec ces raccourcis</p>
+          
+          <div class="actions-grid">
+            <button mat-raised-button class="action-btn" (click)="openCreationForm()">
+              <mat-icon>add_business</mat-icon>
+              Nouveau Salon
+            </button>
+            <button mat-raised-button class="action-btn" (click)="navigateToOffresManager()">
+              <mat-icon>work</mat-icon>
+              Publier Offre
+            </button>
+            <button mat-raised-button class="action-btn" (click)="openReservations()">
+              <mat-icon>event</mat-icon>
+              Voir Réservations
+            </button>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- ✅ SECTION SALONS DANS LE LAYOUT PRINCIPAL -->
-    <div class="section-content" *ngIf="showSalonsList">
-      <div class="section-header-bar">
-        <button class="back-button" (click)="closeSalonsList()">
-          <i class="fas fa-arrow-left"></i> 
-          <span>Retour au tableau de bord</span>
-        </button>
+      <!-- ✅ SECTIONS SIMPLIFIÉES -->
+      <div *ngIf="showProfile" class="profile-section">
+        <div class="section-header">
+          <button mat-icon-button (click)="closeProfile()">
+            <mat-icon>arrow_back</mat-icon>
+          </button>
+          <h2>Mon Profil</h2>
+        </div>
+        <div class="section-content">
+          <app-profile-management></app-profile-management>
+        </div>
       </div>
-      <div class="section-body">
-        <div class="salons-content">
+
+      <div *ngIf="showSalonsList" class="salons-section">
+        <div class="section-header">
+          <button mat-icon-button (click)="navigateTo('dashboard')">
+            <mat-icon>arrow_back</mat-icon>
+          </button>
+          <h2>Mes Salons</h2>
+        </div>
+        <div class="section-content">
           <app-mes-salons (closeModalEvent)="closeSalonsList()"></app-mes-salons>
         </div>
       </div>
-    </div>
 
-    <!-- ✅ SECTION OFFRES D'EMPLOI OPTIMISÉE AVEC CORRECTIONS -->
-    <div class="section-content" *ngIf="showOffresManager">
-      <div class="section-header-bar">
-        <button class="back-button" (click)="closeOffresManager()">
-          <i class="fas fa-arrow-left"></i> 
-          <span>Retour au tableau de bord</span>
-        </button>
-      </div>
-      <div class="section-body">
-        <!-- ✅ TOOLBAR CORRIGÉ AVEC GESTIONNAIRES TYPE-SAFE -->
-        <div class="content-toolbar">
-          <div class="search-filter">
-            <div class="search-input">
-              <i class="fas fa-search"></i>
-              <!-- ✅ CORRECTION: Utilise ngModelChange au lieu de $event.target.value -->
-              <input type="text" 
-                     placeholder="Rechercher une offre..." 
-                     [(ngModel)]="currentFilter.searchQuery"
-                     (ngModelChange)="onFilterChange('search', $event)">
-            </div>
-            
-            <div class="filters">
-              <!-- ✅ CORRECTION: Utilise ngModelChange pour le select de statut -->
-              <select class="filter-select" 
-                      [(ngModel)]="currentFilter.status"
-                      (ngModelChange)="onFilterChange('status', $event)">
-                <option value="">Tous les statuts</option>
-                <option value="active">Active</option>
-                <option value="pending">En attente</option>
-                <option value="expired">Expirée</option>
-                <option value="closed">Fermée</option>
-              </select>
-              
-              <!-- ✅ CORRECTION: Utilise ngModelChange pour le select de tri -->
-              <select class="filter-select" 
-                      [(ngModel)]="currentFilter.sortBy"
-                      (ngModelChange)="onFilterChange('sort', $event)">
-                <option value="date-desc">Plus récentes</option>
-                <option value="date-asc">Plus anciennes</option>
-                <option value="applications">Plus de candidatures</option>
-                <option value="title">Titre A-Z</option>
-              </select>
-            </div>
-          </div>
-          
-          <button class="primary-button" (click)="openOffreEmploiForm()">
-            <i class="fas fa-plus"></i> 
-            <span>Nouvelle offre</span>
+      <div *ngIf="showReservations" class="reservations-section">
+        <div class="section-header">
+          <button mat-icon-button (click)="navigateTo('dashboard')">
+            <mat-icon>arrow_back</mat-icon>
           </button>
+          <h2>Réservations & Avis</h2>
         </div>
-        
-        <!-- Grille optimisée des offres -->
-        <div class="offers-grid-optimized">
-          <div class="offer-card-optimized" *ngFor="let offer of filteredOffers; let i = index">
-            <!-- Header de l'offre -->
-            <div class="offer-header-optimized">
-              <div class="offer-main-info">
-                <h3 class="offer-title-optimized">{{ offer.title }}</h3>
-                <div class="offer-location-optimized">
-                  <i class="fas fa-map-marker-alt"></i>
-                  <span>{{ offer.location }}</span>
-                </div>
-                <div class="offer-meta-optimized">
-                  <span><i class="fas fa-calendar-alt"></i> {{ offer.date | date: 'dd/MM/yyyy' }}</span>
-                  <span><i class="fas fa-clock"></i> Temps plein</span>
-                </div>
+        <div class="section-content">
+          <mat-tab-group>
+            <mat-tab label="Réservations">
+              <div class="tab-content">
+                <app-reservations 
+                  [salons]="salons"
+                  [isFreelance]="false"
+                  (closeEvent)="closeReservations()"
+                  (statsUpdated)="onReservationStatsUpdated($event)"
+                  (reservationUpdated)="onReservationUpdated($event)">
+                </app-reservations>
               </div>
-              <div class="offer-status-optimized" [class]="'status-' + offer.status.toLowerCase()">
-                {{ offer.status }}
+            </mat-tab>
+            <mat-tab label="Avis Reçus">
+              <div class="tab-content">
+                <app-avis-recus 
+                  [userType]="'employeur'"
+                  [showHeader]="false"
+                  [compactMode]="false">
+                </app-avis-recus>
               </div>
-            </div>
-            
-            <!-- Footer avec candidatures -->
-            <div class="offer-footer-optimized">
-              <div class="candidatures-summary">
-                <div class="candidatures-count">
-                  <i class="fas fa-users"></i>
-                  <span class="count-badge">{{ offer.applicationsCount || 0 }}</span>
-                  <span>candidature{{ (offer.applicationsCount || 0) > 1 ? 's' : '' }}</span>
-                </div>
-                
-                <!-- Badge nouvelles candidatures -->
-                <span class="new-applications" 
-                      *ngIf="getNewCandidaturesCount(offer.id) > 0">
-                  {{ getNewCandidaturesCount(offer.id) }} nouvelle{{ getNewCandidaturesCount(offer.id) > 1 ? 's' : '' }}
-                </span>
-                
-                <!-- Bouton pour voir les candidatures -->
-                <button class="view-candidatures-btn" 
-                        (click)="openCandidaturesModal(offer)"
-                        *ngIf="(offer.applicationsCount || 0) > 0">
-                  Voir les candidats
-                </button>
-                
-                <span class="no-candidatures" 
-                      *ngIf="(offer.applicationsCount || 0) === 0">
-                  Aucune candidature
-                </span>
-              </div>
-              
-              <div class="offer-actions-optimized">
-                <button class="action-btn-optimized" 
-                        (click)="editOffer(offer.id)" 
-                        title="Modifier">
-                  <i class="fas fa-edit"></i>
-                </button>
-                <button class="action-btn-optimized" 
-                        (click)="shareOffer(offer.id)" 
-                        title="Partager">
-                  <i class="fas fa-share-alt"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          <!-- État vide -->
-          <div class="empty-state-full" *ngIf="!filteredOffers || filteredOffers.length === 0">
-            <div class="empty-icon">
-              <i class="fas fa-briefcase-medical"></i>
-            </div>
-            <h3>Aucune offre trouvée</h3>
-            <p *ngIf="hasActiveFilters(); else noOffersMessage">
-              Aucune offre ne correspond à vos critères de recherche.
-            </p>
-            <ng-template #noOffersMessage>
-              <p>Vous n'avez pas encore publié d'offres d'emploi</p>
-            </ng-template>
-            <button class="primary-button-large" (click)="openOffreEmploiForm()">
-              <i class="fas fa-plus"></i> Publier une offre
-            </button>
-          </div>
+            </mat-tab>
+          </mat-tab-group>
         </div>
       </div>
-    </div>
-    
-    <!-- ✅ SECTION CANDIDATURES DANS LE LAYOUT PRINCIPAL - CORRIGÉE -->
-    <div class="section-content" *ngIf="showCandidatures">
-      <div class="section-header-bar">
-        <button class="back-button" (click)="closeCandidatures()">
-          <i class="fas fa-arrow-left"></i> 
-          <span>Retour au tableau de bord</span>
-        </button>
-      </div>
-      <div class="section-body">
-        <div class="content-toolbar">
-          <div class="search-filter">
-            <div class="search-input">
-              <i class="fas fa-search"></i>
-              <input type="text" placeholder="Rechercher un candidat...">
-            </div>
-            
-            <div class="filters">
-              <select class="filter-select">
-                <option value="">Statut</option>
-                <option value="Nouveau">Nouveau</option>
-                <option value="Contacté">Contacté</option>
-                <option value="Entretien">Entretien</option>
-                <option value="Embauché">Embauché</option>
-                <option value="Refusé">Refusé</option>
-              </select>
-              
-              <select class="filter-select">
-                <option value="">Offre d'emploi</option>
-                <option *ngFor="let offer of recentOffers" [value]="offer.id">{{ offer.title }}</option>
-              </select>
-            </div>
-          </div>
-          
-          <div class="view-toggle">
-            <button class="view-button active">
-              <i class="fas fa-th-large"></i>
-            </button>
-            <button class="view-button">
-              <i class="fas fa-list"></i>
-            </button>
-          </div>
-        </div>
-        
-        <div class="candidatures-grid">
-          <!-- Afficher un loader pendant le chargement -->
-          <div class="loading-state-full" *ngIf="loadingCandidatures">
-            <div class="spinner">
-              <i class="fas fa-spinner fa-spin"></i>
-            </div>
-            <h3>Chargement des candidatures...</h3>
-          </div>
-          
-          <!-- Afficher un message d'erreur si le chargement a échoué -->
-          <div class="error-state-full" *ngIf="candidaturesError">
-            <div class="error-icon">
-              <i class="fas fa-exclamation-triangle"></i>
-            </div>
-            <h3>Erreur de chargement</h3>
-            <p>{{ candidaturesError }}</p>
-            <button class="primary-button-large" (click)="loadAllCandidatures()">
-              Réessayer
-            </button>
-          </div>
-          
-          <!-- Cartes de candidature -->
-          <ng-container *ngIf="!loadingCandidatures && !candidaturesError">
-            <ng-container *ngFor="let candidatureKey of getObjectKeys(candidatures)">
-              <div class="candidature-card" *ngFor="let candidature of candidatures[candidatureKey]">
-                <div class="candidature-status" [ngClass]="'status-' + (candidature.status || 'new').toLowerCase()">
-                  {{ candidature.status || 'Nouveau' }}
-                </div>
-                
-                <div class="candidature-header">
-                  <div class="candidat-info">
-                    <div class="candidat-avatar">
-                      <!-- <img src="assets/images/avatar-placeholder.png" alt="Photo de profil"> -->
-                    </div>
-                    <div class="candidat-details">
-                      <h3>{{ getCandidateName(candidature) }}</h3>
-                      <p *ngIf="candidature.tarifPropose" class="tarif">{{ candidature.tarifPropose }}€/h</p>
-                    </div>
-                  </div>
-                  
-                  <div class="candidature-date">
-                    <i class="fas fa-calendar-alt"></i> {{ candidature.dateCandidature | date: 'dd/MM/yyyy' }}
-                  </div>
-                </div>
-                
-                <div class="candidature-body">
-                  <div class="job-applied">
-                    <span class="label">Offre :</span>
-                    <span class="value">{{ getOfferTitleById(candidature.offreEmploiId) }}</span>
-                  </div>
-                  
-                  <div class="candidate-experience" *ngIf="candidature.disponibilite">
-                    <span class="label">Disponibilité :</span>
-                    <span class="value">{{ candidature.disponibilite }}</span>
-                  </div>
-                  
-                  <div class="candidate-message" *ngIf="candidature.message">
-                    <p>{{ candidature.message ? (candidature.message | slice:0:100) + (candidature.message.length > 100 ? '...' : '') : '' }}</p>
-                  </div>
-                </div>
-                
-                <div class="candidature-footer">
-                  <button class="action-button view" (click)="viewCandidatureDetails(candidature)">
-                    <i class="fas fa-eye"></i> Détails
-                  </button>
-                  <button class="action-button contact" (click)="contactCandidate(candidature)">
-                    <i class="fas fa-envelope"></i> Contacter
-                  </button>
-                  <div class="status-dropdown">
-                    <button class="status-button">
-                      <i class="fas fa-clock"></i> Statut <i class="fas fa-chevron-down"></i>
-                    </button>
-                    <div class="dropdown-menu">
-                      <a href="#" (click)="$event.preventDefault(); updateCandidatureStatus(candidature.id!, 'Nouveau')">Nouveau</a>
-                      <a href="#" (click)="$event.preventDefault(); updateCandidatureStatus(candidature.id!, 'Contacté')">Contacté</a>
-                      <a href="#" (click)="$event.preventDefault(); updateCandidatureStatus(candidature.id!, 'Entretien')">Entretien</a>
-                      <a href="#" (click)="$event.preventDefault(); updateCandidatureStatus(candidature.id!, 'Embauché')">Embauché</a>
-                      <a href="#" (click)="$event.preventDefault(); updateCandidatureStatus(candidature.id!, 'Refusé')">Refusé</a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </ng-container>
-            
-            <!-- État vide -->
-            <div class="empty-state-full" *ngIf="!loadingCandidatures && !candidaturesError && isObjectEmpty(candidatures)">
-              <div class="empty-icon">
-                <i class="fas fa-user-tie"></i>
-              </div>
-              <h3>Aucune candidature</h3>
-              <p>Vous n'avez pas encore reçu de candidatures</p>
-              <button class="primary-button-large" (click)="navigateToOffresManager()">
-                <i class="fas fa-briefcase"></i> Voir mes offres
-              </button>
-            </div>
-          </ng-container>
-        </div>
-      </div>
-    </div>
-    
-    <!-- ✅ SECTION MESSAGES DANS LE LAYOUT PRINCIPAL -->
-    <div class="section-content" *ngIf="currentSection === 'messages'">
-      <div class="section-header-bar">
-        <button class="back-button" (click)="navigateTo('dashboard')">
-          <i class="fas fa-arrow-left"></i> 
-          <span>Retour au tableau de bord</span>
-        </button>
-      </div>
-      <div class="section-body">
-        <div class="empty-state-full">
-          <div class="empty-icon">
-            <i class="fas fa-comments"></i>
-          </div>
-          <h3>Pas de nouveaux messages</h3>
-          <p>Vous n'avez pas de messages non lus</p>
-        </div>
-      </div>
-    </div>
-  </main>
-</div>
 
-<!-- ✅ MODALS CORRIGÉES - Seuls les vrais modals restent ici -->
-<!-- Modal Création de salon -->
+      <!-- ✅ SECTION OFFRES DÉLÉGUÉE AU COMPOSANT SPÉCIALISÉ -->
+      <div *ngIf="showOffresManager" class="offres-section">
+        <div class="section-header">
+          <button mat-icon-button (click)="navigateTo('dashboard')">
+            <mat-icon>arrow_back</mat-icon>
+          </button>
+          <h2>Offres d'Emploi</h2>
+        </div>
+        <div class="section-content">
+
+          <app-offres-manager></app-offres-manager>
+        </div>
+      </div>
+
+      <!-- ✨ SECTION DISPONIBILITÉS -->
+      <div *ngIf="showAvailabilityManager" class="availability-section">
+        <div class="section-header">
+          <button mat-icon-button (click)="navigateTo('dashboard')">
+            <mat-icon>arrow_back</mat-icon>
+          </button>
+          <h2>Gérer mes Disponibilités</h2>
+        </div>
+        <div class="section-content">
+          <!-- ✅ Composant de gestion des horaires intégré -->
+          <!-- <div *ngIf="selectedSalonForAvailability; else selectSalonPrompt">
+            <app-horaires-manager 
+              [entityId]="selectedSalonForAvailability.id"
+              [isSalon]="true"
+              (horaireError)="onHoraireError($event)">
+            </app-horaires-manager>
+          </div> -->
+          
+          <!-- <ng-template #selectSalonPrompt>
+            <div class="salon-selection-prompt">
+              <mat-icon>store</mat-icon>
+              <h3>Sélectionner un salon</h3>
+              <p>Veuillez sélectionner le salon pour lequel vous souhaitez gérer les disponibilités.</p>
+              
+              <div class="salons-selection" *ngIf="salons.length > 0; else noSalonsAvailable">
+                <mat-card 
+                  class="salon-choice-card" 
+                  *ngFor="let salon of salons"
+                  (click)="selectSalonForAvailability(salon)">
+                  <mat-card-content>
+                    <div class="salon-choice-content">
+                      <mat-icon>store</mat-icon>
+                      <div>
+                        <h4>{{ salon.nom }}</h4>
+                        <p>{{ salon.adresse }}</p>
+                      </div>
+                    </div>
+                  </mat-card-content>
+                </mat-card>
+              </div>
+              
+              <ng-template #noSalonsAvailable>
+                <p class="no-salons-message">
+                  Aucun salon disponible. Créez d'abord un salon pour gérer ses disponibilités.
+                </p>
+                <button mat-raised-button color="primary" (click)="openCreationForm()">
+                  <mat-icon>add_business</mat-icon>
+                  Créer un salon
+                </button>
+              </ng-template>
+            <!-- </div> --> -->
+          <!-- </ng-template> -->
+        </div>
+      </div>
+    </div>
+  </mat-sidenav-content>
+</mat-sidenav-container>
+
+<!-- ✅ MODALS SIMPLIFIÉS -->
 <app-salon 
   *ngIf="showCreationForm" 
   (closeModalEvent)="closeCreationForm()">
 </app-salon>
-
-<!-- Modal Offre d'emploi -->
-<app-offre-emplois 
-  *ngIf="showOffreEmploiForm" 
-  (closeModalEvent)="closeOffreEmploiForm()">
-</app-offre-emplois>
-
-<!-- ✅ MODAL OPTIMISÉ DES CANDIDATURES -->
-<div class="modal-overlay-optimized" 
-     *ngIf="showCandidaturesModal" 
-     (click)="closeCandidaturesModal($event)">
-  <div class="candidatures-modal-optimized" (click)="$event.stopPropagation()">
-    <div class="modal-header-optimized">
-      <div>
-        <h2 class="modal-title-optimized">{{ selectedOfferTitle }}</h2>
-        <div class="modal-subtitle-optimized">
-          {{ modalCandidatures.length }} candidature{{ modalCandidatures.length > 1 ? 's' : '' }} reçue{{ modalCandidatures.length > 1 ? 's' : '' }}
-        </div>
-      </div>
-      <button class="close-btn-optimized" (click)="closeCandidaturesModal()">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-    
-    <div class="modal-body-optimized">
-      <div class="candidatures-list-optimized">
-        <!-- Liste des candidatures -->
-        <div class="candidature-item-optimized" 
-             *ngFor="let candidature of modalCandidatures"
-             (click)="openCandidateDetails(candidature)">
-          
-          <div class="candidate-avatar-optimized">
-            {{ getCandidateInitials(candidature) }}
-          </div>
-          
-          <div class="candidate-info-optimized">
-            <div class="candidate-name-optimized">{{ getCandidateName(candidature) }}</div>
-            <div class="candidate-email-optimized">{{ getCandidateEmail(candidature) }}</div>
-            
-            <div class="candidate-details-optimized">
-              <span class="detail-tag salary-tag" *ngIf="candidature.tarifPropose">
-                {{ candidature.tarifPropose }}€/h
-              </span>
-              <span class="detail-tag availability-tag" *ngIf="candidature.disponibilite">
-                {{ candidature.disponibilite }}
-              </span>
-            </div>
-            
-            <div class="application-date-optimized">
-              Candidature du {{ candidature.dateCandidature | date: 'dd/MM/yyyy' }}
-            </div>
-          </div>
-          
-          <div class="candidate-status-optimized">
-            <span class="status-badge-optimized" 
-                  [ngClass]="'status-' + (candidature.status || 'nouveau').toLowerCase()">
-              {{ formatCandidatureStatus(candidature.status) }}
-            </span>
-            
-            <div class="candidate-actions-optimized" (click)="$event.stopPropagation()">
-              <button class="action-btn-small contact" 
-                      (click)="contactCandidate(candidature)"
-                      title="Contacter">
-                <i class="fas fa-envelope"></i>
-              </button>
-              <button class="action-btn-small details" 
-                      (click)="openCandidateDetails(candidature)"
-                      title="Voir détails">
-                <i class="fas fa-eye"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-        
-        <!-- État vide pour les candidatures -->
-        <div class="empty-state-modal" *ngIf="!modalCandidatures || modalCandidatures.length === 0">
-          <div class="empty-icon-modal">
-            <i class="fas fa-user-slash"></i>
-          </div>
-          <h3>Aucune candidature</h3>
-          <p>Aucune candidature n'a encore été reçue pour cette offre.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Modal pour les détails de candidature -->
-<div class="modal-overlay" *ngIf="selectedCandidature" (click)="closeDetailModal($event)">
-  <div class="modal-container candidature-details-modal">
-    <div class="modal-header">
-      <h2>Détails de la candidature</h2>
-      <button class="close-button" (click)="closeDetailModal()">
-        <i class="fas fa-times"></i>
-      </button>
-    </div>
-    
-    <div class="modal-content">
-      <div class="candidat-profile">
-        <div class="profile-header">
-          <div class="profile-avatar">
-            <img src="assets/images/avatar-placeholder.png" alt="Photo de profil">
-          </div>
-          <div class="profile-info">
-            <h3>{{ getCandidateName(selectedCandidature) }}</h3>
-            <div class="status-badge" [ngClass]="'status-' + (selectedCandidature.status || 'new').toLowerCase()">
-              {{ selectedCandidature.status || 'Nouveau' }}
-            </div>
-          </div>
-        </div>
-        
-        <div class="profile-details">
-          <div class="detail-section">
-            <h4>Détails de la candidature</h4>
-            <div class="detail-grid">
-              <div class="detail-item">
-                <span class="label"><i class="fas fa-bullseye"></i> Offre</span>
-                <span class="value">{{ getOfferTitleById(selectedCandidature.offreEmploiId) }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="label"><i class="fas fa-calendar-alt"></i> Date</span>
-                <span class="value">{{ selectedCandidature.dateCandidature | date: 'dd/MM/yyyy' }}</span>
-              </div>
-              <div class="detail-item" *ngIf="selectedCandidature.tarifPropose">
-                <span class="label"><i class="fas fa-euro-sign"></i> Tarif proposé</span>
-                <span class="value">{{ selectedCandidature.tarifPropose }}€/h</span>
-              </div>
-              <div class="detail-item" *ngIf="selectedCandidature.disponibilite">
-                <span class="label"><i class="fas fa-clock"></i> Disponibilité</span>
-                <span class="value">{{ selectedCandidature.disponibilite }}</span>
-              </div>
-            </div>
-          </div>
-          
-          <div class="detail-section" *ngIf="selectedCandidature.message">
-            <h4>Message du candidat</h4>
-            <div class="message-content">
-              <p>{{ selectedCandidature.message }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <div class="modal-footer">
-      <div class="status-selector">
-        <span class="status-label">Changer le statut :</span>
-        <div class="status-options">
-          <button [class.active]="selectedCandidature.status === 'Nouveau'" (click)="updateCandidatureStatus(selectedCandidature.id!, 'Nouveau')">Nouveau</button>
-          <button [class.active]="selectedCandidature.status === 'Contacté'" (click)="updateCandidatureStatus(selectedCandidature.id!, 'Contacté')">Contacté</button>
-          <button [class.active]="selectedCandidature.status === 'Entretien'" (click)="updateCandidatureStatus(selectedCandidature.id!, 'Entretien')">Entretien</button>
-          <button [class.active]="selectedCandidature.status === 'Embauché'" (click)="updateCandidatureStatus(selectedCandidature.id!, 'Embauché')">Embauché</button>
-          <button [class.active]="selectedCandidature.status === 'Refusé'" (click)="updateCandidatureStatus(selectedCandidature.id!, 'Refusé')">Refusé</button>
-        </div>
-      </div>
-      <div class="action-buttons">
-        <button class="secondary-button" (click)="closeDetailModal()">Fermer</button>
-        <button class="primary-button" (click)="contactCandidate(selectedCandidature)">
-          <i class="fas fa-envelope"></i> Contacter
-        </button>
-      </div>
-    </div>
-  </div>
-</div>

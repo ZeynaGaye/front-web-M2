@@ -95,6 +95,15 @@
             <div class="info-value">{{ formatDate(offre.datePublication) }}</div>
           </div>
 
+          <!-- Informations du salon -->
+          <div class="job-info-item salon-info" *ngIf="offre.salonNom">
+            <div class="info-label"><mat-icon>store</mat-icon>Salon</div>
+            <div class="info-value salon-details">
+              <div class="salon-name">{{ offre.salonNom }}</div>
+              <div class="salon-address" *ngIf="offre.salonAdresse">{{ offre.salonAdresse }}</div>
+            </div>
+          </div>
+
           <!-- ✅ CANDIDATURES COUNT -->
           <div class="job-info-item candidates-info">
             <div class="info-label"><mat-icon>people</mat-icon>Candidatures</div>
@@ -118,11 +127,9 @@
             <button mat-icon-button 
                     class="candidates-button"
                     aria-label="Voir les candidatures"
-                    (click)="viewCandidates(offre.id ?? 0)"
-                    [disabled]="!offre.candidaturesCount || offre.candidaturesCount === 0">
+                    (click)="viewCandidates(offre.id ?? 0)">
               <mat-icon>people</mat-icon>
-              <span *ngIf="offre.candidaturesCount && offre.candidaturesCount > 0" 
-                    class="candidates-count">{{ offre.candidaturesCount }}</span>
+              <span class="candidates-count">{{ offre.candidaturesCount || 0 }}</span>
             </button>
 
             <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Actions">
@@ -203,55 +210,90 @@
         </p>
       </div>
       
-      <div *ngFor="let candidature of selectedOffreCandidatures; trackBy: trackByCandidatureId">
-        <div class="candidate-item" (click)="viewCandidatureDetails(candidature)">
-          <div class="candidate-avatar"><mat-icon>person</mat-icon></div>
-          <div class="candidate-info">
-            <h4 class="candidate-name">{{ candidature.nomCandidat || 'Candidat inconnu' }}</h4>
-            <p class="candidate-email">
-              <mat-icon>email</mat-icon> 
-              {{ candidature.emailCandidat || 'Email non disponible' }}
-            </p>
-            <p class="candidate-date">
-              <mat-icon>schedule</mat-icon> 
-              Postulé le {{ formatDate(candidature.datePostulation || candidature.dateCandidature) }}
-            </p>
-            <div class="candidate-status">
-              <span class="status-indicator" [ngClass]="(candidature.status || 'nouvelle').toLowerCase()">
-                {{ candidature.status || 'Nouvelle' }}
+      <div *ngFor="let candidature of selectedOffreCandidatures; let i = index">
+        <div class="candidate-item-enhanced">
+          <div class="candidate-avatar">
+            <div class="avatar-circle">
+              <span>{{ (candidature.freelanceNom || candidature.freelancePrenom || candidature.freelance?.nom || candidature.freelance?.prenom || 'C')[0].toUpperCase() }}</span>
+            </div>
+          </div>
+          
+          <div class="candidate-main-info">
+            <div class="candidate-header">
+              <span class="candidate-name">{{ (candidature.freelancePrenom || candidature.freelance?.prenom || '') + ' ' + (candidature.freelanceNom || candidature.freelance?.nom || '') || 'Nom non disponible' }}</span>
+            </div>
+            
+            <div class="candidate-details">
+              <div class="contact-details-row">
+                <div class="detail-item">
+                  <mat-icon>email</mat-icon>
+                  <span>{{ candidature.freelanceEmail || candidature.freelance?.email || 'Email non disponible' }}</span>
+                </div>
+                
+                <div class="detail-item">
+                  <mat-icon>phone</mat-icon>
+                  <span>{{ candidature['freelanceTelephone'] || candidature.telCandidat || 'non disponible' }}</span>
+                </div>
+              </div>
+              
+              <!-- <div class="detail-item" *ngIf="candidature.dateCandidature">
+                <mat-icon>schedule</mat-icon>
+                <span>{{ candidature.dateCandidature | date:'dd/MM/yyyy à HH:mm' }}</span>
+              </div>
+              
+              <div class="detail-item" *ngIf="candidature.tarifPropose">
+                <mat-icon>attach_money</mat-icon>
+                <span>{{ candidature.tarifPropose }} CFA</span>
+              </div> -->
+            </div>
+          </div>
+          
+          <div class="candidate-actions-section">
+            <!-- Statut du candidat -->
+            <div class="candidate-status-container">
+              <span class="candidate-status" [ngClass]="candidature.status?.toLowerCase() || 'nouveau'">
+                {{ candidature.status || 'NOUVEAU' }}
               </span>
             </div>
-            <!-- ✅ MESSAGE DE CANDIDATURE -->
-            <div *ngIf="candidature.message" class="candidate-message">
-              <p><strong>Message :</strong> {{ candidature.message }}</p>
+            
+            <!-- Actions avec icônes -->
+            <div class="candidate-actions-icons">
+              <button mat-mini-fab 
+                      (click)="viewCandidatureDetails(candidature)"
+                      title="Voir les détails complets"
+                      class="action-details-icon">
+                <mat-icon>visibility</mat-icon>
+              </button>
+              
+              <button mat-mini-fab 
+                      (click)="contactCandidate(candidature)"
+                      title="Contacter ce candidat"
+                      class="action-contact-icon"
+                      [disabled]="!(candidature.freelance?.email || candidature.freelanceEmail) || (candidature.freelance?.email === 'Email non disponible' || candidature.freelanceEmail === 'Email non disponible')">
+                <mat-icon>send</mat-icon>
+              </button>
+              
+              <button mat-mini-fab 
+                      *ngIf="candidature.status !== 'ACCEPTEE'"
+                      (click)="updateCandidatureStatus(candidature, 'ACCEPTEE')"
+                      title="Accepter cette candidature"
+                      class="action-accept-icon"
+                      [class.pulse]="candidature.status === 'NOUVEAU'">
+                <mat-icon>done</mat-icon>
+              </button>
+              
+              <button mat-mini-fab 
+                      *ngIf="candidature.status !== 'REFUSEE'"
+                      (click)="updateCandidatureStatus(candidature, 'REFUSEE')"
+                      title="Refuser cette candidature"
+                      class="action-refuse-icon">
+                <mat-icon>close</mat-icon>
+              </button>
             </div>
-            <!-- ✅ TARIF PROPOSÉ -->
-            <div *ngIf="candidature.tarifPropose" class="candidate-tarif">
-              <p><strong>Tarif proposé :</strong> {{ candidature.tarifPropose }}€</p>
-            </div>
-          </div>
-          <div class="candidate-actions">
-            <button mat-icon-button (click)="viewCandidatureDetails(candidature); $event.stopPropagation()">
-              <mat-icon>visibility</mat-icon>
-            </button>
-            <button mat-icon-button *ngIf="candidature.cv" (click)="downloadCV(candidature); $event.stopPropagation()">
-              <mat-icon>download</mat-icon>
-            </button>
-            <!-- ✅ BOUTONS DE STATUT -->
-            <button mat-icon-button 
-                    *ngIf="candidature.status !== 'ACCEPTÉE'"
-                    (click)="updateCandidatureStatus(candidature, 'ACCEPTÉE'); $event.stopPropagation()"
-                    title="Accepter">
-              <mat-icon style="color: green;">check_circle</mat-icon>
-            </button>
-            <button mat-icon-button 
-                    *ngIf="candidature.status !== 'REFUSÉE'"
-                    (click)="updateCandidatureStatus(candidature, 'REFUSÉE'); $event.stopPropagation()"
-                    title="Refuser">
-              <mat-icon style="color: red;">cancel</mat-icon>
-            </button>
           </div>
         </div>
+        
+        <mat-divider *ngIf="i < selectedOffreCandidatures.length - 1"></mat-divider>
       </div>
     </div>
 
@@ -278,6 +320,188 @@
   (closeModalEvent)="closeOffreEmploiForm()"
   class="offre-creation-modal">
 </app-offre-emplois>
+
+<!-- ✅ MODAL DÉTAILS COMPLETS DU CANDIDAT -->
+<ng-template #candidateDetailsTemplate let-data>
+  <div class="candidate-details-header">
+    <h2 mat-dialog-title>
+      <mat-icon>person_pin</mat-icon> 
+      Détails complets - {{ (data?.freelancePrenom || data?.freelance?.prenom || '') + ' ' + (data?.freelanceNom || data?.freelance?.nom || '') || 'Nom non disponible' }}
+    </h2>
+    <button mat-icon-button mat-dialog-close><mat-icon>close</mat-icon></button>
+  </div>
+  
+  <div mat-dialog-content class="candidate-details-content">
+    
+    <!-- PROFIL CANDIDAT -->
+    <mat-card class="info-section profile-section">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>account_circle</mat-icon>
+        <mat-card-title>Profil du candidat</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="profile-info">
+          <div class="profile-main">
+            <h3 class="candidate-name">
+              {{ (data?.freelancePrenom || data?.freelance?.prenom || '') + ' ' + (data?.freelanceNom || data?.freelance?.nom || '') || 'Nom non disponible' }}
+            </h3>
+            <div class="profile-contacts">
+              <div class="contact-item">
+                <mat-icon>email</mat-icon>
+                <span>{{ data?.freelanceEmail || data?.freelance?.email || 'Email non disponible' }}</span>
+              </div>
+              <div class="contact-item">
+                <mat-icon>phone</mat-icon>
+                <span>{{ data?.['freelanceTelephone'] || data?.telCandidat || data?.freelance?.telephone || 'non disponible' }}</span>
+              </div>
+              <div class="contact-item" *ngIf="data?.freelanceAdresse || data?.freelance?.adresse">
+                <mat-icon>location_on</mat-icon>
+                <span>{{ data?.freelanceAdresse || data?.freelance?.adresse }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- COMPÉTENCES -->
+    <mat-card class="info-section" *ngIf="data?.['freelanceCompetences']">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>psychology</mat-icon>
+        <mat-card-title>Compétences</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="competences-text">
+          <p>{{ data?.['freelanceCompetences'] }}</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- PORTFOLIO DU FREELANCE - SECTION COLLAPSIBLE -->
+    <mat-card class="info-section portfolio-section" *ngIf="getFreelanceId(data)">
+      <mat-card-header class="portfolio-header-clickable" (click)="togglePortfolio()">
+        <mat-icon mat-card-avatar>collections</mat-icon>
+        <mat-card-title>Portfolio & Réalisations</mat-card-title>
+        <div class="header-actions">
+
+          
+          <mat-icon class="expand-icon" [class.expanded]="isPortfolioExpanded">
+            {{ isPortfolioExpanded ? 'expand_less' : 'expand_more' }}
+          </mat-icon>
+        </div>
+      </mat-card-header>
+      
+      <div class="portfolio-collapsible" [class.expanded]="isPortfolioExpanded">
+        <mat-card-content class="portfolio-content">
+          <app-portfolio 
+            [freelanceId]="getFreelanceId(data)" 
+            [clientMode]="true">
+          </app-portfolio>
+        </mat-card-content>
+      </div>
+    </mat-card>
+
+    <!-- EXPÉRIENCE -->
+    <mat-card class="info-section" *ngIf="data?.['freelanceExperience']">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>work_history</mat-icon>
+        <mat-card-title>Expérience professionnelle</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="experience-text">
+          <p>{{ data?.['freelanceExperience'] }}</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- INFORMATIONS PROFESSIONNELLES -->
+    <mat-card class="info-section" *ngIf="data?.freelance?.specialite || data?.freelance?.experience">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>work</mat-icon>
+        <mat-card-title>Autres informations professionnelles</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="info-grid" *ngIf="data?.freelance?.specialite">
+          <div class="info-item">
+            <label>Spécialité :</label>
+            <span>{{ data?.freelance?.specialite }}</span>
+          </div>
+        </div>
+        <div *ngIf="data?.freelance?.experience">
+          <label>Expérience :</label>
+          <p>{{ data?.freelance?.experience }}</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- DÉTAILS DE LA CANDIDATURE - VERSION COMPACTE -->
+    <mat-card class="info-section candidature-details-compact">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>assignment</mat-icon>
+        <mat-card-title>Détails de la candidature</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <!-- Informations sous forme de badges compacts -->
+        <div class="candidature-badges">
+          <div class="badge-item status-item">
+            <mat-icon>info</mat-icon>
+            <span class="status-badge" [ngClass]="data?.status?.toLowerCase()">
+              {{ data?.status }}
+            </span>
+          </div>
+
+          <div class="badge-item date-item">
+            <mat-icon>schedule</mat-icon>
+            <div class="badge-content">
+              <span class="badge-label">Candidature</span>
+              <span class="badge-value">{{ data?.dateCandidature | date:'dd/MM/yyyy' }}</span>
+            </div>
+          </div>
+
+          <div class="badge-item tarif-item" *ngIf="data?.tarifPropose">
+            <mat-icon>payments</mat-icon>
+            <div class="badge-content">
+              <span class="badge-label">Tarif proposé</span>
+              <span class="badge-value">{{ data?.tarifPropose | number:'1.0-0' }} CFA</span>
+            </div>
+          </div>
+
+          <div class="badge-item disponibilite-item" *ngIf="data?.disponibilite">
+            <mat-icon>calendar_today</mat-icon>
+            <div class="badge-content">
+              <span class="badge-label">Disponible le</span>
+              <span class="badge-value">{{ data?.disponibilite | date:'dd/MM/yyyy' }}</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Message du candidat - format original -->
+        <div class="message-section" *ngIf="data?.message">
+          <label>Message du candidat :</label>
+          <p class="candidate-message">{{ data?.message }}</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+  </div>
+  
+  <div mat-dialog-actions align="end" class="details-dialog-actions">
+    <button mat-stroked-button mat-dialog-close class="btn-close">
+      <mat-icon>close</mat-icon> 
+      <span>Fermer</span>
+    </button>
+    <button mat-flat-button color="primary" (click)="contactCandidate(data)" class="btn-contact">
+      <mat-icon>send</mat-icon> 
+      <span>Envoyer un message</span>
+    </button>
+    <button mat-mini-fab color="accent" (click)="updateCandidatureStatus(data, 'ACCEPTEE')" 
+            *ngIf="data?.status !== 'ACCEPTEE'" 
+            class="btn-accept-fab" 
+            title="Accepter cette candidature">
+      <mat-icon>done</mat-icon>
+    </button>
+  </div>
+</ng-template>
 
 <!-- 🔄 OVERLAY DE CHARGEMENT -->
 <div class="global-loading-overlay" *ngIf="isLoading">

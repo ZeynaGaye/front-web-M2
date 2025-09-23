@@ -1,4 +1,4 @@
-<div class="modal-overlay" (click)="closeDetails()" *ngIf="offreExists">
+re<div class="modal-overlay" (click)="closeDetails()" *ngIf="offreExists">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <!-- En-tête du modal -->
     <div class="modal-header">
@@ -33,7 +33,7 @@
           </div>
           
           <div class="info-item">
-            <mat-icon class="icon">euro_symbol</mat-icon>
+            <mat-icon class="icon">attach_money</mat-icon>
             <div>
               <h4>Rémunération</h4>
               <p>{{ offre?.salaire }}</p>
@@ -66,80 +66,197 @@
         </div>
       </div>
       
+      <!-- Informations du salon -->
+      <div class="salon-section" *ngIf="offre?.salonNom">
+        <h3>
+          <mat-icon>store</mat-icon>
+          À propos du salon
+        </h3>
+        <div class="salon-details">
+          <div class="salon-header">
+            <h4>{{ offre?.salonNom }}</h4>
+          </div>
+          <div class="salon-info-item" *ngIf="offre?.salonAdresse">
+            <mat-icon class="salon-icon">location_on</mat-icon>
+            <div>
+              <h5>Adresse</h5>
+              <p>{{ offre?.salonAdresse }}</p>
+            </div>
+          </div>
+          <div class="salon-info-item" *ngIf="offre?.salonDescription">
+            <mat-icon class="salon-icon">description</mat-icon>
+            <div>
+              <h5>À propos</h5>
+              <p>{{ offre?.salonDescription }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
      <!-- Section candidature -->
      <div class="application-section" *ngIf="offre?.status === 'OUVERT' && !submitSuccess">
+      <h3>
+        <mat-icon>work</mat-icon>
+        Candidature
+      </h3>
+      
       <!-- Bouton Postuler -->
-      <div *ngIf="!showForm">
+      <div class="application-content" *ngIf="!showForm">
+        <div class="application-intro">
+          <p>Cette offre vous intéresse ? Postulez dès maintenant et mettez en avant votre profil !</p>
+        </div>
+        
         <button mat-raised-button 
                 color="primary"
                 (click)="showForm = true"
                 [disabled]="aDejaPostule"
                 class="apply-button"
                 [ngClass]="{'disabled-button': aDejaPostule}">
+          <mat-icon>send</mat-icon>
           {{ aDejaPostule ? 'Déjà postulé' : 'Postuler à cette offre' }}
         </button>
         
-        <!-- Message de candidature déjà envoyée - visible même sans cliquer sur le bouton -->
+        <!-- Message de candidature déjà envoyée -->
         <div *ngIf="aDejaPostule" class="already-applied-message">
           <mat-icon class="icon">check_circle</mat-icon>
           <p>Votre candidature a déjà été soumise pour cette offre</p>
         </div>
       </div>
 
-  <!-- Formulaire affiché après clic -->
-  <form *ngIf="showForm && !aDejaPostule" [formGroup]="candidatureForm" (ngSubmit)="onSubmit()">
-    <!-- Champ titre en lecture seule -->
-    <div class="form-group">
-      <label>Titre de la candidature</label>
-      <input 
-        matInput
-        formControlName="titre" 
-        placeholder="Titre de la candidature"
-        [value]="offre?.titre"
-        readonly>
-    </div>
-    
-    <div class="form-group">
-      <label>Votre message</label>
-      <textarea 
-        matInput
-        formControlName="message" 
-        placeholder="Présentez-vous et expliquez pourquoi vous êtes parfait(e) pour cette mission"
-        rows="5"
-      ></textarea>
-      <mat-error *ngIf="candidatureForm.get('message')?.invalid && candidatureForm.get('message')?.touched">
-        Le message doit contenir au moins 10 caractères
-      </mat-error>
-    </div>
+  <!-- Formulaire de candidature  -->
+  <div class="application-form-container" *ngIf="showForm && !aDejaPostule">
+    <div class="form-overlay">
+      <form class="application-form" [formGroup]="candidatureForm" (ngSubmit)="onSubmit()">
+        
+        <!-- En-tête du formulaire -->
+        <div class="form-header">
+          <div class="header-icon">
+            <mat-icon>person_add</mat-icon>
+          </div>
+          <div class="header-content">
+            <h3>Postuler à cette offre</h3>
+            <p>Complétez votre candidature pour cette opportunité</p>
+          </div>
+          <button type="button" 
+                  mat-icon-button 
+                  class="close-form-btn"
+                  (click)="showForm = false"
+                  [disabled]="isSubmitting">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
 
-    <div class="form-row">
-      <div class="form-group">
-        <label>Date de disponibilité</label>
-        <input matInput type="date" formControlName="disponibilite">
-        <mat-error *ngIf="candidatureForm.get('disponibilite')?.invalid && candidatureForm.get('disponibilite')?.touched">
-          Ce champ est requis
-        </mat-error>
-      </div>
+        <!-- Affichage d'erreur -->
+        <div class="error-banner" *ngIf="errorMessage">
+          <mat-icon>error</mat-icon>
+          <span>{{ errorMessage }}</span>
+        </div>
+
+        <!-- Corps du formulaire -->
+        <div class="form-body">
+          
+          <!-- Titre de la candidature (lecture seule) -->
+          <div class="form-group">
+            <label class="form-label">
+              <mat-icon>work</mat-icon>
+              Poste visé
+            </label>
+            <div class="readonly-field">
+              <input type="text" 
+                     formControlName="titre" 
+                     [value]="offre?.titre"
+                     readonly
+                     class="readonly-input">
+            </div>
+          </div>
+
+          <!-- Date de disponibilité -->
+          <div class="form-group">
+            <label class="form-label">
+              <mat-icon>calendar_today</mat-icon>
+              Date de disponibilité
+            </label>
+            <mat-form-field appearance="outline" class="custom-field">
+              <mat-label>Choisissez votre date de disponibilité</mat-label>
+              <input matInput 
+                     [matDatepicker]="picker"
+                     formControlName="disponibilite"
+                     [min]="getTodayDate()"
+                     readonly>
+              <mat-datepicker-toggle matIconSuffix [for]="picker">
+                <mat-icon matDatepickerToggleIcon>calendar_today</mat-icon>
+              </mat-datepicker-toggle>
+              <mat-datepicker #picker></mat-datepicker>
+              <mat-error *ngIf="candidatureForm.get('disponibilite')?.invalid && candidatureForm.get('disponibilite')?.touched">
+                Veuillez indiquer quand vous êtes disponible
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <!-- Message de motivation -->
+          <div class="form-group message-group">
+            <label class="form-label">
+              <mat-icon>edit</mat-icon>
+              Message de motivation
+            </label>
+            <mat-form-field appearance="outline" class="custom-field">
+              <textarea matInput
+                        formControlName="message"
+                        placeholder="Présentez-vous et expliquez pourquoi vous êtes le candidat idéal pour ce poste..."
+                        rows="4"
+                        cdkTextareaAutosize
+                        cdkAutosizeMinRows="4"
+                        cdkAutosizeMaxRows="8"
+                        maxlength="500">
+              </textarea>
+              <mat-hint align="end">
+                {{ candidatureForm.get('message')?.value?.length || 0 }}/500
+              </mat-hint>
+              <mat-error *ngIf="candidatureForm.get('message')?.invalid && candidatureForm.get('message')?.touched">
+                <span *ngIf="candidatureForm.get('message')?.errors?.['required']">
+                  Un message de motivation est requis
+                </span>
+                <span *ngIf="candidatureForm.get('message')?.errors?.['minlength']">
+                  Votre message doit contenir au moins 10 caractères
+                </span>
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+        </div>
+
+        <!-- Actions du formulaire -->
+        <div class="form-actions">
+          <button mat-stroked-button 
+                  type="button" 
+                  class="cancel-btn"
+                  (click)="showForm = false"
+                  [disabled]="isSubmitting">
+            <mat-icon>close</mat-icon>
+            Annuler
+          </button>
+          
+          <button mat-raised-button 
+                  color="primary" 
+                  type="submit" 
+                  class="submit-btn"
+                  [disabled]="candidatureForm.invalid || isSubmitting">
+            <mat-icon *ngIf="!isSubmitting">send</mat-icon>
+            <mat-spinner *ngIf="isSubmitting" diameter="18"></mat-spinner>
+            <span>{{ isSubmitting ? 'Envoi en cours...' : 'Envoyer ma candidature' }}</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
       
-      <div class="form-group">
-        <label>Tarif proposé</label>
-        <input matInput type="number" formControlName="tarifPropose" placeholder="Votre tarif en €">
-        <mat-error *ngIf="candidatureForm.get('tarifPropose')?.invalid && candidatureForm.get('tarifPropose')?.touched">
-          Veuillez indiquer un tarif valide
-        </mat-error>
+      <!-- Message de succès -->
+      <div class="success-message" *ngIf="submitSuccess">
+        <mat-icon class="success-icon">check_circle</mat-icon>
+        <h3>Candidature envoyée avec succès !</h3>
+        <p>Votre candidature a été transmise à l'employeur. Vous recevrez une réponse dans les plus brefs délais.</p>
       </div>
     </div>
-
-    <div class="submit-section">
-      <button mat-raised-button 
-              color="primary" 
-              type="submit" 
-              [disabled]="candidatureForm.invalid || isSubmitting">
-        <span *ngIf="!isSubmitting">Envoyer ma candidature</span>
-        <span *ngIf="isSubmitting">
-          <mat-spinner diameter="20"></mat-spinner>
-        </span>
-      </button>
-    </div>
-  </form>
+  </div>
 </div>

@@ -1,5 +1,24 @@
-
+ 
 <div class="opportunites-container" [class.compact-mode]="compactMode">
+  
+  <!--  NOTIFICATION GLOBALE DES CHANGEMENTS DE STATUT -->
+  <div class="status-notifications" *ngIf="hasRecentStatusChanges() && !compactMode">
+    <div class="notification-banner" 
+         [ngClass]="getGlobalNotificationClass()"
+         (click)="scrollToStatusChanges()">
+      <div class="notification-icon">
+        <i class="fas fa-bell"></i>
+      </div>
+      <div class="notification-content">
+        <h4>{{ getGlobalNotificationTitle() }}</h4>
+        <p>{{ getGlobalNotificationMessage() }}</p>
+      </div>
+      <div class="notification-action">
+        <i class="fas fa-arrow-down"></i>
+        <span>Voir</span>
+      </div>
+    </div>
+  </div>
   
   <!-- En-tête conditionnel -->
   <div class="header-section" *ngIf="showHeader">
@@ -27,13 +46,13 @@
       Ouvertes
     </button>
     
-    <button 
+    <!-- <button 
       class="filter-chip"
       [class.active]="searchForm.get('status')?.value === 'URGENT' && !showOnlyApplied"
       (click)="setStatusFilter('URGENT')">
       <i class="fas fa-exclamation-circle"></i>
       Urgentes
-    </button>
+    </button> -->
     
     <button 
       class="filter-chip"
@@ -51,7 +70,7 @@
       À la une
     </button>
     
-    <!-- 🆕 BOUTON "DÉJÀ POSTULÉ" -->
+    <!-- BOUTON "DÉJÀ POSTULÉ" -->
     <button 
       class="filter-chip applied-filter"
       [class.active]="showOnlyApplied"
@@ -129,7 +148,7 @@
     </div>
 
     <!-- ===============================================
-         ✅ UNE SEULE SECTION DE CARTES (CORRIGÉE)
+         UNE SEULE SECTION DE CARTES (CORRIGÉE)
     =============================================== -->
     <div class="offers-grid" 
          [class.compact-grid]="compactMode"
@@ -171,6 +190,12 @@
             <i class="time-icon fas fa-clock"></i>
             <span>{{ getJobDuration(offre) }}</span>
           </div>
+          
+          <!-- Salon info en mode compact -->
+          <div class="detail-item" *ngIf="compactMode && offre.salonNom">
+            <i class="salon-icon fas fa-store"></i>
+            <span>{{ offre.salonNom }}</span>
+          </div>
         </div>
         
         <!-- Description -->
@@ -186,19 +211,78 @@
           </p>
         </div>
         
-        <!-- 🆕 FOOTER AVEC STATUT DE CANDIDATURE -->
+        <!-- Informations du salon -->
+        <div class="salon-info" *ngIf="offre.salonNom && !compactMode">
+          <div class="salon-header">
+            <i class="fas fa-store"></i>
+            <strong>{{ offre.salonNom }}</strong>
+          </div>
+          <div class="salon-details">
+            <div class="salon-address" *ngIf="offre.salonAdresse">
+              <i class="fas fa-map-marker-alt"></i>
+              <span>{{ offre.salonAdresse }}</span>
+            </div>
+            <div class="salon-description" *ngIf="offre.salonDescription">
+              <p>{{ truncateText(offre.salonDescription, 120) }}</p>
+            </div>
+          </div>
+        </div>
+        
+        <!--  FOOTER AVEC STATUT DE CANDIDATURE -->
         <div class="offer-footer">
           <span class="experience">
             <i class="fas fa-graduation-cap"></i>
             {{ offre.experienceRequise || 'Expérience à définir' }}
           </span>
           
-          <!-- 🆕 STATUT DE CANDIDATURE (si postulé) -->
+          <!--  STATUT DE CANDIDATURE PROÉMINENT (si postulé) -->
           <div class="candidature-status" *ngIf="hasAppliedToOffer(offre.id) && getCandidatureStatus(offre.id)">
-            <span class="status-badge candidature" [ngClass]="getCandidatureStatusClass(offre.id)">
-              <i class="fas fa-circle"></i>
+            <!-- Badge normal pour EN_ATTENTE -->
+            <span class="status-badge candidature" 
+                  [ngClass]="getCandidatureStatusClass(offre.id)"
+                  *ngIf="getCandidatureStatus(offre.id) === 'EN_ATTENTE'">
+              <i class="fas fa-clock"></i>
               {{ getCandidatureStatusText(offre.id) }}
             </span>
+            
+            <!-- Alerte proéminente pour ACCEPTEE -->
+            <div class="status-alert status-accepted" 
+                 *ngIf="getCandidatureStatus(offre.id) === 'ACCEPTEE'">
+              <div class="alert-content">
+                <i class="fas fa-check-circle"></i>
+                <span class="alert-text">
+                  <strong>CANDIDATURE ACCEPTÉE !</strong>
+                  <small>Vous avez été sélectionné pour cette offre</small>
+                </span>
+              </div>
+              <div class="alert-action">
+                <i class="fas fa-bell animated-bell"></i>
+              </div>
+            </div>
+            
+            <!-- Alerte proéminente pour REFUSEE -->
+            <div class="status-alert status-rejected" 
+                 *ngIf="getCandidatureStatus(offre.id) === 'REFUSEE'">
+              <div class="alert-content">
+                <i class="fas fa-times-circle"></i>
+                <span class="alert-text">
+                  <strong>Candidature non retenue</strong>
+                  <small>Votre Cnadidature pour ce poste n'a pas ete retenue</small>
+                </span>
+              </div>
+            </div>
+            
+            <!-- Badge pour EN_COURS -->
+            <div class="status-alert status-in-progress" 
+                 *ngIf="getCandidatureStatus(offre.id) === 'EN_COURS'">
+              <div class="alert-content">
+                <i class="fas fa-spinner fa-spin"></i>
+                <span class="alert-text">
+                  <strong>EN COURS D'ÉVALUATION</strong>
+                  <small>Votre candidature est à l'étude</small>
+                </span>
+              </div>
+            </div>
           </div>
           
           <button class="view-details-btn" 

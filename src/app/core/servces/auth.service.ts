@@ -9,6 +9,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { environment } from '../../../environments/environment';
 import { RoleRedirectService } from '../services/auth/role-redirect.service';
 import { AuthUIService } from '../../shared/services/authUI/auth-ui.service';
+import { UserProfile } from '../../shared/services/profile/profile-management.service';
 
 export interface LoginCredentials {
   email: string;
@@ -30,7 +31,14 @@ export interface AuthResponse {
   providedIn: 'root',
 })
 export class AuthService {
+  setCurrentUser(updatedProfile: UserProfile): void {
+    this.currentUserSubject.next(updatedProfile);
+    if (this.isBrowser) {
+      localStorage.setItem('currentUser', JSON.stringify(updatedProfile));
+    }
+  }
   // Injection des dépendances
+  
   private http = inject(HttpClient);
   private keycloakService = inject(KeycloakService);
   private router = inject(Router);

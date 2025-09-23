@@ -65,21 +65,21 @@
   
         <!-- Étape 2 : Portfolio et documents -->
         <div class="step-content" *ngIf="currentStep === 2">
-          <div class="form-group">
+          <!-- <div class="form-group">
             <label>Photos de portfolio (max 5)</label>
             <input type="file" accept="image/*" multiple (change)="onPortfolioChange($event)" [disabled]="portfolioFiles.length >= 5" />
             <small class="info-text">Partagez vos meilleures réalisations (maquillage, coiffure, soins...)</small>
-          </div>
+          </div> -->
   
-          <div class="portfolio-preview" *ngIf="portfolioFiles.length > 0">
+          <!-- <div class="portfolio-preview" *ngIf="portfolioFiles.length > 0">
             <h4>Vos photos sélectionnées:</h4>
             <div class="portfolio-images">
               <div class="portfolio-image" *ngFor="let file of portfolioFiles; let i = index">
                 <span class="remove-image" (click)="removePortfolioImage(i)">&times;</span>
-                <!-- <img [src]="file ? URL.createObjectURL(file) : ''" alt="Preview" /> -->
-              </div>
+                <img [src]="file ? URL.createObjectURL(file) : ''" alt="Preview" /> -->
+              <!-- </div>
             </div>
-          </div>
+          </div> -->
   
           <div class="form-group">
             <label>CV (optionnel)</label>

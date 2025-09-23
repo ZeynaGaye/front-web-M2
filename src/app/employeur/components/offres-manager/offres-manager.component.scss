@@ -418,13 +418,20 @@ $gradient-card: linear-gradient(135deg, $secondary-color 0%, $primary-color 100%
 =============================================== */
 .job-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
   margin-bottom: 2.5rem;
+  max-width: 1200px; // Limiter la largeur totale
+  margin-left: auto;
+  margin-right: auto;
+
+  @media (min-width: 1400px) {
+    grid-template-columns: repeat(3, 1fr); // Max 3 colonnes sur très grands écrans
+  }
 
   @media (max-width: 992px) {
-    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.2rem;
   }
 
   @media (max-width: 768px) {
@@ -607,6 +614,53 @@ $gradient-card: linear-gradient(135deg, $secondary-color 0%, $primary-color 100%
         color: #ff4d4f;
         font-weight: 700;
       }
+    }
+  }
+
+  // Styles spécifiques pour les informations du salon
+  .salon-info {
+    background: rgba($primary-color, 0.08);
+    border-left-color: $primary-color;
+
+    .salon-details {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+
+      .salon-name {
+        font-weight: 700;
+        color: $text-dark;
+        font-size: 0.95rem;
+      }
+
+      .salon-address {
+        font-size: 0.8rem;
+        color: $text-light;
+        font-weight: 500;
+        font-style: italic;
+      }
+    }
+  }
+
+  // Styles pour les candidatures
+  .candidates-info {
+    background: rgba($secondary-color, 0.08);
+    border-left-color: $secondary-color;
+
+    .candidates-count {
+      background: $secondary-color;
+      color: $white;
+      padding: 0.2rem 0.5rem;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      min-width: 20px;
+      text-align: center;
+    }
+
+    .candidates-label {
+      font-size: 0.85rem;
+      color: $text-light;
     }
   }
 }
@@ -1336,5 +1390,1138 @@ button:focus,
 
   .job-grid {
     gap: 0.75rem;
+  }
+}
+
+/* ===============================================
+   👥 MODAL CANDIDATURES AMÉLIORÉ
+=============================================== */
+
+.candidates-dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e0e0e0;
+
+  h2 {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: $text-dark;
+    font-weight: 600;
+  }
+}
+
+.candidates-dialog-content {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.loading-candidates {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  
+  p {
+    margin-top: 1rem;
+    color: $text-light;
+  }
+}
+
+.candidates-header {
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 1rem;
+
+  .candidates-count-info {
+    font-weight: 500;
+    color: $text-dark;
+    font-size: 0.9rem;
+  }
+}
+
+.candidate-item-enhanced {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 8px;
+  background: $white;
+  border: 1px solid #e0e0e0;
+  margin-bottom: 1rem;
+  transition: all 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 2px 8px $shadow-light;
+    border-color: $primary-color;
+  }
+}
+
+.candidate-avatar {
+  .avatar-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: $gradient-primary;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+  }
+}
+
+.candidate-main-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.candidate-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.candidate-name {
+  font-weight: 600;
+  color: $text-dark;
+  font-size: 1.1rem;
+}
+
+.candidate-status {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+
+  &.nouveau {
+    background: #e3f2fd;
+    color: #1976d2;
+  }
+
+  &.acceptee {
+    background: #e8f5e8;
+    color: #2e7d32;
+  }
+
+  &.refusee {
+    background: #ffebee;
+    color: #c62828;
+  }
+
+  &.en_attente {
+    background: #fff3e0;
+    color: #ef6c00;
+  }
+}
+
+.candidate-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  .contact-details-row {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .detail-item {
+      flex: 1;
+      min-width: 200px;
+    }
+  }
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: $text-light;
+  font-size: 0.85rem;
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    color: $secondary-color;
+  }
+
+  .message-preview {
+    line-height: 1.4;
+    color: $text-dark;
+  }
+}
+
+/* ===============================================
+   🎯 SECTION ACTIONS AVEC STATUT
+=============================================== */
+.candidate-actions-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(226, 232, 240, 0.6);
+
+  .candidate-status-container {
+    flex-shrink: 0;
+
+    .candidate-status {
+      padding: 0.4rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      transition: all 0.2s ease;
+
+      &.nouveau {
+        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        color: #1d4ed8;
+        border: 1px solid #93c5fd;
+      }
+
+      &.acceptee {
+        background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+        color: #15803d;
+        border: 1px solid #86efac;
+      }
+
+      &.refusee {
+        background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%);
+        color: #dc2626;
+        border: 1px solid #fca5a5;
+      }
+
+      &.en_attente {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        color: #d97706;
+        border: 1px solid #fcd34d;
+      }
+    }
+  }
+}
+
+/* ===============================================
+   🎯 ACTIONS ICÔNES SIMPLIFIÉES 
+=============================================== */
+.candidate-actions-icons {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  margin-top: 0.5rem;
+
+  button {
+    width: 40px;
+    height: 40px;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    overflow: hidden;
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+
+    // Effet de tooltip au survol amélioré
+    &[title]:hover::after {
+      content: attr(title);
+      position: absolute;
+      bottom: 120%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.9);
+      color: white;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      white-space: nowrap;
+      z-index: 1000;
+      animation: tooltip-fade-in 0.2s ease;
+      pointer-events: none;
+    }
+
+    &[title]:hover::before {
+      content: '';
+      position: absolute;
+      bottom: 110%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 5px solid rgba(0, 0, 0, 0.9);
+      z-index: 1000;
+      animation: tooltip-fade-in 0.2s ease;
+    }
+
+    &.action-details-icon {
+      background: linear-gradient(135deg, rgba($secondary-color, 0.15) 0%, rgba($secondary-color, 0.25) 100%);
+      color: color.adjust($secondary-color, $lightness: -20%);
+      box-shadow: 0 3px 12px rgba($secondary-color, 0.2);
+
+      &:hover {
+        background: linear-gradient(135deg, rgba($secondary-color, 0.25) 0%, rgba($secondary-color, 0.35) 100%);
+        transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 6px 20px rgba($secondary-color, 0.3);
+      }
+    }
+
+    &.action-contact-icon {
+      background: linear-gradient(135deg, rgba($primary-color, 0.15) 0%, rgba($primary-color, 0.25) 100%);
+      color: color.adjust($primary-color, $lightness: -25%);
+      box-shadow: 0 3px 12px rgba($primary-color, 0.2);
+
+      &:hover:not(:disabled) {
+        background: linear-gradient(135deg, rgba($primary-color, 0.25) 0%, rgba($primary-color, 0.35) 100%);
+        transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 6px 20px rgba($primary-color, 0.3);
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none !important;
+        box-shadow: 0 3px 12px rgba($primary-color, 0.1) !important;
+      }
+    }
+
+    &.action-accept-icon {
+      background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+      color: white;
+      box-shadow: 0 3px 12px rgba(76, 175, 80, 0.3);
+
+      &:hover {
+        background: linear-gradient(135deg, #45a049 0%, #5eb85e 100%);
+        transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+      }
+
+      &.pulse {
+        animation: pulse-accept 2s infinite;
+      }
+    }
+
+    &.action-refuse-icon {
+      background: linear-gradient(135deg, #f44336 0%, #ef5350 100%);
+      color: white;
+      box-shadow: 0 3px 12px rgba(244, 67, 54, 0.3);
+
+      &:hover {
+        background: linear-gradient(135deg, #e53935 0%, #e53935 100%);
+        transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 6px 20px rgba(244, 67, 54, 0.4);
+      }
+    }
+  }
+}
+
+@keyframes tooltip-fade-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@keyframes pulse-accept {
+  0% { 
+    transform: scale(1); 
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+  }
+  50% { 
+    transform: scale(1.05); 
+    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.5);
+  }
+  100% { 
+    transform: scale(1); 
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+  }
+}
+
+// Styles pour les anciens sélecteurs (compatibilité)
+.action-details, .action-contact {
+  min-width: 110px;
+  font-size: 0.8rem;
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    margin-right: 0.25rem;
+  }
+}
+
+.status-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+
+  button {
+    width: 32px;
+    height: 32px;
+    
+    mat-icon {
+      font-size: 16px;
+    }
+  }
+}
+
+.no-candidates {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  text-align: center;
+
+  .no-candidates-animation {
+    margin-bottom: 1rem;
+    
+    mat-icon {
+      font-size: 4rem;
+      width: 4rem;
+      height: 4rem;
+      color: $text-light;
+      opacity: 0.5;
+    }
+  }
+
+  h4 {
+    color: $text-dark;
+    margin: 0 0 0.5rem 0;
+    font-weight: 600;
+  }
+
+  p {
+    color: $text-light;
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+}
+
+.candidates-dialog-actions {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #e0e0e0;
+  
+  button {
+    min-width: 100px;
+  }
+}
+
+/* Responsive pour le modal candidatures */
+@media (max-width: 768px) {
+  .candidate-item-enhanced {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .candidate-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .candidate-actions-icons {
+    gap: 0.5rem;
+    justify-content: center;
+
+    button {
+      width: 36px;
+      height: 36px;
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+
+      // Tooltips plus petits sur mobile
+      &[title]:hover::after {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.5rem;
+        bottom: 110%;
+      }
+
+      &[title]:hover::before {
+        bottom: 105%;
+      }
+    }
+  }
+
+  // Compatibilité avec l'ancien système
+  .candidate-actions-enhanced {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+
+    .main-actions {
+      flex-direction: column;
+      gap: 0.25rem;
+
+      .action-btn {
+        min-width: 90px;
+        height: 32px;
+        font-size: 0.75rem;
+
+        .action-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+        }
+      }
+    }
+
+    .status-actions-improved {
+      gap: 0.5rem;
+
+      button {
+        width: 36px;
+        height: 36px;
+
+        .status-icon {
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+        }
+      }
+    }
+  }
+
+  .status-actions {
+    margin-top: 0;
+  }
+
+  .action-details, .action-contact {
+    min-width: 90px;
+    font-size: 0.75rem;
+  }
+
+  // Modal responsivité améliorée
+  .candidate-details-content {
+    padding: 1rem;
+    
+    .info-section {
+      mat-card-header {
+        padding: 0.75rem 1rem;
+        
+        .mat-mdc-card-avatar {
+          width: 32px;
+          height: 32px;
+          
+          mat-icon {
+            font-size: 16px;
+          }
+        }
+      }
+      
+      mat-card-content {
+        padding: 1rem;
+        
+        .info-grid {
+          grid-template-columns: 1fr;
+          gap: 0.75rem;
+          
+          .info-item {
+            padding: 0.75rem;
+          }
+        }
+      }
+    }
+  }
+
+  .details-dialog-actions {
+    padding: 1rem;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    justify-content: center;
+
+    .btn-close, .btn-contact {
+      min-width: 140px;
+      height: 36px;
+      font-size: 0.85rem;
+    }
+
+    .btn-accept-fab {
+      width: 40px;
+      height: 40px;
+      
+      mat-icon {
+        font-size: 18px;
+      }
+    }
+  }
+}
+
+/* ===============================================
+   🎨 MODAL DE DÉTAILS CANDIDATURE - DESIGN AMÉLIORÉ
+=============================================== */
+
+// Configuration globale du modal
+::ng-deep .candidate-details-modal {
+  .mat-mdc-dialog-container {
+    border-radius: 16px !important;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  .mat-mdc-dialog-surface {
+    border-radius: 16px !important;
+  }
+}
+
+.candidate-details-header {
+  background: $gradient-card;
+  color: white;
+  padding: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="%23ffffff" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="%23ffffff" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    opacity: 0.3;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+    z-index: 1;
+
+    mat-icon {
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+      color: #ffd700;
+    }
+  }
+
+  button {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 1;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.3);
+      border-color: rgba(255, 255, 255, 0.5);
+      transform: scale(1.05);
+    }
+  }
+}
+
+.candidate-details-content {
+  padding: 2rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  max-height: 70vh;
+  overflow-y: auto;
+
+  .info-section {
+    margin-bottom: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    background: white;
+    border: 1px solid rgba(226, 232, 240, 0.5);
+    transition: all 0.3s ease;
+
+    &:hover {
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+      transform: translateY(-2px);
+    }
+
+    mat-card-header {
+      background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+      border-radius: 12px 12px 0 0;
+      padding: 1rem 1.5rem;
+
+      mat-card-title {
+        color: #334155;
+        font-weight: 600;
+        font-size: 1.1rem;
+      }
+
+      .mat-mdc-card-avatar {
+        background: $gradient-primary;
+        color: white;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+
+        mat-icon {
+          font-size: 20px;
+        }
+      }
+    }
+
+    mat-card-content {
+      padding: 1.5rem;
+
+      .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+
+        .info-item {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+          padding: 1rem;
+          background: rgba(241, 245, 249, 0.5);
+          border-radius: 8px;
+          border: 1px solid rgba(226, 232, 240, 0.8);
+          transition: all 0.2s ease;
+
+          &:hover {
+            background: rgba(241, 245, 249, 0.8);
+            border-color: #cbd5e1;
+          }
+
+          label {
+            font-weight: 600;
+            color: #475569;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+
+          span {
+            color: #1e293b;
+            font-size: 1rem;
+            word-break: break-word;
+          }
+        }
+      }
+
+      .competences-text, .experience-text {
+        background: rgba(241, 245, 249, 0.5);
+        padding: 1rem;
+        border-radius: 8px;
+        border-left: 4px solid $primary-color;
+
+        p {
+          margin: 0;
+          color: #334155;
+          line-height: 1.6;
+        }
+      }
+
+      .message-section {
+        margin-top: 1rem;
+        
+        label {
+          display: block;
+          font-weight: 600;
+          color: #475569;
+          font-size: 0.85rem;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          margin-bottom: 0.5rem;
+        }
+
+        .candidate-message {
+          background: linear-gradient(135deg, rgba($primary-color, 0.1) 0%, rgba($primary-color, 0.05) 100%);
+          padding: 1rem;
+          border-radius: 8px;
+          border-left: 4px solid $primary-color;
+          color: #1e293b;
+          line-height: 1.6;
+          font-style: italic;
+          margin: 0;
+        }
+      }
+
+      .status-badge {
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+
+        &.nouveau {
+          background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+          color: #1d4ed8;
+        }
+
+        &.acceptee {
+          background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+          color: #15803d;
+        }
+
+        &.refusee {
+          background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%);
+          color: #dc2626;
+        }
+      }
+    }
+
+    // Section candidature compacte
+    &.candidature-details-compact {
+      .candidature-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        justify-content: flex-start;
+        align-items: stretch;
+
+        .badge-item {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 0.75rem;
+          background: rgba($secondary-color, 0.05);
+          border-radius: 8px;
+          border-left: 3px solid;
+          transition: all 0.2s ease;
+          flex: 1;
+          min-width: 180px;
+          max-width: 220px;
+
+          &:hover {
+            background: rgba($secondary-color, 0.1);
+            transform: translateY(-1px);
+          }
+
+          mat-icon {
+            font-size: 20px;
+            width: 20px;
+            height: 20px;
+          }
+
+          &.status-item {
+            border-left-color: $primary-color;
+            
+            mat-icon {
+              color: $primary-color;
+            }
+
+            .status-badge {
+              margin: 0;
+              padding: 0.25rem 0.6rem;
+              font-size: 0.75rem;
+            }
+          }
+
+          &.date-item {
+            border-left-color: #3b82f6;
+
+            mat-icon {
+              color: #3b82f6;
+            }
+          }
+
+          &.tarif-item {
+            border-left-color: #10b981;
+
+            mat-icon {
+              color: #10b981;
+            }
+          }
+
+          &.disponibilite-item {
+            border-left-color: #f59e0b;
+
+            mat-icon {
+              color: #f59e0b;
+            }
+          }
+
+          .badge-content {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+
+            .badge-label {
+              font-size: 0.75rem;
+              color: $text-light;
+              font-weight: 500;
+            }
+
+            .badge-value {
+              font-size: 0.9rem;
+              color: $text-dark;
+              font-weight: 600;
+            }
+          }
+        }
+      }
+
+      .message-section-compact {
+        .message-header {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          margin-bottom: 0.75rem;
+
+          mat-icon {
+            color: $primary-color;
+            font-size: 18px;
+            width: 18px;
+            height: 18px;
+          }
+
+          .message-title {
+            font-weight: 600;
+            color: $text-dark;
+            font-size: 0.9rem;
+          }
+        }
+
+        .candidate-message-compact {
+          background: linear-gradient(135deg, rgba($primary-color, 0.08) 0%, rgba($primary-color, 0.03) 100%);
+          padding: 1rem;
+          border-radius: 8px;
+          border-left: 3px solid $primary-color;
+          color: $text-dark;
+          line-height: 1.5;
+          font-size: 0.9rem;
+          margin: 0;
+          font-style: italic;
+        }
+      }
+    }
+
+    // Section profil candidat
+    &.profile-section {
+      .profile-info {
+        .profile-main {
+          .candidate-name {
+            margin: 0 0 1rem 0;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: $text-dark;
+            background: $gradient-primary;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+          }
+
+          .profile-contacts {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+
+            .contact-item {
+              display: flex;
+              align-items: center;
+              gap: 0.75rem;
+              padding: 0.5rem;
+              background: rgba($primary-color, 0.05);
+              border-radius: 8px;
+              border-left: 3px solid $primary-color;
+
+              mat-icon {
+                color: $primary-color;
+                font-size: 20px;
+                width: 20px;
+                height: 20px;
+              }
+
+              span {
+                font-size: 0.95rem;
+                color: $text-dark;
+                font-weight: 500;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Section portfolio - collapsible
+    &.portfolio-section {
+      .portfolio-header-clickable {
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        user-select: none;
+
+        &:hover {
+          background: rgba($primary-color, 0.05);
+        }
+
+        .header-actions {
+          display: flex;
+          align-items: center;
+
+          .expand-icon {
+            color: $primary-color;
+            transition: transform 0.3s ease;
+            font-size: 24px;
+
+            &.expanded {
+              transform: rotate(180deg);
+            }
+          }
+        }
+      }
+
+      .portfolio-collapsible {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.4s ease-in-out;
+
+        &.expanded {
+          max-height: 2000px; // Grande valeur pour permettre l'expansion complète
+        }
+
+        .portfolio-content {
+          padding: 0 1.5rem 1.5rem 1.5rem;
+
+          ::ng-deep app-portfolio {
+            .portfolio-container {
+              .portfolio-header.client-header {
+                display: none; // Masquer le header du composant car on a déjà le header de la mat-card
+              }
+              
+              .filters {
+                margin-top: 0;
+                margin-bottom: 1rem;
+              }
+
+              .portfolio-grid {
+                animation: fadeInUp 0.3s ease;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  }
+}
+
+.details-dialog-actions {
+  padding: 1.5rem 2rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border-top: 1px solid rgba(226, 232, 240, 0.8);
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: flex-end;
+
+  .btn-close {
+    min-width: 120px;
+    height: 42px;
+    border-radius: 21px;
+    font-weight: 500;
+    background: transparent;
+    color: #6b7280;
+    border: 2px solid #e5e7eb;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background: #f3f4f6;
+      border-color: #d1d5db;
+      transform: translateY(-1px);
+    }
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      margin-right: 0.5rem;
+    }
+  }
+
+  .btn-contact {
+    min-width: 180px;
+    height: 42px;
+    border-radius: 21px;
+    font-weight: 600;
+    background: $gradient-primary;
+    color: white;
+    border: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba($primary-color, 0.3);
+
+    &:hover {
+      background: linear-gradient(135deg, color.adjust($primary-color, $lightness: -5%) 0%, color.adjust($primary-color, $lightness: 5%) 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba($primary-color, 0.4);
+    }
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      margin-right: 0.5rem;
+    }
+  }
+
+  .btn-accept-fab {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+    &:hover {
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: 0 8px 25px rgba(16, 185, 129, 0.5);
+    }
+
+    mat-icon {
+      font-size: 22px;
+      width: 22px;
+      height: 22px;
+    }
   }
 }

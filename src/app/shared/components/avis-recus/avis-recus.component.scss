@@ -1,0 +1,603 @@
+/* ========================================
+   COMPOSANT AVIS REÇUS - STYLES
+======================================== */
+
+// Variables de couleurs beauty
+$beauty-primary: #F5A393;
+$beauty-secondary: #A4B1BD;
+$beauty-accent: #F5A393;
+$beauty-light: #F8F9FA;
+$beauty-dark: #2C3E50;
+$beauty-muted: #6C757D;
+
+.avis-recus-container {
+  padding: 1rem;
+  max-width: 1000px;
+  margin: 0 auto;
+
+  &.compact-mode {
+    padding: 1rem;
+    
+    .header-section {
+      margin-bottom: 1rem;
+    }
+    
+    .avis-card {
+      margin-bottom: 0.75rem;
+    }
+  }
+
+  // ==========================================
+  // 📊 SECTION HEADER ET STATISTIQUES
+  // ==========================================
+
+  .header-section {
+    margin-bottom: 1.5rem;
+
+    .header-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+
+      h2 {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0;
+        color: $beauty-dark;
+        font-weight: 600;
+        font-size: 1.5rem;
+
+        mat-icon {
+          color: $beauty-primary;
+          font-size: 1.75rem;
+          width: 1.75rem;
+          height: 1.75rem;
+        }
+      }
+
+      .refresh-btn {
+        color: $beauty-primary;
+        
+        mat-icon.spinning {
+          animation: spin 1s linear infinite;
+        }
+      }
+    }
+
+    .stats-overview {
+      .stats-card {
+        background: linear-gradient(135deg, $beauty-primary 0%, $beauty-secondary 100%);
+        color: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 16px rgba($beauty-primary, 0.2);
+
+        .stats-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+          gap: 1.5rem;
+          padding: 1.25rem;
+
+          .stat-item {
+            text-align: center;
+
+            .stat-value {
+              font-size: 1.75rem;
+              font-weight: 700;
+              margin-bottom: 0.4rem;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 0.25rem;
+
+              &.average-rating {
+                .star-icon {
+                  color: $beauty-accent;
+                  font-size: 1.5rem;
+                }
+              }
+
+              mat-icon {
+                font-size: 1.75rem;
+                width: 1.75rem;
+                height: 1.75rem;
+              }
+            }
+
+            .stat-label {
+              font-size: 0.875rem;
+              opacity: 0.9;
+              font-weight: 500;
+            }
+          }
+        }
+      }
+    }
+
+    .stats-loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding: 2rem;
+      color: $beauty-muted;
+    }
+  }
+
+  // ==========================================
+  // 📑 ONGLETS
+  // ==========================================
+
+  .avis-tabs {
+    .mat-mdc-tab-label {
+      color: $beauty-secondary;
+      
+      &.mdc-tab--active {
+        color: $beauty-primary;
+      }
+      
+      .mat-icon {
+        margin-right: 0.5rem;
+      }
+    }
+    
+    .mat-mdc-tab-label-content {
+      color: inherit;
+    }
+
+    .tab-content {
+      padding: 1.25rem 0;
+    }
+  }
+
+  // ==========================================
+  // 🎛️ CONTRÔLES ET FILTRES
+  // ==========================================
+
+  .controls-section {
+    margin-bottom: 1.5rem;
+
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      align-items: center;
+
+      .filter-group, .sort-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+
+        .filter-label {
+          font-weight: 600;
+          color: $beauty-dark;
+          font-size: 0.875rem;
+        }
+
+        .note-filters {
+          display: flex;
+          gap: 0.5rem;
+          flex-wrap: wrap;
+
+          button {
+            &.active {
+              background-color: $beauty-primary;
+              color: white;
+              border-color: $beauty-primary;
+            }
+
+            mat-icon {
+              margin-left: 0.25rem;
+              font-size: 1rem;
+              width: 1rem;
+              height: 1rem;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // ==========================================
+  // 📋 LISTE DES AVIS
+  // ==========================================
+
+  .avis-list {
+    .loading-section, .error-section, .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 1rem;
+      text-align: center;
+      color: $beauty-muted;
+
+      mat-icon {
+        font-size: 4rem;
+        width: 4rem;
+        height: 4rem;
+        margin-bottom: 1rem;
+      }
+
+      .error-icon {
+        color: #f44336;
+      }
+
+      .empty-icon {
+        color: $beauty-muted;
+      }
+
+      h3 {
+        margin: 0.5rem 0;
+        color: $beauty-dark;
+      }
+    }
+
+    .avis-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1rem;
+      
+      @media (min-width: 1200px) {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      
+      @media (min-width: 1600px) {
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+      .avis-card {
+        border-radius: 8px;
+        border: 1px solid rgba($beauty-secondary, 0.2);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        max-width: 400px;
+        margin: 0 auto;
+
+        &::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 4px;
+          background: linear-gradient(90deg, $beauty-primary 0%, $beauty-secondary 100%);
+        }
+
+        &:hover {
+          border-color: rgba($beauty-primary, 0.3);
+          box-shadow: 0 8px 24px rgba($beauty-primary, 0.15);
+          transform: translateY(-2px);
+        }
+
+        .mat-mdc-card-header {
+          padding: 0.75rem 1rem 0.5rem 1rem;
+
+          .client-avatar {
+            background: linear-gradient(135deg, $beauty-primary 0%, $beauty-secondary 100%);
+            color: white;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 0.875rem;
+          }
+
+          .mat-mdc-card-title {
+            color: $beauty-dark;
+            font-weight: 600;
+            font-size: 1.1rem;
+          }
+
+          .mat-mdc-card-subtitle {
+            color: $beauty-muted;
+            font-size: 0.875rem;
+          }
+        }
+
+        .mat-mdc-card-content {
+          padding: 0.75rem 1rem 1rem 1rem;
+
+          .rating-display {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+
+            .stars {
+              display: flex;
+              gap: 0.125rem;
+
+              .star-icon {
+                font-size: 1.25rem;
+                width: 1.25rem;
+                height: 1.25rem;
+                color: #ddd;
+
+                &.filled {
+                  color: $beauty-accent;
+                }
+              }
+            }
+
+            .note-value {
+              font-weight: 600;
+              color: $beauty-dark;
+              font-size: 1rem;
+            }
+          }
+
+          .comment-section {
+            margin-bottom: 0.75rem;
+
+            .comment-text {
+              font-style: italic;
+              color: $beauty-dark;
+              line-height: 1.5;
+              background-color: rgba($beauty-primary, 0.08);
+              padding: 0.75rem;
+              border-radius: 6px;
+              border-left: 3px solid $beauty-primary;
+              margin: 0;
+              font-size: 0.9rem;
+            }
+          }
+
+          .reservation-info {
+            mat-chip-set {
+              .mat-mdc-chip {
+                background-color: rgba($beauty-primary, 0.1);
+                color: $beauty-primary;
+                font-size: 0.75rem;
+
+                mat-icon {
+                  color: $beauty-primary;
+                  font-size: 1rem;
+                  width: 1rem;
+                  height: 1rem;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // ==========================================
+  // 📄 PAGINATION
+  // ==========================================
+
+  .pagination-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1.5rem;
+    padding: 0.75rem;
+    background-color: rgba($beauty-secondary, 0.05);
+    border-radius: 6px;
+
+    .pagination-info {
+      color: $beauty-muted;
+      font-size: 0.875rem;
+    }
+
+    .pagination-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      .page-indicator {
+        margin: 0 0.5rem;
+        font-weight: 600;
+        color: $beauty-dark;
+      }
+
+      button {
+        color: $beauty-primary;
+
+        &:disabled {
+          color: $beauty-muted;
+        }
+      }
+    }
+  }
+
+  // ==========================================
+  // 📊 STATISTIQUES DÉTAILLÉES
+  // ==========================================
+
+  .detailed-stats {
+    display: grid;
+    gap: 2rem;
+
+    .stats-chart-card, .summary-card {
+      border-radius: 12px;
+      border: 1px solid rgba($beauty-primary, 0.1);
+
+      .mat-mdc-card-header {
+        background: linear-gradient(135deg, rgba($beauty-primary, 0.05) 0%, rgba($beauty-secondary, 0.05) 100%);
+        
+        .mat-mdc-card-title {
+          color: $beauty-dark;
+          font-weight: 600;
+        }
+      }
+
+      .rating-distribution {
+        .rating-bar {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          margin-bottom: 0.75rem;
+
+          .rating-label {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            min-width: 60px;
+            font-weight: 500;
+            color: $beauty-dark;
+
+            mat-icon {
+              color: $beauty-accent;
+              font-size: 1rem;
+              width: 1rem;
+              height: 1rem;
+            }
+          }
+
+          .rating-progress {
+            flex: 1;
+            height: 8px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            overflow: hidden;
+
+            .rating-fill {
+              height: 100%;
+              background: linear-gradient(90deg, $beauty-primary 0%, $beauty-secondary 100%);
+              transition: width 0.3s ease;
+            }
+          }
+
+          .rating-count {
+            min-width: 30px;
+            text-align: right;
+            font-weight: 600;
+            color: $beauty-dark;
+          }
+        }
+      }
+
+      .summary-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1.5rem;
+
+        .summary-item {
+          text-align: center;
+          padding: 1rem;
+          border-radius: 8px;
+          background-color: $beauty-light;
+
+          .summary-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: $beauty-primary;
+            margin-bottom: 0.5rem;
+          }
+
+          .summary-label {
+            font-size: 0.875rem;
+            color: $beauty-muted;
+          }
+        }
+      }
+    }
+  }
+
+  // ==========================================
+  // 🎈 ACTIONS FLOTTANTES
+  // ==========================================
+
+  .floating-actions {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 1000;
+
+    .export-btn {
+      background: linear-gradient(135deg, $beauty-primary 0%, $beauty-secondary 100%);
+      color: white;
+      box-shadow: 0 8px 24px rgba($beauty-primary, 0.4);
+
+      &:hover {
+        transform: scale(1.05);
+        box-shadow: 0 12px 32px rgba($beauty-primary, 0.5);
+      }
+    }
+  }
+}
+
+// ==========================================
+// 🎨 ANIMATIONS
+// ==========================================
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+// ==========================================
+// 📱 RESPONSIVE
+// ==========================================
+
+@media (max-width: 768px) {
+  .avis-recus-container {
+    padding: 1rem;
+
+    .header-section {
+      .stats-overview .stats-card .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        padding: 1rem;
+      }
+    }
+
+    .controls-section .filters {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 1rem;
+
+      .filter-group, .sort-group {
+        .note-filters, mat-button-toggle-group {
+          justify-content: center;
+        }
+      }
+    }
+
+    .pagination-section {
+      flex-direction: column;
+      gap: 1rem;
+      text-align: center;
+    }
+
+    .detailed-stats .summary-stats {
+      grid-template-columns: 1fr;
+    }
+
+    .floating-actions {
+      bottom: 1rem;
+      right: 1rem;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .avis-recus-container {
+    .header-section .stats-overview .stats-card .stats-grid {
+      grid-template-columns: 1fr;
+      text-align: center;
+    }
+
+    .controls-section .filters .note-filters {
+      justify-content: center;
+      gap: 0.25rem;
+
+      button {
+        padding: 0.5rem;
+        min-width: auto;
+
+        mat-icon {
+          margin: 0;
+        }
+      }
+    }
+  }
+}

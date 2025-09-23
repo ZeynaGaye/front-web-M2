@@ -1,0 +1,912 @@
+
+$primary-color: #F5A393;
+$secondary-color: #A4B1BD; 
+$primary-light: lighten($primary-color, 15%);
+$primary-dark: darken($primary-color, 15%);
+$secondary-light: lighten($secondary-color, 20%);
+$secondary-dark: darken($secondary-color, 15%);
+$white: #ffffff;
+$dark-text: #2c2c2c;
+$light-grey: #f8f9fa;
+$border-color: lighten($secondary-color, 35%);
+$error-color: #d32f2f;
+$success-color: $primary-color;
+
+.employe-form-container {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  position: relative;
+  animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+
+  .form-section {
+    animation: slideInRight 0.6s ease-out;
+
+    &:nth-child(2) {
+      animation-delay: 0.1s;
+    }
+
+    &:nth-child(3) {
+      animation-delay: 0.2s;
+    }
+
+    &:nth-child(4) {
+      animation-delay: 0.3s;
+    }
+  }
+
+  &.loading {
+    .loading-overlay {
+      mat-spinner {
+        animation: pulse 2s infinite;
+      }
+    }
+  }
+}
+
+mat-card {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  border-radius: 16px;
+  overflow: hidden;
+  background: $white;
+  border: 1px solid rgba($primary-color, 0.1);
+}
+
+mat-card-header {
+  background: linear-gradient(135deg, $primary-color 0%, $primary-dark 100%);
+  color: white;
+  padding: 24px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(white, 0.1) 50%, transparent 70%);
+    transform: translateX(-100%);
+    animation: shimmer 3s infinite;
+  }
+
+  .form-icon {
+    background: rgba(white, 0.2) !important;
+    color: white !important;
+    border: 2px solid rgba(white, 0.3);
+    margin-right: 16px;
+    width: 48px;
+    height: 48px;
+    font-size: 24px;
+  }
+
+  .mat-mdc-card-title-group {
+    flex: 1;
+  }
+
+  mat-card-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin: 0 0 4px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  }
+
+  mat-card-subtitle {
+    color: rgba(white, 0.8) !important;
+    font-size: 0.9rem;
+    margin: 0;
+    font-style: italic;
+  }
+}
+
+mat-card-content {
+  padding: 32px 24px;
+  background: $white;
+
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+}
+
+// Sections du formulaire
+.form-section {
+  background: lighten($light-grey, 2%);
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid $border-color;
+  position: relative;
+  transition: all 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba($primary-color, 0.1);
+    border-color: $primary-light;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid $primary-light;
+
+    .section-icon {
+      color: $secondary-dark;
+      margin-right: 12px;
+      font-size: 18px;
+      background: lighten($secondary-light, 10%);
+      border-radius: 50%;
+      padding: 10px;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      
+      // Style pour les icônes FontAwesome
+      i.fas {
+        color: $secondary-dark !important;
+        font-size: 18px !important;
+      }
+    }
+
+    h3 {
+      margin: 0;
+      color: $primary-dark;
+      font-size: 1.1rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  }
+}
+
+// Styles des lignes de formulaire
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: start;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+// Styles des champs de formulaire avec VOS couleurs
+.form-field, .full-width {
+  width: 100%;
+
+  ::ng-deep {
+    .mat-mdc-form-field {
+      width: 100%;
+
+      // Style outline avec vos couleurs
+      &.mat-mdc-form-field-appearance-outline {
+        .mdc-notched-outline {
+          border-color: $border-color !important;
+          border-width: 2px !important;
+          border-radius: 12px !important;
+        }
+
+        &.mat-focused {
+          .mdc-notched-outline {
+            border-color: $primary-color !important;
+            border-width: 2px !important;
+            box-shadow: 0 0 0 3px rgba($primary-color, 0.1) !important;
+          }
+        }
+
+        &:hover:not(.mat-focused) {
+          .mdc-notched-outline {
+            border-color: $primary-light !important;
+          }
+        }
+
+        // Background sur focus
+        &.mat-focused {
+          .mdc-text-field {
+            background-color: rgba($primary-light, 0.05) !important;
+          }
+        }
+      }
+
+      // Labels avec couleur gris bleutée UNIQUEMENT
+      .mdc-floating-label {
+        color: $secondary-dark !important;
+        font-weight: 500 !important;
+        font-size: 14px !important;
+        transition: all 0.3s ease !important;
+
+        &.mdc-floating-label--float-above {
+          color: $secondary-color !important;
+          font-size: 12px !important;
+          font-weight: 600 !important;
+          transform: translateY(-50%) scale(0.85) !important;
+        }
+      }
+
+      // Préfixes (icônes) - FontAwesome avec couleur gris bleutée
+      .mat-mdc-form-field-icon-prefix {
+        color: $secondary-color !important;
+        margin-right: 16px !important;
+        font-size: 18px !important;
+        min-width: 24px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 4px !important;
+        
+        // Style pour les icônes FontAwesome
+        i.fas {
+          color: $secondary-color !important;
+          font-size: 18px !important;
+          width: 20px !important;
+          text-align: center !important;
+          line-height: 1 !important;
+        }
+      }
+
+      // Focus state pour les icônes
+      &.mat-focused {
+        .mat-mdc-form-field-icon-prefix {
+          color: $secondary-dark !important;
+          
+          i.fas {
+            color: $secondary-dark !important;
+          }
+        }
+      }
+
+      // Hints
+      .mat-mdc-form-field-hint {
+        color: $secondary-color !important;
+        font-size: 11px !important;
+        font-style: italic !important;
+        margin-top: 4px !important;
+      }
+
+      // Inputs avec vos couleurs
+      .mdc-text-field__input {
+        color: $dark-text !important;
+        font-size: 15px !important;
+        font-weight: 400 !important;
+        caret-color: $primary-color !important;
+        padding: 16px 12px !important;
+        background: transparent !important;
+
+        &::placeholder {
+          color: lighten($secondary-color, 20%) !important;
+          font-style: italic !important;
+        }
+
+        &:focus {
+          outline: none !important;
+          background-color: rgba($primary-light, 0.02) !important;
+        }
+      }
+
+      // Select avec vos couleurs
+      .mat-mdc-select-value {
+        color: $dark-text !important;
+        font-size: 15px !important;
+        font-weight: 400 !important;
+      }
+
+      .mat-mdc-select-placeholder {
+        color: lighten($secondary-color, 20%) !important;
+        font-style: italic !important;
+      }
+
+      .mat-mdc-select-arrow {
+        color: $primary-color !important;
+        transition: transform 0.3s ease !important;
+      }
+
+      &.mat-focused .mat-mdc-select-arrow {
+        transform: rotate(180deg) !important;
+        color: $primary-dark !important;
+      }
+
+      // Erreurs avec vos couleurs
+      .mat-mdc-form-field-error {
+        color: $error-color !important;
+        font-size: 12px !important;
+        font-weight: 500 !important;
+        margin-top: 4px !important;
+        display: flex !important;
+        align-items: center !important;
+        
+        &::before {
+          content: '⚠' !important;
+          margin-right: 4px !important;
+          font-size: 14px !important;
+        }
+      }
+
+      // Focus states - Override complet
+      &.mat-focused {
+        .mdc-floating-label {
+          color: $primary-color !important;
+        }
+        
+        .mat-mdc-select-arrow {
+          color: $primary-color !important;
+        }
+      }
+
+      // States invalid
+      &.mat-form-field-invalid {
+        .mdc-notched-outline {
+          border-color: $error-color !important;
+        }
+
+        .mdc-floating-label {
+          color: $error-color !important;
+
+          &.mdc-floating-label--float-above {
+            color: $error-color !important;
+          }
+        }
+      }
+    }
+
+    // Styles pour les select multiples
+    .mat-mdc-select-multiple {
+      .mat-mdc-select-value {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 4px 0;
+      }
+
+      .mat-mdc-select-value-text {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+    }
+  }
+}
+
+// Styles globaux pour les panels de select avec VOS couleurs
+::ng-deep {
+  // Panel principal
+  .mat-mdc-select-panel,
+  .specialite-select-panel,
+  .cdk-overlay-pane .mat-mdc-select-panel {
+    background: $white !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
+    border: 1px solid rgba($primary-color, 0.2) !important;
+    max-height: 320px !important;
+    overflow-y: auto !important;
+    
+    // Ajouter padding en bas pour le bouton
+    &.specialite-select-panel {
+      padding-bottom: 60px !important;
+      position: relative !important;
+    }
+
+    // Scrollbar personnalisée
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: $light-grey;
+      border-radius: 3px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: $primary-light;
+      border-radius: 3px;
+
+      &:hover {
+        background: $primary-color;
+      }
+    }
+  }
+
+  // Options dans les panels
+  .mat-mdc-option {
+    color: $dark-text !important;
+    padding: 12px 16px !important;
+    min-height: 44px !important;
+    font-size: 14px !important;
+    line-height: 1.4 !important;
+    transition: all 0.2s ease !important;
+    border-bottom: 1px solid rgba($border-color, 0.5) !important;
+
+    &:last-child {
+      border-bottom: none !important;
+    }
+
+    &:hover {
+      background-color: $primary-light !important;
+      color: $primary-dark !important;
+    }
+
+    &.mdc-list-item--selected,
+    &.mat-mdc-option-active {
+      background-color: $primary-color !important;
+      color: $white !important;
+      font-weight: 500 !important;
+
+      &:hover {
+        background-color: $primary-dark !important;
+      }
+    }
+
+    // Checkboxes pour les sélections multiples
+    .mdc-checkbox {
+      margin-right: 12px !important;
+
+      .mdc-checkbox__native-control:checked ~ .mdc-checkbox__background {
+        background-color: $primary-color !important;
+        border-color: $primary-color !important;
+      }
+
+      .mdc-checkbox__checkmark-path {
+        stroke: $white !important;
+        stroke-width: 2px !important;
+      }
+
+      .mdc-checkbox__background {
+        border-color: $secondary-color !important;
+        transition: all 0.2s ease !important;
+      }
+    }
+
+    // Texte des options
+    .mdc-list-item__primary-text {
+      font-size: 14px !important;
+      line-height: 1.4 !important;
+    }
+  }
+
+  // Override pour éviter les couleurs bleues résiduelles
+  .mat-primary .mat-mdc-option.mat-mdc-option-active,
+  .mat-primary .mat-mdc-option.mdc-list-item--selected {
+    background-color: $primary-color !important;
+    color: $white !important;
+  }
+
+  // Backdrop du select
+  .cdk-overlay-backdrop {
+    background-color: rgba(0, 0, 0, 0.3) !important;
+  }
+}
+
+// Résumé des horaires
+.horaire-summary {
+  display: flex;
+  align-items: center;
+  background: lighten($secondary-light, 15%);
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-top: 16px;
+  border: 1px solid $secondary-light;
+
+  i.fas {
+    color: $secondary-dark !important;
+    margin-right: 12px !important;
+    font-size: 18px !important;
+    width: 20px !important;
+    text-align: center !important;
+  }
+
+  span {
+    color: $secondary-dark;
+    font-weight: 500;
+    font-size: 14px;
+  }
+}
+
+// Styles des boutons avec VOS couleurs uniquement
+.form-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: flex-end;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 2px solid $primary-light;
+  background: lighten($light-grey, 1%);
+  border-radius: 8px;
+  padding: 24px;
+
+  @media (max-width: 768px) {
+    flex-direction: column-reverse;
+    gap: 12px;
+
+    button {
+      width: 100%;
+    }
+  }
+
+  .cancel-btn {
+    min-width: 140px;
+    height: 48px;
+    border-radius: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 13px;
+    transition: all 0.3s ease;
+    color: $secondary-dark !important;
+    border: 2px solid $secondary-color !important;
+    background: transparent !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    &:hover:not(:disabled) {
+      background: $secondary-color !important;
+      color: $white !important;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba($secondary-color, 0.3);
+    }
+
+    &:disabled {
+      opacity: 0.5 !important;
+      cursor: not-allowed !important;
+      color: lighten($secondary-color, 20%) !important;
+      border-color: lighten($secondary-color, 20%) !important;
+    }
+  }
+
+  .submit-btn {
+    min-width: 180px;
+    height: 48px;
+    border-radius: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 13px;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, $primary-color 0%, $primary-dark 100%) !important;
+    color: $white !important;
+    box-shadow: 0 6px 16px rgba($primary-color, 0.3) !important;
+    border: none !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    &:hover:not(:disabled) {
+      background: linear-gradient(135deg, $primary-dark 0%, darken($primary-dark, 10%) 100%) !important;
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba($primary-color, 0.4) !important;
+    }
+
+    &:disabled {
+      background: lighten($secondary-color, 15%) !important;
+      color: $secondary-dark !important;
+      box-shadow: none !important;
+      cursor: not-allowed !important;
+      opacity: 0.6 !important;
+    }
+
+    mat-spinner {
+      ::ng-deep circle {
+        stroke: $white !important;
+      }
+    }
+  }
+}
+
+// États de chargement avec vos couleurs
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba($white, 0.95);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  border-radius: 16px;
+  backdrop-filter: blur(4px);
+
+  mat-spinner {
+    ::ng-deep circle {
+      stroke: $primary-color !important;
+      stroke-width: 3px !important;
+    }
+  }
+
+  .loading-text {
+    margin-top: 16px;
+    color: $primary-dark;
+    font-size: 16px;
+    font-weight: 600;
+    text-align: center;
+    animation: pulse 2s infinite;
+  }
+}
+
+// Animations
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+// Animation shimmer pour le header
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  mat-card-header {
+    padding: 20px 16px;
+
+    mat-card-title {
+      font-size: 1.3rem;
+    }
+
+    .form-icon {
+      width: 40px;
+      height: 40px;
+      font-size: 20px;
+    }
+  }
+
+  mat-card-content {
+    padding: 24px 16px;
+
+    form {
+      gap: 24px;
+    }
+  }
+
+  .form-section {
+    padding: 20px;
+
+    .section-header {
+      .section-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 18px;
+      }
+
+      h3 {
+        font-size: 1rem;
+      }
+    }
+  }
+
+  .form-actions {
+    margin-top: 24px;
+    padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  mat-card {
+    border-radius: 12px;
+  }
+
+  mat-card-header {
+    padding: 16px 12px;
+    flex-direction: column;
+    text-align: center;
+
+    .form-icon {
+      margin: 0 0 12px 0;
+    }
+
+    mat-card-title {
+      font-size: 1.2rem;
+    }
+  }
+
+  mat-card-content {
+    padding: 20px 12px;
+  }
+
+  .form-section {
+    padding: 16px;
+  }
+
+  .form-field, .full-width {
+    ::ng-deep .mat-mdc-form-field {
+      .mdc-text-field__input {
+        font-size: 14px;
+        padding: 12px;
+      }
+    }
+  }
+}
+
+// Mode modal
+:host-context(.cdk-overlay-pane) {
+  .employe-form-container {
+    max-height: 85vh;
+    overflow-y: auto;
+
+    mat-card {
+      margin: 0;
+      height: 100%;
+    }
+
+    mat-card-content {
+      max-height: calc(85vh - 100px);
+      overflow-y: auto;
+    }
+  }
+}
+
+// Override global pour éliminer TOUT le bleu et utiliser GRIS BLEUTÉ
+::ng-deep {
+  // FORCER le gris bleuté partout - éliminer TOUT bleu Material
+  .mat-mdc-form-field.mat-focused {
+    .mdc-notched-outline {
+      border-color: $secondary-color !important;
+      box-shadow: 0 0 0 1px $secondary-color !important;
+    }
+    
+    .mdc-floating-label {
+      color: $secondary-color !important;
+    }
+  }
+
+  // Supprimer les couleurs Material primaires par défaut
+  .mat-primary {
+    .mat-mdc-button {
+      color: $secondary-color !important;
+    }
+
+    .mat-mdc-raised-button {
+      background: linear-gradient(135deg, $secondary-color 0%, $secondary-dark 100%) !important;
+      color: $white !important;
+    }
+  }
+
+  // Override TOUS les thèmes Material pour utiliser gris bleuté
+  .mat-accent, .mat-primary, .mat-warn {
+    --mdc-theme-primary: #{$secondary-color} !important;
+    --mat-form-field-focus-color: #{$secondary-color} !important;
+    --mat-form-field-hover-color: #{$secondary-light} !important;
+  }
+
+  // Form fields focus - GRIS BLEUTÉ UNIQUEMENT
+  .mat-focused .mdc-line-ripple::after {
+    border-bottom-color: $secondary-color !important;
+  }
+
+  .mat-focused .mdc-floating-label {
+    color: $secondary-color !important;
+  }
+
+  // Select arrows - GRIS BLEUTÉ
+  .mat-mdc-select-arrow {
+    color: $secondary-color !important;
+  }
+
+  .mat-mdc-form-field.mat-focused .mat-mdc-select-arrow {
+    color: $secondary-color !important;
+  }
+
+  // Éliminer DÉFINITIVEMENT toute trace de bleu
+  .mat-mdc-form-field-focus-overlay {
+    background-color: rgba($secondary-color, 0.04) !important;
+  }
+
+  // Ripple effects
+  .mat-mdc-form-field .mat-mdc-text-field-wrapper .mat-mdc-form-field-focus-overlay {
+    background-color: rgba($secondary-color, 0.04) !important;
+  }
+
+  // Force la fermeture après sélection pour select multiple
+  .mat-mdc-select-panel {
+    &.specialite-select-panel {
+      .mat-mdc-option {
+        cursor: pointer !important;
+      }
+    }
+  }
+
+  // Override définitif pour les options sélectionnées
+  .mat-primary .mat-mdc-select-panel .mat-mdc-option.mdc-list-item--selected,
+  .mat-primary .mat-mdc-select-panel .mat-mdc-option.mat-mdc-option-active {
+    background-color: $primary-color !important;
+    color: $white !important;
+  }
+
+  // Conteneur du bouton "Terminé" dans le select multiple
+  .close-option-container {
+    background: lighten($secondary-light, 15%) !important;
+    border-top: 2px solid $secondary-light !important;
+    padding: 12px !important;
+    position: sticky !important;
+    bottom: 0 !important;
+    z-index: 1000 !important;
+
+    .close-select-button {
+      width: 100% !important;
+      height: 44px !important;
+      background: $secondary-color !important;
+      color: $white !important;
+      border: none !important;
+      border-radius: 8px !important;
+      font-size: 14px !important;
+      font-weight: 600 !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.5px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 8px !important;
+      transition: all 0.3s ease !important;
+      box-shadow: 0 2px 8px rgba($secondary-color, 0.3) !important;
+      cursor: pointer !important;
+
+      &:hover {
+        background: $secondary-dark !important;
+        box-shadow: 0 4px 12px rgba($secondary-color, 0.4) !important;
+        transform: translateY(-1px) !important;
+      }
+
+      &:active {
+        transform: translateY(0) !important;
+        box-shadow: 0 1px 4px rgba($secondary-color, 0.4) !important;
+      }
+
+      i.fas {
+        font-size: 16px !important;
+        color: $white !important;
+      }
+    }
+  }
+}

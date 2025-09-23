@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { 
   FormBuilder, 
@@ -12,6 +12,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
+import { TextFieldModule } from '@angular/cdk/text-field';
 import { CandidatureService } from '../../services/candidatures.service';
 
 @Component({
@@ -24,13 +27,16 @@ import { CandidatureService } from '../../services/candidatures.service';
     MatButtonModule,
     MatInputModule,
     MatFormFieldModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    TextFieldModule
   ],
   templateUrl: './offre-details.component.html',
   styleUrls: ['./offre-details.component.scss'],
   providers: [CandidatureService],
 })
-export class OffreDetailsComponent implements OnInit {
+export class OffreDetailsComponent implements OnInit, OnDestroy {
   @Input() offre: OffreEmploi | null = null;
   @Output() closeEvent = new EventEmitter<void>();
   
@@ -50,7 +56,7 @@ export class OffreDetailsComponent implements OnInit {
       titre: ['', Validators.required],
       message: ['', [Validators.required, Validators.minLength(10)]],
       disponibilite: ['', Validators.required],
-      tarifPropose: ['', [Validators.required, Validators.min(0)]]
+      // tarifPropose: ['', [Validators.required, Validators.min(0)]]
     });
   }
 
@@ -64,6 +70,14 @@ export class OffreDetailsComponent implements OnInit {
         titre: this.offre.titre
       });
     }
+    
+    // Empêcher le scroll du body quand le modal est ouvert
+    document.body.style.overflow = 'hidden';
+  }
+
+  ngOnDestroy(): void {
+    // Restaurer le scroll du body quand le composant est détruit
+    document.body.style.overflow = 'auto';
   }
 
   private checkIfAlreadyApplied(offreId: number): void {
@@ -93,7 +107,13 @@ export class OffreDetailsComponent implements OnInit {
     return this.offre?.competences?.split(',').map(s => s.trim()) || [];
   }
 
+  getTodayDate(): Date {
+    return new Date();
+  }
+
   closeDetails(): void {
+    // Restaurer le scroll du body avant de fermer
+    document.body.style.overflow = 'auto';
     this.closeEvent.emit();
   }
 
@@ -115,7 +135,7 @@ export class OffreDetailsComponent implements OnInit {
       titre: this.candidatureForm.value.titre,
       message: this.candidatureForm.value.message,
       disponibilite: this.candidatureForm.value.disponibilite,
-      tarifPropose: this.candidatureForm.value.tarifPropose
+      // tarifPropose: this.candidatureForm.value.tarifPropose
     };
 
     this.candidatureService.createCandidature(candidatureData).subscribe({

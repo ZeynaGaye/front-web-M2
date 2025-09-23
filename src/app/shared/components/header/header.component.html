@@ -1,18 +1,14 @@
 <nav class="nav-bar">
   <div class="nav-container">
-    <!-- Logo -->
     <div class="logo2">
       <img src="assets/images/logo (2).png" alt="BeautyHub" />
     </div>
 
-    <!-- Navigation principale -->
     <div class="main-nav">
-      <!-- Bouton menu mobile -->
       <button class="mobile-menu-toggle" (click)="toggleMobileMenu()">
         <i class="fas fa-bars"></i>
       </button>
 
-      <!-- Menu des liens -->
       <div class="nav-links" [class.mobile-visible]="isMobileMenuOpen">
         <div class="mobile-header" *ngIf="isMobileMenuOpen">
           <img src="assets/images/logo (2).png" alt="BeautyHub" class="mobile-logo" />
@@ -21,113 +17,121 @@
           </button>
         </div>
 
-        <!-- Liens communs -->
         <a routerLink="/" class="nav-link" (click)="isMobileMenuOpen ? toggleMobileMenu() : null">ACCUEIL</a>
         <a class="contact-link" (click)="openContactModal(); isMobileMenuOpen ? toggleMobileMenu() : null">
           CONTACTEZ-NOUS
         </a>
-
-        <!-- Liens spécifiques pour CLIENT -->
-        <div *ngIf="isLoggedIn && isClient" class="role-links">
-          <a routerLink="/reservations" class="nav-link" (click)="isMobileMenuOpen ? toggleMobileMenu() : null">MES RÉSERVATIONS</a>
-          <a routerLink="/favoris" class="nav-link" (click)="isMobileMenuOpen ? toggleMobileMenu() : null">MES FAVORIS</a>
-        </div>
-
-        <!-- Liens spécifiques pour FREELANCE -->
-        <div *ngIf="isLoggedIn && isFreelance" class="role-links">
-          <a routerLink="/portfolio" class="nav-link" (click)="isMobileMenuOpen ? toggleMobileMenu() : null">MON PORTFOLIO</a>
-          <a routerLink="/offres-emploi" class="nav-link" (click)="isMobileMenuOpen ? toggleMobileMenu() : null">OFFRES D'EMPLOI</a>
-        </div>
-
-        <!-- Liens spécifiques pour EMPLOYEUR -->
-        <div *ngIf="isLoggedIn && isEmployeur" class="role-links">
-          <a routerLink="/gestion-salon" class="nav-link" (click)="isMobileMenuOpen ? toggleMobileMenu() : null">MON SALON</a>
-          <a routerLink="/publier-offre" class="nav-link" (click)="isMobileMenuOpen ? toggleMobileMenu() : null">PUBLIER UNE OFFRE</a>
-        </div>
-
-        <!-- Actions principales - adaptées selon le rôle -->
-        <a *ngIf="!isLoggedIn || isFreelance" class="free-pro" (click)="navigateToFreelancePage()">
+        <a class="free-pro" (click)="navigateToFreelancePage()">
           DEVENIR FREELANCE
         </a>
-        <a *ngIf="!isLoggedIn || isEmployeur" class="free-pro" (click)="navigateToHiring()">
+        <a class="free-pro" (click)="navigateToHiring()">
           RECRUTER
         </a>
-        
-        <a *ngIf="!isLoggedIn || isFreelance" class="free-pro" (click)="navigateToSalonRegistration()">
-         INSCRIRE VOTRE ENTREPRISE
+        <a class="free-pro" (click)="navigateToSalonRegistration()">
+          INSCRIRE VOTRE ENTREPRISE
         </a>
 
-        <!-- Recherche mobile -->
         <div class="mobile-search" *ngIf="isMobileMenuOpen">
-          <input 
-            type="text" 
-            [(ngModel)]="searchTerm" 
-            placeholder="Rechercher par nom, adresse, service..." 
-            (keyup.enter)="searchSalonsAdvanced(); toggleMobileMenu()"
-          />
+          <input
+            type="text"
+            [(ngModel)]="searchTerm"
+             placeholder="Rechercher par nom, adresse, service..."
+            (keyup.enter)="searchSalonsAdvanced(); toggleMobileMenu()"/>
           <button (click)="searchSalonsAdvanced(); toggleMobileMenu()">
             <i class="fas fa-search"></i>
           </button>
         </div>
+        <a *ngIf="!isLoggedIn" class="signin-button" (click)="login()">
+        SE CONNECTER
+        </a>
       </div>
     </div>
 
-    <!-- Authentification -->
     <div class="auth-section">
-      <!-- Si utilisateur connecté -->
       <div *ngIf="isLoggedIn" class="user-profile">
         <div class="user-dropdown" [class.open]="isProfileMenuOpen" (click)="toggleProfileMenu($event)">
-          <div class="user-avatar">
-           <img src="assets/images/avatar-placeholder.png" alt="Profil" /> 
+          <div class="user-icon">
+            <i class="fas fa-user-circle"></i>
+            <span class="user-name" *ngIf="isClient && clientName">{{ clientName }}</span>
           </div>
           <div class="profile-menu">
-            <a routerLink="/profil" (click)="closeAllMenus()">Mon Profil</a>
-            <a routerLink="/parametres" (click)="closeAllMenus()">Paramètres</a>
-            <a (click)="logout(); closeAllMenus()">Déconnexion</a>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Si utilisateur non connecté -->
-      <div *ngIf="!isLoggedIn" class="signin-button" (click)="login()">
-        SE CONNECTER
-      </div>
+    <ng-container *ngIf="isClient">
+      <a routerLink="/client-dashboard" (click)="closeAllMenus()">
+        <i class="fas fa-tachometer-alt"></i> Mon Espace Client
+      </a>
+    </ng-container>
+
+    <ng-container *ngIf="isFreelance">
+      <a routerLink="/home-freelance" (click)="closeAllMenus()">
+        <i class="fas fa-tachometer-alt"></i> Mon Espace Freelance
+      </a>
+    </ng-container>
+
+    <ng-container *ngIf="isEmployeur">
+      <a routerLink="/home-employee" (click)="closeAllMenus()">
+        <i class="fas fa-tachometer-alt"></i> Mon Espace Employeur
+      </a>
+    </ng-container>
+
+   <div *ngIf="!isLoggedIn" class="signin-button" (click)="login()">
+SE CONNECTER
+</div>
+   </div>
     </div>
+    </div>
+  </div>
   </div>
 </nav>
 
-<!-- Header wrapper avec hero section - visible pour tous -->
+<div class="client-welcome-banner" *ngIf="isLoggedIn && isClient && !welcomeBannerDismissed">
+  <div class="welcome-content">
+    <div class="welcome-left">
+      <span class="greeting">👋 Bonjour {{ clientName }} !</span>
+      <span class="next-rdv" *ngIf="nextAppointment">
+        Prochain RDV: {{ formatDate(nextAppointment.datePrestation) }} - {{ nextAppointment.serviceName }}
+      </span>
+    </div>
+    <div class="welcome-actions">
+      <button class="dashboard-btn" routerLink="/client-dashboard">
+        <i class="fas fa-tachometer-alt"></i> Mon espace
+      </button>
+      <button class="close-banner" (click)="dismissWelcomeBanner()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
 <div class="header-wrapper">
-  <!-- Main header content -->
   <div class="main-header">
     <div class="left-section">
       <div class="header-container">
-        <!-- <img src="assets/images/logo1.png" alt="BeautyHub Logo" class="logo" /> -->
       </div>
       <h1 class="header-title">
         Un monde de beauté, une<br />plateforme de talents
       </h1>
       <h4 class="header-title2">
         Réservez des services de beauté ou trouvez des talents près de chez vous
+        <br/> ou votre prochain emploi en une seule place
       </h4>
 
-      <!-- NOUVEAU: Toggle pour choisir le type de professionnel -->
       <div class="provider-toggle">
-        <button 
+        <button
           class="toggle-option"
           [class.active]="selectedProviderType === 'salon'"
           (click)="selectProviderType('salon')">
           <i class="fas fa-store"></i>
           Salons
         </button>
-        <button 
+        <button
           class="toggle-option"
           [class.active]="selectedProviderType === 'freelance'"
           (click)="selectProviderType('freelance')">
           <i class="fas fa-user-tie"></i>
           Freelances
         </button>
-        <button 
+
+        <button
           class="toggle-option"
           [class.active]="selectedProviderType === 'both'"
           (click)="selectProviderType('both')">
@@ -136,24 +140,23 @@
         </button>
       </div>
 
-      <!-- AMÉLIORÉ: Barre de recherche avec types -->
       <div class="enhanced-search-bar">
         <div class="search-type-selector">
-          <button 
+          <button
             class="search-type-btn"
             [class.active]="searchMode === 'location'"
             (click)="setSearchMode('location')">
             <i class="fas fa-map-marker-alt"></i>
             Par localisation
           </button>
-          <button 
+          <button
             class="search-type-btn"
             [class.active]="searchMode === 'photo'"
             (click)="setSearchMode('photo')">
             <i class="fas fa-camera"></i>
             Par photo
           </button>
-          <button 
+          <button
             class="search-type-btn"
             [class.active]="searchMode === 'text'"
             (click)="setSearchMode('text')">
@@ -161,57 +164,67 @@
             Recherche libre
           </button>
         </div>
-        
         <div class="main-search-input">
-          <!-- Input principal -->
-          <input 
-            type="text" 
-            [(ngModel)]="searchTerm" 
+          <input
+            type="text"
+            [(ngModel)]="searchTerm"
             [placeholder]="getSearchPlaceholder()"
-            (keyup.enter)="searchSalonsAdvanced()"
-          />
-          
-          <!-- Upload de photo (conditionnel) -->
-          <div class="photo-upload-inline" *ngIf="searchMode === 'photo'">
+            (keyup.enter)="searchSalonsAdvanced()"/>
+           <div class="photo-upload-inline" *ngIf="searchMode === 'photo'">
             <input type="file" id="photo-upload" accept="image/*" (change)="handlePhotoUpload($event)" hidden/>
             <label for="photo-upload" class="photo-upload-btn" [class.has-photo]="uploadedPhoto">
               <i class="fas fa-camera"></i>
+              <span *ngIf="!uploadedPhoto"></span>
+              <span *ngIf="isAnalyzingPhoto"></span>
             </label>
+
             <div class="mini-preview" *ngIf="uploadedPhoto">
               <img [src]="uploadedPhotoPreview" alt="Aperçu" />
               <button class="remove-photo" (click)="removePhoto($event)">×</button>
+              
+              <!-- Seulement l'indicateur de chargement -->
+              <div class="analysis-overlay" *ngIf="isAnalyzingPhoto">
+                <div class="analysis-spinner">
+                  <i class="fas fa-brain fa-spin"></i>
+                </div>
+                <span class="analysis-text">Recherche de prestataires...</span>
+              </div>
+            </div>
+            <!-- Seulement en cas d'erreur -->
+            <div class="analysis-error" *ngIf="photoAnalysisError">
+              <i class="fas fa-exclamation-triangle"></i>
+              <span>{{ photoAnalysisError }}</span>
+              <button class="retry-btn" (click)="retryPhotoAnalysis()">
+                <i class="fas fa-redo"></i>
+                Réessayer
+              </button>
             </div>
           </div>
-          
-          <!-- Bouton pour options avancées -->
+
           <button class="advanced-search-toggle" (click)="toggleAdvancedSearch()">
             <i class="fas fa-sliders-h"></i>
           </button>
-          
-          <!-- Bouton de recherche -->
+
           <button class="search-btn" (click)="searchSalonsAdvanced()">
             <i class="fas fa-search"></i>
           </button>
         </div>
-        
-        <!-- Indicateur de recherche -->
+
         <div class="search-indicator" *ngIf="selectedProviderType">
           <i class="fas fa-info-circle"></i>
           <span [innerHTML]="getSearchIndicatorText()"></span>
         </div>
       </div>
-      
-      <!-- ✅ PANNEAU DE RECHERCHE AVANCÉE AMÉLIORÉ -->
+
       <div class="advanced-search-panel" *ngIf="showAdvancedSearch">
-        <!-- Critères généraux -->
         <div class="search-option">
           <label>Budget maximum</label>
           <div class="budget-slider">
-            <input type="range" [(ngModel)]="budgetRange" min="2000" max="100000" step="1000" />
+            <input type="range" [(ngModel)]="budgetRange" min="2000" max="100000" step="500" />
             <span>{{budgetRange}} CFA</span>
           </div>
         </div>
-        
+
         <div class="search-option">
           <label>Date et heure</label>
           <div class="datetime-picker">
@@ -219,7 +232,7 @@
             <input type="time" [(ngModel)]="selectedTime" />
           </div>
         </div>
-        
+
         <div class="search-option" *ngIf="!userLocation">
           <label>Localisation</label>
           <button class="location-btn" (click)="getUserLocation()">
@@ -227,26 +240,25 @@
           </button>
           <input type="text" [(ngModel)]="locationInput" placeholder="Quartier, ville..." />
         </div>
-        
+
         <div class="search-option" *ngIf="userLocation">
           <label>Localisation</label>
           <div class="location-display">
-            <i class="fas fa-map-marker-alt"></i> 
+            <i class="fas fa-map-marker-alt"></i>
             <span>{{userLocation}}</span>
             <button class="change-location" (click)="clearLocation()">Modifier</button>
           </div>
         </div>
 
-        <!-- ✅ NOUVEAUX CRITÈRES SPÉCIFIQUES AUX FREELANCES -->
         <div class="freelance-criteria" *ngIf="showFreelanceCriteria()">
           <div class="criteria-header">
             <h4><i class="fas fa-user-tie"></i> Critères Freelances</h4>
-            <button class="clear-freelance-btn" (click)="clearOnlyFreelanceCriteria()" 
+            <button class="clear-freelance-btn" (click)="clearOnlyFreelanceCriteria()"
                     *ngIf="hasFreelanceCriteria()">
               Effacer
             </button>
           </div>
-          
+
           <div class="criteria-toggles">
             <label class="toggle-option">
               <input type="checkbox" [(ngModel)]="disponibleWeekend" />
@@ -255,7 +267,7 @@
                 Disponible weekend
               </span>
             </label>
-            
+
             <label class="toggle-option">
               <input type="checkbox" [(ngModel)]="disponibleSoir" />
               <span class="toggle-text">
@@ -263,16 +275,8 @@
                 Disponible soirée
               </span>
             </label>
-            
-            <label class="toggle-option">
-              <input type="checkbox" [(ngModel)]="deplacementInclus" />
-              <span class="toggle-text">
-                <i class="fas fa-car"></i>
-                Déplacement inclus
-              </span>
-            </label>
           </div>
-          
+
           <div class="search-option">
             <label>Expérience minimum</label>
             <select [(ngModel)]="experienceMin">
@@ -284,8 +288,7 @@
             </select>
           </div>
         </div>
-        
-        <!-- Boutons d'action -->
+
         <div class="search-actions">
           <button class="clear-all-btn" (click)="clearAdvancedCriteria()">
             Tout effacer
@@ -297,109 +300,151 @@
         </div>
       </div>
     </div>
-    
-    <div class="right-section"></div>
-    <div class="hero-image">
-      <div class="hero-text">
-        Instantanée comme un<br />
-        coup de coeur, simple<br />
-        comme un coup de<br />
-        pousse
+    <div class="right-section">
+      <div class="hero-image">
+        <div class="hero-text">
+          Instantanée comme un<br />
+          coup de cœur, simple<br />
+          comme un coup de<br />
+          pousse
+        </div>
       </div>
     </div>
   </div>
-  
-  <!-- AMÉLIORÉ: Service navigation avec mode dual -->
+
   <div class="dual-service-nav">
     <div class="service-nav-header">
-      <div class="nav-title">Services disponibles</div>
+      <div class="nav-title">Recherche Rapide</div>
       <div class="service-stats">
-        <span class="stats-text" *ngIf="serviceStats">
-          {{ getServiceStatsText() }}
-        </span>
       </div>
     </div>
-    
+
     <div class="service-buttons-container">
-      <button 
+      <button
         class="service-btn"
         [class.active]="selectedService === 'Coiffure'"
         (click)="filterSalonsByService('Coiffure')">
         <i class="fas fa-cut"></i>
         <span class="service-name">Coiffure</span>
-        <span class="provider-indicator" [ngClass]="getProviderIndicatorClass('Coiffure')">
-          {{ getServiceCount('Coiffure') }}
-        </span>
       </button>
-      
-      <button 
+
+      <button
         class="service-btn"
         [class.active]="selectedService === 'Pedicure,Manucure'"
         (click)="filterSalonsByService('Pedicure,Manucure')">
         <i class="fas fa-hand-sparkles"></i>
         <span class="service-name">Pédicure & Manucure</span>
-        <span class="provider-indicator" [ngClass]="getProviderIndicatorClass('Pedicure,Manucure')">
-          {{ getServiceCount('Pedicure,Manucure') }}
-        </span>
       </button>
-      
-      <button 
+
+      <button
         class="service-btn"
-        [class.active]="selectedService === 'Barber'"
-        (click)="filterSalonsByService('Barber')">
+        [class.active]="selectedService === 'Barbier'"
+        (click)="filterSalonsByService('Barbier')">
         <i class="fas fa-user-tie"></i>
-        <span class="service-name">Barber</span>
-        <span class="provider-indicator" [ngClass]="getProviderIndicatorClass('Barber')">
-          {{ getServiceCount('Barber') }}
-        </span>
+        <span class="service-name">Barbier</span>
       </button>
-      
-      <button 
+
+      <button
         class="service-btn"
         [class.active]="selectedService === 'Maquillage'"
         (click)="filterSalonsByService('Maquillage')">
         <i class="fas fa-palette"></i>
         <span class="service-name">Maquillage</span>
-        <span class="provider-indicator" [ngClass]="getProviderIndicatorClass('Maquillage')">
-          {{ getServiceCount('Maquillage') }}
-        </span>
       </button>
-      
-      <button 
+
+      <button
         class="service-btn"
         [class.active]="selectedService === 'Soins de la peau'"
         (click)="filterSalonsByService('Soins de la peau')">
         <i class="fas fa-spa"></i>
         <span class="service-name">Soins de la peau</span>
-        <span class="provider-indicator" [ngClass]="getProviderIndicatorClass('Soins de la peau')">
-          {{ getServiceCount('Soins de la peau') }}
-        </span>
       </button>
     </div>
   </div>
 </div>
 
-<!-- ✅ SECTION D'AFFICHAGE DES RÉSULTATS AMÉLIORÉE -->
+<div class="client-suggestions-section" *ngIf="isLoggedIn && isClient && (clientSuggestions?.length || 0) > 0 && (!selectedService || searchFromSuggestion)">
+  <div class="suggestions-container">
+    <div class="suggestions-header">
+      <h2><i class="fas fa-magic"></i> Suggestions pour vous</h2>
+      <span class="suggestions-subtitle">Basées sur vos préférences</span>
+    </div>
+
+    <div class="suggestions-carousel-container">
+      <button class="carousel-nav prev" 
+              (click)="scrollSuggestions('prev')" 
+              [disabled]="currentSuggestionIndex === 0"
+              *ngIf="clientSuggestions.length > suggestionCardsVisible">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      
+      <div class="suggestions-carousel" #suggestionsCarousel>
+        <div class="carousel-track" 
+             [style.transform]="'translateX(' + getCarouselTransform() + 'px)'"
+             [style.transition]="'transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)'">
+          <div class="suggestion-card" *ngFor="let suggestion of clientSuggestions">
+            <div class="suggestion-image">
+              <!-- <img [src]="suggestion.image || 'assets/images/freelances.jpeg'"
+                    [alt]="suggestion.name"> -->
+              <div class="suggestion-type">
+                <i class="fas" [ngClass]="suggestion.type === 'SALON' ? 'fa-store' : 'fa-user-tie'"></i>
+                <span>{{ suggestion.type === 'SALON' ? 'Salon' : 'Freelance' }}</span>
+              </div>
+            </div>
+
+            <div class="suggestion-info">
+              <h4>{{ suggestion.name }}</h4>
+              <p class="suggestion-service">{{ suggestion.service }}</p>
+              <div class="suggestion-rating">
+                <!-- <span class="stars">⭐ {{ suggestion.rating }}</span> -->
+                <!-- <span class="reviews">({{ suggestion.reviewCount }} avis)</span> -->
+              </div>
+              <div class="suggestion-reason">{{ suggestion.reason }}</div>
+            </div>
+            <button class="quick-book-btn" (click)="quickBookSuggestion(suggestion)">
+              <i class="fas fa-calendar-plus"></i>
+              Réserver
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <button class="carousel-nav next" 
+              (click)="scrollSuggestions('next')" 
+              [disabled]="currentSuggestionIndex >= getMaxIndex()"
+              *ngIf="clientSuggestions.length > suggestionCardsVisible">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+    
+    <div class="carousel-indicators" *ngIf="clientSuggestions.length > suggestionCardsVisible">
+      <span class="indicator" 
+            *ngFor="let dot of getCarouselDots(); let i = index"
+            [class.active]="i === getCurrentSlideIndex()"
+            (click)="goToSuggestionSlide(i)">
+      </span>
+    </div>
+  </div>
+</div>
+
 <div *ngIf="selectedService" class="salons-section">
-  <!-- Loading indicator -->
   <div class="loading-indicator" *ngIf="isLoading">
     <div class="spinner"></div>
     <p>Recherche en cours...</p>
   </div>
-  
-  <!-- En-tête de résultats -->
+
   <div class="results-header" *ngIf="!isLoading">
     <h2>{{ getResultsTitle() }}</h2>
     <div class="results-summary">
-      <span class="result-count">{{ filteredSalons.length }} résultat(s) trouvé(s)</span>
+      <span class="result-count">{{ allProviders.length }} résultat(s) trouvé(s)</span>
       <div class="view-options">
-        <button 
+        <button
           class="view-toggle"
           [class.active]="viewMode === 'grid'"
           (click)="setViewMode('grid')">
           <i class="fas fa-th"></i>
         </button>
-        <button 
+        <button
           class="view-toggle"
           [class.active]="viewMode === 'list'"
           (click)="setViewMode('list')">
@@ -408,33 +453,55 @@
       </div>
     </div>
   </div>
-  
-  <!-- ✅ AFFICHAGE DES CARTES CORRIGÉ -->
-  <div class="salons-grid" [class.list-view]="viewMode === 'list'" *ngIf="!isLoading && filteredSalons.length > 0">
-    <div class="salon-card" *ngFor="let provider of filteredSalons">
-      <!-- ✅ Badge de type de professionnel -->
+
+  <div class="match-reason-container"
+       [attr.data-search-level]="searchMetadata?.searchLevel || searchResponse?.['searchLevel']"
+       *ngIf="!isLoading && allProviders.length > 0 && (searchMetadata?.matchReason || searchResponse?.['matchReason'])">
+
+       <div class="match-reason-content">
+      <i class="fas fa-info-circle"></i>
+      <span class="match-reason-text">{{ searchMetadata?.matchReason || searchResponse?.['matchReason'] }}</span>
+      <div class="search-level-badge" *ngIf="searchMetadata?.searchLevel || searchResponse?.['searchLevel']">
+        <span class="search-level">{{ searchMetadata?.searchLevel || searchResponse?.['searchLevel'] }}</span>
+      </div>
+    </div>
+    <div class="relaxed-criteria" *ngIf="(searchMetadata?.relaxedCriteria?.length ?? 0) > 0 || (searchResponse?.['relaxedCriteria']?.length ?? 0) > 0">
+      <span class="relaxed-label">Critères assouplis :</span>
+      <span class="criteria-tag" *ngFor="let criteria of (searchMetadata?.relaxedCriteria ?? searchResponse?.['relaxedCriteria'] ?? [])">{{ criteria }}</span>
+    </div>
+  </div>
+
+  <div class="salons-grid" [class.list-view]="viewMode === 'list'" *ngIf="!isLoading && allProviders.length > 0">
+    <div class="salon-card" *ngFor="let provider of allProviders">
       <div class="provider-badge" [ngClass]="provider.type || 'salon'">
         <i class="fas" [ngClass]="getProviderIcon(provider.type)"></i>
         {{ getProviderLabel(provider.type) }}
       </div>
-      
-      <!-- ✅ Image du provider avec gestion d'erreurs -->
       <div class="salon-image">
-        <img [src]="provider.imageUrl || (provider.type === 'freelance' ? 'assets/images/freelance-default.jpg' : 'assets/images/salon-default.jpg')" 
-             [alt]="provider.nom"
+        <img [src]="getImageUrl(provider.imageUrl || provider['image'])"
+             [alt]="provider.nom + (provider.prenom ? ' ' + provider.prenom : '')"
              (error)="onImageError($event, provider)"
              (load)="onImageLoad($event, provider)">
         <div class="image-overlay" *ngIf="provider.type === 'freelance'">
           <i class="fas fa-user-tie"></i>
         </div>
       </div>
-      
-      <!-- ✅ Informations du provider -->
+
       <div class="salon-info">
-        <h3 class="salon-name">{{ provider.nom }}</h3>
+        <h3 class="salon-name">
+          
+          <span *ngIf="provider.type === 'freelance' && provider.prenom">{{ provider.prenom }} </span>{{ provider.nom }}
+        </h3>
         <p class="salon-address">{{ provider.adresse }}</p>
-        
-        <!-- Star rating system -->
+
+        <div class="distance-info" *ngIf="provider.distanceKm !== null && provider.distanceKm !== undefined">
+          <i class="fas fa-map-marker-alt"></i>
+          <span class="distance-text">{{ (provider.distanceKm | number:'1.1-1') + ' km' }}</span>
+        </div>
+        <p class="provider-specialty" *ngIf="provider.type === 'freelance' && provider.specialite">
+          <i class="fas fa-star"></i> {{ provider.specialite }}
+        </p>
+
         <div class="salon-rating">
           <div class="stars">
             <i class="fas fa-star" *ngFor="let star of getStarArray(provider.rating)"></i>
@@ -443,25 +510,32 @@
           <span class="rating-value">{{ provider.rating }}</span>
           <span class="review-count">({{ provider.reviewCount }} avis)</span>
         </div>
-        
-        <!-- Services tags -->
+
         <div class="salon-services">
           <span class="service-tag" *ngFor="let service of provider.services.slice(0, 3)">{{ service }}</span>
           <span class="more-services" *ngIf="provider.services.length > 3">+{{ provider.services.length - 3 }}</span>
         </div>
-        
-        <!-- ✅ INFORMATIONS SPÉCIFIQUES AUX FREELANCES AMÉLIORÉES -->
+
         <div class="freelance-info" *ngIf="provider.type === 'freelance'">
-          <div class="experience" *ngIf="provider.experience || provider.anneesExperience">
-            <i class="fas fa-clock"></i>
-            {{ provider.experience || provider.anneesExperience }} ans d'expérience
+          <div class="freelance-details">
+            <div class="experience" *ngIf="provider.experience || provider.anneesExperience">
+              <i class="fas fa-clock"></i>
+              {{ provider.experience || provider.anneesExperience }} ans d'expérience
+            </div>
+            <div class="profession" *ngIf="provider.profession">
+              <i class="fas fa-briefcase"></i>
+              {{ provider.profession }}
+            </div>
+            <div class="competences" *ngIf="provider.competences">
+              <i class="fas fa-tools"></i>
+              {{ provider.competences }}
+            </div>
+            <div class="ville" *ngIf="provider.ville">
+              <i class="fas fa-map-marker-alt"></i>
+              {{ provider.ville }}
+            </div>
           </div>
-          <div class="availability" *ngIf="provider.availability">
-            <i class="fas fa-calendar-check"></i>
-            {{ provider.availability }}
-          </div>
-          
-          <!-- ✅ BADGES FREELANCES -->
+
           <div class="freelance-badges">
             <span class="badge weekend" *ngIf="provider.disponibleWeekend">
               <i class="fas fa-calendar-weekend"></i> Weekend
@@ -474,17 +548,15 @@
             </span>
           </div>
         </div>
-        
-        <!-- ✅ BOUTON D'ACTION INTELLIGENT CORRIGÉ -->
+
         <button class="voir-salon-btn" (click)="openDetailDialog(provider)">
           {{ provider.type === 'freelance' ? 'Voir le profil' : 'Voir le salon' }}
         </button>
       </div>
     </div>
   </div>
-  
-  <!-- Message si aucun résultat -->
-  <div class="no-results" *ngIf="!isLoading && filteredSalons.length === 0">
+
+  <div class="no-results" *ngIf="!isLoading && allProviders.length === 0 && selectedService">
     <div class="no-results-content">
       <i class="fas fa-search"></i>
       <h3>Aucun résultat trouvé</h3>
@@ -505,22 +577,86 @@
   </div>
 </div>
 
-<!-- ✅ Modal de connexion avec protection contre l'ouverture automatique -->
+<div class="floating-rdv-widget"
+     *ngIf="isLoggedIn && isClient && (upcomingReservations?.length || 0) > 0"
+     [class.minimized]="widgetMinimized">
+
+  <div class="widget-header" (click)="toggleWidget()">
+    <div class="widget-title">
+      <i class="fas fa-calendar"></i>
+      <span>Mes prochains RDV ({{ upcomingReservations.length }})</span>
+    </div>
+    <i class="fas" [ngClass]="widgetMinimized ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+  </div>
+
+  <div class="widget-content" *ngIf="!widgetMinimized">
+    <div class="rdv-item" *ngFor="let rdv of upcomingReservations.slice(0, 3)">
+      <div class="rdv-info">
+        <div class="rdv-service">{{ rdv.serviceName }}</div>
+        <div class="rdv-datetime">
+          <i class="fas fa-clock"></i>
+          {{ formatDate(rdv.datePrestation) }} à {{ formatTime(rdv.datePrestation) }}
+        </div>
+        <div class="rdv-provider">
+          <i class="fas" [ngClass]="rdv.salonId ? 'fa-store' : 'fa-user-tie'"></i>
+          {{ rdv.salonName || (rdv.freelancePrenom + ' ' + rdv.freelanceNom) }}
+        </div>
+      </div>
+
+      <div class="rdv-actions">
+        <button class="rdv-action-btn" (click)="viewReservationDetails(rdv)" title="Voir détails">
+          <i class="fas fa-info-circle"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="widget-footer">
+      <button class="see-all-btn" routerLink="/client-dashboard">
+        <i class="fas fa-tachometer-alt"></i>
+        Voir tout dans mon espace
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="client-quick-actions" *ngIf="isLoggedIn && isClient && showQuickActions">
+  <div class="quick-actions-container">
+    <button class="quick-action-fab main"
+            routerLink="/client-dashboard"
+            title="Mon espace client">
+      <i class="fas fa-tachometer-alt"></i>
+    </button>
+
+    <button class="quick-action-fab"
+            routerLink="/client/reservations"
+            title="Mes réservations"
+            *ngIf="upcomingCount > 0">
+      <i class="fas fa-calendar-check"></i>
+      <span class="fab-badge">{{ upcomingCount }}</span>
+    </button>
+
+    <button class="quick-action-fab"
+            (click)="quickNewReservation()"
+            title="Nouvelle réservation">
+      <i class="fas fa-plus"></i>
+    </button>
+  </div>
+</div>
+
 <div *ngIf="showLoginModal && !isPageLoading" class="modal-backdrop">
   <div class="modal-container">
     <button class="close-btn" (click)="closeLoginModal()">×</button>
-    <app-authent 
+    <app-authent
       (switchToRegisterEvent)="switchToRegister()"
       (close)="closeLoginModal()">
     </app-authent>
   </div>
 </div>
 
-<!-- ✅ Modal d'inscription avec protection contre l'ouverture automatique -->
 <div *ngIf="showRegisterModal && !isPageLoading" class="modal-backdrop">
   <div class="modal-container">
     <button class="close-btn" (click)="closeRegisterModal()">×</button>
-    <app-register 
+    <app-register
       (switchToLoginEvent)="switchToLogin()"
       (close)="closeRegisterModal()">
     </app-register>

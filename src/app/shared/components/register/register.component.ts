@@ -42,7 +42,8 @@ export class RegisterComponent implements OnInit {
       prenom: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       telephone: ['', [Validators.pattern(/^\d{9}$/)]],
-      adresse: [''],
+      ville: ['', Validators.required],
+      adresse: ['', Validators.required],
       role: ['', Validators.required],
       sexe: ['', Validators.required],
       motDePasse: ['', [
@@ -140,6 +141,7 @@ export class RegisterComponent implements OnInit {
       nom: this.registerForm.value.nom,
       prenom: this.registerForm.value.prenom,
       telephone: this.registerForm.value.telephone || '',
+      ville: this.registerForm.value.ville || '',
       adresse: this.registerForm.value.adresse || '',
       role: this.registerForm.value.role,
       sexe: this.registerForm.value.sexe
@@ -182,7 +184,7 @@ export class RegisterComponent implements OnInit {
           panelClass: ['success-snackbar']
         });
         this.closeModal();
-        this.router.navigate(['/dashboard']);
+        this.router.navigate(['/acueil']);
       },
       error: (error) => {
         this.isLoading = false;

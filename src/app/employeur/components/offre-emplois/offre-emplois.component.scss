@@ -85,6 +85,15 @@ h2 {
     font-size: 0.875rem;
     margin-top: 0.25rem;
     display: block;
+
+    &.warning {
+      color: #f59e0b;
+      font-weight: 500;
+      background: #fef3c7;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid #fbbf24;
+    }
   }
 }
 

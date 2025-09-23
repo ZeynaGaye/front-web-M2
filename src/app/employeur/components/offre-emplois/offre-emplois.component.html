@@ -25,23 +25,44 @@
 
       <!-- Étape 1 : Informations de base -->
       <div class="step-content" *ngIf="currentStep === 1">
+        <!-- NOUVEAU : Sélection de salon -->
+        <div class="form-group">
+          <label>Salon concerné</label>
+          <select formControlName="salonId">
+            <option value="">
+              {{ loadingSalons ? 'Chargement des salons...' : 'Sélectionnez un salon' }}
+            </option>
+            <option *ngFor="let salon of salons" [value]="salon.id">
+              {{ salon.nom }} - {{ salon.adresse }}
+            </option>
+          </select>
+          <small *ngIf="offreEmploiForm.get('salonId')?.invalid && offreEmploiForm.get('salonId')?.touched">
+            Vous devez sélectionner un salon
+          </small>
+          <small *ngIf="!loadingSalons && salons.length === 0" class="warning">
+            Aucun salon trouvé. Vous devez créer un salon avant de publier une offre.
+          </small>
+        </div>
+
         <div class="form-group">
           <label>Titre du Poste</label>
-          <input type="text" formControlName="titre" placeholder="Ex: Formation en make up professionel" />
+          <input type="text" formControlName="titre" maxlength="255" placeholder="Ex: Formation en make up professionel" />
           <small *ngIf="offreEmploiForm.get('titre')?.invalid && offreEmploiForm.get('titre')?.touched">
-            Le titre est obligatoire
+            <span *ngIf="offreEmploiForm.get('titre')?.errors?.['required']">Le titre est obligatoire</span>
+            <span *ngIf="offreEmploiForm.get('titre')?.errors?.['maxlength']">Le titre ne peut pas dépasser 255 caractères</span>
           </small>
         </div>
 
         <div class="form-group">
           <label>Description du Poste</label>
-          <textarea formControlName="description" placeholder="Décrivez les responsabilités et les missions"></textarea>
+          <textarea formControlName="description" maxlength="1000" placeholder="Décrivez les responsabilités et les missions"></textarea>
           <small *ngIf="offreEmploiForm.get('description')?.invalid && offreEmploiForm.get('description')?.touched">
-            La description est obligatoire
+            <span *ngIf="offreEmploiForm.get('description')?.errors?.['required']">La description est obligatoire</span>
+            <span *ngIf="offreEmploiForm.get('description')?.errors?.['maxlength']">La description ne peut pas dépasser 1000 caractères</span>
           </small>
         </div>
 
-        <button type="button" class="btn-primary" (click)="nextStep()">
+        <button type="button" class="btn-primary" (click)="nextStep()" [disabled]="salons.length === 0">
           Suivant
         </button>
       </div>
@@ -50,23 +71,26 @@
       <div class="step-content" *ngIf="currentStep === 2">
         <div class="form-group">
           <label>Compétences Requises</label>
-          <textarea formControlName="competences" placeholder="Ex: Maquillage Simple ou pro, pose ongle, pose cils, massage"></textarea>
+          <textarea formControlName="competences" maxlength="255" placeholder="Ex: Maquillage Simple ou pro, pose ongle, pose cils, massage"></textarea>
           <small *ngIf="offreEmploiForm.get('competences')?.invalid && offreEmploiForm.get('competences')?.touched">
-            Les compétences sont obligatoires
+            <span *ngIf="offreEmploiForm.get('competences')?.errors?.['required']">Les compétences sont obligatoires</span>
+            <span *ngIf="offreEmploiForm.get('competences')?.errors?.['maxlength']">Les compétences ne peuvent pas dépasser 255 caractères</span>
           </small>
         </div>
         <div class="form-group">
           <label>Expérience Requise</label>
-          <input type="text" formControlName="experienceRequise" placeholder="Ex: 2 ans minimum" />
+          <input type="text" formControlName="experienceRequise" maxlength="255" placeholder="Ex: 2 ans minimum" />
           <small *ngIf="offreEmploiForm.get('experienceRequise')?.invalid && offreEmploiForm.get('experienceRequise')?.touched">
-            L'expérience requise est obligatoire
+            <span *ngIf="offreEmploiForm.get('experienceRequise')?.errors?.['required']">L'expérience requise est obligatoire</span>
+            <span *ngIf="offreEmploiForm.get('experienceRequise')?.errors?.['maxlength']">L'expérience ne peut pas dépasser 255 caractères</span>
           </small>
         </div>
         <div class="form-group">
           <label>Lieu</label>
-          <input type="text" formControlName="lieu" placeholder="Ex: zac mbao, Rufisque" />
+          <input type="text" formControlName="lieu" maxlength="255" placeholder="Ex: zac mbao, Rufisque" />
           <small *ngIf="offreEmploiForm.get('lieu')?.invalid && offreEmploiForm.get('lieu')?.touched">
-            Le lieu est obligatoire
+            <span *ngIf="offreEmploiForm.get('lieu')?.errors?.['required']">Le lieu est obligatoire</span>
+            <span *ngIf="offreEmploiForm.get('lieu')?.errors?.['maxlength']">Le lieu ne peut pas dépasser 255 caractères</span>
           </small>
         </div>
 
@@ -98,9 +122,10 @@
 
         <div class="form-group">
           <label>Salaire</label>
-          <input type="text" formControlName="salaire" placeholder="Ex: 40k€ - 50k€" />
+          <input type="text" formControlName="salaire" maxlength="255" placeholder="Ex: 40k cfa - 50k cfa" />
           <small *ngIf="offreEmploiForm.get('salaire')?.invalid && offreEmploiForm.get('salaire')?.touched">
-            Le salaire est obligatoire
+            <span *ngIf="offreEmploiForm.get('salaire')?.errors?.['required']">Le salaire est obligatoire</span>
+            <span *ngIf="offreEmploiForm.get('salaire')?.errors?.['maxlength']">Le salaire ne peut pas dépasser 255 caractères</span>
           </small>
         </div>
         

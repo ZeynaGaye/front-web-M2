@@ -1,1 +1,539 @@
-<p>client-dashboard works!</p>
+<div class="dashboard">
+  <!-- Header -->
+  <header class="header">
+    <div class="header-title">
+      <mat-icon>dashboard</mat-icon>
+      <div>
+        <h1>Mon Espace Client</h1>
+        <p class="welcome-message" *ngIf="currentUser">Bonjour, {{ currentUser.prenom }} !</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button mat-button class="btn btn-outline" (click)="openNotifications()">
+        <mat-icon>notifications</mat-icon>
+        Notifications
+        <mat-chip *ngIf="unreadNotifications > 0" class="notification-badge">{{unreadNotifications}}</mat-chip>
+      </button>
+      <!-- <button mat-raised-button class="btn btn-primary" (click)="bookNewAppointment()">
+        <mat-icon>add</mat-icon>
+        Nouveau RDV
+      </button> -->
+       <button mat-raised-button class="btn btn-primary" [routerLink]="['/accueil']">
+        <mat-icon>home</mat-icon>
+        Accueil
+      </button>
+    </div>
+  </header>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="loading">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Chargement de votre dashboard...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-container" *ngIf="error && !loading">
+    <mat-icon class="error-icon">error</mat-icon>
+    <h3>Oups ! Une erreur est survenue</h3>
+    <p>{{ error }}</p>
+    <button mat-raised-button color="primary" (click)="loadDashboardData()">
+      <mat-icon>refresh</mat-icon>
+      Réessayer
+    </button>
+  </div>
+
+  <!-- Dashboard Content -->
+  <div class="dashboard-content" *ngIf="!loading && !error">
+
+    <!-- Stats Overview -->
+    <section class="stats-section">
+      <div class="stats-grid">
+        <mat-card class="stat-card">
+          <mat-card-content>
+            <div class="stat-content">
+              <div class="stat-icon primary-icon">
+                <mat-icon>event</mat-icon>
+              </div>
+              <div class="stat-info">
+                <h3>{{ stats.total }}</h3>
+                <p>Total réservations</p>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card">
+          <mat-card-content>
+            <div class="stat-content">
+              <div class="stat-icon info-icon">
+                <mat-icon>schedule</mat-icon>
+              </div>
+              <div class="stat-info">
+                <h3>{{ stats.aVenir }}</h3>
+                <p>À venir</p>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card">
+          <mat-card-content>
+            <div class="stat-content">
+              <div class="stat-icon success-icon">
+                <mat-icon>check_circle</mat-icon>
+              </div>
+              <div class="stat-info">
+                <h3>{{ stats.terminees }}</h3>
+                <p>Terminées</p>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card">
+          <mat-card-content>
+            <div class="stat-content">
+              <div class="stat-icon warning-icon">
+                <mat-icon>payments</mat-icon>
+              </div>
+              <div class="stat-info">
+                <h3>{{ formatPrice(stats.totalDepense) }}</h3>
+                <p>Total dépensé</p>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <!-- Loyalty Program -->
+<!--      <mat-card class="loyalty-card" *ngIf="loyaltyProgram">-->
+<!--        <mat-card-content>-->
+<!--          <div class="loyalty-header">-->
+<!--            <div>-->
+<!--              <h3>Programme Fidélité</h3>-->
+<!--              <p>Niveau : {{ loyaltyProgram.level }}</p>-->
+<!--            </div>-->
+<!--            <div class="loyalty-points">{{ loyaltyProgram.points | number }} pts</div>-->
+<!--          </div>-->
+<!--          <div class="loyalty-progress">-->
+<!--            <div class="loyalty-progress-fill" [style.width.%]="loyaltyProgram.progressPercent"></div>-->
+<!--          </div>-->
+<!--          <p>Plus que {{ loyaltyProgram.pointsToNext }} points pour atteindre le niveau {{ loyaltyProgram.nextLevel }}!</p>-->
+<!--        </mat-card-content>-->
+<!--      </mat-card>-->
+    </section>
+
+    <!-- Next Appointment -->
+    <section class="next-appointment" *ngIf="nextAppointment">
+      <div class="appointment-content">
+        <div class="appointment-time">
+          <div class="appointment-date">{{ formatDate(nextAppointment.datePrestation) }}</div>
+          <div class="appointment-time-display">{{ formatTime(nextAppointment.datePrestation) }}</div>
+          <div class="appointment-countdown">{{ getTimeUntilNext(nextAppointment.datePrestation) }}</div>
+        </div>
+        <div class="appointment-details">
+          <h3>{{ getServiceName(nextAppointment) }}</h3>
+          <div class="appointment-provider">
+            <mat-icon>{{ getProviderIcon(nextAppointment) }}</mat-icon>
+            {{ getProviderName(nextAppointment) }}
+          </div>
+          <div class="appointment-provider" *ngIf="getProviderAddress(nextAppointment) !== 'Adresse non renseignée'">
+            <mat-icon>location_on</mat-icon>
+            {{ getProviderAddress(nextAppointment) }}
+          </div>
+          <div class="appointment-provider">
+            <mat-icon>payments</mat-icon>
+            {{ getFormattedServicePrice(nextAppointment) }}
+          </div>
+          <div class="appointment-provider" *ngIf="getServiceDuration(nextAppointment) !== 'Durée non précisée'">
+            <mat-icon>schedule</mat-icon>
+            {{ getServiceDuration(nextAppointment) }}
+          </div>
+        </div>
+        <div class="appointment-actions">
+          <button mat-button class="btn-outline-white" (click)="viewReservationDetails(nextAppointment)">
+            <mat-icon>info</mat-icon>
+            Détails
+          </button>
+          <button mat-button class="btn-outline-white" (click)="cancelReservation(nextAppointment)"
+                  *ngIf="canCancelReservation(nextAppointment)">
+            <mat-icon>cancel</mat-icon>
+            Annuler
+          </button>
+        </div>
+      </div>
+    </section>
+
+<!--    &lt;!&ndash; Spending Chart &ndash;&gt;-->
+<!--    <mat-card class="chart-container" *ngIf="spendingData?.length">-->
+<!--      <mat-card-content>-->
+<!--        <div class="chart-header">-->
+<!--          <h3>Mes dépenses mensuelles</h3>-->
+<!--          <mat-select [(value)]="selectedPeriod" (selectionChange)="updateSpendingChart()">-->
+<!--            <mat-option value="6months">6 derniers mois</mat-option>-->
+<!--            <mat-option value="12months">12 derniers mois</mat-option>-->
+<!--          </mat-select>-->
+<!--        </div>-->
+<!--        <div class="spending-chart">-->
+<!--          <div class="chart-bar"-->
+<!--               *ngFor="let data of spendingData; let i = index"-->
+<!--               [style.height.%]="data.percentage"-->
+<!--               [attr.data-value]="formatPrice(data.amount)"-->
+<!--               matTooltip="{{ data.month }}: {{ formatPrice(data.amount) }}">-->
+<!--          </div>-->
+<!--        </div>-->
+<!--      </mat-card-content>-->
+<!--    </mat-card>-->
+
+    <!-- Main Content Tabs -->
+    <mat-card class="tabs-container">
+      <mat-tab-group [(selectedIndex)]="selectedTab" class="main-tabs">
+
+        <!-- À venir -->
+        <mat-tab [label]="getTabLabel('À venir', upcomingReservations.length)">
+          <div class="tab-content">
+            <h3>Mes prochains rendez-vous</h3>
+
+            <div class="reservations-grid" *ngIf="upcomingReservations.length > 0">
+              <mat-card class="reservation-card" *ngFor="let reservation of upcomingReservations">
+                <mat-card-content>
+                  <div class="reservation-header">
+                    <div class="service-info">
+                      <h4>{{ getServiceName(reservation) }}</h4>
+                      <div class="provider-info">
+                        <mat-icon>{{ getProviderIcon(reservation) }}</mat-icon>
+                        {{ getProviderName(reservation) }}
+                      </div>
+                    </div>
+                    <mat-chip class="status-chip" [ngClass]="'status-' + reservation.status?.toLowerCase()">
+                      <mat-icon>{{ getStatusIcon(reservation.status) }}</mat-icon>
+                      {{ formatStatus(reservation.status) }}
+                    </mat-chip>
+                  </div>
+
+                  <div class="reservation-details">
+                    <div class="detail-item">
+                      <mat-icon>today</mat-icon>
+                      <span>{{ formatDate(reservation.datePrestation) }}</span>
+                    </div>
+                    <div class="detail-item">
+                      <mat-icon>access_time</mat-icon>
+                      <span>{{ formatTime(reservation.datePrestation) }}</span>
+                    </div>
+                    <div class="detail-item">
+                      <mat-icon>payments</mat-icon>
+                      <span>{{ getFormattedServicePrice(reservation) }}</span>
+                    </div>
+                    <div class="detail-item" *ngIf="getServiceDuration(reservation) !== 'Durée non précisée'">
+                      <mat-icon>schedule</mat-icon>
+                      <span>{{ getServiceDuration(reservation) }}</span>
+                    </div>
+                  </div>
+
+                  <div class="reservation-actions">
+                    <button mat-button (click)="viewReservationDetails(reservation)">
+                      <mat-icon>info</mat-icon>
+                      Détails
+                    </button>
+                    <button mat-button color="warn" (click)="cancelReservation(reservation)"
+                            *ngIf="canCancelReservation(reservation)">
+                      <mat-icon>cancel</mat-icon>
+                      Annuler
+                    </button>
+                    <button mat-raised-button color="primary" (click)="completeReservation(reservation)"
+                            *ngIf="canCompleteReservation(reservation)">
+                      <mat-icon>check</mat-icon>
+                      Terminer
+                    </button>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+            </div>
+
+            <div class="empty-state" *ngIf="upcomingReservations.length === 0">
+              <mat-icon>event_available</mat-icon>
+              <h3>Aucun rendez-vous à venir</h3>
+              <p>Prenez un nouveau rendez-vous dès maintenant !</p>
+              <button mat-raised-button color="primary" (click)="bookNewAppointment()">
+                <mat-icon>add</mat-icon>
+                Nouveau rendez-vous
+              </button>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- Historique -->
+        <mat-tab [label]="getTabLabel('Historique', recentHistory.length)">
+          <div class="tab-content">
+            <h3>Historique de mes réservations</h3>
+
+            <div class="reservations-grid" *ngIf="recentHistory.length > 0">
+              <mat-card class="reservation-card history-card" *ngFor="let reservation of recentHistory">
+                <mat-card-content>
+                  <div class="reservation-header">
+                    <div class="service-info">
+                      <h4>{{ getServiceName(reservation) }}</h4>
+                      <div class="provider-info">
+                        <mat-icon>{{ getProviderIcon(reservation) }}</mat-icon>
+                        {{ getProviderName(reservation) }}
+                      </div>
+                    </div>
+                    <mat-chip class="status-chip" [ngClass]="'status-' + reservation.status?.toLowerCase()">
+                      <mat-icon>{{ getStatusIcon(reservation.status) }}</mat-icon>
+                      {{ formatStatus(reservation.status) }}
+                    </mat-chip>
+                  </div>
+
+                  <div class="reservation-details">
+                    <div class="detail-item">
+                      <mat-icon>today</mat-icon>
+                      <span>{{ formatDate(reservation.datePrestation) }}</span>
+                    </div>
+                    <div class="detail-item">
+                      <mat-icon>payments</mat-icon>
+                      <span>{{ getFormattedServicePrice(reservation) }}</span>
+                    </div>
+                    <div class="detail-item" *ngIf="getServiceDuration(reservation) !== 'Durée non précisée'">
+                      <mat-icon>schedule</mat-icon>
+                      <span>{{ getServiceDuration(reservation) }}</span>
+                    </div>
+                    <div class="detail-item" *ngIf="reservation.note">
+                      <mat-icon>star</mat-icon>
+                      <span>{{ formatStars(reservation.note) }}</span>
+                    </div>
+                  </div>
+
+                  <div class="reservation-actions">
+                    <button mat-button (click)="viewReservationDetails(reservation)">
+                      <mat-icon>info</mat-icon>
+                      Voir détails
+                    </button>
+                    <button mat-raised-button color="primary" (click)="rebookService(reservation)">
+                      <mat-icon>repeat</mat-icon>
+                      Réserver à nouveau
+                    </button>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+            </div>
+
+            <div class="empty-state" *ngIf="recentHistory.length === 0">
+              <mat-icon>history</mat-icon>
+              <h3>Aucun historique</h3>
+              <p>Vos réservations passées apparaîtront ici</p>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- Mes avis -->
+        <mat-tab [label]="getTabLabel('Mes avis', reservationsToRate.length + recentAvis.length)">
+          <div class="tab-content">
+
+            <!-- Services à noter -->
+            <div class="to-rate-section" *ngIf="reservationsToRate.length > 0">
+              <mat-card class="warning-alert">
+                <mat-card-content>
+                  <div class="alert-content">
+                    <div>
+                      <h4 style="text-align:center">⭐ {{ reservationsToRate.length }} service{{ reservationsToRate.length > 1 ? 's' : '' }} à noter</h4>
+                      <p>Votre avis compte ! Aidez les autres clients.</p>
+                    </div>
+                    <button mat-raised-button class="btn-white" (click)="openRatingDialog(reservationsToRate[0])">
+                      Noter maintenant
+                    </button>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+            </div>
+
+            <!-- Mes derniers avis -->
+            <h3 *ngIf="recentAvis.length > 0">Mes derniers avis</h3>
+            <div class="reservations-grid" *ngIf="recentAvis.length > 0">
+              <mat-card class="reservation-card avis-card" *ngFor="let avis of recentAvis">
+                <mat-card-content>
+                  <div class="reservation-header">
+                    <div class="service-info">
+                      <h4>{{ avis.nomService }}</h4>
+                      <div class="provider-info">
+                        <mat-icon>{{ avis.salonId ? 'store' : 'person' }}</mat-icon>
+                        {{ avis.nomPrestataire }}
+                      </div>
+                    </div>
+                    <div class="avis-rating">
+                      <div class="stars">{{ formatStars(avis.note) }}</div>
+                      <small>{{ getRelativeTime(avis.dateAvis) }}</small>
+                    </div>
+                  </div>
+
+                  <p class="avis-comment" *ngIf="avis.commentaire">
+                    "{{ avis.commentaire }}"
+                  </p>
+
+                  <div class="reservation-actions">
+                    <button mat-button (click)="editReview(avis)">
+                      <mat-icon>edit</mat-icon>
+                      Modifier l'avis
+                    </button>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+            </div>
+
+            <div class="empty-state" *ngIf="reservationsToRate.length === 0 && recentAvis.length === 0">
+              <mat-icon>star_outline</mat-icon>
+              <h3>Aucun avis pour le moment</h3>
+              <p>Vos avis et évaluations apparaîtront ici après vos rendez-vous</p>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- Favoris -->
+        <mat-tab [label]="getTabLabel('Favoris', favoriteProviders.length)">
+          <div class="tab-content">
+            <h3>Mes prestataires favoris</h3>
+
+            <div class="reservations-grid" *ngIf="favoriteProviders.length > 0">
+              <mat-card class="reservation-card favorite-card" *ngFor="let provider of favoriteProviders">
+                <mat-card-content>
+                  <div class="reservation-header">
+                    <div class="service-info">
+                      <h4>{{ provider.prestataire }}</h4>
+                      <div class="provider-info">
+                        <mat-icon>{{ provider.type === 'SALON' ? 'store' : 'person' }}</mat-icon>
+                        {{ provider.nombreReservations }} réservation{{ provider.nombreReservations > 1 ? 's' : '' }}
+                      </div>
+                    </div>
+                    <div class="favorite-heart">
+                      <mat-icon>favorite</mat-icon>
+                    </div>
+                  </div>
+
+                  <div class="reservation-details">
+                    <div class="detail-item" *ngIf="provider.adresse">
+                      <mat-icon>location_on</mat-icon>
+                      <span>{{ provider.adresse }}</span>
+                    </div>
+                    <div class="detail-item" *ngIf="provider.rating">
+                      <mat-icon>star</mat-icon>
+                      <span>{{ provider.rating }}/5 ({{ provider.reviewCount }} avis)</span>
+                    </div>
+                    <div class="detail-item" *ngIf="provider.priceRange">
+                      <mat-icon>payments</mat-icon>
+                      <span>{{ provider.priceRange }}</span>
+                    </div>
+                  </div>
+
+                  <div class="reservation-actions">
+                    <button mat-button (click)="viewProviderProfile(provider)">
+                      <mat-icon>info</mat-icon>
+                      Voir profil
+                    </button>
+                    <button mat-raised-button color="primary" (click)="bookWithProvider(provider)">
+                      <mat-icon>add</mat-icon>
+                      Réserver
+                    </button>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+            </div>
+
+            <div class="empty-state" *ngIf="favoriteProviders.length === 0">
+              <mat-icon>favorite_border</mat-icon>
+              <h3>Aucun favori</h3>
+              <p>Vos prestataires les plus fréquentés apparaîtront ici</p>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- Calendrier -->
+        <mat-tab label="Calendrier">
+          <div class="tab-content">
+            <h3>Mon calendrier</h3>
+
+            <mat-card class="calendar-widget">
+              <mat-card-content>
+                <div class="calendar-header">
+                  <button mat-icon-button class="calendar-nav" (click)="previousMonth()">
+                    <mat-icon>chevron_left</mat-icon>
+                  </button>
+                  <h3>{{ currentMonthName }} {{ currentYear }}</h3>
+                  <button mat-icon-button class="calendar-nav" (click)="nextMonth()">
+                    <mat-icon>chevron_right</mat-icon>
+                  </button>
+                </div>
+
+                <div class="calendar-grid">
+                  <!-- En-têtes des jours -->
+                  <div class="calendar-day-header" *ngFor="let day of dayNames">{{ day }}</div>
+
+                  <!-- Jours du calendrier -->
+                  <div class="calendar-day"
+                       *ngFor="let day of calendarDays"
+                       [class.has-appointment]="day.hasAppointment"
+                       [class.today]="day.isToday"
+                       [class.other-month]="day.isOtherMonth"
+                       (click)="selectDate(day)"
+                       [matTooltip]="day.appointments?.length || 0 > 0 ? (day.appointments?.length || 0) + ' RDV' : ''">
+                    <span class="day-number">{{ day.date }}</span>
+                    <div class="appointment-indicators" *ngIf="day.hasAppointment">
+                      <div class="appointment-dot" 
+                           *ngFor="let appointment of day.appointments?.slice(0, 3)"
+                           [class]="getAppointmentStatusClass(appointment)"></div>
+                      <span class="more-appointments" *ngIf="day.appointments && day.appointments.length > 3">
+                        +{{ day.appointments.length - 3 }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+        </mat-tab>
+
+      </mat-tab-group>
+    </mat-card>
+
+    <!-- Quick Actions -->
+    <section class="quick-actions-section">
+      <h2 class="section-title">Actions rapides</h2>
+      <div class="quick-actions">
+        <!-- <button mat-card class="quick-action" (click)="bookNewAppointment()">
+          <mat-icon>add_circle</mat-icon>
+          <h4>Nouveau RDV</h4>
+          <p>Réserver un service</p>
+        </button> -->
+
+        <button mat-card class="quick-action" [routerLink]="['accueil']">
+          <mat-icon>search</mat-icon>
+          <h4>Rechercher</h4>
+          <p>Trouver un salon</p>
+        </button>
+
+        <button mat-card class="quick-action" [routerLink]="['/client/profile']">
+          <mat-icon>person</mat-icon>
+          <h4>Mon profil</h4>
+          <p>Gérer mes infos</p>
+        </button>
+
+        <!-- <button mat-card class="quick-action" (click)="viewOffers()">
+          <mat-icon>local_offer</mat-icon>
+          <h4>Offres</h4>
+          <p>Promotions du moment</p>
+        </button> -->
+
+        <button mat-card class="quick-action" (click)="shareApp()">
+          <mat-icon>share</mat-icon>
+          <h4>Partager</h4>
+          <p>Inviter des amis</p>
+        </button>
+
+        <button mat-card class="quick-action" (click)="openSupport()">
+          <mat-icon>help</mat-icon>
+          <h4>Support</h4>
+          <p>Besoin d'aide ?</p>
+        </button>
+      </div>
+    </section>
+
+  </div>
+</div>

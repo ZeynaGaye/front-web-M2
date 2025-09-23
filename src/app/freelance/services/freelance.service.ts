@@ -93,7 +93,78 @@ private handleError(error: HttpErrorResponse) {
     return this.http.get<Freelance[]>(`${this.apiUrl}/all`).pipe(
       retry(1),
       tap(freelances => console.log('Tous les freelances récupérés:', freelances)),
-      catchError(this.handleError)
+      catchError((error) => {
+        console.error('Erreur API, utilisation des données de test:', error);
+        return this.getMockFreelances();
+      })
     );
+  }
+
+  /**
+   * Retourne des données de test en cas d'échec de l'API
+   */
+  private getMockFreelances(): Observable<Freelance[]> {
+    return this.http.get<Freelance[]>('/assets/mock-freelances.json').pipe(
+      tap(freelances => console.log('Données de test chargées:', freelances)),
+      catchError(() => {
+        console.error('Impossible de charger les données de test');
+        return of(this.getHardcodedFreelances());
+      })
+    );
+  }
+
+  /**
+   * Données de secours codées en dur
+   */
+  private getHardcodedFreelances(): Freelance[] {
+    return [
+      {
+        id: 1,
+        nom: 'Diop',
+        prenom: 'Fatou',
+        email: 'fatou.diop@email.com',
+        adresse: 'Dakar, Plateau',
+        telephone: '77 123 45 67',
+        competences: 'Coiffure, Tresses, Soins capillaires',
+        profession: 'Coiffeuse',
+        ville: 'Dakar',
+        profileImage: '/assets/images/profile-placeholder.jpg',
+        rating: 4.8,
+        reviews: 25,
+       
+        
+      },
+      {
+        id: 2,
+        nom: 'Ndiaye',
+        prenom: 'Aminata',
+        email: 'aminata.ndiaye@email.com',
+        adresse: 'Dakar, Sacré-Coeur',
+        telephone: '76 987 65 43',
+        competences: 'Maquillage, Soins du visage, Manucure',
+        profession: 'Esthéticienne',
+        ville: 'Dakar',
+        profileImage: '/assets/images/profile-placeholder.jpg',
+        rating: 4.6,
+        reviews: 18,
+       
+       
+      },
+      {
+        id: 3,
+        nom: 'Fall',
+        prenom: 'Moussa',
+        email: 'moussa.fall@email.com',
+        adresse: 'Dakar, Mermoz',
+        telephone: '78 456 78 90',
+        competences: 'Coiffure homme, Barbe, Massage crânien',
+        profession: 'Barbier',
+        ville: 'Dakar',
+        profileImage: '/assets/images/profile-placeholder.jpg',
+        rating: 4.9,
+        reviews: 42,
+       
+      }
+    ];
   }
 }

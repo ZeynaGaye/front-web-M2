@@ -1,306 +1,944 @@
-// Variables reprises de votre design
-$primary-color: #f5a393;
-$secondary-color: #a4b1bd;
-$text-dark: #333;
-$text-light: #6b7280;
-$border-color: #e5e7eb;
+/* ===============================================
+   🎨 PALETTE DE COULEURS AMÉLIORÉE (SANS BLEU)
+   =============================================== */
+
+// Couleurs principales
+$primary-orange: hsl(13, 91%, 74%);
+$primary-orange-light: #ffd7cc;
+$primary-orange-dark: #ef9b88;
+
+// Palette de gris pour varier
+$gray-50: #f8fafc;
+$gray-100: #f1f5f9;
+$gray-200: #e2e8f0;
+$gray-300: #cbd5e1;
+$gray-400: #94a3b8;
+$gray-500: #64748b;
+$gray-600: #475569;
+$gray-700: #334155;
+$gray-800: #1e293b;
+$gray-900: #0f172a;
+
+// Couleurs sémantiques
+$success-color: #22c55e;
+$warning-color: #f59e0b;
 $error-color: #ef4444;
-$focus-color: #fb8f71;
+$info-color: $gray-500;
+
+// Couleurs de texte
+$text-primary: $gray-900;
+$text-secondary: $gray-600;
+$text-tertiary: $gray-400;
+$text-white: #ffffff;
+
+// Couleurs de fond
+$bg-white: #ffffff;
+$bg-light: $gray-50;
+$bg-medium: $gray-100;
+$bg-dark: $gray-800;
+
+// Bordures
+$border-light: $gray-200;
+$border-medium: $gray-300;
+$border-dark: $gray-400;
+
+/* ===============================================
+   ✨ STYLES POUR LE BACKDROP ET LE PANEL MATERIAL
+   =============================================== */
+
+/* Assurez-vous d'ajouter `panelClass: 'service-dialog-panel'` lors de l'ouverture de la modale en TS */
+.service-dialog-panel {
+  /* Le backdrop d'Angular Material est un élément `.cdk-overlay-backdrop` qui est un frère de votre modale.
+     Nous ciblons son opacité ici pour le rendre moins intrusif. */
+  .cdk-overlay-backdrop {
+    background-color: rgba($gray-900, 0.45) !important; /* Opacité réduite pour le backdrop */
+    /* Assurez-vous que le z-index de votre modale est supérieur à celui du backdrop si besoin */
+  }
+
+  /* Pour s'assurer que le contenu du dialogue lui-même n'est pas transparent,
+     même si le backdrop est visible, le fond de `.service-dialog` est géré directement. */
+}
+
+
+/* ===============================================
+   🏢 STYLES DE LA BOÎTE DE DIALOGUE DE SERVICE
+   =============================================== */
 
 .service-dialog {
-  max-width: 450px;
+  max-width: 500px;
+  max-height: 90vh; /* 90% de la hauteur de la fenêtre, ajustez si nécessaire */
   margin: 0 auto;
-  background: white;
-  border-radius: 12px;
+  background: $bg-white; /* Fond blanc opaque pour le dialogue lui-même */
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-  
-  // ✅ OPTIMISATIONS POUR UN AFFICHAGE NET
-  transform: translateZ(0); // Force GPU acceleration
-  backface-visibility: hidden; // Prevent blurring
-  -webkit-font-smoothing: antialiased; // Smooth fonts on webkit
-  -moz-osx-font-smoothing: grayscale; // Smooth fonts on firefox
+  box-shadow:
+    0 10px 25px rgba($gray-800, 0.15),
+    0 4px 6px rgba($gray-800, 0.05);
+  border: 1px solid $border-light;
+  transform: translateZ(0); /* Accélération matérielle */
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  display: flex; /* Utiliser flexbox pour gérer le header/footer fixe et le contenu scrollable */
+  flex-direction: column; /* Empiler les éléments verticalement */
+
 
   .dialog-header {
-    background: linear-gradient(135deg, $primary-color 0%, lighten($primary-color, 10%) 100%);
-    color: white;
-    padding: 20px;
+    background: linear-gradient(135deg, $primary-orange 0%, lighten($primary-orange, 8%) 50%, $gray-100 100%);
+    color: $text-white;
+    padding: 24px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    
-    // ✅ Assurer la netteté du header
-    -webkit-font-smoothing: antialiased;
+    position: relative;
+    z-index: 2;
+    flex-shrink: 0; /* Empêche le header de rétrécir */
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(45deg, transparent 30%, rgba($gray-600, 0.1) 100%);
+      pointer-events: none;
+    }
 
     h2 {
       margin: 0;
-      font-size: 1.4rem;
-      font-weight: 600;
+      font-size: 1.5rem;
+      font-weight: 700;
       display: flex;
       align-items: center;
-      gap: 10px;
-      line-height: 1.2; // ✅ Améliore la netteté du texte
+      gap: 12px;
+      line-height: 1.2;
+      text-shadow: 0 1px 2px rgba($gray-800, 0.1);
+      z-index: 1;
+      position: relative;
 
-      i.material-icons {
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 50%;
-        padding: 8px;
-        font-size: 20px;
-        width: 36px;
-        height: 36px;
+      mat-icon {
+        background: rgba($text-white, 0.15);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba($text-white, 0.2);
+        border-radius: 12px;
+        padding: 10px;
+        font-size: 22px;
+        width: 42px;
+        height: 42px;
         display: flex;
         align-items: center;
         justify-content: center;
-        line-height: 1; // ✅ Icônes bien centrées
+        line-height: 1;
+        box-shadow: 0 2px 8px rgba($gray-800, 0.1);
       }
     }
 
     .close-button {
-      background: rgba(255, 255, 255, 0.1);
-      border: none;
-      border-radius: 50%;
-      width: 36px;
-      height: 36px;
+      background: rgba($text-white, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba($text-white, 0.2);
+      border-radius: 10px;
+      width: 40px;
+      height: 40px;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: all 0.2s ease; // ✅ Transition plus rapide
-      color: white;
+      transition: all 0.3s ease;
+      color: $text-white;
+      z-index: 1;
+      position: relative;
 
       &:hover {
-        background: rgba(255, 255, 255, 0.2);
-        transform: rotate(90deg);
+        background: rgba($error-color, 0.8);
+        border-color: $error-color;
+        transform: rotate(90deg) scale(1.05);
+        box-shadow: 0 4px 12px rgba($error-color, 0.3);
       }
 
-      i.material-icons {
+      mat-icon {
         font-size: 20px;
-        line-height: 1; // ✅ Icône bien centrée
+        line-height: 1;
       }
     }
   }
 
-  .service-form {
-    padding: 25px;
+  .service-form-compact {
+    padding: 32px;
+    background: $bg-light; /* Garde le fond clair pour le contenu du formulaire */
+    max-height: calc(90vh - 100px); /* Hauteur max = hauteur du dialog - hauteur du header - hauteur du footer */
+                                    /* Ajustez 100px si votre header/footer a une hauteur différente */
+    overflow-y: auto; /* Active le défilement vertical si le contenu dépasse */
+    -webkit-overflow-scrolling: touch; /* Améliore le défilement sur les appareils tactiles */
+    flex-grow: 1; /* Permet au formulaire de prendre l'espace disponible */
 
-    .input-group {
-      position: relative;
-      margin-bottom: 1.5rem;
+    /* Styles de la scrollbar (Webkit) */
+    &::-webkit-scrollbar {
+      width: 8px;
+      background-color: $gray-100;
+      border-radius: 10px;
+    }
 
-      &.half-width {
-        width: calc(50% - 8px);
+    &::-webkit-scrollbar-thumb {
+      background-color: $gray-400;
+      border-radius: 10px;
+      &:hover {
+        background-color: $gray-500;
+      }
+    }
+
+    .step-section,
+    .section-nouveau,
+    .confirmation-section,
+    .preview-section {
+      background: $bg-white; /* Fond blanc opaque pour les sections */
+      border: 2px solid $border-light;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      transition: all 0.3s ease;
+      /* Ajoutez box-shadow pour une meilleure séparation visuelle */
+      box-shadow: 0 4px 12px rgba($gray-100, 0.1);
+
+      &:hover {
+        border-color: rgba($primary-orange, 0.3);
+        box-shadow: 0 2px 8px rgba($primary-orange, 0.1);
+      }
+    }
+
+    .step-header,
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: $text-primary;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid $border-light;
+
+      mat-icon {
+        color: $primary-orange;
+        background: rgba($primary-orange, 0.1);
+        border-radius: 8px;
+        padding: 6px;
+        font-size: 18px;
+      }
+    }
+
+    /* Conteneur pour afficher les éléments deux par deux */
+    .form-fields-grid {
+      display: grid;
+      grid-template-columns: 1fr; /* Par défaut, une colonne pour les petits écrans */
+      gap: 20px; /* Espacement entre les éléments */
+
+      @media (min-width: 480px) { /* Au-dessus de 480px, passer à deux colonnes */
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* S'adapte avec min 200px */
+      }
+    }
+
+
+    .service-selection-compact {
+      display: flex; /* Utilisation de flex pour une meilleure flexibilité */
+      flex-wrap: wrap; /* Permet aux éléments de passer à la ligne */
+      gap: 16px; /* Espacement entre les services */
+      justify-content: space-between; /* Distribue l'espace entre les éléments */
+
+      /* Chaque élément de service (si c'est un bouton ou une carte) */
+      & > * {
+        flex: 1 1 calc(50% - 8px); /* Environ 50% de largeur, en tenant compte du gap */
+        min-width: 150px; /* Largeur minimale pour éviter des éléments trop petits */
       }
 
-      i.material-icons {
-        position: absolute;
-        left: 1rem;
-        top: 50%;
-        transform: translateY(-50%); // ✅ Centrage précis
-        color: #9ca3af;
-        font-size: 20px;
-        z-index: 1;
-        line-height: 1; // ✅ Évite les décalages
-      }
+      /* Styles génériques pour les champs Angular Material */
+      mat-form-field {
+        width: 100%; /* Le mat-form-field prendra 100% de la largeur de son conteneur (flex-item) */
 
-      input,
-      textarea {
-        width: 100%;
-        padding: 0.75rem 1rem 0.75rem 2.5rem;
-        border: 1px solid $border-color;
-        border-radius: 0.5rem;
-        font-size: 1rem;
-        line-height: 1.5; // ✅ Hauteur de ligne optimisée
-        outline: none;
-        transition: all 0.2s ease; // ✅ Transition plus rapide
-        font-family: inherit;
-        resize: none;
-        box-sizing: border-box; // ✅ Évite les débordements
-        
-        // ✅ OPTIMISATIONS POUR LA NETTETÉ
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-
-        &:focus {
-          border-color: $focus-color;
-          box-shadow: 0 0 0 3px rgba(251, 143, 113, 0.1); // ✅ Ombre plus légère
-          outline: none;
+        .mat-form-field-wrapper {
+          padding-bottom: 0;
         }
-
-        &::placeholder {
-          color: #9ca3af;
-          opacity: 1; // ✅ Assure l'opacité du placeholder
+        .mat-form-field-flex {
+          align-items: center;
+        }
+        .mat-form-field-outline {
+          color: $border-light;
+          border-radius: 12px;
+        }
+        &.mat-focused .mat-form-field-outline-thick {
+          color: $primary-orange;
+        }
+        &.mat-form-field-invalid.mat-focused .mat-form-field-outline-thick {
+          color: $error-color;
+        }
+        .mat-label {
+          color: $text-secondary;
+        }
+        &.mat-focused .mat-label {
+          color: $primary-orange;
+        }
+        &.mat-form-field-invalid .mat-label {
+          color: $error-color;
+        }
+        input, textarea, .mat-select-value {
+          color: $text-primary;
+          background-color: transparent; /* Assure que les inputs ne sont pas transparents */
+        }
+        mat-icon {
+          color: $text-tertiary;
         }
       }
 
-      textarea {
-        min-height: 80px;
-        resize: vertical; // ✅ Permet redimensionnement vertical uniquement
-        
-        & ~ i.material-icons {
-          top: 1.25rem; // ✅ Position ajustée pour textarea
-          transform: none;
-        }
-      }
-
-      small {
+      .mat-error {
         color: $error-color;
-        font-size: 12px;
-        display: block;
-        margin-top: 5px;
-        padding-left: 0.5rem;
-        line-height: 1.3; // ✅ Hauteur optimisée pour les messages
+        font-size: 13px;
+        font-weight: 500;
+        margin-top: 8px;
+        padding: 8px 16px;
+        background: rgba($error-color, 0.05);
+        border-left: 3px solid $error-color;
+        border-radius: 0 6px 6px 0;
+        line-height: 1.4;
+
+        &::before {
+          content: '⚠️';
+          margin-right: 6px;
+        }
+      }
+
+      .custom-service-btn {
+        background: linear-gradient(135deg, rgba($primary-orange, 0.1) 0%, rgba($primary-orange, 0.05) 100%);
+        color: $primary-orange;
+        border-color: rgba($primary-orange, 0.3);
+        padding: 10px 16px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+
+        &:hover {
+          background: linear-gradient(135deg, rgba($primary-orange, 0.15) 0%, rgba($primary-orange, 0.1) 100%);
+          border-color: $primary-orange;
+          transform: translateY(-1px);
+          box-shadow: 0 2px 8px rgba($primary-orange, 0.2);
+        }
+
+        mat-icon {
+            font-size: 16px;
+        }
+      }
+    }
+
+    .section-nouveau {
+      .action-buttons {
+        display: flex;
+        gap: 12px;
+        margin-top: 20px;
+        flex-wrap: wrap;
+
+        button {
+          background: $gray-100;
+          color: $text-secondary;
+          border-color: $border-medium;
+          padding: 10px 16px;
+          border-radius: 10px;
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+
+          &:hover {
+            background: $gray-200;
+            color: $text-primary;
+            transform: translateY(-1px);
+          }
+          mat-icon {
+              font-size: 16px;
+          }
+        }
+      }
+    }
+
+    .confirmation-section {
+      .suggestion-card {
+        background: linear-gradient(135deg, rgba($info-color, 0.05) 0%, rgba($info-color, 0.1) 100%);
+        border: 1px solid rgba($info-color, 0.2);
+        border-radius: 12px;
+        padding: 20px;
+        margin-top: 16px;
+        color: $text-secondary;
+
+        p {
+          margin: 0 0 10px 0;
+        }
+
+        .suggested-service {
+          background: rgba($info-color, 0.05);
+          border-left: 3px solid $info-color;
+          padding: 12px 16px;
+          border-radius: 4px;
+          margin-top: 10px;
+          color: $text-primary; /* Assure que le texte est bien lisible */
+
+          strong {
+            color: $text-primary;
+            font-weight: 600;
+          }
+          .category {
+              color: $text-secondary;
+              font-size: 0.9em;
+          }
+        }
+
+        mat-card-actions {
+          display: flex;
+          gap: 12px;
+          margin-top: 20px;
+          padding-top: 16px;
+          border-top: 1px solid $border-light;
+          flex-wrap: wrap;
+
+          button {
+            flex: 1;
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            line-height: 1.2;
+
+            mat-icon {
+                font-size: 16px;
+            }
+
+            &.mat-raised-button {
+              background: linear-gradient(135deg, $primary-orange 0%, $primary-orange-dark 100%);
+              color: $text-white;
+              border: 1px solid $primary-orange;
+              box-shadow: 0 2px 4px rgba($primary-orange, 0.2);
+
+              &:hover {
+                background: linear-gradient(135deg, $primary-orange-dark 0%, darken($primary-orange-dark, 10%) 100%);
+                box-shadow: 0 4px 8px rgba($primary-orange, 0.3);
+                transform: translateY(-1px);
+              }
+            }
+            &.mat-stroked-button {
+              background: $gray-100;
+              color: $text-secondary;
+              border: 1px solid $border-medium;
+              box-shadow: 0 1px 2px rgba($gray-400, 0.1);
+
+              &:hover {
+                background: $gray-200;
+                color: $text-primary;
+                border-color: $gray-400;
+                transform: translateY(-1px);
+                box-shadow: 0 2px 4px rgba($gray-400, 0.2);
+              }
+            }
+          }
+        }
       }
     }
 
     .form-row {
       display: flex;
-      gap: 16px;
-      margin-bottom: 1.5rem;
+      gap: 20px;
+      margin-bottom: 24px;
+      flex-wrap: wrap; /* Important pour que les champs passent à la ligne */
 
-      .input-group {
-        margin-bottom: 0;
+      mat-form-field {
+        width: 100%; /* Par défaut, pleine largeur */
+      }
+
+      mat-form-field.half-width {
+        flex: 1 1 calc(50% - 10px); /* Prend 50% de la largeur avec gap */
+        min-width: 200px; /* Largeur minimale pour les colonnes */
+      }
+    }
+
+    .preview-section {
+      .preview-cards {
+        display: flex;
+        gap: 16px;
+        margin-top: 16px;
+        flex-wrap: wrap; /* Permet aux cartes de passer à la ligne */
+        justify-content: space-between;
+
+        .preview-card {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 12px 16px;
+          background: linear-gradient(135deg, rgba($success-color, 0.05) 0%, rgba($success-color, 0.1) 100%);
+          border: 1px solid rgba($success-color, 0.2);
+          border-radius: 10px;
+          color: $text-primary;
+          flex: 1 1 calc(50% - 8px); /* Environ 50% de largeur, en tenant compte du gap */
+          min-width: 150px;
+
+          mat-icon {
+            color: $success-color;
+            font-size: 18px;
+          }
+
+          .label {
+            font-size: 0.9rem;
+            color: $text-secondary;
+          }
+          .value {
+            font-size: 1rem;
+            font-weight: 600;
+            color: $success-color;
+          }
+        }
       }
     }
 
     .form-actions {
       display: flex;
-      gap: 12px;
-      margin-top: 2rem;
+      gap: 16px;
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 2px solid $border-light;
+      flex-shrink: 0; /* Empêche les boutons de rétrécir */
 
-      .cancel-btn,
-      .submit-btn {
+      button {
         flex: 1;
-        padding: 12px 16px;
+        padding: 16px 20px;
         border: none;
-        border-radius: 6px;
+        border-radius: 12px;
         font-size: 16px;
-        font-weight: 500;
+        font-weight: 600;
         cursor: pointer;
         display: flex;
         justify-content: center;
         align-items: center;
-        gap: 8px;
-        transition: all 0.2s ease; // ✅ Transition plus rapide
-        line-height: 1.2; // ✅ Hauteur optimisée
-        
-        // ✅ OPTIMISATIONS POUR LA NETTETÉ
+        gap: 10px;
+        transition: all 0.3s ease;
+        line-height: 1.2;
+        position: relative;
+        overflow: hidden;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
 
-        i.material-icons {
-          font-size: 18px;
-          line-height: 1; // ✅ Icônes bien alignées
+        &::before {
+          content: '';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 0;
+          height: 0;
+          border-radius: 50%;
+          background: rgba($text-white, 0.3);
+          transition: width 0.3s ease, height 0.3s ease;
+          transform: translate(-50%, -50%);
+        }
+
+        &:active::before {
+          width: 300px;
+          height: 300px;
+        }
+
+        mat-icon {
+          font-size: 20px;
+          line-height: 1;
+          z-index: 1;
+          position: relative;
+        }
+
+        .mat-spinner {
+          margin-right: 8px;
         }
       }
 
-      .cancel-btn {
-        background-color: transparent;
-        color: $secondary-color;
-        border: 1px solid $secondary-color;
+      .mat-stroked-button {
+        background: linear-gradient(135deg, $gray-100 0%, $gray-200 100%);
+        color: $text-secondary;
+        border: 2px solid $border-medium;
+        box-shadow: 0 2px 4px rgba($gray-400, 0.1);
 
         &:hover {
-          background-color: rgba($secondary-color, 0.1);
-          transform: translateY(-1px);
+          background: linear-gradient(135deg, $gray-200 0%, $gray-300 100%);
+          border-color: $gray-400;
+          color: $text-primary;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba($gray-400, 0.2);
         }
       }
 
-      .submit-btn {
-        background-color: $primary-color;
-        color: white;
+      .mat-raised-button {
+        background: linear-gradient(135deg, $primary-orange 0%, $primary-orange-dark 100%);
+        color: $text-white;
+        border: 2px solid $primary-orange;
+        box-shadow: 0 4px 8px rgba($primary-orange, 0.2);
 
         &:disabled {
-          background-color: $secondary-color;
+          background: linear-gradient(135deg, $gray-300 0%, $gray-400 100%);
+          color: $text-tertiary;
+          border-color: $gray-300;
           cursor: not-allowed;
           transform: none;
+          box-shadow: none;
+
+          &::before {
+            display: none;
+          }
         }
 
         &:hover:not(:disabled) {
-          background-color: darken($primary-color, 8%);
-          transform: translateY(-1px); // ✅ Mouvement plus subtil
-          box-shadow: 0 4px 12px rgba($primary-color, 0.25); // ✅ Ombre plus légère
+          background: linear-gradient(135deg, $primary-orange-dark 0%, darken($primary-orange-dark, 10%) 100%);
+          border-color: $primary-orange-dark;
+          transform: translateY(-3px);
+          box-shadow: 0 6px 20px rgba($primary-orange, 0.3);
+        }
+
+        &:active:not(:disabled) {
+          transform: translateY(-1px);
         }
       }
     }
   }
 }
 
-// Responsive design
+/* ===============================================
+   📱 DESIGN RESPONSIVE
+   =============================================== */
+
 @media (max-width: 600px) {
   .service-dialog {
     max-width: 95vw;
     margin: 10px;
+    border-radius: 12px;
+    max-height: 95vh; /* Ajuste la hauteur max pour les petits écrans */
 
     .dialog-header {
-      padding: 16px;
+      padding: 20px;
 
       h2 {
-        font-size: 1.2rem;
+        font-size: 1.3rem;
 
-        i.material-icons {
-          width: 32px;
-          height: 32px;
+        mat-icon {
+          width: 36px;
+          height: 36px;
           font-size: 18px;
+          padding: 8px;
         }
       }
 
       .close-button {
-        width: 32px;
-        height: 32px;
+        width: 36px;
+        height: 36px;
 
-        i.material-icons {
+        mat-icon {
           font-size: 18px;
         }
       }
     }
 
-    .service-form {
-      padding: 20px;
+    .service-form-compact {
+      padding: 24px;
+      /* Ajuste la hauteur max pour les petits écrans en tenant compte du header et du footer */
+      max-height: calc(95vh - 90px - 80px); /* Ajustez ces valeurs si la hauteur du header/footer change */
 
       .form-row {
         flex-direction: column;
         gap: 0;
 
-        .input-group.half-width {
+        mat-form-field.half-width {
           width: 100%;
-          margin-bottom: 1.5rem;
+          margin-bottom: 20px;
         }
       }
 
       .form-actions {
-        .cancel-btn,
-        .submit-btn {
-          padding: 10px 14px;
-          font-size: 14px;
+        flex-direction: column;
+
+        button {
+          padding: 14px 18px;
+          font-size: 15px;
         }
+      }
+
+      .service-selection-compact,
+      .section-nouveau .action-buttons,
+      .confirmation-section mat-card-actions,
+      .preview-section .preview-cards {
+        flex-direction: column;
+        gap: 12px;
+
+        & > * { /* Cible tous les enfants directs (services, boutons, cartes) */
+            flex: 1 1 100%; /* Prend toute la largeur sur mobile */
+            justify-content: center; /* Centre le contenu des boutons et cartes */
+        }
+      }
+
+      .step-section,
+      .section-nouveau,
+      .confirmation-section,
+      .preview-section {
+        padding: 16px;
       }
     }
   }
 }
 
-// Animation d'entrée optimisée
-@keyframes slideIn {
+/* ===============================================
+   🎭 ANIMATIONS AMÉLIORÉES
+   =============================================== */
+
+@keyframes slideInFadeUp {
   from {
     opacity: 0;
-    transform: translateY(-10px) translateZ(0); // ✅ Mouvement plus subtil
+    transform: translateY(20px) translateZ(0) scale(0.95);
   }
   to {
     opacity: 1;
-    transform: translateY(0) translateZ(0);
+    transform: translateY(0) translateZ(0) scale(1);
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateZ(0);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05) translateZ(0);
+  }
+  70% {
+    transform: scale(0.9) translateZ(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateZ(0);
   }
 }
 
 .service-dialog {
-  animation: slideIn 0.25s ease-out; // ✅ Animation plus rapide
+  animation: slideInFadeUp 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+  .dialog-header h2 mat-icon {
+    animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.2s both;
+  }
 }
 
-// ✅ STYLES GLOBAUX POUR AMÉLIORER LA NETTETÉ
+/* ===============================================
+   ✨ EFFETS SPÉCIAUX
+   =============================================== */
+
+.mat-raised-button[type="submit"] {
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba($text-white, 0.1), transparent);
+    transform: rotate(45deg);
+    transition: all 0.5s ease;
+    opacity: 0;
+  }
+
+  &:hover::after {
+    animation: shine 0.8s ease-out;
+  }
+}
+
+@keyframes shine {
+  0% {
+    left: -100%;
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    left: 100%;
+    opacity: 0;
+  }
+}
+
+/* ===============================================
+   🔧 OPTIMISATIONS GLOBALES
+   =============================================== */
+
 * {
   box-sizing: border-box;
 }
 
-// ✅ Optimisation spécifique pour les icônes Material
-i.material-icons {
+mat-icon {
   font-feature-settings: 'liga';
   -webkit-font-feature-settings: 'liga';
   -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+/* ===============================================
+   ℹ️ SECTION SERVICE EXISTANT  
+   =============================================== */
+
+.service-exists-section {
+  background: rgba($warning-color, 0.05);
+  border-color: rgba($warning-color, 0.3);
+
+  .info-card {
+    background: $bg-white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 16px;
+
+    .info-message {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding: 16px;
+      background: rgba($warning-color, 0.1);
+      border-radius: 10px;
+      border-left: 4px solid $warning-color;
+
+      .info-icon {
+        color: $warning-color;
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
+        margin-top: 2px;
+      }
+
+      p {
+        margin: 0;
+        color: $text-primary;
+        font-weight: 500;
+      }
+    }
+
+    .existing-service {
+      background: $bg-light;
+      border-left: 4px solid $warning-color;
+      padding: 16px;
+      border-radius: 10px;
+      margin: 16px 0;
+
+      strong {
+        color: $text-primary;
+        font-weight: 600;
+      }
+
+      .category {
+        color: $text-secondary;
+        font-size: 0.875rem;
+        margin-left: 8px;
+      }
+
+      p {
+        margin: 8px 0 0 0;
+        color: $text-secondary;
+        font-size: 0.875rem;
+      }
+    }
+
+    .info-note {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 12px;
+      background: rgba($primary-orange, 0.05);
+      border-radius: 10px;
+      margin-top: 16px;
+
+      mat-icon {
+        color: $primary-orange;
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+        margin-top: 2px;
+      }
+
+      span {
+        font-size: 0.875rem;
+        color: $text-secondary;
+        line-height: 1.4;
+      }
+    }
+
+    mat-card-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid $border-light;
+      flex-wrap: wrap;
+
+      button {
+        flex: 1;
+        padding: 10px 16px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        line-height: 1.2;
+
+        mat-icon {
+          font-size: 16px;
+        }
+
+        &.mat-raised-button {
+          background: linear-gradient(135deg, $primary-orange 0%, $primary-orange-dark 100%);
+          color: $text-white;
+          border: 1px solid $primary-orange;
+          box-shadow: 0 2px 4px rgba($primary-orange, 0.2);
+
+          &:hover {
+            background: linear-gradient(135deg, $primary-orange-dark 0%, darken($primary-orange-dark, 10%) 100%);
+            box-shadow: 0 4px 8px rgba($primary-orange, 0.3);
+            transform: translateY(-1px);
+          }
+        }
+
+        &.mat-stroked-button {
+          background: $gray-100;
+          color: $text-secondary;
+          border: 1px solid $border-medium;
+          box-shadow: 0 1px 2px rgba($gray-400, 0.1);
+
+          &:hover {
+            background: $gray-200;
+            color: $text-primary;
+            border-color: $gray-400;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba($gray-400, 0.2);
+          }
+        }
+      }
+    }
+  }
 }

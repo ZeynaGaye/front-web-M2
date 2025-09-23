@@ -1,3 +1,4 @@
+
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { ServiceSalon } from '../../../models/service-salon';
 
@@ -10,6 +11,7 @@ import { SalonService } from '../../services/salon.service';
 import { MatDialog } from '@angular/material/dialog';
 import { ServiceSalonService } from '../../services/service-salon.service';
 import { AddServiceDialogComponent } from '../add-service-dialog/add-service-dialog.component';
+
 
 @Component({
   selector: 'app-mes-services',
@@ -70,7 +72,8 @@ export class MesServicesComponent implements OnInit {
     if (!this.salonId) return;
 
     const dialogRef = this.dialog.open(AddServiceDialogComponent, {
-      width: '500px'
+      width: '500px',
+      data: { salonId: this.salonId }
     });
 
     dialogRef.afterClosed().subscribe(result => {

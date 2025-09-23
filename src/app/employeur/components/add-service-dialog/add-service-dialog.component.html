@@ -1,80 +1,280 @@
 <div class="service-dialog">
   <div class="dialog-header">
     <h2>
-      <i class="material-icons">{{ isEditMode ? 'edit' : 'add_business' }}</i>
+      <mat-icon>{{ isEditMode ? 'edit' : 'add_business' }}</mat-icon>
       {{ isEditMode ? 'Modifier le service' : 'Ajouter un service' }}
     </h2>
     <button type="button" class="close-button" (click)="onCancel()">
-      <i class="material-icons">close</i>
+      <mat-icon>close</mat-icon>
     </button>
   </div>
-  <form [formGroup]="serviceForm" (ngSubmit)="onSubmit()" class="service-form">
-    <div class="input-group">
-      <i class="material-icons">content_cut</i>
-      <input 
-        type="text" 
-        placeholder="Nom du service (ex: Coupe et brushing)" 
-        formControlName="nom"
-        maxlength="100">
-      <small *ngIf="serviceForm.get('nom')?.invalid && serviceForm.get('nom')?.touched">
-        Le nom du service est requis (min 2 caractères)
-      </small>
+
+  <form [formGroup]="serviceForm" (ngSubmit)="onSubmit()" class="service-form-compact">
+
+    <!-- ✅ SÉLECTION SERVICE COMPACT -->
+    <div class="step-section" *ngIf="!estFormulaireDemande">
+      <div class="step-header">
+        <mat-icon>search</mat-icon>
+        <span>1. Choisir un service</span>
+      </div>
+      
+      <div class="service-selection-compact">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Rechercher un service</mat-label>
+          <input matInput formControlName="rechercheQuery" placeholder="Ex: Coupe, Manucure...">
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="select-field">
+          <mat-label>Service prédéfini</mat-label>
+          <mat-select formControlName="servicePredefini" (selectionChange)="onServicePredefiniSelected($event)">
+            <mat-option value="">-- Choisir --</mat-option>
+            <mat-optgroup *ngFor="let groupe of servicesGroupes" [label]="groupe.categorie">
+              <mat-option *ngFor="let service of groupe.services" [value]="service.id">
+                {{service.nom}}
+              </mat-option>
+            </mat-optgroup>
+          </mat-select>
+        </mat-form-field>
+
+        <button type="button" mat-stroked-button class="custom-service-btn" (click)="demanderNouveauService()">
+          <mat-icon>add</mat-icon> Créer un service
+        </button>
+      </div>
     </div>
 
-    <!-- Description -->
-    <div class="input-group">
-      <i class="material-icons">description</i>
+    <!-- ✅ SECTION NOUVEAU SERVICE -->
+    <ng-container *ngIf="estFormulaireDemande">
+      <div class="section-nouveau">
+        <h3 class="section-title">
+          <mat-icon>add_circle_outline</mat-icon>
+          Nouveau service salon personnalisé
+        </h3>
+        <!-- ✅ CHAMP AVEC SUGGESTIONS TEMPS RÉEL -->
+        <div class="service-input-container">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Nom du service</mat-label>
+            <input 
+              matInput 
+              formControlName="nomPersonnalise"
+              placeholder="Ex: Coupe + Brushing premium"
+              maxlength="100"
+              (focus)="afficherSuggestionsTempsReel = true"
+              (blur)="masquerSuggestionsTempsReel()"
+              autocomplete="off">
+            <mat-icon matSuffix>content_cut</mat-icon>
+            <mat-error *ngIf="getFieldErrorMessage('nomPersonnalise')">
+              {{getFieldErrorMessage('nomPersonnalise')}}
+            </mat-error>
+          </mat-form-field>
+          
+          <!-- ✅ SUGGESTIONS EN TEMPS RÉEL -->
+          <div class="suggestions-dropdown" *ngIf="afficherSuggestionsTempsReel && (suggestionsTempsReel.length > 0 || rechercheEnCours)">
+            <div class="suggestions-header">
+              <mat-icon>lightbulb</mat-icon>
+              <span>Suggestions</span>
+              <mat-spinner diameter="16" *ngIf="rechercheEnCours"></mat-spinner>
+            </div>
+            
+            <div class="suggestion-item" 
+                 *ngFor="let suggestion of suggestionsTempsReel"
+                 (click)="selectionnerSuggestionTempsReel(suggestion)">
+              <div class="suggestion-content">
+                <div class="suggestion-name">{{suggestion.nom}}</div>
+                <div class="suggestion-category">{{suggestion.categorie}}</div>
+              </div>
+              <mat-icon>arrow_forward</mat-icon>
+            </div>
+            
+            <div class="no-suggestions" *ngIf="!rechercheEnCours && suggestionsTempsReel.length === 0">
+              <mat-icon>info</mat-icon>
+              <span>Aucune suggestion trouvée</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- ✅ NOUVEAU : Catégorie pour service personnalisé -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Catégorie du service</mat-label>
+          <mat-select formControlName="categorie">
+            <mat-option value="Coiffure">Coiffure</mat-option>
+            <mat-option value="Manucure">Manucure</mat-option>
+            <mat-option value="Pédicure">Pédicure</mat-option>
+            <mat-option value="Soins du visage">Soins du visage</mat-option>
+            <mat-option value="Soins du corps">Soins du corps</mat-option>
+            <mat-option value="Maquillage">Maquillage</mat-option>
+            <mat-option value="Épilation">Épilation</mat-option>
+            <mat-option value="Massage">Massage</mat-option>
+            <mat-option value="Autre">Autre</mat-option>
+          </mat-select>
+          <mat-icon matSuffix>category</mat-icon>
+          <mat-error *ngIf="getFieldErrorMessage('categorie')">
+            {{getFieldErrorMessage('categorie')}}
+          </mat-error>
+        </mat-form-field>
+        <div class="action-buttons" *ngIf="aServicesPredefinis">
+          <button type="button" mat-stroked-button (click)="annulerDemandeNouveauService()">
+            <mat-icon>arrow_back</mat-icon>
+            Retour à la sélection
+          </button>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ✅ SECTION CONFIRMATION - MODIFIÉE -->
+    <div class="confirmation-section" *ngIf="enAttenteConfirmation && suggestionService">
+      <h3 class="section-title">
+        <mat-icon>help_outline</mat-icon>
+        Suggestion de service
+      </h3>
+      <mat-card class="suggestion-card">
+        <mat-card-content>
+          <p>Il semblerait que vous vouliez ajouter : <strong>"{{ nomOriginal }}"</strong></p>
+          <p>Ne serait-ce pas plutôt :</p>
+          <div class="suggested-service">
+            <strong>{{ suggestionService.nom }}</strong> 
+            <span class="category">({{ suggestionService.categorie }})</span>
+            <p *ngIf="suggestionService.description">{{ suggestionService.description }}</p>
+          </div>
+        </mat-card-content>
+        <!-- ✅ ACTIONS MODIFIÉES - Suppression du bouton "Créer le mien" -->
+        <mat-card-actions>
+          <button type="button" mat-raised-button color="primary" (click)="utiliserSuggestion()">
+            <mat-icon>check_circle</mat-icon>
+            Utiliser cette suggestion
+          </button>
+          <button type="button" mat-stroked-button (click)="annulerSuggestion()">
+            <mat-icon>cancel</mat-icon>
+            Annuler et recommencer
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+
+    <!-- ✅ NOUVEAU : SECTION INFORMATION SERVICE EXISTANT -->
+    <div class="service-exists-section" *ngIf="serviceExisteDeja && serviceExistantTrouve">
+      <h3 class="section-title">
+        <mat-icon>info</mat-icon>
+        Service déjà existant
+      </h3>
+      <mat-card class="info-card">
+        <mat-card-content>
+          <div class="info-message">
+            <mat-icon class="info-icon">warning</mat-icon>
+            <p>{{ messageServiceExistant }}</p>
+          </div>
+          <div class="existing-service">
+            <strong>{{ serviceExistantTrouve.nom }}</strong> 
+            <span class="category">({{ serviceExistantTrouve.categorie }})</span>
+            <p *ngIf="serviceExistantTrouve.description">{{ serviceExistantTrouve.description }}</p>
+          </div>
+          <div class="info-note">
+            <mat-icon>lightbulb</mat-icon>
+            <span>Pour éviter les doublons, ce service n'a pas été créé. Vous pouvez utiliser le service existant ou modifier votre saisie.</span>
+          </div>
+        </mat-card-content>
+        <mat-card-actions>
+          <button type="button" mat-raised-button color="primary" (click)="utiliserServiceExistant()">
+            <mat-icon>check_circle</mat-icon>
+            Utiliser le service existant
+          </button>
+          <button type="button" mat-stroked-button (click)="retourSaisie()">
+            <mat-icon>edit</mat-icon>
+            Modifier ma saisie
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+    
+    <!-- ✅ DESCRIPTION -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Description du service</mat-label>
       <textarea 
-        placeholder="Description du service..." 
+        matInput 
         formControlName="description"
-        maxlength="300"
+        placeholder="Décrivez votre service salon en détail..."
+        maxlength="500"
         rows="3">
       </textarea>
-      <small *ngIf="serviceForm.get('description')?.invalid && serviceForm.get('description')?.touched">
-        La description est requise (min 5 caractères)
-      </small>
-    </div>
+      <mat-icon matSuffix>description</mat-icon>
+      <mat-hint align="end">{{serviceForm.get('description')?.value?.length || 0}}/500</mat-hint>
+      <mat-error *ngIf="getFieldErrorMessage('description')">
+        {{getFieldErrorMessage('description')}}
+      </mat-error>
+    </mat-form-field>
 
-    <!-- Prix et Durée -->
+    <!-- ✅ PRIX ET DURÉE -->
     <div class="form-row">
-      <div class="input-group half-width">
-        <i class="material-icons">AFA</i>
+      <mat-form-field appearance="outline" class="half-width">
+        <mat-label>Prix du service (CFA)</mat-label>
         <input 
+          matInput 
           type="number" 
-          placeholder="Prix en cfa" 
           formControlName="prix"
-          min="0.01"
-          step="0.01">
-        <small *ngIf="serviceForm.get('prix')?.invalid && serviceForm.get('prix')?.touched">
-          Prix requis 
-        </small>
-      </div>
-
-      <div class="input-group half-width">
-        <i class="material-icons">schedule</i>
-        <input 
-          type="number" 
-          placeholder="Durée en minutes" 
-          formControlName="dureeEnMinutes"
+          placeholder="20000"
           min="1"
-          max="600">
-        <small *ngIf="serviceForm.get('dureeEnMinutes')?.invalid && serviceForm.get('dureeEnMinutes')?.touched">
-          Durée requise (min 1 minute)
-        </small>
+          step="1000">
+        <mat-icon matSuffix>payments</mat-icon>
+        <mat-error *ngIf="getFieldErrorMessage('prix')">
+          {{getFieldErrorMessage('prix')}}
+        </mat-error>
+      </mat-form-field>
+    </div>
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Durée du service</mat-label>
+      <input 
+        matInput 
+        type="number" 
+        formControlName="dureeEnMinutes"
+        placeholder="60"
+        min="15"
+        max="480"
+        step="15">
+      <mat-icon matSuffix>schedule</mat-icon>
+      <mat-hint>Durée en minutes (15 min minimum)</mat-hint>
+      <mat-error *ngIf="getFieldErrorMessage('dureeEnMinutes')">
+        {{getFieldErrorMessage('dureeEnMinutes')}}
+      </mat-error>
+    </mat-form-field>
+
+
+    <!-- ✅ APERÇU -->
+    <div class="preview-section" *ngIf="getPrixFormate() || getFormattedDuration()">
+      <h3 class="section-title">
+        <mat-icon>visibility</mat-icon>
+        Aperçu du service
+      </h3>
+      
+      <div class="preview-cards">
+        <div class="preview-card" *ngIf="getPrixFormate()">
+          <mat-icon>account_balance_wallet</mat-icon>
+          <span class="label">Tarif :</span>
+          <span class="value">{{getPrixFormate()}}</span>
+        </div>
+        
+        <div class="preview-card" *ngIf="getFormattedDuration()">
+          <mat-icon>access_time</mat-icon>
+          <span class="label">Durée :</span>
+          <span class="value">{{getFormattedDuration()}}</span>
+        </div>
       </div>
     </div>
 
-    <!-- Boutons -->
+    <!-- ✅ ACTIONS DU FORMULAIRE -->
     <div class="form-actions">
-      <button type="button" class="cancel-btn" (click)="onCancel()">
-        <i class="material-icons">cancel</i>
+      <button type="button" mat-stroked-button (click)="onCancel()">
+        <mat-icon>cancel</mat-icon>
         Annuler
       </button>
       
-      <button type="submit" class="submit-btn" [disabled]="!serviceForm.valid">
-        <i class="material-icons">{{ isEditMode ? 'save' : 'add' }}</i>
-        {{ isEditMode ? 'Enregistrer' : 'Ajouter' }}
-        <!-- {{ !serviceForm.valid ? ' (INVALIDE)' : ' (OK)' }} -->
+      <button 
+        type="submit" 
+        mat-raised-button 
+        color="primary" 
+        [disabled]="!isFormValid() || enCoursCreation">
+        <mat-spinner diameter="20" *ngIf="enCoursCreation"></mat-spinner>
+        <mat-icon *ngIf="!enCoursCreation">{{ isEditMode ? 'save' : 'add' }}</mat-icon>
+        {{ isEditMode ? 'Enregistrer' : 'Ajouter le service' }}
       </button>
     </div>
 

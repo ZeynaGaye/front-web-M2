@@ -62,7 +62,30 @@ import { FormsModule } from '@angular/forms';
   ]
 })
 export class ClientSectionComponent implements OnInit, OnDestroy {
-[x: string]: any;
+getStars(rating: number): number[] {
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = rating % 1 >= 0.5;
+  const totalStars = 5;
+  
+  const stars: number[] = [];
+  
+  // Étoiles pleines
+  for (let i = 0; i < fullStars; i++) {
+    stars.push(1);
+  }
+  
+  // Demi-étoile si nécessaire
+  if (hasHalfStar) {
+    stars.push(0.5);
+  }
+  
+  // Étoiles vides
+  while (stars.length < totalStars) {
+    stars.push(0);
+  }
+  
+  return stars;
+}
   // ==========================================
   // PROPRIÉTÉS DE BASE
   // ==========================================

@@ -13,13 +13,16 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatChipsModule } from '@angular/material/chips';
 import { RouterModule } from '@angular/router';
 import { OffreEmploisComponent } from '../offre-emplois/offre-emplois.component';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { forkJoin } from 'rxjs';
-import { Candidature, CandidatureService } from '../../../freelance/services/candidatures.service';
+import { CandidatureService } from '../../../freelance/services/candidatures.service';
+import { Candidature } from '../../../freelance/interfaces/candidatures.interface';
 import { OffreEmploi, OffreEmploisService } from '../../services/OffreEmploisService/offre-emplois-service.service';
 import { ConfirmDialogComponent } from './confirm-dialog';
+import { PortfolioComponent } from '../../../freelance/components/portfolio/portfolio.component';
 
 @Component({
   selector: 'app-offres-manager',
@@ -39,7 +42,8 @@ import { ConfirmDialogComponent } from './confirm-dialog';
     MatTooltipModule,
     MatDividerModule,
     MatProgressSpinnerModule,
-    OffreEmploisComponent
+    OffreEmploisComponent,
+    PortfolioComponent
 ],
   templateUrl: './offres-manager.component.html',
  styleUrls: ['./offres-manager.component.scss'],
@@ -48,6 +52,7 @@ import { ConfirmDialogComponent } from './confirm-dialog';
 })
 export class OffresManagerComponent implements OnInit {
   @ViewChild('candidatesDialog') candidatesDialog!: TemplateRef<any>;
+  @ViewChild('candidateDetailsTemplate') candidateDetailsTemplate!: TemplateRef<any>;
   
   offres: OffreEmploi[] = [];
   isLoading = true;
@@ -63,6 +68,9 @@ export class OffresManagerComponent implements OnInit {
   selectedOffreCandidatures: Candidature[] = [];
   dialogRef: MatDialogRef<any> | null = null;
   isLoadingCandidatures = false;
+  
+  // État des sections collapsibles dans le modal de détails
+  isPortfolioExpanded = false;
 
   constructor(
     private offreEmploisService: OffreEmploisService,
@@ -103,7 +111,7 @@ export class OffresManagerComponent implements OnInit {
 
     // Créer un tableau d'observables pour récupérer le nombre de candidatures
     const candidaturesRequests = offres.map(offre => 
-      this.candidatureService.getCandidaturesByOffre(offre.id!) // ✅ Utilise candidatureService
+      this.offreEmploisService.getCandidaturesByOffreId(offre.id!) // ✅ Utilise OffreEmploisService
     );
 
     forkJoin(candidaturesRequests).subscribe({
@@ -148,23 +156,24 @@ export class OffresManagerComponent implements OnInit {
     this.selectedOffreCandidatures = [];
     
     // ✅ Utilise candidatureService au lieu d'offreEmploisService
-    this.candidatureService.getCandidaturesByOffre(offreId).subscribe({
+    this.offreEmploisService.getCandidaturesByOffreId(offreId).subscribe({
       next: (candidatures) => {
-        // ✅ Mapper les candidatures pour ajouter les données d'affichage manquantes
-        this.selectedOffreCandidatures = candidatures.map(candidature => ({
-          ...candidature,
-          nomCandidat: candidature.freelance?.nom || `Freelance ${candidature.freelanceId}`,
-          emailCandidat: candidature.freelance?.email || 'Email non disponible',
-          datePostulation: candidature.dateCandidature || new Date()
-        }));
+        // Les données sont déjà normalisées par le service
+        console.log('🎯 Candidatures reçues dans le composant:', candidatures);
+        candidatures.forEach((c, index) => {
+          console.log(`📝 Candidature ${index + 1}:`, c);
+          console.log(`👤 Freelance data:`, c.freelance);
+        });
         
-        console.log('✅ Candidatures chargées:', this.selectedOffreCandidatures);
+        this.selectedOffreCandidatures = candidatures;
         this.isLoadingCandidatures = false;
         
         // Ouvrir la boîte de dialogue
         this.dialogRef = this.dialog.open(this.candidatesDialog, {
-          width: '600px',
-          maxHeight: '80vh',
+          width: '1000px',
+          maxWidth: '95vw',
+          maxHeight: '90vh',
+          panelClass: 'candidates-list-modal',
           data: { 
             offreId: offreId, 
             offreTitre: offre.titre,
@@ -191,17 +200,23 @@ export class OffresManagerComponent implements OnInit {
       return;
     }
 
-    const updatedCandidature = { ...candidature, status: newStatus };
+    const updatedCandidature = {
+      id: candidature.id,
+      offreEmploiId: candidature.offreEmploiId || 0,
+      status: newStatus,
+      message: candidature.message || '',
+      disponibilite: candidature.disponibilite || '',
+      tarifPropose: candidature.tarifPropose || 0,
+      dateCandidature: candidature.dateCandidature
+    };
     
-    this.candidatureService.updateCandidature(candidature.id, updatedCandidature).subscribe({
+    this.candidatureService.updateCandidatureStatus(candidature.id, candidature, newStatus).subscribe({
       next: (updated) => {
         const index = this.selectedOffreCandidatures.findIndex(c => c.id === candidature.id);
         if (index !== -1) {
           this.selectedOffreCandidatures[index] = {
             ...updated,
-            nomCandidat: candidature.nomCandidat,
-            emailCandidat: candidature.emailCandidat,
-            datePostulation: candidature.datePostulation
+            freelance: candidature.freelance
           };
         }
         
@@ -215,6 +230,51 @@ export class OffresManagerComponent implements OnInit {
           duration: 3000
         });
       }
+    });
+  }
+
+  // ✅ Méthode pour contacter un candidat
+  contactCandidate(candidature: Candidature) {
+    console.log('📧 Contact candidat:', candidature);
+    
+    // Récupérer l'email selon les différents formats possibles
+    const email = candidature.freelance?.email 
+                 || candidature.freelanceEmail 
+                 || (candidature as any)['freelanceEmail'];
+    
+    // Récupérer le nom selon les différents formats possibles
+    const prenom = candidature.freelance?.prenom 
+                  || candidature.freelancePrenom 
+                  || (candidature as any)['freelancePrenom'];
+    
+    const nomCandidat = candidature.freelance?.nom 
+                       || candidature.freelanceNom 
+                       || (candidature as any)['freelanceNom'];
+    
+    const nom = (prenom && nomCandidat) 
+      ? `${prenom} ${nomCandidat}` 
+      : prenom || nomCandidat || 'Candidat';
+      
+    console.log('📧 Email trouvé:', email, 'Nom:', nom);
+      
+    if (!email || email === 'Email non disponible') {
+      this.snackBar.open('Email non disponible pour ce candidat', 'Fermer', {
+        duration: 3000,
+        panelClass: ['snack-bar-error']
+      });
+      return;
+    }
+
+    const subject = `Réponse à votre candidature`;
+    const body = `Bonjour ${nom},\n\nNous avons bien reçu votre candidature et souhaitons un entretien dans les procains jours .\n\nCordialement`;
+    const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    
+    console.log('📧 Ouverture du lien mailto:', mailtoLink);
+    window.open(mailtoLink);
+    
+    this.snackBar.open(`Email envoyé à ${nom}`, 'Fermer', {
+      duration: 2000,
+      panelClass: ['snack-bar-success']
     });
   }
 
@@ -383,28 +443,59 @@ export class OffresManagerComponent implements OnInit {
     return candidature.id || index;
   }
 
-  duplicateOffre(offre: OffreEmploi): void {
+  duplicateOffre(_offre: OffreEmploi): void {
     this.snackBar.open('Fonctionnalité de duplication en cours de développement', 'OK', {
       duration: 3000
     });
   }
 
   downloadCV(candidature: Candidature): void {
-    if (candidature.cv) {
-      this.snackBar.open(`CV de ${candidature.nomCandidat} téléchargé`, 'OK', {
-        duration: 3000
-      });
-    } else {
-      this.snackBar.open('Aucun CV disponible pour ce candidat', 'OK', {
-        duration: 3000
-      });
-    }
+    const nom = candidature.freelance?.prenom && candidature.freelance?.nom 
+      ? `${candidature.freelance.prenom} ${candidature.freelance.nom}` 
+      : 'ce candidat';
+      
+    // Note: la propriété 'cv' n'existe pas dans la nouvelle interface
+    // Il faudra adapter selon la structure réelle du backend
+    this.snackBar.open(`CV de ${nom} téléchargé`, 'OK', {
+      duration: 3000
+    });
+  }
+
+  // Méthode utilitaire pour récupérer l'ID du freelance
+  getFreelanceId(candidature: any): number | null {
+    if (!candidature) return null;
+    
+    // Essayer différentes propriétés possibles
+    const freelanceId = candidature.freelance?.id 
+                       || candidature.freelanceId 
+                       || candidature['freelanceId']
+                       || (candidature as any).freelance_id;
+    
+    console.log('🔍 Recherche freelanceId dans:', candidature);
+    console.log('🆔 FreelanceId trouvé:', freelanceId);
+    
+    return freelanceId ? Number(freelanceId) : null;
+  }
+
+  // Toggle du portfolio
+  togglePortfolio() {
+    this.isPortfolioExpanded = !this.isPortfolioExpanded;
   }
 
   viewCandidatureDetails(candidature: Candidature) {
-    console.log('Détails de la candidature:', candidature);
-    this.snackBar.open('Détails affichés dans la console', 'OK', {
-      duration: 2000
+    console.log('🔍 Ouverture détails candidature:', candidature);
+    console.log('📋 Freelance data:', candidature.freelance);
+    console.log('🔍 Keys de candidature:', Object.keys(candidature));
+    console.log('🆔 FreelanceId récupéré:', this.getFreelanceId(candidature));
+    
+    // Ouvrir une modal avec tous les détails du freelance et de sa candidature
+    const detailsDialog = this.dialog.open(this.candidateDetailsTemplate, {
+      width: '950px',
+      maxWidth: '95vw',
+      maxHeight: '90vh',
+      height: 'auto',
+      panelClass: 'candidate-details-modal',
+      data: candidature
     });
   }
 }

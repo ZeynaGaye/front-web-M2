@@ -20,8 +20,23 @@ export enum StatusCandidature {
     status?: StatusCandidature | string; // Statut de la candidature
     
     // Relations (IDs uniquement côté frontend)
-    freelanceId?: number;              // ID du freelance candidat
+    freelanceId?: any;                 // ID du freelance candidat
     offreEmploiId: number;            // ID de l'offre d'emploi (obligatoire)
+    
+    // Champs pour compatibilité avec l'ancien service
+    nomCandidat?: any;                 // Nom du candidat (pour affichage)
+    emailCandidat?: any;               // Email du candidat (pour affichage)
+    telCandidat?: any;                 // Téléphone du candidat (pour affichage)
+    datePostulation?: any;             // Date de postulation (alias de dateCandidature)
+    cv?: any;                          // CV du candidat
+    
+    // Nouvelles propriétés du backend
+    freelanceNom?: string;             // Nom du freelance
+    freelancePrenom?: string;          // Prénom du freelance
+    freelanceEmail?: string;           // Email du freelance
+    freelanceTelephone?: string;       // Téléphone du freelance
+    freelanceCompetences?: string;     // Compétences du freelance
+    freelanceExperience?: string;      // Expérience du freelance
     
     // Données du freelance (dénormalisées pour l'affichage)
     freelance?: {
@@ -50,6 +65,10 @@ export enum StatusCandidature {
     // Champs calculés côté frontend
     isNew?: boolean;                   // Candidature récente (< 24h)
     responseTime?: string;             // Temps de réponse formaté
+    
+    // Propriétés pour l'interface améliorée (compatibilité avec l'ancien service)
+    isLue?: boolean;                   // Candidature lue ou non
+    isNouvelle?: boolean;              // Candidature nouvelle
     
     // Métadonnées
     dateCreation?: Date;               // Date de création

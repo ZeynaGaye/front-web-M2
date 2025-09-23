@@ -14,8 +14,9 @@
   import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
   import { ReactiveFormsModule } from '@angular/forms';
   import { RouterModule } from '@angular/router';
-  import { DragDropDirective } from '../../../freelanca/directives/drag-drop/drag-drop.directive';
+
   import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { DragDropDirective } from '../../directives/drag-drop/drag-drop.directive';
 
   @Component({
     selector: 'app-add-portfolio-item',

@@ -1,0 +1,269 @@
+<div class="freelance-detail-dialog">
+  <div class="dialog-header">
+    <button mat-icon-button class="close-button" (click)="closeDialog()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <div class="dialog-content" *ngIf="freelance; else loading" (click)="$event.stopPropagation()">
+    <div class="freelance-hero" @fadeIn>
+      <div class="freelance-cover">
+        <div class="freelance-avatar">
+          <img [src]="freelance.profileImage || 'assets/images/freelance-avatar.jpg'"
+               [alt]="freelance.prenom + ' ' + freelance.nom"
+               (error)="onProfileImageError($event)">
+        </div>
+
+        <div class="freelance-info-overlay">
+          <div class="freelance-name-section">
+            <h2 class="freelance-name">{{ freelance.prenom }} {{ freelance.nom }}</h2>
+            <p class="freelance-specialty">{{ freelance.profession }}</p>
+          </div>
+
+          <div class="freelance-rating">
+            <span class="stars">
+              <i class="fas fa-star" *ngFor="let star of getStarArray(freelance.rating)"></i>
+              <i class="fas fa-star-half-alt" *ngIf="hasHalfStar(freelance.rating)"></i>
+            </span>
+            <span class="rating-value">{{ freelance.rating || 0 }}</span>
+            <span class="review-count">({{ freelance.reviews || 0 }} avis)</span>
+          </div>
+
+          <div class="freelance-meta">
+            <p class="freelance-location">
+              <mat-icon>location_on</mat-icon>
+              {{ freelance.ville || freelance.adresse }}
+            </p>
+            </div>
+        </div>
+      </div>
+
+      <div class="quick-actions">
+        <!-- <button mat-raised-button color="primary" class="contact-btn" (click)="contactFreelance()">
+          <mat-icon>message</mat-icon>
+          Contacter
+        </button> -->
+      </div>
+    </div>
+
+    <div class="navigation-tabs freelance-tabs">
+      <div class="tab" [class.active]="activeTab === 'presentation'" (click)="setActiveTab('presentation'); $event.stopPropagation()">
+        <mat-icon>person</mat-icon>
+        <span>Profil</span>
+      </div>
+      <div class="tab" [class.active]="activeTab === 'services'" (click)="setActiveTab('services'); $event.stopPropagation()">
+        <mat-icon>work</mat-icon>
+        <span>Services</span>
+      </div>
+      <div class="tab" [class.active]="activeTab === 'portfolio'" (click)="setActiveTab('portfolio'); $event.stopPropagation()">
+        <mat-icon>photo_library</mat-icon>
+        <span>Portfolio</span>
+      </div>
+      <div class="tab" [class.active]="activeTab === 'reviews'" (click)="setActiveTab('reviews'); $event.stopPropagation()">
+        <mat-icon>star</mat-icon>
+        <span>Avis</span>
+      </div>
+    </div>
+
+    <div class="tab-content" @slideIn>
+      <div *ngIf="activeTab === 'presentation'" class="presentation-tab">
+
+        <div class="info-section">
+          <h3>Contact</h3>
+          <div class="info-grid">
+            <!-- <div class="info-item">
+              <mat-icon>person</mat-icon>
+              <div class="info-text">
+                <h4>Nom Complet</h4>
+                <p>{{ freelance.prenom }} {{ freelance.nom }}</p>
+              </div> -->
+            <!-- </div> -->
+            <!-- <div class="info-item" *ngIf="freelance.adresse">
+              <mat-icon>location_on</mat-icon> -->
+              <!-- <div class="info-text">
+                <h4>Adresse</h4>
+                <p>{{ freelance.adresse }}, {{ freelance.ville }}</p>
+              </div> -->
+            <!-- </div> -->
+            <div class="info-item" *ngIf="freelance.telephone">
+              <mat-icon>phone</mat-icon>
+              <div class="info-text">
+                <h4>Téléphone</h4>
+                <p>{{ freelance.telephone }}</p>
+              </div>
+            </div>
+            <div class="info-item" *ngIf="freelance.email">
+              <mat-icon>email</mat-icon>
+              <div class="info-text">
+                <h4>Email</h4>
+                <p>{{ freelance.email }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-section">
+          <h3>À propos de moi</h3>
+          <p class="freelance-description">
+            {{ freelance.competences || 'Ce freelance n\'a pas encore ajouté de description ou de compétences générales.' }}
+          </p>
+        </div>
+
+        <div class="info-section" *ngIf="freelance.experiences || freelance.competences">
+          <h3>Expérience et Compétences</h3>
+          <div class="info-grid">
+            <div class="info-item" *ngIf="freelance.experiences">
+              <mat-icon>history_edu</mat-icon>
+              <div class="info-text">
+                <h4>Expérience</h4>
+                <p>{{ formatExperience(freelance.experiences) }}</p>
+              </div>
+            </div>
+            <div class="info-item" *ngIf="freelance.competences">
+              <mat-icon>verified</mat-icon>
+              <div class="info-text">
+                <h4>Compétences Spécifiques</h4>
+                <p>{{ freelance.competences }}</p>
+                </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div *ngIf="activeTab === 'services'" class="services-tab">
+        <h3>Mes services</h3>
+        <div *ngIf="isLoadingServices" class="loading-spinner">
+          <mat-spinner diameter="40"></mat-spinner>
+          <p>Chargement des services...</p>
+        </div>
+        <div *ngIf="!isLoadingServices && services.length === 0" class="empty-state">
+          <mat-icon>spa</mat-icon>
+          <p>Aucun service n'est disponible pour le moment.</p>
+        </div>
+        <div *ngIf="!isLoadingServices && services.length > 0" class="services-grid freelance-services">
+          <div class="service-card freelance-service" *ngFor="let service of services" @serviceAnimation>
+            <div class="service-content">
+              <div class="service-header">
+                <h4 class="service-name">{{ service.nom }}</h4>
+                <span class="service-category">{{ service.categorie }}</span>
+              </div>
+              <div class="service-details">
+                <div class="service-duration">
+                  <mat-icon>schedule</mat-icon>
+                  <span>{{ formatDuration(service.dureeEnMinutes) }}</span>
+                </div>
+                <div class="service-price">
+                  <span>{{ formatPrice(service.prixMin) }} - {{ formatPrice(service.prixMax) }}</span>
+                </div>
+              </div>
+              <p class="service-description" *ngIf="service.description">
+                {{ service.description }}
+              </p>
+              <div class="service-options">
+                <span class="location-option" *ngIf="service.typeIntervention === 'DOMICILE' || service.typeIntervention === 'MIXTE'">
+                  <i class="fas fa-home"></i> À domicile
+                </span>
+                <span class="location-option" *ngIf="service.typeIntervention === 'SALON' || service.typeIntervention === 'MIXTE'">
+                  <i class="fas fa-store"></i> En salon
+                </span>
+                  <span class="location-option" *ngIf="service.typeIntervention === 'SALON' || service.typeIntervention === 'MIXTE'">
+                  <i class="fas fa-store"></i> Deplacement inclu
+                </span>
+              </div>
+               <span class="location-option displacement-info" 
+                  [ngClass]="service.deplacementInclus ? 'displacement-included' : 'displacement-not-included'">
+              <i class="fas" [ngClass]="service.deplacementInclus ? 'fa-car' : 'fa-times-circle'"></i>
+              {{ service.deplacementInclus ? 'Déplacement inclus' : 'Déplacement non inclus' }}
+            </span>
+              <!-- ✅ NOUVEAU: Disponibilités weekend et soirée si disponibles -->
+              <span class="availability-option" *ngIf="service.disponibleWeekend">
+                <i class="fas fa-calendar-weekend"></i> Disponible weekend
+              </span>
+              <span class="availability-option" *ngIf="service.disponibleSoir">
+                <i class="fas fa-moon"></i> Disponible soirée
+              </span>
+              <div class="service-actions">
+                <button mat-raised-button color="primary" class="book-button" (click)="bookService(service); ">
+                  <mat-icon>event_available</mat-icon>
+                  Réserver
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="activeTab === 'portfolio'" class="portfolio-tab">
+        <app-portfolio
+          [clientMode]="true"
+          [freelanceId]="freelanceId">
+        </app-portfolio>
+      </div>
+
+      <div *ngIf="activeTab === 'reviews'" class="reviews-tab">
+        <div class="reviews-header">
+          <h3>Avis clients</h3>
+          <div class="rating-summary" *ngIf="recentAvis.length > 0">
+            <div class="average-rating">
+              <span class="rating-value">{{ getAverageRating() }}</span>
+              <div class="stars">{{ formatStars(getAverageRating()) }}</div>
+            </div>
+            <span class="review-count">{{ getTotalReviews() }} avis</span>
+          </div>
+        </div>
+
+        <!-- Chargement des avis -->
+        <div *ngIf="isLoadingAvis" class="loading-container">
+          <mat-spinner diameter="40"></mat-spinner>
+          <p>Chargement des avis...</p>
+        </div>
+
+        <!-- Liste des avis -->
+        <div *ngIf="!isLoadingAvis && recentAvis.length > 0" class="reviews-list">
+          <div class="review-item" *ngFor="let avis of recentAvis">
+            <div class="review-header">
+              <div class="reviewer-info">
+                <div class="reviewer-details">
+                  <h4>{{ avis.nomClient || 'Client' }}</h4>
+                  <div class="service-info" *ngIf="avis.nomService">
+                    <mat-icon>work</mat-icon>
+                    {{ avis.nomService }}
+                  </div>
+                </div>
+              </div>
+              <div class="review-rating">
+                <div class="stars">{{ formatStars(avis.note) }}</div>
+                <small>{{ getRelativeTime(avis.dateCreation || avis.dateAvis) }}</small>
+              </div>
+            </div>
+
+            <div class="review-content" *ngIf="avis.commentaire">
+              <p class="review-comment">"{{ avis.commentaire }}"</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Aucun avis -->
+        <div *ngIf="!isLoadingAvis && recentAvis.length === 0" class="empty-state">
+          <mat-icon>star_border</mat-icon>
+          <p>Aucun avis disponible pour le moment.</p>
+          <p style="font-size: 0.9em; margin-top: 10px; color: #666;">Soyez le premier à laisser un avis après avoir utilisé les services de ce freelance !</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #loading>
+    <div class="loading-container">
+      <mat-spinner diameter="60"></mat-spinner>
+      <p>Chargement des informations du freelance...</p>
+    </div>
+  </ng-template>
+
+  <div *ngIf="errorMessage" class="error-message">
+    <mat-icon>error</mat-icon>
+    <p>{{ errorMessage }}</p>
+    <button mat-raised-button color="primary" (click)="closeDialog()">Fermer</button>
+  </div>
+</div>

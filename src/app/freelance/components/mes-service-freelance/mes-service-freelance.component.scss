@@ -1,0 +1,1732 @@
+// 🎨 Palette de couleurs moderne et sophistiquée
+@use 'sass:map';
+
+// Palette principale - Orange coral élégant
+$primary-palette: (
+  main: #F5A393,
+  lighter: #ffeee9,
+  darker: #f37e63,
+  text: #ffffff
+);
+
+// Palette complémentaire - Gris bleu sophistiqué
+$secondary-palette: (
+  main: #A4B1BD,
+  lighter: #e8edf1,
+  darker: #7a8892,
+  text: #ffffff
+);
+
+// Palette neutre moderne
+$neutral-palette: (
+  main: #64748b,
+  lighter: #f1f5f9,
+  darker: #334155,
+  text: #000000
+);
+
+// Variables de couleurs
+$white: #ffffff;
+$text-dark: #1e293b;
+$text-light: #64748b;
+$text-muted: #94a3b8;
+$bg-light: #f8fafc;
+$bg-section: #f1f5f9;
+$border-color: #e2e8f0;
+
+// Couleurs principales
+$primary: map.get($primary-palette, main);
+$primary-light: map.get($primary-palette, lighter);
+$primary-dark: map.get($primary-palette, darker);
+$primary-text: map.get($primary-palette, text);
+
+$secondary: map.get($secondary-palette, main);
+$secondary-light: map.get($secondary-palette, lighter);
+$secondary-dark: map.get($secondary-palette, darker);
+$secondary-text: map.get($secondary-palette, text);
+
+$neutral: map.get($neutral-palette, main);
+$neutral-light: map.get($neutral-palette, lighter);
+$neutral-dark: map.get($neutral-palette, darker);
+
+// Couleurs utilitaires modernes
+$success-color: #059669;
+$success-light: #ecfdf5;
+$warning-color: #d97706;
+$warning-light: #fffbeb;
+$error-color: #dc2626;
+$error-light: #fef2f2;
+
+// Variables de design
+$border-radius: 16px;
+$border-radius-sm: 8px;
+$border-radius-lg: 20px;
+$shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+$shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+$shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+$shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+// ===== CONTENEUR PRINCIPAL MODERNE =====
+.services-container {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  background: linear-gradient(135deg, $bg-light 0%, lighten($secondary-light, 2%) 100%);
+  min-height: 100vh;
+
+  // ===== HEADER SOPHISTIQUÉ =====
+  .header {
+    text-align: center;
+    margin-bottom: 3rem;
+    padding: 3rem 2rem;
+    background: linear-gradient(135deg, 
+      rgba($primary, 0.08) 0%, 
+      rgba($secondary, 0.05) 50%,
+      rgba($primary, 0.03) 100%);
+    border-radius: $border-radius-lg;
+    border: 1px solid rgba($secondary, 0.15);
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, $primary 0%, $secondary 100%);
+    }
+
+    .header-icon {
+      margin-bottom: 1.5rem;
+      
+      mat-icon {
+        font-size: 4rem;
+        height: 4rem;
+        width: 4rem;
+        color: $primary;
+        background: linear-gradient(135deg, rgba($primary, 0.15) 0%, rgba($primary, 0.25) 100%);
+        border-radius: $border-radius;
+        padding: 1rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+    }
+
+    h2 {
+      color: $text-dark;
+      font-size: 2.5rem;
+      font-weight: 800;
+      margin: 0 0 1rem 0;
+      letter-spacing: -0.025em;
+      background: linear-gradient(135deg, $text-dark 0%, $secondary-dark 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      color: $text-light;
+      font-size: 1.2rem;
+      margin: 0;
+      font-weight: 500;
+      max-width: 600px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+  }
+
+  // ===== STATISTIQUES ÉLÉGANTES =====
+  .stats-section {
+    margin-bottom: 3rem;
+
+    .stats-card {
+      background: linear-gradient(135deg, $white 0%, lighten($secondary-light, 3%) 100%);
+      border-radius: $border-radius;
+      padding: 2rem;
+      box-shadow: $shadow;
+      border: 1px solid rgba($secondary, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+
+      .stats-icon {
+        mat-icon {
+          font-size: 3rem;
+          height: 3rem;
+          width: 3rem;
+          color: $primary;
+          background: linear-gradient(135deg, rgba($primary, 0.1) 0%, rgba($primary, 0.2) 100%);
+          border-radius: $border-radius-sm;
+          padding: 0.8rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+      }
+
+      .stats-content {
+        flex: 1;
+
+        .stats-title {
+          color: $text-dark;
+          font-weight: 700;
+          font-size: 1.3rem;
+          margin-bottom: 0.5rem;
+        }
+
+        .stats-message {
+          color: $text-light;
+          font-size: 1.1rem;
+          font-weight: 500;
+        }
+      }
+    }
+  }
+
+  // ===== ÉTATS DE CHARGEMENT ET ERREUR MODERNES =====
+  .loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 5rem 2rem;
+    background: linear-gradient(135deg, $white 0%, lighten($secondary-light, 2%) 100%);
+    border-radius: $border-radius-lg;
+    box-shadow: $shadow-lg;
+    border: 1px solid rgba($secondary, 0.1);
+
+    mat-spinner {
+      margin-bottom: 2rem;
+      
+      ::ng-deep circle {
+        stroke: $primary;
+      }
+    }
+
+    .loading-content {
+      text-align: center;
+
+      h3 {
+        color: $text-dark;
+        font-weight: 700;
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+      }
+
+      p {
+        color: $text-light;
+        font-weight: 500;
+        font-size: 1.1rem;
+        margin: 0;
+      }
+    }
+  }
+
+  .error-message {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 2.5rem;
+    background: linear-gradient(135deg, 
+      rgba($error-color, 0.05) 0%, 
+      rgba($error-color, 0.1) 100%);
+    border: 2px solid rgba($error-color, 0.2);
+    border-radius: $border-radius;
+    box-shadow: $shadow;
+
+    .error-icon {
+      mat-icon {
+        font-size: 3rem;
+        height: 3rem;
+        width: 3rem;
+        color: $error-color;
+        background: rgba($error-color, 0.1);
+        border-radius: $border-radius-sm;
+        padding: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+    }
+
+    .error-content {
+      h3 {
+        color: $error-color;
+        font-weight: 700;
+        font-size: 1.3rem;
+        margin-bottom: 0.5rem;
+      }
+
+      p {
+        color: darken($error-color, 10%);
+        font-weight: 500;
+        margin: 0;
+      }
+    }
+  }
+
+  // ===== AUCUN SERVICE - DESIGN MODERNE =====
+  .no-services {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: linear-gradient(135deg, $white 0%, lighten($primary-light, 2%) 100%);
+    border-radius: $border-radius-lg;
+    border: 2px dashed rgba($primary, 0.3);
+    position: relative;
+    overflow: hidden;
+
+    .no-services-visual {
+      position: relative;
+      margin-bottom: 3rem;
+
+      .no-services-icon {
+        mat-icon {
+          font-size: 6rem;
+          height: 6rem;
+          width: 6rem;
+          color: $primary;
+          background: linear-gradient(135deg, rgba($primary, 0.1) 0%, rgba($primary, 0.2) 100%);
+          border-radius: 50%;
+          padding: 1.5rem;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 2rem;
+        }
+      }
+
+      .floating-elements {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 300px;
+        height: 300px;
+        pointer-events: none;
+
+        .floating-icon {
+          position: absolute;
+          animation: float 3s ease-in-out infinite;
+
+          mat-icon {
+            font-size: 1.5rem;
+            height: 1.5rem;
+            width: 1.5rem;
+            color: $secondary;
+            background: rgba($secondary, 0.1);
+            border-radius: 50%;
+            padding: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+
+          &:nth-child(1) {
+            top: 20%;
+            left: 20%;
+            animation-delay: 0s;
+          }
+
+          &:nth-child(2) {
+            top: 30%;
+            right: 20%;
+            animation-delay: 1s;
+          }
+
+          &:nth-child(3) {
+            bottom: 20%;
+            left: 30%;
+            animation-delay: 2s;
+          }
+        }
+      }
+    }
+
+    .no-services-content {
+      h3 {
+        color: $text-dark;
+        margin-bottom: 1.5rem;
+        font-size: 2rem;
+        font-weight: 700;
+        letter-spacing: -0.025em;
+      }
+
+      p {
+        color: $text-light;
+        margin-bottom: 3rem;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.7;
+        font-size: 1.1rem;
+        font-weight: 500;
+      }
+
+      .cta-button {
+        padding: 1rem 2.5rem;
+        font-weight: 700;
+        font-size: 1.1rem;
+        background: linear-gradient(135deg, $primary 0%, lighten($primary, 5%) 100%);
+        color: $primary-text;
+        border-radius: $border-radius;
+        box-shadow: $shadow;
+        transition: all 0.3s ease;
+        margin-bottom: 3rem;
+        
+        &:hover {
+          background: linear-gradient(135deg, $primary-dark 0%, $primary 100%);
+          transform: translateY(-2px);
+          box-shadow: $shadow-lg;
+        }
+      }
+
+      .quick-tips {
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        flex-wrap: wrap;
+
+        .tip-item {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          color: $text-light;
+          font-weight: 600;
+          font-size: 0.95rem;
+
+          mat-icon {
+            font-size: 1.2rem;
+            color: $secondary;
+          }
+        }
+      }
+    }
+  }
+
+  // ===== ACTIONS DES SERVICES MODERNISÉES =====
+  .services-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3rem;
+    padding: 2rem;
+    background: linear-gradient(135deg, $white 0%, lighten($secondary-light, 1%) 100%);
+    border-radius: $border-radius;
+    box-shadow: $shadow;
+    border-left: 4px solid $primary;
+
+    .actions-left {
+      display: flex;
+      gap: 1rem;
+
+      .primary-action {
+        background: linear-gradient(135deg, $primary 0%, lighten($primary, 5%) 100%);
+        color: $primary-text;
+        font-weight: 700;
+        padding: 0.75rem 1.5rem;
+        box-shadow: $shadow-sm;
+        
+        &:hover {
+          background: linear-gradient(135deg, $primary-dark 0%, $primary 100%);
+          transform: translateY(-1px);
+          box-shadow: $shadow;
+        }
+      }
+
+      .secondary-action {
+        color: $secondary-dark;
+        border-color: $secondary;
+        font-weight: 600;
+        
+        &:hover {
+          background: rgba($secondary, 0.1);
+          border-color: $secondary-dark;
+        }
+      }
+    }
+
+    .services-stats {
+      .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        color: $text-light;
+        font-weight: 700;
+        font-size: 1.1rem;
+
+        mat-icon {
+          color: $secondary;
+          font-size: 1.3rem;
+        }
+      }
+    }
+  }
+
+  // ===== GRILLE DES SERVICES ULTRA-MODERNE =====
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+
+    .service-card {
+      background: linear-gradient(135deg,  #94a3b8, 0%, lighten($neutral-light, 1%) 100%);
+      border-radius: $border-radius-lg;
+      box-shadow: $shadow;
+      transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+      border: 1px solid rgba($secondary, 0.1);
+      overflow: hidden;
+      position: relative;
+      
+
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, $primary 0%, $secondary 100%);
+      }
+
+      &:hover {
+        transform: translateY(-8px);
+        box-shadow: $shadow-xl;
+        border-color: rgba($primary, 0.2);
+      }
+
+      // ===== HEADER DE CARTE MODERNE =====
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 1.5rem 1.5rem 0.75rem;
+        background: linear-gradient(135deg, 
+          rgba($primary, 0.03) 0%, 
+          rgba($secondary, 0.02) 100%);
+
+        .header-left {
+          display: flex;
+          gap: 1rem;
+          flex: 1;
+
+          .service-icon {
+            mat-icon {
+              font-size: 2rem;
+              height: 2rem;
+              width: 2rem;
+              color: $primary;
+              background: linear-gradient(135deg, rgba($primary, 0.1) 0%, rgba($primary, 0.2) 100%);
+              border-radius: $border-radius-sm;
+              padding: 0.5rem;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+          }
+
+          .header-info {
+            flex: 1;
+
+            .service-title {
+              color: $text-dark;
+              font-size: 1.2rem;
+              font-weight: 700;
+              margin: 0 0 0.3rem 0;
+              line-height: 1.3;
+              letter-spacing: -0.025em;
+            }
+
+            .service-category {
+              display: flex;
+              align-items: center;
+              gap: 0.5rem;
+              color: $secondary-dark;
+              font-weight: 600;
+              font-size: 0.95rem;
+
+              mat-icon {
+                font-size: 1.1rem;
+                color: $secondary;
+              }
+            }
+          }
+        }
+
+        .header-actions {
+          .action-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: $border-radius-sm;
+            transition: all 0.3s ease;
+
+            &.duplicate-btn {
+              color: $secondary-dark;
+              
+              &:hover {
+                background: rgba($secondary, 0.1);
+                color: $secondary-dark;
+                transform: scale(1.05);
+              }
+            }
+          }
+        }
+      }
+
+      // ===== CONTENU PRINCIPAL =====
+      .card-content {
+        padding: 0.75rem 1.5rem 1.5rem;
+
+        .description {
+          display: flex;
+          gap: 0.5rem;
+          margin-bottom: 1.5rem;
+          padding: 0.75rem;
+          background: rgba($neutral-light, 0.3);
+          border-radius: $border-radius-sm;
+          border-left: 3px solid $secondary;
+
+          mat-icon {
+            color: $secondary;
+            font-size: 1.2rem;
+            margin-top: 0.1rem;
+          }
+
+          p {
+            color: $text-light;
+            line-height: 1.6;
+            margin: 0;
+            font-weight: 500;
+          }
+        }
+
+        // ===== PRIX ET DURÉE - MISE EN AVANT =====
+        .price-duration-card {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 0.75rem;
+          margin-bottom: 1rem;
+
+          .price-section,
+          .duration-section {
+            padding: 1rem;
+            border-radius: $border-radius;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: all 0.3s ease;
+
+            &:hover {
+              transform: translateY(-2px);
+            }
+          }
+
+          .price-section {
+            background: linear-gradient(135deg, 
+              rgba($success-color, 0.05) 0%, 
+              rgba($success-color, 0.1) 100%);
+            border: 1px solid rgba($success-color, 0.2);
+
+            .price-icon {
+              mat-icon {
+                font-size: 1.8rem;
+                height: 1.8rem;
+                width: 1.8rem;
+                color: $success-color;
+                background: rgba($success-color, 0.1);
+                border-radius: $border-radius-sm;
+                padding: 0.4rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              }
+            }
+
+            .price-info {
+              display: flex;
+              flex-direction: column;
+
+              .price-label {
+                font-size: 0.8rem;
+                color: $success-color;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+              }
+
+              .price-value {
+                font-size: 1.2rem;
+                color: darken($success-color, 10%);
+                font-weight: 800;
+              }
+            }
+          }
+
+          .duration-section {
+            background: linear-gradient(135deg, 
+              rgba($secondary, 0.05) 0%, 
+              rgba($secondary, 0.1) 100%);
+            border: 1px solid rgba($secondary, 0.2);
+
+            .duration-icon {
+              mat-icon {
+                font-size: 1.8rem;
+                height: 1.8rem;
+                width: 1.8rem;
+                color: $secondary;
+                background: rgba($secondary, 0.1);
+                border-radius: $border-radius-sm;
+                padding: 0.4rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              }
+            }
+
+            .duration-info {
+              display: flex;
+              flex-direction: column;
+
+              .duration-label {
+                font-size: 0.8rem;
+                color: $secondary;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+              }
+
+              .duration-value {
+                font-size: 1.2rem;
+                color: $secondary-dark;
+                font-weight: 800;
+              }
+            }
+          }
+        }
+
+        // ===== CARTES D'INFORMATION =====
+        .intervention-card,
+        .deplacement-card {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 0.75rem;
+          margin-bottom: 0.75rem;
+          border-radius: $border-radius-sm;
+          border-left: 3px solid $primary;
+          background: rgba($primary, 0.05);
+
+          mat-icon {
+            color: $primary;
+            font-size: 1.5rem;
+          }
+
+          .intervention-info,
+          .deplacement-info {
+            display: flex;
+            flex-direction: column;
+
+            .intervention-label,
+            .deplacement-label {
+              font-size: 0.8rem;
+              color: $primary;
+              font-weight: 600;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            }
+
+            .intervention-value,
+            .deplacement-value {
+              color: $text-dark;
+              font-weight: 700;
+              font-size: 1rem;
+            }
+          }
+        }
+
+        .deplacement-card {
+          border-left-color: $warning-color;
+          background: rgba($warning-color, 0.05);
+
+          mat-icon {
+            color: $warning-color;
+          }
+
+          .deplacement-label {
+            color: $warning-color;
+          }
+        }
+
+        // ===== AVANTAGES =====
+        .service-benefits {
+          margin-top: 1.5rem;
+
+          .benefits-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            color: $text-dark;
+            font-weight: 700;
+            font-size: 1rem;
+
+            mat-icon {
+              color: $success-color;
+              font-size: 1.3rem;
+            }
+          }
+
+          .benefits-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+
+            .benefit-tag {
+              display: flex;
+              align-items: center;
+              gap: 0.5rem;
+              padding: 0.5rem 0.75rem;
+              background: rgba($success-color, 0.05);
+              border-radius: $border-radius-sm;
+              color: $text-dark;
+              font-weight: 600;
+              font-size: 0.9rem;
+
+              mat-icon {
+                color: $success-color;
+                font-size: 1rem;
+              }
+            }
+          }
+        }
+      }
+
+      // ===== ACTIONS MODERNISÉES =====
+      .card-actions {
+        display: flex;
+        justify-content: space-between;
+        padding: 1rem 1.5rem;
+        background: rgba($neutral-light, 0.2);
+        border-top: 1px solid rgba($secondary, 0.1);
+
+        button {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-weight: 700;
+          padding: 0.75rem 1.5rem;
+          border-radius: $border-radius-sm;
+          transition: all 0.3s ease;
+          text-transform: none;
+          font-size: 0.9rem;
+
+          &.edit-btn {
+            color: $primary;
+            
+            &:hover {
+              background: rgba($primary, 0.1);
+              color: $primary-dark;
+              transform: translateY(-1px);
+            }
+          }
+
+          &.delete-btn {
+            color: $error-color;
+            
+            &:hover {
+              background: rgba($error-color, 0.1);
+              color: darken($error-color, 10%);
+              transform: translateY(-1px);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // ===== SECTION CONSEILS ULTRA-MODERNE =====
+  .tips-section {
+    margin-top: 4rem;
+
+    .tips-card {
+      background: linear-gradient(135deg, $white 0%, lighten($primary-light, 1%) 100%);
+      border: 1px solid rgba($primary, 0.15);
+      border-radius: $border-radius-lg;
+      box-shadow: $shadow-lg;
+      overflow: hidden;
+
+      .tips-header {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        padding: 2rem 2rem 1rem;
+        background: linear-gradient(135deg, 
+          rgba($primary, 0.05) 0%, 
+          rgba($secondary, 0.03) 100%);
+
+        .tips-icon {
+          mat-icon {
+            font-size: 3rem;
+            height: 3rem;
+            width: 3rem;
+            color: $primary;
+            background: linear-gradient(135deg, rgba($primary, 0.1) 0%, rgba($primary, 0.2) 100%);
+            border-radius: $border-radius-sm;
+            padding: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+        }
+
+        .tips-title {
+          h3 {
+            color: $text-dark;
+            font-weight: 800;
+            font-size: 1.5rem;
+            margin: 0 0 0.5rem 0;
+            letter-spacing: -0.025em;
+          }
+
+          p {
+            color: $text-light;
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.1rem;
+          }
+        }
+      }
+
+      .tips-content {
+        padding: 1rem 2rem 2rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+
+        .tip-card {
+          display: flex;
+          align-items: flex-start;
+          gap: 1rem;
+          padding: 1.5rem;
+          background: rgba($neutral-light, 0.3);
+          border-radius: $border-radius;
+          border-left: 4px solid $primary;
+          transition: all 0.3s ease;
+
+          &:hover {
+            transform: translateY(-2px);
+            box-shadow: $shadow;
+            border-left-color: $primary-dark;
+          }
+
+          .tip-icon {
+            mat-icon {
+              font-size: 1.5rem;
+              height: 1.5rem;
+              width: 1.5rem;
+              color: $primary;
+              background: rgba($primary, 0.1);
+              border-radius: $border-radius-sm;
+              padding: 0.5rem;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+          }
+
+          .tip-text {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+
+            strong {
+              color: $text-dark;
+              font-weight: 700;
+              font-size: 1rem;
+            }
+
+            span {
+              color: $text-light;
+              font-size: 0.9rem;
+              line-height: 1.5;
+              font-weight: 500;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // ===== ACTIONS RAPIDES MODERNES =====
+  .quick-actions {
+    margin-top: 3rem;
+    text-align: center;
+
+    .quick-actions-container {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+
+      button {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 1rem 2rem;
+        font-weight: 700;
+        border-radius: $border-radius;
+        transition: all 0.3s ease;
+
+        &.export-btn {
+          color: $secondary-dark;
+          border-color: $secondary;
+          
+          &:hover {
+            background: rgba($secondary, 0.1);
+            border-color: $secondary-dark;
+            transform: translateY(-2px);
+          }
+        }
+
+        &.share-btn {
+          color: $primary;
+          border-color: $primary;
+          
+          &:hover {
+            background: rgba($primary, 0.1);
+            border-color: $primary-dark;
+            transform: translateY(-2px);
+          }
+        }
+      }
+    }
+  }
+}
+
+// ===== ANIMATIONS SOPHISTIQUÉES =====
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+// ===== RESPONSIVE ULTRA-MODERNE =====
+@media (max-width: 1024px) {
+  .services-container {
+    .services-grid {
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 2rem;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .services-container {
+    padding: 1.5rem;
+
+    .header {
+      padding: 2rem 1.5rem;
+
+      h2 {
+        font-size: 2rem;
+      }
+    }
+
+    .services-grid {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+
+      .service-card {
+        .card-header {
+          padding: 1.5rem 1.5rem 1rem;
+
+          .header-left {
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
+          }
+        }
+
+        .card-content {
+          padding: 1rem 1.5rem 1.5rem;
+
+          .price-duration-card {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        .card-actions {
+          flex-direction: column;
+          gap: 1rem;
+          padding: 1.5rem;
+
+          button {
+            width: 100%;
+            justify-content: center;
+          }
+        }
+      }
+    }
+
+    .services-actions {
+      flex-direction: column;
+      gap: 1.5rem;
+      text-align: center;
+
+      .actions-left {
+        justify-content: center;
+      }
+    }
+
+    .tips-section {
+      .tips-card {
+        .tips-header {
+          flex-direction: column;
+          text-align: center;
+          gap: 1rem;
+        }
+
+        .tips-content {
+          grid-template-columns: 1fr;
+          padding: 1rem 1.5rem 2rem;
+        }
+      }
+    }
+
+    .no-services {
+      .no-services-content {
+        .quick-tips {
+          flex-direction: column;
+          gap: 1rem;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .services-container {
+    padding: 1rem;
+
+    .header {
+      padding: 1.5rem 1rem;
+
+      h2 {
+        font-size: 1.7rem;
+      }
+
+      .subtitle {
+        font-size: 1rem;
+      }
+    }
+
+    .services-grid {
+      gap: 1rem;
+    }
+
+    .quick-actions {
+      .quick-actions-container {
+        flex-direction: column;
+        gap: 1rem;
+
+        button {
+          width: 100%;
+        }
+      }
+    }
+  }
+}
+
+// ✅ MODAL OVERLAY MODERNE
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.6) 100%);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  
+  .modal-container {
+    background-color: $white;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 700px;
+    max-height: 90vh;
+    box-shadow: 
+      0 25px 50px -12px rgba(0, 0, 0, 0.25),
+      0 0 0 1px rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+}
+
+.dialog-container {
+  width: 100%;
+  max-width: 700px;
+  min-width: 500px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  background: $white;
+  border-radius: 16px;
+  
+  // ===== HEADER SOPHISTIQUÉ =====
+  .dialog-header {
+    flex-shrink: 0;
+    background: linear-gradient(135deg, 
+      rgba($primary, 0.08) 0%, 
+      rgba($secondary, 0.06) 50%,
+      rgba($primary, 0.04) 100%);
+    border-bottom: 1px solid rgba($secondary, 0.15);
+    padding: 2rem 2.5rem;
+    border-radius: 16px 16px 0 0;
+    position: relative;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, $primary 0%, $secondary 100%);
+    }
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+
+      mat-icon {
+        color: $primary;
+        font-size: 2.5rem;
+        height: 2.5rem;
+        width: 2.5rem;
+        background: linear-gradient(135deg, rgba($primary, 0.1) 0%, rgba($primary, 0.2) 100%);
+        border-radius: 12px;
+        padding: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      h2 {
+        color: $text-dark;
+        font-weight: 700;
+        font-size: 1.6rem;
+        margin: 0;
+        letter-spacing: -0.025em;
+      }
+    }
+    
+    .close-button {
+      background: none;
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: $neutral;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      
+      &:hover {
+        background: linear-gradient(135deg, rgba($error-color, 0.1) 0%, rgba($error-color, 0.15) 100%);
+        color: $error-color;
+        transform: scale(1.05);
+      }
+      
+      mat-icon {
+        font-size: 1.5rem;
+      }
+    }
+  }
+
+  // ===== CONTENU MODERNISÉ =====
+  .dialog-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 2rem 1rem 0;
+    max-height: calc(85vh - 180px);
+
+    // ===== SECTIONS ÉLÉGANTES =====
+    .form-section {
+      margin-bottom: 2.5rem;
+      padding: 2rem;
+      background: linear-gradient(135deg, 
+        rgba($bg-light, 0.5) 0%, 
+        rgba($secondary-light, 0.1) 100%);
+      border-radius: 16px;
+      border: 1px solid rgba($secondary, 0.12);
+      position: relative;
+      transition: all 0.3s ease;
+
+      &:hover {
+        border-color: rgba($primary, 0.2);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+      }
+
+      .section-title {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        color: $text-dark;
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid rgba($secondary, 0.15);
+        letter-spacing: -0.025em;
+
+        mat-icon {
+          color: $primary;
+          font-size: 1.5rem;
+          background: linear-gradient(135deg, rgba($primary, 0.1) 0%, rgba($primary, 0.2) 100%);
+          border-radius: 8px;
+          padding: 0.4rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+      }
+    }
+
+    // ===== LAYOUT MODERNE =====
+    .form-row {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+      align-items: flex-start;
+
+      &.price-row {
+        align-items: flex-end;
+      }
+
+      .full-width {
+        flex: 1;
+        width: 100%;
+      }
+
+      .half-width {
+        flex: 1;
+        min-width: 0;
+      }
+    }
+
+    .supplement-row {
+      margin-left: 2.5rem;
+      margin-top: 1.5rem;
+      padding: 1.5rem;
+      border-left: 4px solid rgba($warning-color, 0.4);
+      background: linear-gradient(135deg, 
+        rgba($warning-color, 0.05) 0%, 
+        rgba($warning-color, 0.1) 100%);
+      border-radius: 0 12px 12px 0;
+    }
+
+    // ===== CHAMPS MODERNES SANS BLEU =====
+    ::ng-deep .mat-mdc-form-field {
+      .mat-mdc-form-field-focus-overlay {
+        background-color: rgba($primary, 0.05);
+      }
+
+      .mat-mdc-form-field-outline {
+        color: rgba($secondary, 0.3);
+      }
+
+      &.mat-focused .mat-mdc-form-field-outline-thick {
+        color: $primary !important;
+        border-width: 2px;
+      }
+
+      .mat-mdc-form-field-label {
+        color: $text-light !important;
+        font-weight: 500;
+      }
+
+      &.mat-focused .mat-mdc-form-field-label {
+        color: $primary !important;
+      }
+
+      .mat-mdc-form-field-icon-suffix {
+        color: $secondary !important;
+        transition: all 0.3s ease;
+      }
+
+      &.mat-focused .mat-mdc-form-field-icon-suffix {
+        color: $primary !important;
+      }
+
+      // Suppression totale des couleurs bleues
+      .mdc-text-field--focused .mdc-floating-label {
+        color: $primary !important;
+      }
+
+      .mdc-text-field--focused .mdc-notched-outline__leading,
+      .mdc-text-field--focused .mdc-notched-outline__notch,
+      .mdc-text-field--focused .mdc-notched-outline__trailing {
+        border-color: $primary !important;
+      }
+
+      .mat-mdc-input-element {
+        color: $text-dark !important;
+        caret-color: $primary !important;
+        font-weight: 500;
+      }
+
+      // Amélioration des hints
+      .mat-mdc-form-field-hint {
+        color: $text-light !important;
+        font-size: 0.85rem;
+      }
+
+      // Amélioration des suffixes
+      .mat-mdc-form-field-text-suffix {
+        color: $secondary !important;
+        font-weight: 600;
+      }
+    }
+
+    // ===== SELECT MODERNISÉ =====
+    ::ng-deep .mat-mdc-select {
+      .mat-mdc-select-value {
+        color: $text-dark !important;
+        font-weight: 500;
+      }
+
+      .mat-mdc-select-arrow {
+        color: $secondary !important;
+      }
+
+      &.mat-focused .mat-mdc-select-arrow {
+        color: $primary !important;
+      }
+    }
+
+    ::ng-deep .mat-mdc-select-panel {
+      border-radius: 12px !important;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2) !important;
+
+      .mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled) {
+        background: linear-gradient(135deg, rgba($primary, 0.1) 0%, rgba($primary, 0.15) 100%) !important;
+        color: $primary-dark !important;
+      }
+
+      .mat-mdc-option:hover:not(.mdc-list-item--disabled) {
+        background: linear-gradient(135deg, rgba($secondary, 0.08) 0%, rgba($secondary, 0.12) 100%) !important;
+      }
+
+      .mat-mdc-option {
+        color: $text-dark !important;
+        font-weight: 500;
+        border-radius: 8px;
+        margin: 0.2rem 0.5rem;
+      }
+    }
+
+    // ===== CHECKBOXES ÉLÉGANTES =====
+    .checkbox-group {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+
+      mat-checkbox {
+        ::ng-deep .mat-mdc-checkbox-checkmark {
+          fill: $primary-text !important;
+        }
+
+        ::ng-deep .mat-mdc-checkbox-ripple {
+          color: $primary !important;
+        }
+
+        ::ng-deep .mdc-checkbox__native-control:enabled:checked ~ .mdc-checkbox__background,
+        ::ng-deep .mdc-checkbox__native-control:enabled:indeterminate ~ .mdc-checkbox__background {
+          background-color: $primary !important;
+          border-color: $primary !important;
+        }
+
+        ::ng-deep .mdc-checkbox__native-control:enabled ~ .mdc-checkbox__background {
+          border-color: $secondary !important;
+        }
+
+        ::ng-deep .mdc-checkbox {
+          border-radius: 6px;
+        }
+
+        .checkbox-content {
+          display: flex;
+          flex-direction: column;
+          margin-left: 1rem;
+
+          strong {
+            color: $text-dark;
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 0.2rem;
+          }
+
+          span {
+            color: $text-light;
+            font-size: 0.9rem;
+            line-height: 1.4;
+          }
+        }
+      }
+    }
+
+    // ===== PRÉVISUALISATIONS MODERNES =====
+    .price-preview,
+    .duration-preview {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 1.5rem;
+      padding: 1rem 1.5rem;
+      background: linear-gradient(135deg, 
+        rgba($success-color, 0.05) 0%, 
+        rgba($success-color, 0.1) 100%);
+      border: 2px solid rgba($success-color, 0.2);
+      border-radius: 12px;
+      color: $success-color;
+      font-weight: 600;
+
+      mat-icon {
+        font-size: 1.4rem;
+        background: rgba($success-color, 0.1);
+        border-radius: 8px;
+        padding: 0.3rem;
+      }
+
+      strong {
+        color: darken($success-color, 15%);
+        font-weight: 700;
+      }
+    }
+
+    // ===== ERREURS STYLISÉES =====
+    .form-error {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 1.5rem;
+      padding: 1rem 1.5rem;
+      background: linear-gradient(135deg, 
+        rgba($error-color, 0.05) 0%, 
+        rgba($error-color, 0.1) 100%);
+      border: 2px solid rgba($error-color, 0.2);
+      border-radius: 12px;
+      color: $error-color;
+      font-weight: 600;
+
+      mat-icon {
+        font-size: 1.4rem;
+        background: rgba($error-color, 0.1);
+        border-radius: 8px;
+        padding: 0.3rem;
+      }
+    }
+
+    ::ng-deep .mat-mdc-form-field-error {
+      color: $error-color !important;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    // ===== DIVIDERS SOPHISTIQUÉS =====
+    ::ng-deep mat-divider {
+      border-top-color: rgba($secondary, 0.2) !important;
+      margin: 2rem 0;
+      height: 2px;
+      background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba($secondary, 0.2) 50%, 
+        transparent 100%);
+    }
+  }
+
+  // ===== ACTIONS MODERNES =====
+  .dialog-actions {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 1.5rem;
+    padding: 2rem 2.5rem;
+    border-top: 1px solid rgba($secondary, 0.15);
+    background: linear-gradient(135deg, 
+      rgba($bg-light, 0.5) 0%, 
+      rgba($secondary-light, 0.1) 100%);
+
+    .cancel-btn {
+      color: $neutral-dark !important;
+      font-weight: 600;
+      padding: 0.75rem 1.5rem;
+      border-radius: 10px;
+      transition: all 0.3s ease;
+      
+      &:hover {
+        background: rgba($secondary, 0.1) !important;
+        color: $secondary-dark !important;
+        transform: translateY(-1px);
+      }
+    }
+
+    .submit-btn {
+      background: linear-gradient(135deg, $primary 0%, lighten($primary, 5%) 100%) !important;
+      color: $primary-text !important;
+      font-weight: 700;
+      padding: 0.75rem 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba($primary, 0.3);
+      transition: all 0.3s ease;
+
+      &:hover:not(:disabled) {
+        background: linear-gradient(135deg, $primary-dark 0%, $primary 100%) !important;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba($primary, 0.4);
+      }
+
+      &:disabled {
+        background: linear-gradient(135deg, $neutral-light 0%, lighten($neutral-light, 5%) 100%) !important;
+        color: $neutral !important;
+        cursor: not-allowed;
+        opacity: 0.7;
+        transform: none;
+        box-shadow: none;
+      }
+    }
+  }
+}
+
+// ===== RESPONSIVE SOPHISTIQUÉ =====
+@media (max-width: 768px) {
+  .modal-overlay {
+    .modal-container {
+      width: 95vw;
+      max-height: 95vh;
+      margin: 10px;
+      border-radius: 12px;
+    }
+  }
+  
+  .dialog-container {
+    min-width: auto !important;
+    max-width: none !important;
+    width: 100% !important;
+    border-radius: 12px;
+    
+    .dialog-header {
+      padding: 1.5rem 2rem;
+
+      .header-content {
+        h2 {
+          font-size: 1.4rem;
+        }
+      }
+    }
+
+    .dialog-content {
+      padding: 1.5rem 1rem 0;
+      max-height: calc(95vh - 140px);
+      
+      .form-section {
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+      }
+
+      .form-row {
+        flex-direction: column;
+        gap: 1rem;
+
+        &.price-row {
+          flex-direction: row;
+          
+          @media (max-width: 480px) {
+            flex-direction: column;
+          }
+        }
+      }
+
+      .supplement-row {
+        margin-left: 0;
+        padding-left: 1.5rem;
+      }
+    }
+
+    .dialog-actions {
+      flex-direction: column-reverse;
+      gap: 1rem;
+      padding: 1.5rem 2rem;
+
+      button {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  }
+}
+
+// ===== ANIMATIONS FLUIDES =====
+.modal-overlay {
+  animation: fadeInBackdrop 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  
+  .modal-container {
+    animation: slideInScale 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+}
+
+@keyframes fadeInBackdrop {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInScale {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+// ===== SCROLLBAR ÉLÉGANTE =====
+.dialog-content {
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba($secondary-light, 0.3);
+    border-radius: 10px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, rgba($primary, 0.6) 0%, rgba($secondary, 0.6) 100%);
+    border-radius: 10px;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background: linear-gradient(135deg, rgba($primary, 0.8) 0%, rgba($secondary, 0.8) 100%);
+    }
+  }
+}

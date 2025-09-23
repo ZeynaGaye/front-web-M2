@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { FreelanceDashbordComponent } from './freelance/components/freelance-dashbord/freelance-dashbord.component';
+import { ClientDashboardComponent } from './client/components/client-dashboard/client-dashboard.component';
 import { AccueilComponent } from './shared/components/accueil/accueil.component';
 import { ContactComponent } from './shared/components/contact/contact.component';
 import { HomeEmployeeComponent } from './employeur/components/home-employee/home-employee.component';
@@ -15,23 +16,22 @@ import { PortfolioComponent } from './freelance/components/portfolio/portfolio.c
 import { JobOfferComponent } from './shared/components/job-offer/job-offer.component';
 import { SalonRegistrationComponent } from './shared/components/salon-registration/salon-registration.component';
 
-// ❌ SUPPRIMÉ : import path from 'path'; // ← CECI CASSAIT TOUT !
+
 
 export const routes: Routes = [
-  // ✅ CORRECTION 1 : Pas de redirection, route directe
+ 
   { 
     path: '', 
     component: AccueilComponent, 
     pathMatch: 'full' 
   },
   
-  // ✅ Route accueil explicite
+ 
   { 
     path: 'accueil', 
     component: AccueilComponent 
   },
-  
-  // ✅ ROUTES PUBLIQUES (pas de guard)
+ 
   { 
     path: 'contacts', 
     component: ContactComponent 
@@ -45,7 +45,7 @@ export const routes: Routes = [
     component: JobOfferComponent 
   },
   
-  // ✅ ROUTES SALON (corrigées)
+
   { 
     path: 'salon', 
     component: SalonComponent 
@@ -89,6 +89,12 @@ export const routes: Routes = [
     component: HomeFreelanceComponent,
     canActivate: [authGuard],
     data: { roles: ['FREELANCE'] },
+  },
+  {
+    path: 'client-dashboard',
+    component: ClientDashboardComponent,
+    canActivate: [authGuard],
+    data: { roles: ['CLIENT'] },
   },
   {
     path: 'home-employee',

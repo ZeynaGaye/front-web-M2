@@ -1,0 +1,293 @@
+<!-- service-dialog.component.html - VERSION AVEC GRILLE 2x2 -->
+<div class="modal-overlay">
+  <div class="modal-container">
+    
+    <!-- ✅ HEADER -->
+    <div class="modal-header">
+      <div class="header-content">
+        <mat-icon>{{ isEditMode ? 'edit' : 'add_business' }}</mat-icon>
+        <h2>{{ isEditMode ? 'Modifier le service' : 'Ajouter un service freelance' }}</h2>
+      </div>
+      <button class="close-button" (click)="onCancel()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <!-- ✅ LOADING -->
+    <div *ngIf="chargementServices" class="loading-section">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Chargement des services...</p>
+    </div>
+
+    <!-- ✅ ERROR -->
+    <div *ngIf="erreurChargement && !chargementServices" class="error-section">
+      <mat-icon>error_outline</mat-icon>
+      <h4>Impossible de charger les services</h4>
+      <p>Vous pouvez continuer en saisissant manuellement.</p>
+      <button mat-button (click)="basculerVersSaisieLibre()">
+        <mat-icon>edit</mat-icon>
+        Saisie manuelle
+      </button>
+    </div>
+
+    <!-- ✅ CONFIRMATION -->
+    <div *ngIf="enAttenteConfirmation" class="confirmation-section">
+      <mat-card>
+        <mat-card-header>
+          <mat-icon mat-card-avatar>lightbulb_outline</mat-icon>
+          <mat-card-title>Service similaire trouvé</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="suggestion-content">
+            <p><strong>Votre saisie :</strong> "{{ nomOriginal }}"</p>
+            <p><strong>Service suggéré :</strong> {{ suggestionService?.nom }} ({{ suggestionService?.categorie }})</p>
+            <p>Nous avons trouvé un service similaire. Que souhaitez-vous faire ?</p>
+          </div>
+        </mat-card-content>
+        <mat-card-actions>
+          <button mat-raised-button color="primary" (click)="utiliserSuggestion()">
+            <mat-icon>check_circle</mat-icon>
+            Utiliser "{{ suggestionService?.nom }}"
+          </button>
+          <button mat-button (click)="annulerDemandeNouveauService()">
+            <mat-icon>arrow_back</mat-icon>
+            Retour
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+
+    <!-- ✅ CONTENU PRINCIPAL -->
+    <div class="dialog-content" *ngIf="!chargementServices && !enAttenteConfirmation">
+      <form [formGroup]="serviceForm" (ngSubmit)="onSubmit()">
+
+        <!-- ✅ SECTION : SÉLECTION SERVICE -->
+        <div class="form-section" *ngIf="aServicesPredefinis && !estFormulaireDemande">
+          <h3 class="section-title">
+            <mat-icon>list_alt</mat-icon>
+            Choisissez votre service
+          </h3>
+          
+          <!-- ✅ GRILLE 2x2 : Recherche + Sélection -->
+          <div class="form-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Rechercher un service</mat-label>
+              <input matInput formControlName="rechercheQuery"
+                     placeholder="Ex: coupe, maquillage...">
+              <mat-icon matSuffix>search</mat-icon>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Sélectionnez votre service</mat-label>
+              <mat-select formControlName="servicePredefini" 
+                         (selectionChange)="onServicePredefiniSelected({target: {value: $event.value.id}})">
+                <!-- Résultats de recherche -->
+                <ng-container *ngIf="modeRecherche && aResultatsRecherche">
+                  <mat-optgroup label="🔍 Résultats de recherche">
+                    <mat-option *ngFor="let service of servicesPredefinisFiltres" [value]="service">
+                      <span class="service-nom">{{service.nom}}</span>
+                      <small class="service-categorie"> ({{service.categorie}})</small>
+                    </mat-option>
+                  </mat-optgroup>
+                </ng-container>
+                
+                <!-- Services par catégorie -->
+                <ng-container *ngIf="!modeRecherche">
+                  <mat-optgroup *ngFor="let groupe of servicesGroupes" [label]="groupe.categorie + ' (' + groupe.count + ')'">
+                    <mat-option *ngFor="let service of groupe.services" [value]="service">
+                      {{service.nom}}
+                    </mat-option>
+                  </mat-optgroup>
+                </ng-container>
+              </mat-select>
+              <mat-error>{{ getFormErrorMessage() }}</mat-error>
+            </mat-form-field>
+          </div>
+
+          <!-- ✅ BOUTONS D'ACTION EN GRILLE -->
+          <div class="form-row service-actions">
+            <button type="button" mat-stroked-button (click)="basculerAffichageServices()">
+              <mat-icon>{{afficherTousServices ? 'category' : 'list'}}</mat-icon>
+              {{afficherTousServices ? 'Par catégorie' : 'Vue liste'}}
+            </button>
+            <button type="button" mat-stroked-button color="primary" (click)="demanderNouveauService()">
+              <mat-icon>add_circle</mat-icon>
+              Service non listé
+            </button>
+          </div>
+
+          <!-- Info service sélectionné -->
+          <div class="service-info" *ngIf="serviceSelectionne">
+            <mat-card>
+              <mat-card-content>
+                <div class="info-content">
+                  <strong>{{serviceSelectionne.nom}}</strong>
+                  <span>Catégorie: {{serviceSelectionne.categorie}}</span>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+        </div>
+
+        <!-- ✅ NOUVEAU SERVICE -->
+        <div class="form-section" *ngIf="estFormulaireDemande">
+          <h3 class="section-title">
+            <mat-icon>add_circle_outline</mat-icon>
+            Nouveau service personnalisé
+          </h3>
+          
+          <div class="form-row-single">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Nom de votre service</mat-label>
+              <input matInput formControlName="nomPersonnalise" 
+                     placeholder="Ex: Coiffure afro spécialisée"
+                     maxlength="100">
+              <mat-icon matSuffix>edit</mat-icon>
+              <mat-error>{{ getFieldErrorMessage('nomPersonnalise') }}</mat-error>
+            </mat-form-field>
+          </div>
+          
+          <div class="form-actions" *ngIf="aServicesPredefinis">
+            <button type="button" mat-button (click)="annulerDemandeNouveauService()">
+              <mat-icon>arrow_back</mat-icon>
+              Retour à la sélection
+            </button>
+          </div>
+        </div>
+
+        <!-- ✅ DESCRIPTION -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <mat-icon>description</mat-icon>
+            Description (optionnelle)
+          </h3>
+          
+          <div class="form-row-single">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Description de votre prestation</mat-label>
+              <textarea matInput formControlName="description" rows="3" 
+                       placeholder="Décrivez votre prestation..."
+                       maxlength="500"></textarea>
+              <mat-hint>Maximum 500 caractères</mat-hint>
+              <mat-error>{{ getFieldErrorMessage('description') }}</mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <!-- ✅ TARIFICATION EN GRILLE -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <mat-icon>payments</mat-icon>
+            Tarification
+          </h3>
+          
+          <div class="form-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Prix minimum</mat-label>
+              <input matInput type="number" formControlName="prixMin" min="1" step="5">
+              <span matTextSuffix>CFA</span>
+              <mat-error>{{ getFieldErrorMessage('prixMin') }}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Prix maximum</mat-label>
+              <input matInput type="number" formControlName="prixMax" min="1" step="5">
+              <span matTextSuffix>CFA</span>
+              <mat-error>{{ getFieldErrorMessage('prixMax') }}</mat-error>
+            </mat-form-field>
+          </div>
+          
+          <div class="price-preview" *ngIf="getPrixFormate()">
+            <mat-icon>visibility</mat-icon>
+            <span>Fourchette affichée: <strong>{{ getPrixFormate() }}</strong></span>
+          </div>
+        </div>
+
+        <!-- ✅ DURÉE ET TYPE EN GRILLE -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <mat-icon>schedule</mat-icon>
+            Durée et lieu d'intervention
+          </h3>
+          
+          <div class="form-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Durée en minutes</mat-label>
+              <input matInput type="number" formControlName="dureeEnMinutes" 
+                     min="15" max="480" step="15">
+              <span matTextSuffix>min</span>
+              <mat-hint>Entre 15 min et 8h</mat-hint>
+              <mat-error>{{ getFieldErrorMessage('dureeEnMinutes') }}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Type d'intervention</mat-label>
+              <mat-select formControlName="typeIntervention">
+                <mat-option *ngFor="let type of typesIntervention" [value]="type.value">
+                  {{ type.label }}
+                </mat-option>
+              </mat-select>
+              <mat-icon matSuffix>place</mat-icon>
+            </mat-form-field>
+          </div>
+          
+          <div class="duration-preview" *ngIf="getFormattedDuration()">
+            <mat-icon>access_time</mat-icon>
+            <span>Durée affichée: <strong>{{ getFormattedDuration() }}</strong></span>
+          </div>
+        </div>
+
+        <!-- ✅ OPTIONS EN GRILLE 2x2 -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <mat-icon>tune</mat-icon>
+            Options et inclusions
+          </h3>
+          
+          <div class="checkbox-group">
+            <mat-checkbox formControlName="materielInclus">
+              <div class="checkbox-content">
+                <strong>Matériel inclus</strong>
+                <span>J'apporte tout le matériel</span>
+              </div>
+            </mat-checkbox>
+
+            <mat-checkbox formControlName="deplacementInclus">
+              <div class="checkbox-content">
+                <strong>Déplacement inclus</strong>
+                <span>Pas de frais de transport</span>
+              </div>
+            </mat-checkbox>
+
+            <mat-checkbox formControlName="disponibleWeekend">
+              <div class="checkbox-content">
+                <strong>Disponible weekend</strong>
+                <span>Samedi et dimanche</span>
+              </div>
+            </mat-checkbox>
+
+            <mat-checkbox formControlName="disponibleSoir">
+              <div class="checkbox-content">
+                <strong>Disponible soirée</strong>
+                <span>Après 18h en semaine</span>
+              </div>
+            </mat-checkbox>
+          </div>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- ✅ FOOTER ACTIONS -->
+    <div class="dialog-actions">
+      <button type="button" class="cancel-btn" (click)="onCancel()">
+        Annuler
+      </button>
+      <button type="submit" class="submit-btn" [disabled]="!serviceForm.valid" (click)="onSubmit()">
+        <mat-icon>{{ isEditMode ? 'save' : 'add' }}</mat-icon>
+        {{ isEditMode ? 'Modifier' : 'Ajouter' }}
+      </button>
+    </div>
+
+  </div>
+</div>

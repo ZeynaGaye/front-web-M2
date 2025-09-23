@@ -11,6 +11,9 @@ import { AuthInterceptor } from './core/interceptors/auth.interceptor';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { TokenService } from './core/servces/token.service';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
+import { OverlayContainer } from '@angular/cdk/overlay';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule, MAT_DATE_LOCALE } from '@angular/material/core';
 import { SalonDetailsComponent } from './shared/components/salon-details/salon-details.component';
 
 
@@ -49,7 +52,7 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withInterceptorsFromDi(), withFetch()),
     provideClientHydration(),
     provideAnimations(),
-    importProvidersFrom(MatSnackBarModule, MatDialogModule ),
+    importProvidersFrom(MatSnackBarModule, MatDialogModule, MatDatepickerModule, MatNativeDateModule),
     ConfigService,
     KeycloakService,
     TokenService,
@@ -60,6 +63,10 @@ export const appConfig: ApplicationConfig = {
     {
       provide: MAT_DIALOG_DATA,
       useValue: null
+    },
+    {
+      provide: MAT_DATE_LOCALE,
+      useValue: 'fr-FR'
     },
     {
       provide: HTTP_INTERCEPTORS,

@@ -1,11 +1,7 @@
 <div class="accueil-container">
   <app-header></app-header>
-  <!-- <app-header></app-header> -->
-  <app-pro-free></app-pro-free>
-  <app-client-section></app-client-section>
-  
-  <!-- 🆕 SECTION RECOMMANDATIONS -->
-  <!-- <section class="recommendations-wrapper" *ngIf="showRecommendations">
+    <!-- SECTION RECOMMANDATIONS -->
+  <section class="recommendations-wrapper" *ngIf="showRecommendations">
     <app-recommendations
       [showRecommendations]="true"
       [autoLoad]="true"
@@ -21,7 +17,13 @@
       (favoriteToggle)="onFavoriteToggle($event)"
       (ctaClick)="onRecommendationCta()">
     </app-recommendations>
-  </section> -->
+  </section>
+  <!-- <app-header></app-header> -->
+  <app-pro-free></app-pro-free>
+  <app-client-section></app-client-section>
+  
+
+  
 
   <!-- 🆕 SECTION OPPORTUNITÉS D'EMPLOI - COMPOSANT DIRECT -->
   <!-- <section class="job-opportunities-wrapper" *ngIf="showJobOpportunities">
@@ -33,8 +35,8 @@
       (offreClick)="onJobOfferClick($event)"
       (viewAllClick)="onViewAllJobOffers()"
       (filterChange)="onJobFilterChange($event)">
-    </app-opportunites-emploi> -->
-  <!-- </section> -->
+    </app-opportunites-emploi>
+  </section> -->
 
   <!-- Section existante job offers (peut être supprimée si remplacée) -->
   <!-- <app-job-offer></app-job-offer> -->

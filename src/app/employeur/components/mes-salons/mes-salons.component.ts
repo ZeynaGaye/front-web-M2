@@ -1,6 +1,9 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { SalonService } from '../../services/salon.service';
 import { ServiceSalonService } from '../../services/service-salon.service';
+import { EmployeService } from '../../services/employe';
+import { EmployeListItem } from '../../../models/employe';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -11,13 +14,21 @@ import { MatListModule } from '@angular/material/list';
 import { MatSpinner } from '@angular/material/progress-spinner';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { NoDataDialogComponent } from '../no-data-dialog/no-data-dialog.component';
-import { AddServiceDialogComponent } from '../add-service-dialog/add-service-dialog.component'; // ✅ AJOUT
+import { AddServiceDialogComponent } from '../add-service-dialog/add-service-dialog.component';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 
-// ✅ INTERFACES POUR LE TYPAGE
+
+import { HorairesManagerComponent } from '../../../shared/components/horaires-manager/horaires-manager.component';
+
+import { SalonComponent } from '../salon/salon.component';
+import { EmployeFormComponent } from '../employe-form/employe-form.component';
+import { EmployeListComponent } from "../employe-list/employe-list.component";
+
+
+
 interface UploadResponse {
   photos: any[];
   total: number;
@@ -30,6 +41,9 @@ interface DeleteResponse {
   message?: string;
   error?: string;
 }
+
+
+
 
 @Component({
   selector: 'app-mes-salons',
@@ -46,8 +60,11 @@ interface DeleteResponse {
     MatDialogModule,
     MatExpansionModule,
     MatMenuModule,
-    MatTooltipModule
-  ],
+    MatTooltipModule,
+    HorairesManagerComponent,
+    SalonComponent,
+    EmployeListComponent
+],
   templateUrl: './mes-salons.component.html',
   styleUrl: './mes-salons.component.scss',
   animations: [
@@ -103,21 +120,38 @@ export class MesSalonsComponent implements OnInit {
   expandedSalonId: number | null = null;
   services: { [salonId: number]: any[] } = {};
   salonPhotos: { [salonId: number]: any[] } = {};
+  salonEmployes: { [salonId: number]: EmployeListItem[] } = {};
+
+
   isLoading = false;
   errorMessage = '';
   activeTab: { [salonId: number]: string } = {};
-  
+
   // États de chargement spécifiques
   loadingStates: { [key: string]: boolean } = {};
-  
-  // ✅ NOUVEAU: États spécifiques pour les photos
+
+
+  horairesErrors: { [salonId: number]: string } = {};
+
+  // États spécifiques pour les photos
   photosInitialized: { [salonId: number]: boolean } = {};
   photosErrors: { [salonId: number]: string } = {};
+
+  // États spécifiques pour les employés
+  employesInitialized: { [salonId: number]: boolean } = {};
+  employesErrors: { [salonId: number]: string } = {};
+
+  // ✅ NOUVELLES PROPRIÉTÉS POUR LE MODE ÉDITION
+  showModal = false;
+  isEditMode = false;
+  salonToEdit: any = null;
 
   constructor(
     private salonService: SalonService,
     private serviceSalonService: ServiceSalonService,
-    private dialog: MatDialog
+    private employeService: EmployeService,
+    private dialog: MatDialog,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -131,16 +165,21 @@ export class MesSalonsComponent implements OnInit {
         console.log('🏢 Salons chargés:', data);
         this.salons = data;
         this.isLoading = false;
-        
-        // Initialiser les tabs pour chaque salon
+
+        // Initialiser les tabs et les états pour chaque salon
         this.salons.forEach(salon => {
           this.activeTab[salon.id] = 'info';
-          // ✅ Initialiser les états des photos
           this.photosInitialized[salon.id] = false;
           this.salonPhotos[salon.id] = [];
           this.photosErrors[salon.id] = '';
+          // Initialiser les états des employés
+          this.employesInitialized[salon.id] = false;
+          this.salonEmployes[salon.id] = [];
+          this.employesErrors[salon.id] = '';
+          
+          this.horairesErrors[salon.id] = ''; 
         });
-        
+
         // Afficher le popup si aucun salon n'est disponible
         if (data.length === 0) {
           this.openNoDataDialog({
@@ -164,8 +203,8 @@ export class MesSalonsComponent implements OnInit {
       this.expandedSalonId = null;
     } else {
       this.expandedSalonId = salonId;
-      // Charger les services par défaut
-      this.loadServices(salonId);
+      // Charger les services par défaut ou le premier onglet actif
+      this.loadServices(salonId); // Garder le comportement actuel si désiré
     }
   }
 
@@ -176,8 +215,7 @@ export class MesSalonsComponent implements OnInit {
         next: (data: any[]) => {
           this.services[salonId] = data;
           this.setLoadingState(`services-${salonId}`, false);
-          
-          // Afficher le popup si aucun service n'est disponible
+
           if (data.length === 0 && this.activeTab[salonId] === 'services') {
             this.openNoDataDialog({
               title: 'Services du Salon',
@@ -195,86 +233,82 @@ export class MesSalonsComponent implements OnInit {
     }
   }
 
-  // ✅ MÉTHODE COMPLÈTEMENT REFAITE pour le chargement des photos
+  // ✅ Simplification de loadSalonHoraires
+  loadSalonHoraires(salonId: number) {
+    // Le HorairesManagerComponent chargera ses propres données.
+    // Cette méthode peut être utilisée pour réinitialiser un état d'erreur ou de chargement
+    // si vous aviez des indicateurs spécifiques au parent.
+    // Pour l'instant, elle ne fait rien de spécifique ici car le child gère le chargement.
+    console.log(`Activation de l'onglet horaires pour le salon ID: ${salonId}. Le composant HorairesManager se chargera des données.`);
+    this.horairesErrors[salonId] = ''; // Réinitialise l'erreur si l'utilisateur change d'onglet
+  }
+
   loadSalonPhotos(salonId: number, forceReload: boolean = false) {
-    // Éviter les chargements multiples sauf si forcé
     if (this.photosInitialized[salonId] && !forceReload) {
       console.log(`📸 Photos déjà chargées pour salon ${salonId}`);
       return;
     }
 
-    // Éviter les chargements simultanés
     if (this.getLoadingState(`photos-${salonId}`)) {
       console.log(`⏳ Chargement photos déjà en cours pour salon ${salonId}`);
       return;
     }
 
     console.log(`🔄 Début chargement photos salon ${salonId} (force: ${forceReload})`);
-    
-    // Marquer comme en cours de chargement
+
     this.setLoadingState(`photos-${salonId}`, true);
     this.photosErrors[salonId] = '';
-    
+
     this.salonService.getSalonPhotos(salonId).subscribe({
       next: (photos: any[]) => {
         console.log(`✅ Photos reçues pour salon ${salonId}:`, photos);
-        
-        // Le service retourne maintenant toujours un tableau
+
         this.salonPhotos[salonId] = photos || [];
         this.photosInitialized[salonId] = true;
         this.setLoadingState(`photos-${salonId}`, false);
-        
+
         console.log(`📊 ${photos.length} photos chargées pour salon ${salonId}`);
-        
-        // Log détaillé de chaque photo
-        photos.forEach((photo, index) => {
-          console.log(`📸 Photo ${index + 1}:`, {
-            id: photo.id,
-            url: photo.url,
-            filename: photo.filename,
-            fileExists: photo.fileExists
-          });
-        });
       },
       error: (error) => {
         console.error(`❌ Erreur photos salon ${salonId}:`, error);
-        
-        // Gérer l'erreur de manière gracieuse
+
         this.photosErrors[salonId] = error.message || 'Erreur de chargement';
         this.salonPhotos[salonId] = [];
-        this.photosInitialized[salonId] = true; // Marquer comme initialisé même en cas d'erreur
+        this.photosInitialized[salonId] = true;
         this.setLoadingState(`photos-${salonId}`, false);
-        
-        // Afficher l'erreur à l'utilisateur
+
         this.errorMessage = `Erreur photos salon ${salonId}: ${error.message}`;
       }
     });
   }
 
-  // ✅ MÉTHODE CORRIGÉE pour setActiveTab
+  // ✅ MÉTHODE CORRIGÉE pour setActiveTab incluant les horaires
   setActiveTab(salonId: number, tab: string) {
     console.log(`🔄 Changement d'onglet salon ${salonId}: ${this.activeTab[salonId]} → ${tab}`);
-    
-    // Éviter les changements inutiles
+
     if (this.activeTab[salonId] === tab) {
       console.log(`📌 Onglet ${tab} déjà actif pour salon ${salonId}`);
       return;
     }
-    
+
     this.activeTab[salonId] = tab;
-    
+
     // Charger les données selon l'onglet sélectionné
     if (tab === 'services') {
       this.loadServices(salonId);
+    } else if (tab === 'horaires') {
+      this.loadSalonHoraires(salonId); // Appel de la méthode simplifiée
     } else if (tab === 'photos') {
       console.log(`📸 Activation onglet photos pour salon ${salonId}`);
       this.loadSalonPhotos(salonId);
+    } else if (tab === 'employes') {
+      console.log(`👥 Activation onglet employés pour salon ${salonId}`);
+      this.loadSalonEmployes(salonId);
     }
   }
 
   // ✅ MÉTHODES UTILITAIRES AMÉLIORÉES
 
-  // Méthodes utilitaires pour gérer les états de chargement
   setLoadingState(key: string, loading: boolean) {
     this.loadingStates[key] = loading;
     console.log(`🔄 Loading state ${key}: ${loading}`);
@@ -284,32 +318,26 @@ export class MesSalonsComponent implements OnInit {
     return this.loadingStates[key] || false;
   }
 
-  // Vérifier si un salon a des photos chargées
   hasPhotosLoaded(salonId: number): boolean {
     return this.photosInitialized[salonId] === true;
   }
 
-  // Vérifier si les photos sont en cours de chargement
   arePhotosLoading(salonId: number): boolean {
     return this.getLoadingState(`photos-${salonId}`);
   }
 
-  // ✅ NOUVELLE: Obtenir le nombre de photos pour un salon
   getPhotosCount(salonId: number): number {
     return this.salonPhotos[salonId]?.length || 0;
   }
 
-  // ✅ NOUVELLE: Vérifier s'il y a une erreur pour les photos d'un salon
   hasPhotosError(salonId: number): boolean {
     return !!(this.photosErrors[salonId]);
   }
 
-  // ✅ NOUVELLE: Obtenir le message d'erreur pour les photos d'un salon
   getPhotosError(salonId: number): string {
     return this.photosErrors[salonId] || '';
   }
 
-  // ✅ NOUVELLE: Recharger les photos avec debug
   reloadPhotos(salonId: number) {
     console.log(`🔄 Rechargement forcé des photos pour salon ${salonId}`);
     this.photosInitialized[salonId] = false;
@@ -317,7 +345,16 @@ export class MesSalonsComponent implements OnInit {
     this.loadSalonPhotos(salonId, true);
   }
 
-  // ✅ NOUVELLE: Debug complet d'un salon
+  // ✅ NOUVELLE: Méthode pour gérer les erreurs remontées par HorairesManagerComponent
+  handleHorairesError(salonId: number, message: string): void {
+    this.horairesErrors[salonId] = message;
+    console.error(`Erreur horaires pour le salon ${salonId}: ${message}`);
+    this.errorMessage = `Erreur de gestion des horaires pour le salon ${salonId}: ${message}`;
+  }
+
+  // ✅ REMOVED: reloadHoraires, areHorairesLoading, hasHorairesLoaded, hasHorairesError, getHorairesError
+  // Ces méthodes sont maintenant gérées directement par HorairesManagerComponent ou via son output d'erreur.
+
   debugSalon(salonId: number) {
     console.log(`🔍 DEBUG salon ${salonId}:`);
     console.log('- Salon data:', this.salons.find(s => s.id === salonId));
@@ -325,42 +362,38 @@ export class MesSalonsComponent implements OnInit {
     console.log('- Photos data:', this.salonPhotos[salonId]);
     console.log('- Photos loading:', this.arePhotosLoading(salonId));
     console.log('- Photos error:', this.photosErrors[salonId]);
+    console.log('- Horaires error (from child):', this.horairesErrors[salonId]); // ✅ DEBUG Horaires
     console.log('- Active tab:', this.activeTab[salonId]);
-    
-    // Test de l'API directement
+
     if (confirm('Tester l\'API directement ?')) {
       this.testSalonPhotosAPI(salonId);
     }
   }
 
-  // ✅ NOUVELLE MÉTHODE CORRIGÉE: Test direct de l'API
   testSalonPhotosAPI(salonId: number) {
     const url = `http://localhost:8081/api/salons/${salonId}/photos`;
     console.log(`🧪 Test direct API: ${url}`);
-    
+
     fetch(url, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
-        // Ajoutez ici vos headers d'authentification si nécessaire
-        // 'Authorization': 'Bearer ' + your_token
       }
     })
     .then(response => {
       console.log('🌐 Status de la réponse:', response.status);
       console.log('🌐 Headers de la réponse:', Array.from(response.headers.entries()));
-      
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      
+
       return response.json();
     })
     .then(data => {
       console.log('✅ Données reçues en test direct:', data);
-      
-      // Analyser le format de la réponse
+
       if (data && typeof data === 'object' && 'photos' in data) {
         console.log(`📊 Format objet: ${data.photos.length} photos trouvées`);
         console.log('📋 Première photo:', data.photos[0]);
@@ -372,15 +405,13 @@ export class MesSalonsComponent implements OnInit {
       } else {
         console.log('⚠️ Format de données inattendu:', typeof data);
       }
-      
-      // Afficher un résumé à l'utilisateur
-      const summary = Array.isArray(data) 
-        ? `Format tableau: ${data.length} photos` 
+
+      const summary = Array.isArray(data)
+        ? `Format tableau: ${data.length} photos`
         : `Format objet: ${data.photos?.length || 0} photos`;
-      
+
       alert(`✅ API fonctionne!\n${summary}\n\nVoir console pour détails`);
-      
-      // Optionnel: mettre à jour les données du composant
+
       if (confirm('Voulez-vous utiliser ces données dans le composant ?')) {
         const photos = Array.isArray(data) ? data : (data.photos || []);
         this.salonPhotos[salonId] = photos;
@@ -393,35 +424,31 @@ export class MesSalonsComponent implements OnInit {
     });
   }
 
-  // ✅ MÉTHODES PHOTOS CORRIGÉES avec gestion des nouveaux types
-
   uploadSalonPhotos(salonId: number, files: FileList) {
     console.log(`📤 Upload ${files.length} photos pour salon ${salonId}`);
     this.setLoadingState(`upload-photos-${salonId}`, true);
-    
+
     const formData = new FormData();
     for (let i = 0; i < files.length; i++) {
       formData.append('files', files[i]);
     }
-    
+
     this.salonService.uploadSalonPhotos(salonId, formData).subscribe({
       next: (response: UploadResponse) => {
         console.log('✅ Upload réussi:', response);
-        
-        // Le service retourne maintenant toujours un objet UploadResponse
+
         if (response && response.photos && Array.isArray(response.photos)) {
-          // Ajouter les nouvelles photos aux existantes
           if (!this.salonPhotos[salonId]) {
             this.salonPhotos[salonId] = [];
           }
           this.salonPhotos[salonId] = [...this.salonPhotos[salonId], ...response.photos];
-          
+
           console.log(`📊 Total photos après upload: ${this.salonPhotos[salonId].length}`);
           console.log(`📝 Message: ${response.message}`);
         } else {
           console.warn('⚠️ Réponse upload sans photos:', response);
         }
-        
+
         this.setLoadingState(`upload-photos-${salonId}`, false);
       },
       error: (error) => {
@@ -434,28 +461,26 @@ export class MesSalonsComponent implements OnInit {
 
   deletePhoto(photoId: number, salonId: number) {
     if (!confirm('Voulez-vous vraiment supprimer cette photo ?')) return;
-    
+
     console.log(`🗑️ Suppression photo ${photoId} du salon ${salonId}`);
     this.setLoadingState(`delete-photo-${photoId}`, true);
-    
+
     this.salonService.deleteSalonPhoto(photoId).subscribe({
       next: (response: DeleteResponse) => {
         console.log('✅ Réponse suppression:', response);
-        
-        // Le service retourne maintenant toujours un objet DeleteResponse
+
         if (response && response.success) {
-          // Retirer la photo de la liste
           if (this.salonPhotos[salonId]) {
             this.salonPhotos[salonId] = this.salonPhotos[salonId].filter(photo => photo.id !== photoId);
           }
-          
+
           console.log(`📊 Photos restantes: ${this.salonPhotos[salonId]?.length || 0}`);
           console.log(`📝 Message: ${response.message}`);
         } else {
           console.error('❌ Échec suppression:', response.error);
           this.errorMessage = `Erreur suppression: ${response.error}`;
         }
-        
+
         this.setLoadingState(`delete-photo-${photoId}`, false);
       },
       error: (error) => {
@@ -466,9 +491,7 @@ export class MesSalonsComponent implements OnInit {
     });
   }
 
-  // ✅ MÉTHODES DE SERVICES CORRIGÉES - UTILISATION DU DIALOGUE
-
-  openNoDataDialog(data: {title: string, message: string, buttonText: string, icon: string}) {
+  openNoDataDialog(data: { title: string, message: string, buttonText: string, icon: string }) {
     const dialogRef = this.dialog.open(NoDataDialogComponent, {
       width: '400px',
       data: data
@@ -485,37 +508,37 @@ export class MesSalonsComponent implements OnInit {
     });
   }
 
-  // ✅ MÉTHODE CORRIGÉE: Ouvre le dialogue au lieu de créer directement
   addService(salonId: number) {
     const dialogRef = this.dialog.open(AddServiceDialogComponent, {
-      width: '450px', // ✅ Réduit de 600px à 450px
+      width: '600px',
       maxHeight: '90vh',
       disableClose: false,
-      data: { service: null } // null car c'est un nouveau service
+      data: { 
+        service: null,
+        salonId: salonId 
+      }
     });
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        // result contient les données du formulaire si l'utilisateur a cliqué sur "Ajouter"
         console.log('Nouveau service à créer:', result);
         this.createService(salonId, result);
       }
     });
   }
 
-  // ✅ NOUVELLE MÉTHODE: Créer le service avec les données du formulaire
   createService(salonId: number, serviceData: any) {
     this.setLoadingState(`create-service-${salonId}`, true);
-    
+
     this.serviceSalonService.createService(salonId, serviceData).subscribe({
       next: (service) => {
         console.log('✅ Service créé:', service);
-        
+
         if (!this.services[salonId]) {
           this.services[salonId] = [];
         }
         this.services[salonId].push(service);
-        
+
         this.setLoadingState(`create-service-${salonId}`, false);
       },
       error: (error) => {
@@ -526,21 +549,22 @@ export class MesSalonsComponent implements OnInit {
     });
   }
 
-  // ✅ MÉTHODE CORRIGÉE: Utilise le dialogue pour l'édition
   editService(serviceId: number, salonId: number) {
-    // Récupérer le service existant
     const existingService = this.services[salonId]?.find(s => s.id === serviceId);
-    
+
     if (!existingService) {
       this.errorMessage = 'Service non trouvé';
       return;
     }
 
     const dialogRef = this.dialog.open(AddServiceDialogComponent, {
-      width: '450px', // ✅ Réduit de 600px à 450px
+      width: '450px',
       maxHeight: '90vh',
       disableClose: false,
-      data: { service: existingService } // Passer le service existant pour l'édition
+      data: { 
+        service: existingService,
+        salonId: salonId 
+      }
     });
 
     dialogRef.afterClosed().subscribe(result => {
@@ -551,19 +575,18 @@ export class MesSalonsComponent implements OnInit {
     });
   }
 
-  // ✅ NOUVELLE MÉTHODE: Mettre à jour le service
   updateService(serviceId: number, salonId: number, serviceData: any) {
     this.setLoadingState(`update-service-${serviceId}`, true);
-    
+
     this.serviceSalonService.updateService(serviceId, serviceData).subscribe({
       next: (updatedService) => {
         console.log('✅ Service mis à jour:', updatedService);
-        
+
         const index = this.services[salonId].findIndex(s => s.id === serviceId);
         if (index !== -1) {
           this.services[salonId][index] = updatedService;
         }
-        
+
         this.setLoadingState(`update-service-${serviceId}`, false);
       },
       error: (error) => {
@@ -595,38 +618,77 @@ export class MesSalonsComponent implements OnInit {
     }
   }
 
-  // ✅ MÉTHODES EXISTANTES INCHANGÉES
-
   editSalon(salonId: number) {
-    console.log('Modifier le salon avec ID:', salonId);
+    console.log('🔄 Modifier le salon avec ID:', salonId);
+    
+    // Trouver le salon à modifier dans la liste
+    const salonToEdit = this.salons.find(salon => salon.id === salonId);
+    
+    if (!salonToEdit) {
+      console.error('❌ Salon non trouvé avec ID:', salonId);
+      return;
+    }
+    
+    console.log('📝 Données du salon à modifier:', salonToEdit);
+    
+    // Activer le mode édition et définir le salon à modifier
+    this.isEditMode = true;
+    this.salonToEdit = salonToEdit;
+    this.showModal = true;
   }
 
   closeModal() {
     console.log('Modal fermé ou redirection effectuée.');
+    this.showModal = false;
+    this.isEditMode = false;
+    this.salonToEdit = null;
     this.closeModalEvent.emit();
+  }
+
+  // ✅ NOUVELLE MÉTHODE - Gérer la mise à jour du salon
+  onSalonUpdated(updatedSalon: any) {
+    console.log('✅ Salon mis à jour:', updatedSalon);
+    
+    // Mettre à jour la liste des salons
+    const index = this.salons.findIndex(salon => salon.id === updatedSalon.id);
+    if (index !== -1) {
+      this.salons[index] = updatedSalon;
+    }
+    
+    this.closeModal();
+    
+    // Recharger les données du salon
+    this.loadSalons();
+  }
+
+  // ✅ NOUVELLE MÉTHODE - Ouvrir modal de création
+  openCreateModal() {
+    this.isEditMode = false;
+    this.salonToEdit = null;
+    this.showModal = true;
   }
 
   changeProfilePhoto(salonId: number) {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.accept = 'image/*';
-    
+
     fileInput.addEventListener('change', (event) => {
       const file = (event.target as HTMLInputElement).files?.[0];
       if (file) {
         this.uploadProfilePhoto(salonId, file);
       }
     });
-    
+
     fileInput.click();
   }
-  
+
   uploadProfilePhoto(salonId: number, file: File) {
     this.setLoadingState(`profile-photo-${salonId}`, true);
-    
+
     const formData = new FormData();
     formData.append('file', file);
-    
+
     this.salonService.updateSalonProfilePhoto(salonId, formData).subscribe({
       next: (updatedSalon) => {
         const index = this.salons.findIndex(s => s.id === salonId);
@@ -647,14 +709,14 @@ export class MesSalonsComponent implements OnInit {
     fileInput.type = 'file';
     fileInput.accept = 'image/*';
     fileInput.multiple = true;
-    
+
     fileInput.addEventListener('change', (event) => {
       const files = (event.target as HTMLInputElement).files;
       if (files && files.length > 0) {
         this.uploadSalonPhotos(salonId, files);
       }
     });
-    
+
     fileInput.click();
   }
 
@@ -675,10 +737,152 @@ export class MesSalonsComponent implements OnInit {
     });
   }
 
-  // Méthode pour gérer les erreurs de chargement d'images
   onImageError(event: any) {
     console.warn('Erreur de chargement d\'image:', event.target.src);
-    // Remplacer par une image par défaut
     event.target.src = 'assets/images/default-image.jpg';
+  }
+
+  // ✅ NOUVELLES MÉTHODES POUR LA GESTION DES EMPLOYÉS
+
+  loadSalonEmployes(salonId: number, forceReload: boolean = false) {
+    if (this.employesInitialized[salonId] && !forceReload) {
+      console.log(`👥 Employés déjà chargés pour salon ${salonId}`);
+      return;
+    }
+
+    if (this.getLoadingState(`employes-${salonId}`)) {
+      console.log(`⏳ Chargement employés déjà en cours pour salon ${salonId}`);
+      return;
+    }
+
+    console.log(`🔄 Début chargement employés salon ${salonId} (force: ${forceReload})`);
+
+    this.setLoadingState(`employes-${salonId}`, true);
+    this.employesErrors[salonId] = '';
+
+    this.employeService.listerEmployes(salonId, 0, 10).subscribe({
+      next: (response: { content: EmployeListItem[]; totalElements: number; }) => {
+        console.log(`✅ Employés reçus pour salon ${salonId}:`, response);
+
+        this.salonEmployes[salonId] = response.content || [];
+        this.employesInitialized[salonId] = true;
+        this.setLoadingState(`employes-${salonId}`, false);
+
+        console.log(`📊 ${response.content.length} employés chargés pour salon ${salonId}`);
+      },
+      error: (error) => {
+        console.error(`❌ Erreur employés salon ${salonId}:`, error);
+
+        this.employesErrors[salonId] = error.message || 'Erreur de chargement';
+        this.salonEmployes[salonId] = [];
+        this.employesInitialized[salonId] = true;
+        this.setLoadingState(`employes-${salonId}`, false);
+
+        this.errorMessage = `Erreur employés salon ${salonId}: ${error.message}`;
+      }
+    });
+  }
+
+  // Méthodes utilitaires pour les employés
+  areEmployesLoading(salonId: number): boolean {
+    return this.getLoadingState(`employes-${salonId}`);
+  }
+
+  hasEmployesLoaded(salonId: number): boolean {
+    return this.employesInitialized[salonId] === true;
+  }
+
+  hasEmployesError(salonId: number): boolean {
+    return !!(this.employesErrors[salonId]);
+  }
+
+  getEmployesError(salonId: number): string {
+    return this.employesErrors[salonId] || '';
+  }
+
+  getEmployesCount(salonId: number): number {
+    return this.salonEmployes[salonId]?.length || 0;
+  }
+
+  getEmployeStatutClass(statut: string): string {
+    switch (statut?.toLowerCase()) {
+      case 'actif': return 'statut-actif';
+      case 'inactif': return 'statut-inactif';
+      case 'conge': return 'statut-conge';
+      case 'suspendu': return 'statut-suspendu';
+      default: return '';
+    }
+  }
+
+  // Ouvrir le formulaire employé en modal
+  navigateToEmployeForm(salonId: number) {
+    console.log(`🔄 Ouverture modal création employé pour salon ${salonId}`);
+    
+    const dialogRef = this.dialog.open(EmployeFormComponent, {
+      width: '800px',
+      maxWidth: '95vw',
+      maxHeight: '90vh',
+      disableClose: false,
+      hasBackdrop: true,
+      panelClass: 'employe-form-dialog',
+      data: { 
+        salonId: salonId,
+        isEditMode: false
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      console.log('🔄 Dialog fermé avec résultat:', result);
+      if (result && result.success) {
+        console.log('✅ Employé créé:', result.employe);
+        // Recharger les employés du salon
+        this.reloadEmployes(salonId);
+      } else {
+        console.log('❌ Création annulée ou échouée');
+      }
+    });
+  }
+
+  navigateToEmployeList(salonId: number) {
+    console.log(`➡️ Navigation vers liste employés pour salon ${salonId}`);
+    // Stocker l'ID du salon pour filtrer les employés
+    localStorage.setItem('currentSalonId', salonId.toString());
+    this.router.navigate(['/employeur/employes']);
+  }
+
+  editEmploye(employeId: number, salonId: number) {
+    console.log(`🔄 Ouverture modal édition employé ${employeId} du salon ${salonId}`);
+    
+    const dialogRef = this.dialog.open(EmployeFormComponent, {
+      width: '800px',
+      maxWidth: '95vw', 
+      maxHeight: '90vh',
+      disableClose: false,
+      hasBackdrop: true,
+      panelClass: 'employe-form-dialog',
+      data: {
+        salonId: salonId,
+        employeId: employeId,
+        isEditMode: true
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      console.log('🔄 Dialog édition fermé avec résultat:', result);
+      if (result && result.success) {
+        console.log('✅ Employé modifié:', result.employe);
+        // Recharger les employés du salon
+        this.reloadEmployes(salonId);
+      } else {
+        console.log('❌ Modification annulée ou échouée');
+      }
+    });
+  }
+
+  reloadEmployes(salonId: number) {
+    console.log(`🔄 Rechargement forcé des employés pour salon ${salonId}`);
+    this.employesInitialized[salonId] = false;
+    this.employesErrors[salonId] = '';
+    this.loadSalonEmployes(salonId, true);
   }
 }

@@ -14,7 +14,7 @@ $primary-palette: (
 );
 
 $secondary-palette: (
-  main: #9ca3af,
+  main: #b2bcc7,
   lighter: #e5e7eb,
   darker: #6b7280,
   text: #000000
@@ -46,21 +46,21 @@ $job-gradient-accent: linear-gradient(135deg, color.adjust(map.get($primary-pale
   margin: 0 auto;
   padding: 20px;
   position: relative;
-  
+
   // Mode compact adaptatif
   &.compact-mode {
     padding: 10px;
     max-width: 100%;
-    
+
     .header-section {
       padding: 1.5rem 1rem;
       margin-bottom: 1.5rem;
-      
+
       h1 {
         font-size: 1.8rem;
         margin-bottom: 0.5rem;
       }
-      
+
       p {
         font-size: 1rem;
       }
@@ -389,7 +389,7 @@ $job-gradient-accent: linear-gradient(135deg, color.adjust(map.get($primary-pale
    💼 CARTES D'OFFRES
 =============================================== */
 .offer-card {
-  background: rgba($white, 0.95);
+  background: rgba(#e3edf4, 0.95);
   backdrop-filter: blur(10px);
   border-radius: 16px;
   padding: 1.25rem;
@@ -412,21 +412,21 @@ $job-gradient-accent: linear-gradient(135deg, color.adjust(map.get($primary-pale
 
   &.compact-card {
     padding: 1rem;
-    
+
     .offer-header h3 {
       font-size: 1.1rem;
     }
-    
+
     .offer-details .detail-item {
       padding: 0.5rem;
       font-size: 0.85rem;
     }
-    
+
     .offer-footer {
       .experience {
         font-size: 0.8rem;
       }
-      
+
       .view-details-btn {
         padding: 0.5rem 1rem;
         font-size: 0.8rem;
@@ -556,6 +556,70 @@ $job-gradient-accent: linear-gradient(135deg, color.adjust(map.get($primary-pale
 }
 
 /* ===============================================
+   🏢 INFORMATIONS DU SALON
+=============================================== */
+.salon-info {
+  margin-bottom: 1.25rem;
+  background: rgba(map.get($primary-palette, lighter), 0.1);
+  padding: 0.875rem;
+  border-radius: 10px;
+  border-left: 3px solid map.get($primary-palette, main);
+
+  .salon-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    
+    i {
+      color: map.get($primary-palette, main);
+      font-size: 0.9rem;
+    }
+    
+    strong {
+      color: $text-dark;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+  }
+
+  .salon-details {
+    .salon-address {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      
+      i {
+        color: map.get($secondary-palette, darker);
+        font-size: 0.8rem;
+        width: 12px;
+      }
+      
+      span {
+        font-size: 0.85rem;
+        color: map.get($secondary-palette, darker);
+      }
+    }
+
+    .salon-description {
+      p {
+        margin: 0;
+        font-size: 0.82rem;
+        color: map.get($secondary-palette, darker);
+        line-height: 1.4;
+        font-style: italic;
+      }
+    }
+  }
+}
+
+// Icône salon en mode compact
+.detail-item .salon-icon {
+  color: map.get($primary-palette, main);
+}
+
+/* ===============================================
    🦶 FOOTER DE LA CARTE
 =============================================== */
 .offer-footer {
@@ -635,7 +699,7 @@ $job-gradient-accent: linear-gradient(135deg, color.adjust(map.get($primary-pale
       font-size: 1rem;
       color: map.get($secondary-palette, darker);
       margin: 0 0 1rem 0;
-      
+
       strong {
         color: map.get($primary-palette, main);
         font-weight: 700;
@@ -735,6 +799,247 @@ $job-gradient-accent: linear-gradient(135deg, color.adjust(map.get($primary-pale
   i {
     color: map.get($primary-palette, main);
     font-size: 0.9rem;
+  }
+}
+
+/* ===============================================
+   🏷️ STATUTS DES CANDIDATURES
+=============================================== */
+.candidature-status {
+  margin-top: 10px;
+  
+  .status-badge.candidature {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 1px solid;
+    transition: all 0.3s ease;
+    
+    i {
+      font-size: 8px;
+    }
+    
+    // Statut: En attente / Nouveau
+    &.en_attente, &.nouveau {
+      background-color: rgba(255, 193, 7, 0.1);
+      color: #FF8F00;
+      border-color: rgba(255, 143, 0, 0.3);
+      
+      &:hover {
+        background-color: rgba(255, 193, 7, 0.2);
+        transform: translateY(-1px);
+      }
+    }
+    
+    // Statut: Acceptée
+    &.acceptee {
+      background-color: rgba(76, 175, 80, 0.1);
+      color: #2E7D32;
+      border-color: rgba(46, 125, 50, 0.3);
+      
+      &:hover {
+        background-color: rgba(76, 175, 80, 0.2);
+        transform: translateY(-1px);
+      }
+    }
+    
+    // Statut: Refusée
+    &.refusee {
+      background-color: rgba(244, 67, 54, 0.1);
+      color: #C62828;
+      border-color: rgba(198, 40, 40, 0.3);
+      
+      &:hover {
+        background-color: rgba(244, 67, 54, 0.2);
+        transform: translateY(-1px);
+      }
+    }
+    
+    // Animation pour les statuts importants
+    &.acceptee {
+      animation: pulse-success 2s infinite;
+    }
+    
+    &.refusee {
+      animation: pulse-error 3s infinite;
+    }
+  }
+}
+
+// Animations pour les statuts
+@keyframes pulse-success {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(76, 175, 80, 0);
+  }
+}
+
+@keyframes pulse-error {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(244, 67, 54, 0);
+  }
+}
+
+/* ===============================================
+   🚨 ALERTES DE STATUT CANDIDATURE
+=============================================== */
+.status-alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-radius: 12px;
+  margin-top: 8px;
+  border: 1px solid;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  animation: slideInUp 0.3s ease-out;
+  
+  .alert-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    
+    i {
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+    
+    .alert-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      
+      strong {
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      
+      small {
+        font-size: 0.75rem;
+        opacity: 0.8;
+        font-weight: 400;
+      }
+    }
+  }
+  
+  .alert-action {
+    .animated-bell {
+      animation: bell-ring 2s infinite;
+    }
+  }
+  
+  // Statut: Candidature acceptée
+  &.status-accepted {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    border-color: #28a745;
+    color: #155724;
+    
+    .alert-content i {
+      color: #28a745;
+    }
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(40, 167, 69, 0.3);
+    }
+  }
+  
+  // Statut: Candidature refusée
+  &.status-rejected {
+    background: linear-gradient(135deg, #f8d7da 0%, #f1b0b7 100%);
+    border-color: #dc3545;
+    color: #721c24;
+    
+    .alert-content i {
+      color: #dc3545;
+    }
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(220, 53, 69, 0.3);
+    }
+  }
+  
+  // Statut: En cours d'évaluation
+  &.status-in-progress {
+    background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+    border-color: #17a2b8;
+    color: #0c5460;
+    
+    .alert-content i {
+      color: #17a2b8;
+    }
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(23, 162, 184, 0.3);
+    }
+  }
+}
+
+// Classes pour les badges de statut
+.status-badge {
+  &.status-pending {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: #FF8F00;
+    border-color: rgba(255, 143, 0, 0.3);
+  }
+  
+  &.status-accepted {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #155724;
+    border-color: rgba(40, 167, 69, 0.3);
+  }
+  
+  &.status-rejected {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #721c24;
+    border-color: rgba(220, 53, 69, 0.3);
+  }
+  
+  &.status-in-progress {
+    background-color: rgba(23, 162, 184, 0.1);
+    color: #0c5460;
+    border-color: rgba(23, 162, 184, 0.3);
+  }
+}
+
+// Animation pour l'apparition des alertes
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Animation pour la cloche
+@keyframes bell-ring {
+  0%, 50%, 100% {
+    transform: rotate(0deg);
+  }
+  10%, 30% {
+    transform: rotate(10deg);
+  }
+  20%, 40% {
+    transform: rotate(-10deg);
   }
 }
 

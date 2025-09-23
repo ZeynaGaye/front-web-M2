@@ -1,0 +1,91 @@
+<div class="profile-photo-upload">
+  <!-- ✅ Zone d'affichage de la photo actuelle -->
+  <div class="photo-display-zone" *ngIf="hasPhoto">
+    <div class="current-photo">
+      <img [src]="photoUrl" 
+           alt="Photo de profil" 
+           class="profile-image"
+           (error)="onImageError($event)">
+      
+      <!-- Overlay avec actions -->
+      <div class="photo-overlay">
+        <button mat-icon-button 
+                class="action-btn change-btn"
+                (click)="triggerFileSelect()"
+                [disabled]="isUploading"
+                matTooltip="Changer la photo">
+          <mat-icon>edit</mat-icon>
+        </button>
+        
+        <button mat-icon-button 
+                class="action-btn delete-btn"
+                (click)="deletePhoto()"
+                [disabled]="isDeleting"
+                matTooltip="Supprimer la photo">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+      
+      <!-- Spinner de suppression -->
+      <div class="loading-overlay" *ngIf="isDeleting">
+        <mat-spinner diameter="30"></mat-spinner>
+        <span>Suppression...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ Zone d'upload (drag & drop) -->
+  <div class="upload-zone" 
+       [class.drag-over]="dragOver"
+       [class.has-photo]="hasPhoto"
+       *ngIf="!hasPhoto || isUploading"
+       (dragover)="onDragOver($event)"
+       (dragleave)="onDragLeave($event)"
+       (drop)="onDrop($event)"
+       (click)="triggerFileSelect()">
+    
+    <!-- État normal -->
+    <div class="upload-content" *ngIf="!isUploading">
+      <mat-icon class="upload-icon">cloud_upload</mat-icon>
+      <h3>Ajouter une photo de profil</h3>
+      <p class="upload-instructions">
+        Cliquez ici ou glissez-déposez une image<br>
+        <small>JPG, PNG ou WEBP - Maximum 5MB</small>
+      </p>
+      <button mat-raised-button color="primary" class="select-btn">
+        <mat-icon>add_photo_alternate</mat-icon>
+        Sélectionner une photo
+      </button>
+    </div>
+    
+    <!-- État de chargement -->
+    <div class="uploading-content" *ngIf="isUploading">
+      <mat-spinner diameter="40"></mat-spinner>
+      <h3>Upload en cours...</h3>
+      <p>Veuillez patienter</p>
+    </div>
+  </div>
+
+  <!-- ✅ Input file caché -->
+  <input type="file" 
+         id="photo-file-input"
+         class="file-input"
+         accept="image/jpeg,image/jpg,image/png,image/webp"
+         (change)="onFileSelected($event)">
+
+  <!-- ✅ Informations utiles -->
+  <div class="photo-info" *ngIf="!isUploading">
+    <div class="info-card">
+      <mat-icon class="info-icon">info</mat-icon>
+      <div class="info-text">
+        <h4>Conseils pour une bonne photo de profil</h4>
+        <ul>
+          <li>Utilisez une photo récente et professionnelle</li>
+          <li>Assurez-vous que votre visage est bien visible</li>
+          <li>Évitez les photos floues ou trop sombres</li>
+          <li>Un sourire chaleureux inspire confiance</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

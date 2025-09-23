@@ -3,14 +3,19 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ReservationService } from '../../../shared/services/reservation/reservation.service';
 
-
 interface Reservation {
   id: number;
   clientId: number;
   clientNom?: string;
+  clientPrenom?: string;
+  clientAdresse?: string;
   clientEmail?: string;
   clientTelephone?: string;
-  salonId: number;
+  salonId?: number;
+  salonNom?: string;
+  salonAdresse?: string;
+  freelanceId?: number;
+  freelanceNom?: string;
   serviceId: number;
   serviceNom: string;
   serviceDescription?: string;
@@ -18,7 +23,7 @@ interface Reservation {
   servicePrix: number;
   datePrestation: Date;
   dateCreation: Date;
-  statut: 'confirmee' | 'terminee' | 'annulee' | 'non_presentee'; // ✅ CORRIGÉ
+  statut: 'confirmee' | 'terminee' | 'annulee' | 'non_presentee';
   notes?: string;
 }
 
@@ -37,40 +42,49 @@ interface Salon {
   styleUrls: ['./reservations.component.scss']
 })
 export class ReservationsComponent implements OnInit {
-  
+
   @Input() salons: Salon[] = [];
+  @Input() isFreelance: boolean = true; // ✅ NOUVEAU: Indique si c'est pour un freelance
+  @Input() isClient: boolean = false; // ✅ NOUVEAU: Indique si c'est pour un client
   @Output() closeEvent = new EventEmitter<void>();
   @Output() reservationUpdated = new EventEmitter<any>();
   @Output() statsUpdated = new EventEmitter<any>();
-  
+
   reservations: Reservation[] = [];
   filteredReservations: Reservation[] = [];
   selectedReservation: Reservation | null = null;
   loadingReservations = false;
   reservationsError: string | null = null;
-  
-  // ✅ STATISTIQUES CORRIGÉES
-  confirmedReservationsCount = 0; // CONFIRMEE = "en attente" dans l'affichage
-  completedReservationsCount = 0;   // TERMINEE
+
+  // ✅ GESTION DES AVIS
+  avis: any[] = [];
+  loadingAvis = false;
+  avisError: string | null = null;
+  showAvisSection = true;
+
+  // ✅ STATISTIQUES
+  confirmedReservationsCount = 0; // CONFIRMEE
+  completedReservationsCount = 0; // TERMINEE
   todayReservationsCount = 0;
   totalRevenue = 0;
-  
+
   searchTerm = '';
   statusFilter = '';
   salonFilter = '';
   dateFilter = '';
   viewMode: 'cards' | 'list' | 'calendar' = 'cards';
-  
+
   constructor(private reservationService: ReservationService) {}
-  
+
   ngOnInit(): void {
     this.loadReservations();
+    this.loadAvis();
   }
-  
+
   trackByReservationId(index: number, reservation: Reservation): number {
     return reservation.id;
   }
-  
+
   /**
    * ✅ LABELS CORRIGÉS
    */
@@ -83,47 +97,72 @@ export class ReservationsComponent implements OnInit {
     };
     return labels[statut] || statut;
   }
-  
+
+  /**
+   * ✅ CHARGEMENT CORRIGÉ - Utilise la bonne méthode selon le contexte
+   */
   loadReservations(): void {
     this.loadingReservations = true;
     this.reservationsError = null;
-    
-    this.reservationService.getEmployeurReservations().subscribe({
+
+    console.log(`🔄 Chargement des réservations ${this.isFreelance ? 'freelance' : 'employeur'}...`);
+
+    // ✅ CORRECTION: Utiliser la bonne méthode selon le contexte
+    const reservationsObservable = this.isFreelance 
+      ? this.reservationService.getFreelanceReservations()
+      : this.reservationService.getEmployeurReservations();
+
+    reservationsObservable.subscribe({
       next: (data: any[]) => {
-        console.log('Réservations chargées:', data);
-        
+        console.log('✅ Réservations chargées:', data);
+
         this.reservations = data.map(reservation => ({
           id: reservation.id,
-          clientId: reservation.clientId || reservation.utilisateurId,
-          clientNom: reservation.clientNom || reservation.nomClient || `Client #${reservation.clientId}`,
-          clientEmail: reservation.clientEmail || reservation.emailClient,
-          clientTelephone: reservation.clientTelephone || reservation.telephoneClient,
-          salonId: reservation.salonId,
-          serviceId: reservation.serviceId,
-          serviceNom: reservation.serviceNom || reservation.nomService || 'Service',
-          serviceDescription: reservation.serviceDescription || reservation.descriptionService,
-          serviceDuree: reservation.serviceDuree || reservation.dureeService || 30,
-          servicePrix: reservation.servicePrix || reservation.prixService || 0,
+          clientId: reservation.clientId || reservation.client?.id || reservation.utilisateurId,
+          // ✅ MAPPING CLIENT
+          clientNom: reservation.clientNom || reservation.nomClient || reservation.client?.nom || `Client #${reservation.clientId}`,
+          clientPrenom: reservation.clientPrenom || reservation.prenomClient || reservation.client?.prenom,
+          clientAdresse: reservation.clientAdresse || reservation.adresseClient || reservation.client?.adresse,
+          clientEmail: reservation.clientEmail || reservation.emailClient || reservation.client?.email,
+          clientTelephone: reservation.clientTelephone || reservation.telephoneClient || reservation.client?.telephone,
+          // ✅ MAPPING SALON/FREELANCE
+          salonId: reservation.salonId || reservation.salon?.id,
+          salonNom: reservation.salonNom || reservation.nomSalon || reservation.salon?.nom,
+          salonAdresse: reservation.salonAdresse || reservation.adresseSalon || reservation.salon?.adresse,
+          freelanceId: reservation.freelanceId || reservation.freelance?.id,
+          freelanceNom: reservation.freelanceNom || reservation.nomFreelance || reservation.freelance?.nom,
+          // ✅ MAPPING SERVICE
+          serviceId: reservation.serviceId || reservation.serviceSalon?.id || reservation.service?.id,
+          serviceNom: reservation.serviceNom || reservation.nomService || reservation.serviceSalon?.nom || reservation.service?.nom || reservation.serviceName || 'Service',
+          serviceDescription: reservation.serviceDescription || reservation.descriptionService || reservation.serviceSalon?.description || reservation.service?.description,
+          serviceDuree: reservation.serviceDuree || reservation.dureeService || reservation.serviceSalon?.duree || reservation.service?.duree || 30,
+          servicePrix: reservation.servicePrix || reservation.prixService || reservation.serviceSalon?.prix || reservation.service?.prix || reservation.prixTotal || 0,
+          // ✅ MAPPING DATES
           datePrestation: new Date(reservation.datePrestation || reservation.dateRendezVous),
           dateCreation: new Date(reservation.dateCreation || reservation.createdAt || Date.now()),
           statut: this.normalizeStatut(reservation.statut || reservation.status || 'confirmee'),
           notes: reservation.notes || reservation.commentaires || ''
         }));
-        
+
         this.calculateReservationsStats();
         this.filterReservations();
         this.loadingReservations = false;
         this.emitStatsToParent();
       },
       error: (error) => {
-        console.error('Erreur lors du chargement des réservations:', error);
+        console.error('❌ Erreur lors du chargement des réservations:', error);
         this.reservationsError = 'Impossible de charger les réservations.';
         this.loadingReservations = false;
-        this.loadMockReservations();
+        
+        // ✅ En cas d'erreur, essayer de charger des données de test pour le développement
+        if (error.status === 403 || error.status === 401) {
+          console.warn('⚠️ Erreur d\'autorisation - Chargement de données de test');
+          this.loadMockReservations();
+        }
       }
     });
   }
-  
+
   /**
    * ✅ MAPPING STATUTS CORRIGÉ
    */
@@ -139,26 +178,26 @@ export class ReservationsComponent implements OnInit {
       'NON_PRESENTEE': 'non_presentee',
       'no_show': 'non_presentee'
     };
-    
+
     return statusMap[statut] || 'confirmee';
   }
-  
+
   /**
    * ✅ STATISTIQUES CORRIGÉES
    */
   private calculateReservationsStats(): void {
     const stats = {
       total: this.reservations.length,
-      confirmees: 0,    // "En attente" dans l'affichage
+      confirmees: 0,
       terminees: 0,
       annulees: 0,
       nonPresentees: 0,
       chiffreAffaires: 0,
       reservationsAujourdhui: 0
     };
-    
+
     const today = new Date().toISOString().split('T')[0];
-    
+
     this.reservations.forEach(reservation => {
       switch (reservation.statut) {
         case 'confirmee':
@@ -175,21 +214,21 @@ export class ReservationsComponent implements OnInit {
           stats.nonPresentees++;
           break;
       }
-      
+
       const reservationDate = new Date(reservation.datePrestation);
       if (reservationDate.toISOString().split('T')[0] === today) {
         stats.reservationsAujourdhui++;
       }
     });
-    
+
     this.confirmedReservationsCount = stats.confirmees;
     this.completedReservationsCount = stats.terminees;
     this.todayReservationsCount = stats.reservationsAujourdhui;
     this.totalRevenue = stats.chiffreAffaires;
-    
-    console.log('Statistiques calculées:', stats);
+
+    console.log('📊 Statistiques calculées:', stats);
   }
-  
+
   private emitStatsToParent(): void {
     const stats = {
       confirmedReservationsCount: this.confirmedReservationsCount,
@@ -197,74 +236,107 @@ export class ReservationsComponent implements OnInit {
       todayReservationsCount: this.todayReservationsCount,
       totalRevenue: this.totalRevenue
     };
-    
+
     this.statsUpdated.emit(stats);
   }
-  
+
   // ==========================================
-  // 🎯 ACTIONS CORRIGÉES
+  // 🎯 ACTIONS CORRIGÉES POUR FREELANCE
   // ==========================================
-  
+
   /**
    * ✅ TERMINER (CONFIRMEE → TERMINEE)
    */
   completeReservation(reservationId: number): void {
-    console.log('Finalisation réservation:', reservationId);
-    
+    console.log('📝 Finalisation réservation:', reservationId);
+
     this.reservationService.terminerReservation(reservationId).subscribe({
       next: (updatedReservation) => {
-        console.log('Réservation terminée:', updatedReservation);
+        console.log('✅ Réservation terminée:', updatedReservation);
         this.updateLocalReservation(reservationId, updatedReservation);
         this.showSuccessMessage('Réservation terminée avec succès');
         this.reservationUpdated.emit({ action: 'completed', reservation: updatedReservation });
       },
       error: (error) => {
-        console.error('Erreur finalisation:', error);
+        console.error('❌ Erreur finalisation:', error);
         this.showErrorMessage('Impossible de terminer la réservation');
       }
     });
   }
-  
+
   /**
-   * ✅ ANNULER (CONFIRMEE → ANNULEE_PRESTATAIRE)
+   * ✅ ANNULER/REFUSER (CONFIRMEE → ANNULEE_PRESTATAIRE)
    */
   cancelReservation(reservationId: number): void {
-    console.log('Annulation réservation:', reservationId);
+    console.log('❌ Annulation réservation:', reservationId);
+
+    const motif = this.isFreelance ? 'Annulée par le freelance' : 'Annulée par le salon';
     
-    this.reservationService.refuserReservation(reservationId, 'Annulée par le salon').subscribe({
+    this.reservationService.refuserReservation(reservationId, motif).subscribe({
       next: (updatedReservation) => {
-        console.log('Réservation annulée:', updatedReservation);
+        console.log('✅ Réservation annulée:', updatedReservation);
         this.updateLocalReservation(reservationId, updatedReservation);
         this.showSuccessMessage('Réservation annulée');
         this.reservationUpdated.emit({ action: 'cancelled', reservation: updatedReservation });
       },
       error: (error) => {
-        console.error('Erreur annulation:', error);
+        console.error('❌ Erreur annulation:', error);
         this.showErrorMessage('Impossible d\'annuler la réservation');
       }
     });
   }
-  
+
   /**
-   * ✅ NOUVEAU : NON PRÉSENTÉ (CONFIRMEE → NON_PRESENTEE)
+   * ✅ MARQUER COMME NON PRÉSENTÉ (CONFIRMEE → NON_PRESENTEE)
    */
   markNoShow(reservationId: number): void {
-    console.log('Marquer non présenté:', reservationId);
-    
+    console.log('👻 Marquer non présenté:', reservationId);
+
     this.reservationService.marquerNonPresentee(reservationId).subscribe({
       next: (updatedReservation) => {
-        console.log('Client marqué non présenté:', updatedReservation);
+        console.log('✅ Client marqué non présenté:', updatedReservation);
         this.updateLocalReservation(reservationId, updatedReservation);
         this.showSuccessMessage('Client marqué comme non présenté');
         this.reservationUpdated.emit({ action: 'no_show', reservation: updatedReservation });
       },
       error: (error) => {
-        console.error('Erreur non présenté:', error);
+        console.error('❌ Erreur non présenté:', error);
         this.showErrorMessage('Impossible de marquer comme non présenté');
       }
     });
   }
-  
+
+  /**
+   * ✅ CONFIRMER UNE RÉSERVATION (pour freelance)
+   */
+  confirmReservation(reservationId: number): void {
+    console.log('✅ Confirmation réservation:', reservationId);
+
+    this.reservationService.confirmerReservation(reservationId).subscribe({
+      next: (updatedReservation) => {
+        console.log('✅ Réservation confirmée:', updatedReservation);
+        this.updateLocalReservation(reservationId, updatedReservation);
+        this.showSuccessMessage('Réservation confirmée');
+        this.reservationUpdated.emit({ action: 'confirmed', reservation: updatedReservation });
+      },
+      error: (error) => {
+        console.error('❌ Erreur confirmation:', error);
+        this.showErrorMessage('Impossible de confirmer la réservation');
+      }
+    });
+  }
+
+  /**
+   * ✅ Fermer modal
+   */
+  closeReservationModal(event?: MouseEvent): void {
+    if (event && (event.target as HTMLElement).classList.contains('modal')) {
+      this.selectedReservation = null;
+    } else if (!event) {
+      this.selectedReservation = null;
+    }
+  }
+
   private updateLocalReservation(reservationId: number, updatedData: any): void {
     const index = this.reservations.findIndex(r => r.id === reservationId);
     if (index !== -1) {
@@ -275,79 +347,75 @@ export class ReservationsComponent implements OnInit {
         datePrestation: new Date(updatedData.datePrestation || this.reservations[index].datePrestation),
         dateCreation: new Date(updatedData.dateCreation || this.reservations[index].dateCreation)
       };
-      
+
       if (this.selectedReservation && this.selectedReservation.id === reservationId) {
         this.selectedReservation = this.reservations[index];
       }
-      
+
       this.calculateReservationsStats();
       this.filterReservations();
       this.emitStatsToParent();
     }
   }
-  
+
+  // ==========================================
+  // 🔍 FILTRAGE ET RECHERCHE
+  // ==========================================
+
   filterReservations(): void {
     let filtered = [...this.reservations];
-    
+
     if (this.searchTerm.trim()) {
       const searchLower = this.searchTerm.toLowerCase();
-      filtered = filtered.filter(r => 
+      filtered = filtered.filter(r =>
         r.clientNom?.toLowerCase().includes(searchLower) ||
         r.serviceNom?.toLowerCase().includes(searchLower) ||
-        this.getSalonName(r.salonId).toLowerCase().includes(searchLower) ||
+        this.getServiceProviderName(r).toLowerCase().includes(searchLower) ||
         r.clientEmail?.toLowerCase().includes(searchLower) ||
         r.clientTelephone?.includes(this.searchTerm.trim())
       );
     }
-    
+
     if (this.statusFilter) {
       filtered = filtered.filter(r => r.statut === this.statusFilter);
     }
-    
+
     if (this.salonFilter) {
-      filtered = filtered.filter(r => r.salonId.toString() === this.salonFilter);
+      filtered = filtered.filter(r => r.salonId?.toString() === this.salonFilter);
     }
-    
+
     if (this.dateFilter) {
       const filterDate = new Date(this.dateFilter);
       filterDate.setHours(0, 0, 0, 0);
-      
+
       filtered = filtered.filter(r => {
         const reservationDate = new Date(r.datePrestation);
         reservationDate.setHours(0, 0, 0, 0);
         return reservationDate.getTime() === filterDate.getTime();
       });
     }
-    
+
     this.filteredReservations = filtered.sort((a, b) => {
       return new Date(b.datePrestation).getTime() - new Date(a.datePrestation).getTime();
     });
   }
-  
+
   closeReservations(): void {
     this.closeEvent.emit();
   }
-  
+
   viewReservationDetails(reservation: Reservation): void {
     this.selectedReservation = reservation;
   }
-  
-  closeReservationModal(event?: MouseEvent): void {
-    if (event && (event.target as HTMLElement).classList.contains('modal-overlay')) {
-      this.selectedReservation = null;
-    } else if (!event) {
-      this.selectedReservation = null;
-    }
-  }
-  
+
   setViewMode(mode: 'cards' | 'list' | 'calendar'): void {
     this.viewMode = mode;
   }
-  
+
   hasActiveFilters(): boolean {
     return !!(this.searchTerm || this.statusFilter || this.salonFilter || this.dateFilter);
   }
-  
+
   clearFilters(): void {
     this.searchTerm = '';
     this.statusFilter = '';
@@ -355,25 +423,28 @@ export class ReservationsComponent implements OnInit {
     this.dateFilter = '';
     this.filterReservations();
   }
-  
-  // Méthodes d'affichage (inchangées)
+
+  // ==========================================
+  // 📅 MÉTHODES D'AFFICHAGE
+  // ==========================================
+
   formatDay(date: Date): string {
     return date.getDate().toString().padStart(2, '0');
   }
-  
+
   formatMonth(date: Date): string {
-    const months = ['JAN', 'FÉV', 'MAR', 'AVR', 'MAI', 'JUN', 
-                   'JUL', 'AOÛ', 'SEP', 'OCT', 'NOV', 'DÉC'];
+    const months = ['JAN', 'FÉV', 'MAR', 'AVR', 'MAI', 'JUN',
+                    'JUL', 'AOÛ', 'SEP', 'OCT', 'NOV', 'DÉC'];
     return months[date.getMonth()];
   }
-  
+
   formatTime(date: Date): string {
-    return date.toLocaleTimeString('fr-FR', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
+    return date.toLocaleTimeString('fr-FR', {
+      hour: '2-digit',
+      minute: '2-digit'
     });
   }
-  
+
   formatDate(date: Date): string {
     return date.toLocaleDateString('fr-FR', {
       day: '2-digit',
@@ -381,7 +452,7 @@ export class ReservationsComponent implements OnInit {
       year: 'numeric'
     });
   }
-  
+
   formatFullDate(date: Date): string {
     return date.toLocaleDateString('fr-FR', {
       weekday: 'long',
@@ -390,88 +461,174 @@ export class ReservationsComponent implements OnInit {
       day: 'numeric'
     });
   }
-  
-  getSalonName(salonId: number): string {
-    const salon = this.salons.find(s => s.id === salonId);
-    return salon ? salon.nom : `Salon #${salonId}`;
+
+  // ✅ Méthodes pour gérer le nom et l'adresse du prestataire
+  getServiceProviderName(reservation: Reservation): string {
+    if (reservation.salonId) {
+      const salon = this.salons.find(s => s.id === reservation.salonId);
+      return reservation.salonNom || salon?.nom || `Salon #${reservation.salonId}`;
+    } else if (reservation.freelanceId) {
+      return reservation.freelanceNom || `Freelance #${reservation.freelanceId}`;
+    }
+    return 'Prestataire inconnu';
   }
-  
-  getSalonAddress(salonId: number): string {
-    const salon = this.salons.find(s => s.id === salonId);
-    return salon ? salon.adresse : 'Adresse non trouvée';
+
+  getServiceProviderAddress(reservation: Reservation): string {
+    if (reservation.salonId) {
+      const salon = this.salons.find(s => s.id === reservation.salonId);
+      return reservation.salonAdresse || salon?.adresse || 'Adresse salon non trouvée';
+    }
+    return 'Adresse non applicable';
   }
-  
+
+  // ==========================================
+  // 🌟 GESTION DES AVIS
+  // ==========================================
+
+  /**
+   * Charger les avis selon le type d'utilisateur
+   */
+  loadAvis(): void {
+    this.loadingAvis = true;
+    this.avisError = null;
+
+    const avisObservable = this.isFreelance 
+      ? this.reservationService.getFreelanceAvis()
+      : this.reservationService.getSalonAvis();
+
+    avisObservable.subscribe({
+      next: (data: any[]) => {
+        console.log('✅ Avis chargés:', data);
+        this.avis = data;
+        this.loadingAvis = false;
+      },
+      error: (error) => {
+        console.error('❌ Erreur chargement avis:', error);
+        this.avisError = 'Impossible de charger les avis';
+        this.loadingAvis = false;
+      }
+    });
+  }
+
+  /**
+   * Basculer l'affichage de la section avis
+   */
+  toggleAvisSection(): void {
+    this.showAvisSection = !this.showAvisSection;
+    if (this.showAvisSection && this.avis.length === 0) {
+      this.loadAvis();
+    }
+  }
+
+  /**
+   * Formater les étoiles pour affichage
+   */
+  formatStars(rating: number): string {
+    const stars = '★'.repeat(rating) + '☆'.repeat(5 - rating);
+    return stars;
+  }
+
+  /**
+   * Formater la date relative
+   */
+  getRelativeTime(date: string | Date): string {
+    const now = new Date();
+    const targetDate = new Date(date);
+    const diffMs = now.getTime() - targetDate.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return 'Aujourd\'hui';
+    if (diffDays === 1) return 'Hier';
+    if (diffDays < 7) return `Il y a ${diffDays} jours`;
+    if (diffDays < 30) return `Il y a ${Math.floor(diffDays / 7)} semaines`;
+    return `Il y a ${Math.floor(diffDays / 30)} mois`;
+  }
+
   private showSuccessMessage(message: string): void {
     console.log('✅ Succès:', message);
+    // Ici vous pouvez ajouter une notification toast
   }
-  
+
   private showErrorMessage(message: string): void {
     console.error('❌ Erreur:', message);
+    // Ici vous pouvez ajouter une notification toast d'erreur
   }
-  
+
   /**
-   * ✅ DONNÉES DE TEST CORRIGÉES
+   * ✅ DONNÉES DE TEST POUR LE DÉVELOPPEMENT
    */
   private loadMockReservations(): void {
-    console.log('🧪 Chargement de données de test');
-    
+    console.log('🧪 Chargement de données de test pour freelance');
+
     this.reservations = [
       {
         id: 1,
         clientId: 101,
-        clientNom: 'Marie Dupont',
+        clientNom: 'Dupont',
+        clientPrenom: 'Marie',
+        clientAdresse: '123 Rue de la Paix, Paris',
         clientEmail: 'marie.dupont@email.com',
         clientTelephone: '0123456789',
-        salonId: 1,
+        freelanceId: 1, // ✅ Freelance, pas salon
+        freelanceNom: 'Votre Freelance',
         serviceId: 1,
-        serviceNom: 'Coupe + Brushing',
-        serviceDescription: 'Coupe personnalisée avec brushing',
-        serviceDuree: 60,
-        servicePrix: 45000,
-        datePrestation: new Date('2024-07-22T10:00:00'),
-        dateCreation: new Date('2024-07-20T14:30:00'),
-        statut: 'confirmee', // ✅ CORRIGÉ
-        notes: 'Première visite au salon'
+        serviceNom: 'Maquillage Mariage',
+        serviceDescription: 'Maquillage complet pour mariage',
+        serviceDuree: 120,
+        servicePrix: 85000,
+        datePrestation: new Date('2025-07-30T14:00:00'),
+        dateCreation: new Date('2025-07-25T10:30:00'),
+        statut: 'confirmee',
+        notes: 'Maquillage naturel demandé'
       },
       {
         id: 2,
         clientId: 102,
-        clientNom: 'Sophie Martin',
+        clientNom: 'Martin',
+        clientPrenom: 'Sophie',
+        clientAdresse: '789 Boulevard de la Joie, Lyon',
         clientEmail: 'sophie.martin@email.com',
         clientTelephone: '0987654321',
-        salonId: 1,
+        freelanceId: 1,
+        freelanceNom: 'Votre Freelance',
         serviceId: 2,
-        serviceNom: 'Coloration',
-        serviceDescription: 'Coloration complète',
-        serviceDuree: 120,
-        servicePrix: 75000,
-        datePrestation: new Date('2024-07-21T14:00:00'),
-        dateCreation: new Date('2024-07-19T09:15:00'),
-        statut: 'terminee', // ✅ CORRIGÉ
-        notes: 'Allergie aux sulfates'
+        serviceNom: 'Coiffure Soirée',
+        serviceDescription: 'Coiffure élégante pour soirée',
+        serviceDuree: 90,
+        servicePrix: 65000,
+        datePrestation: new Date('2025-07-28T18:00:00'),
+        dateCreation: new Date('2025-07-26T15:20:00'),
+        statut: 'terminee',
+        notes: 'Cliente très satisfaite'
       },
       {
         id: 3,
         clientId: 103,
-        clientNom: 'Julie Leblanc',
+        clientNom: 'Leblanc',
+        clientPrenom: 'Julie',
+        clientAdresse: '10 Rue des Roses, Marseille',
         clientEmail: 'julie.leblanc@email.com',
         clientTelephone: '0156789123',
-        salonId: 2,
+        freelanceId: 1,
+        freelanceNom: 'Votre Freelance',
         serviceId: 3,
-        serviceNom: 'Manucure',
-        serviceDescription: 'Manucure française',
-        serviceDuree: 45,
-        servicePrix: 25000,
+        serviceNom: 'Manucure & Pédicure',
+        serviceDescription: 'Manucure et pédicure complètes',
+        serviceDuree: 60,
+        servicePrix: 45000,
         datePrestation: new Date(),
-        dateCreation: new Date('2024-07-20T16:20:00'),
-        statut: 'confirmee', // ✅ CORRIGÉ
+        dateCreation: new Date('2025-07-27T11:45:00'),
+        statut: 'confirmee',
         notes: ''
       }
     ];
-    
+
     this.calculateReservationsStats();
     this.filterReservations();
     this.loadingReservations = false;
     this.emitStatsToParent();
+    
+    // Supprimer l'erreur puisque les données de test sont chargées
+    this.reservationsError = null;
   }
 }

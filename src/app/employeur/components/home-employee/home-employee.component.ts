@@ -8,17 +8,31 @@ import { MatInputModule } from '@angular/material/input';
 import { MatListModule } from '@angular/material/list';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatBadgeModule } from '@angular/material/badge';
+import { MatMenuModule } from '@angular/material/menu';
 import { SalonService } from '../../../shared/services/salons/salons.service';
 import { Router, RouterModule } from '@angular/router';
 import { SalonComponent } from '../salon/salon.component';
-import { OffreEmploisComponent } from '../offre-emplois/offre-emplois.component';
 import { HeaderService } from '../../../shared/services/header/header.service';
 import { MesSalonsComponent } from "../mes-salons/mes-salons.component";
 import { OffreEmploisService } from '../../services/OffreEmploisService/offre-emplois-service.service';
 import { FormsModule } from '@angular/forms';
-import { Candidature, CandidatureService } from '../../../freelance/services/candidatures.service';
-import { forkJoin, of } from 'rxjs';
+import { CandidatureService } from '../../../freelance/services/candidatures.service';
+import { Candidature } from '../../../freelance/interfaces/candidatures.interface';
+import { forkJoin } from 'rxjs';
 import { ReservationsComponent } from '../../../shared/components/reservations/reservations.component';
+import { NotificationService, Notification } from '../../../shared/services/notification/notification.service';
+import { ReservationService } from '../../../shared/services/reservation/reservation.service';
+import { AvisRecusComponent } from "../../../shared/components/avis-recus/avis-recus.component";
+import { MatTabsModule } from "@angular/material/tabs";
+import { MatSelectModule } from '@angular/material/select';
+import { MatDividerModule } from '@angular/material/divider';
+import { ProfileManagementComponent } from "../../../shared/components/profile-management/profile-management.component";
+import { NotificationListComponent } from '../../../shared/components/notification-list/notification-list.component';
+import { AuthService } from '../../../core/servces/auth.service';
+import { OffresManagerComponent } from "../offres-manager/offres-manager.component";
+import { HorairesManagerComponent } from '../../../shared/components/horaires-manager/horaires-manager.component';
+
 
 // Interface pour les salons pour le typage approprié
 interface Salon {
@@ -68,20 +82,27 @@ interface RecentOffer {
     MatButtonModule,
     MatSidenavModule,
     MatToolbarModule,
+    MatBadgeModule,
+    MatMenuModule,
     RouterModule,
     FormsModule,
     SalonComponent,
-    OffreEmploisComponent,
+    // OffreEmploisComponent,
     MesSalonsComponent,
-    ReservationsComponent
-  ],
+    ReservationsComponent,
+    AvisRecusComponent,
+    MatTabsModule,
+    MatSelectModule,
+    MatDividerModule,
+    ProfileManagementComponent,
+    NotificationListComponent,
+    OffresManagerComponent
+],
   templateUrl: './home-employee.component.html',
   styleUrl: './home-employee.component.scss',
   encapsulation: ViewEncapsulation.None
 })
 export class HomeEmployeeComponent implements OnInit {
-  [x: string]: any;
-
   // ===== PROPRIÉTÉS PRINCIPALES =====
   sidebarOpen = true;
   showCreationForm = false;
@@ -91,6 +112,8 @@ export class HomeEmployeeComponent implements OnInit {
   showCandidatures = false;
   showOffresManager = false;
   showReservations = false;
+  showAvailabilityManager = false;
+  selectedSalonForAvailability: Salon | null = null;
 
   // ✅ NOUVELLES PROPRIÉTÉS POUR L'AFFICHAGE OPTIMISÉ
   showCandidaturesModal = false;
@@ -124,7 +147,14 @@ export class HomeEmployeeComponent implements OnInit {
   pageTitle = 'Tableau de bord';
   activePeriod = 'month';
   userMenuOpen = false;
-  notificationCount = 2;
+  
+  // ✅ Notifications
+  notifications: Notification[] = [];
+  unreadNotifications = 0;
+
+  // ✅ Availability and appointments
+  formattedAverageRating = '4.5';
+  upcomingAppointments: any[] = [];
   
   // ===== DONNÉES SALONS ET OFFRES =====
   salons: Salon[] = [];
@@ -154,19 +184,177 @@ export class HomeEmployeeComponent implements OnInit {
     messages: false
   };
   
+
+  // ===== PROPRIÉTÉS POUR L'AUTHENTIFICATION =====
+  currentUser: any = null;
+  isAuthenticated = false;
+  userFullName = '';
+  userEmail = '';
+  userRole = '';
+  userPhotoUrl = '';
+  showProfile = false;
+  isLoadingStats = false;
+  recentActivities: any[] = [];
+
   constructor(
     private salonService: SalonService,
     private offreEmploisService: OffreEmploisService,
     private candidatureService: CandidatureService, 
-    private router: Router
+    private router: Router,
+    private notificationService: NotificationService,
+    private authService: AuthService,
+    private reservationService: ReservationService
   ) { } 
 
   ngOnInit(): void {
+    this.loadUserProfile();
+    this.loadNotifications();
+    this.initRecentActivities();
     this.loadServices();
-    this.loadSalons();
+    this.loadSalons(); // Cette méthode va maintenant appeler loadUpcomingAppointments()
     // Charger les offres avec leurs candidatures
     this.loadOffresWithCandidatures();
     this.filteredOffers = [...this.recentOffers];
+  }
+
+  // ===== MÉTHODES D'AUTHENTIFICATION =====
+  loadUserProfile(): void {
+    this.authService.currentUser$.subscribe({
+      next: (user: { prenom: any; nom: any; email: string; role: string; photoProfile: string; }) => {
+        if (user) {
+          this.currentUser = user;
+          this.isAuthenticated = true;
+          this.userFullName = `${user.prenom} ${user.nom}`;
+          this.userEmail = user.email;
+          this.userRole = user.role;
+          this.userPhotoUrl = user.photoProfile;
+        } else {
+          this.isAuthenticated = false;
+          this.currentUser = null;
+        }
+      },
+      error: (error: any) => {
+        console.error('Erreur lors du chargement du profil utilisateur:', error);
+        this.isAuthenticated = false;
+      }
+    });
+  }
+
+  loadNotifications(): void {
+    console.log('🔔 Chargement des notifications...');
+    
+    // Charger toutes les notifications
+    this.notificationService.getNotifications().subscribe({
+      next: (notifications) => {
+        this.notifications = notifications;
+        console.log('✅ Notifications chargées:', notifications.length);
+      },
+      error: (error) => {
+        console.error('❌ Erreur lors du chargement des notifications:', error);
+        this.notifications = [];
+      }
+    });
+
+    // Charger le compteur de notifications non lues
+    this.notificationService.getUnreadCount().subscribe({
+      next: (countData) => {
+        this.unreadNotifications = countData.count;
+        console.log('✅ Notifications non lues:', countData.count);
+      },
+      error: (error) => {
+        console.error('❌ Erreur lors du chargement du compteur:', error);
+        this.unreadNotifications = 0;
+      }
+    });
+  }
+
+  initRecentActivities(): void {
+    this.recentActivities = [
+      { icon: 'store', title: 'Nouveau salon ajouté', description: 'Beauty Palace - Paris 15ème', time: 'Il y a 2h' },
+      { icon: 'work', title: 'Nouvelle candidature reçue', description: 'Pour le poste de coiffeuse', time: 'Il y a 3h' },
+      { icon: 'event', title: 'Réservation confirmée', description: 'Marie D. - Coupe et brushing', time: 'Il y a 5h' }
+    ];
+  }
+
+  loadUpcomingAppointments(): void {
+    // Chargement des vraies réservations de l'employeur
+    this.reservationService.getEmployeurReservations().subscribe({
+      next: (reservations) => {
+        // Filtrer les réservations confirmées et à venir
+        const today = new Date();
+        const upcomingReservations = reservations.filter(reservation => {
+          const reservationDate = new Date(reservation.date);
+          return reservationDate >= today && (reservation.statut === 'CONFIRME' || reservation.statut === 'EN_ATTENTE');
+        });
+
+        // Trier par date
+        upcomingReservations.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+        // Formater pour l'affichage
+        this.upcomingAppointments = upcomingReservations.map(reservation => ({
+          id: reservation.id,
+          serviceName: reservation.serviceNom || 'Service non spécifié',
+          clientName: `${reservation.clientPrenom || ''} ${reservation.clientNom || ''}`.trim() || 'Client non spécifié',
+          date: new Date(reservation.date),
+          time: reservation.heure,
+          salonName: reservation.salonNom || 'Salon non spécifié',
+          status: reservation.statut
+        }));
+
+        // Mettre à jour les statistiques
+        this.reservationStats = this.upcomingAppointments.length;
+
+        console.log('Prochains rendez-vous chargés depuis le service:', this.upcomingAppointments);
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement des réservations:', error);
+        this.upcomingAppointments = [];
+        this.reservationStats = 0;
+      }
+    });
+
+    // Charger la note moyenne de tous les salons de l'employeur
+    this.loadAverageRating();
+  }
+
+  loadAverageRating(): void {
+    // Récupérer tous les avis de tous les salons de l'employeur
+    this.reservationService.getSalonAvis().subscribe({
+      next: (avis: any[]) => {
+        if (avis && avis.length > 0) {
+          // Calculer la moyenne de tous les avis de tous les salons
+          const totalRating = avis.reduce((sum: number, avisItem: any) => sum + (avisItem.note || 0), 0);
+          const averageRating = totalRating / avis.length;
+          this.formattedAverageRating = averageRating.toFixed(1);
+        } else {
+          this.formattedAverageRating = 'N/A';
+        }
+        console.log(`Note moyenne calculée sur ${avis?.length || 0} avis de tous les salons:`, this.formattedAverageRating);
+      },
+      error: (error: any) => {
+        console.error('Erreur lors du chargement de la note moyenne:', error);
+        this.formattedAverageRating = 'N/A';
+      }
+    });
+  }
+
+
+
+  navigateToProfile(): void {
+    this.navigateTo('profile');
+  }
+
+  closeProfile(): void {
+    this.navigateTo('dashboard');
+  }
+
+  onNotificationRead(): void {
+    this.unreadNotifications = Math.max(0, this.unreadNotifications - 1);
+  }
+
+  logout(): void {
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 
   // ==========================================
@@ -176,15 +364,13 @@ export class HomeEmployeeComponent implements OnInit {
   openReservations(): void {
     this.resetAllSections();
     this.currentSection = 'reservations';
-    this.pageTitle = 'Réservations';
+    this.pageTitle = 'Réservations & Avis';
     this.showReservations = true;
     console.log('Section réservations ouverte');
   }
 
   closeReservations(): void {
-    this.showReservations = false;
-    this.currentSection = 'dashboard';
-    this.pageTitle = 'Tableau de bord';
+    this.navigateTo('dashboard');
     console.log('Section réservations fermée');
   }
 
@@ -268,21 +454,13 @@ export class HomeEmployeeComponent implements OnInit {
    * ✅ Retourne le nom du candidat depuis les données disponibles
    */
   getCandidateName(candidature: Candidature): string {
-    // Essayer d'abord le nomCandidat normalisé
-    if (candidature.nomCandidat && typeof candidature.nomCandidat === 'string') {
-      return candidature.nomCandidat;
-    }
-    
     // Essayer d'extraire depuis l'objet freelance
     if (candidature.freelance) {
       if (candidature.freelance.nom && candidature.freelance.prenom) {
         return `${candidature.freelance.prenom} ${candidature.freelance.nom}`;
       }
-      if (candidature.freelance.nomComplet) {
-        return candidature.freelance.nomComplet;
-      }
-      if (candidature.freelance.name) {
-        return candidature.freelance.name;
+      if (candidature.freelance.nom) {
+        return candidature.freelance.nom;
       }
     }
     
@@ -294,23 +472,12 @@ export class HomeEmployeeComponent implements OnInit {
    * ✅ Retourne l'email du candidat depuis les données disponibles
    */
   getCandidateEmail(candidature: Candidature): string {
-    // Essayer d'abord l'emailCandidat normalisé
-    if (candidature.emailCandidat && typeof candidature.emailCandidat === 'string') {
-      return candidature.emailCandidat;
-    }
-    
     // Essayer d'extraire depuis l'objet freelance
     if (candidature.freelance && candidature.freelance.email) {
       return candidature.freelance.email;
     }
     
-    // Email générique
-    const nom = this.getCandidateName(candidature);
-    const email = nom.toLowerCase()
-                     .replace(/\s+/g, '.')
-                     .replace(/[^a-z.0-9]/g, '');
-    
-    return `${email}@email.com`;
+    return 'Email non disponible';
   }
 
   /**
@@ -356,11 +523,7 @@ export class HomeEmployeeComponent implements OnInit {
     this.closeCandidaturesModal();
     
     // Ouvrir le modal de détails existant
-    this.selectedCandidature = {
-      ...candidature,
-      nomCandidat: this.getCandidateName(candidature),
-      emailCandidat: this.getCandidateEmail(candidature)
-    };
+    this.selectedCandidature = candidature;
   }
 
   /**
@@ -368,7 +531,27 @@ export class HomeEmployeeComponent implements OnInit {
    */
   editOffer(offerId: number): void {
     console.log('Édition de l\'offre:', offerId);
-    // Implémentez la logique d'édition
+    this.openOffreEmploiForm();
+    // TODO: Charger les données de l'offre pour édition
+  }
+
+  /**
+   * ✅ Supprimer une offre
+   */
+  deleteOffer(offerId: number): void {
+    const offer = this.recentOffers.find(o => o.id === offerId);
+    if (offer && confirm(`Êtes-vous sûr de vouloir supprimer l'offre "${offer.title}" ?`)) {
+      this.offreEmploisService.deleteOffreEmploi(offerId).subscribe({
+        next: () => {
+          this.showNotification('Offre supprimée avec succès', 'success');
+          this.loadOffresWithCandidatures();
+        },
+        error: (error: any) => {
+          console.error('Erreur lors de la suppression:', error);
+          this.showNotification('Erreur lors de la suppression', 'error');
+        }
+      });
+    }
   }
 
   /**
@@ -405,32 +588,41 @@ export class HomeEmployeeComponent implements OnInit {
   // 📋 GESTION DES OFFRES ET CANDIDATURES (ADAPTÉ)
   // ==========================================
 
-  contactCandidat(candidature: any): void {
-    const email = candidature.emailCandidat || this.getCandidateEmail(candidature);
-    if (email) {
+  contactCandidat(candidature: Candidature): void {
+    const email = this.getCandidateEmail(candidature);
+    if (email && email !== 'Email non disponible') {
       const subject = `Concernant votre candidature - ${this.getOfferTitleById(candidature.offreEmploiId || 0)}`;
-      const nom = candidature.nomCandidat || this.getCandidateName(candidature);
+      const nom = this.getCandidateName(candidature);
       const body = `Bonjour ${nom.split(' ')[0]},\n\nNous avons bien reçu votre candidature et souhaitons vous contacter.\n\nCordialement,`;
       window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     }
   }
 
   navigateTo(section: string): void {
-    if (this.currentSection === section) {
-      this.currentSection = 'dashboard';
-      this.pageTitle = this.getPageTitle('dashboard');
-      Object.keys(this.expandedMenuItems).forEach(key => {
-        this.expandedMenuItems[key] = false;
-      });
-    } else {
-      this.currentSection = section;
-      this.pageTitle = this.getPageTitle(section);
-      
-      Object.keys(this.expandedMenuItems).forEach(key => {
-        this.expandedMenuItems[key] = false;
-      });
-      
-      this.expandedMenuItems[section] = true;
+    this.resetAllSections();
+    
+    switch (section) {
+      case 'dashboard':
+        this.currentSection = 'dashboard';
+        this.pageTitle = 'Tableau de bord';
+        break;
+      case 'profile':
+        this.currentSection = 'profile';
+        this.pageTitle = 'Mon Profil';
+        this.showProfile = true;
+        break;
+      case 'salons':
+        this.openSalonsList();
+        break;
+      case 'reservations':
+        this.openReservations();
+        break;
+      case 'offres':
+        this.navigateToOffresManager();
+        break;
+      default:
+        this.currentSection = 'dashboard';
+        this.pageTitle = 'Tableau de bord';
     }
   }
 
@@ -677,9 +869,7 @@ export class HomeEmployeeComponent implements OnInit {
   }
 
   closeOffresManager(): void {
-    this.showOffresManager = false;
-    this.currentSection = 'dashboard';
-    this.pageTitle = 'Tableau de bord';
+    this.navigateTo('dashboard');
   }
 
   toggleSidebar(): void {
@@ -713,7 +903,12 @@ export class HomeEmployeeComponent implements OnInit {
     this.showReservations = false;
     this.showServicesList = false;
     this.showCandidaturesModal = false;
+    this.showAvailabilityManager = false;
+    this.showProfile = false;
+    this.currentSection = 'dashboard';
+    this.pageTitle = 'Tableau de bord';
   }
+
 
   getOfferTitleById(offerId: number): string {
     const offer = this.recentOffers.find(o => o.id === offerId);
@@ -741,9 +936,7 @@ export class HomeEmployeeComponent implements OnInit {
   }
 
   closeSalonsList(): void {
-    this.showSalonsList = false;
-    this.currentSection = 'dashboard';
-    this.pageTitle = 'Tableau de bord';
+    this.navigateTo('dashboard');
     this.loadSalons();
   }
 
@@ -756,9 +949,7 @@ export class HomeEmployeeComponent implements OnInit {
   }
 
   closeCreationForm(): void {
-    this.showCreationForm = false;
-    this.currentSection = 'dashboard';
-    this.pageTitle = 'Tableau de bord';
+    this.navigateTo('dashboard');
     this.loadSalons();
   }
   
@@ -778,7 +969,8 @@ export class HomeEmployeeComponent implements OnInit {
   }
   
   loadServices(): void {
-    const services = this.salonService.getEmployeurServices();
+    // TODO: Implémenter le chargement des services
+    // const services = this.salonService.getEmployeurServices();
   }
   
   loadSalons(): void {
@@ -786,10 +978,14 @@ export class HomeEmployeeComponent implements OnInit {
       .subscribe({
         next: (data: any[]) => {
           this.salons = data.map(salon => this.processSalonData(salon));
+          // Charger les rendez-vous APRÈS avoir chargé les salons
+          this.loadUpcomingAppointments();
         },
         error: (err: any) => {
           console.error('Erreur lors du chargement des salons', err);
           this.salons = [];
+          // Même en cas d'erreur, essayer de charger les rendez-vous
+          this.loadUpcomingAppointments();
         }
       });
   }
@@ -825,9 +1021,6 @@ export class HomeEmployeeComponent implements OnInit {
     return rating % 1 >= 0.5 && Math.floor(rating) < 5;
   }
   
-  logout(): void {
-    console.log('Déconnexion...');
-  }
   
   get username(): string {
     return this.headerService.username() || 'Utilisateur';
@@ -934,4 +1127,26 @@ export class HomeEmployeeComponent implements OnInit {
       }
     });
   }
+
+  // ===== AVAILABILITY MANAGEMENT METHODS =====
+  
+  openAvailabilityManager(): void {
+    this.showAvailabilityManager = true;
+  }
+
+  selectSalonForAvailability(salon: Salon): void {
+    this.selectedSalonForAvailability = salon;
+  }
+
+  onHoraireError(event: any): void {
+    console.error('Erreur horaire:', event);
+    this.showNotification('Erreur lors de la gestion des horaires', 'error');
+  }
+
+  viewAppointmentDetails(appointmentId: number): void {
+    console.log('Affichage des détails du rendez-vous:', appointmentId);
+    // Pour l'instant, naviguer vers la section réservations pour voir tous les détails
+    this.openReservations();
+  }
+
 }

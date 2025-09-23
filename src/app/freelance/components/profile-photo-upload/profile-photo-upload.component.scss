@@ -1,0 +1,283 @@
+.profile-photo-upload {
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 20px;
+
+  // ===== Zone d'affichage photo actuelle =====
+  .photo-display-zone {
+    margin-bottom: 20px;
+    
+    .current-photo {
+      position: relative;
+      width: 200px;
+      height: 200px;
+      margin: 0 auto;
+      border-radius: 50%;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      border: 4px solid #fff;
+      
+      .profile-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+      }
+      
+      // Overlay avec boutons d'action
+      .photo-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        
+        .action-btn {
+          background: rgba(255,255,255,0.9);
+          color: #333;
+          width: 45px;
+          height: 45px;
+          
+          &:hover {
+            background: #fff;
+            transform: scale(1.05);
+          }
+          
+          &.change-btn {
+            color: #2196F3;
+          }
+          
+          &.delete-btn {
+            color: #f44336;
+          }
+        }
+      }
+      
+      &:hover .photo-overlay {
+        opacity: 1;
+      }
+      
+      // Overlay de chargement
+      .loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255,255,255,0.95);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        
+        span {
+          font-size: 14px;
+          font-weight: 500;
+          color: #666;
+        }
+      }
+    }
+  }
+
+  // ===== Zone d'upload (drag & drop) =====
+  .upload-zone {
+    border: 2px dashed #ddd;
+    border-radius: 12px;
+    padding: 40px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #fafafa;
+    
+    &:hover {
+      border-color: #2196F3;
+      background: #f0f8ff;
+      transform: translateY(-2px);
+    }
+    
+    &.drag-over {
+      border-color: #4CAF50;
+      background: #f1f8e9;
+      box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+    }
+    
+    &.has-photo {
+      margin-top: 20px;
+      border-style: solid;
+      background: #fff;
+    }
+    
+    .upload-content {
+      .upload-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+        color: #2196F3;
+        margin-bottom: 15px;
+      }
+      
+      h3 {
+        margin: 0 0 10px 0;
+        font-size: 20px;
+        font-weight: 600;
+        color: #333;
+      }
+      
+      .upload-instructions {
+        margin: 0 0 20px 0;
+        color: #666;
+        line-height: 1.5;
+        
+        small {
+          color: #999;
+          font-size: 12px;
+        }
+      }
+      
+      .select-btn {
+        border-radius: 25px;
+        padding: 10px 25px;
+        font-weight: 500;
+        
+        mat-icon {
+          margin-right: 8px;
+        }
+      }
+    }
+    
+    .uploading-content {
+      h3 {
+        margin: 15px 0 5px 0;
+        color: #2196F3;
+        font-weight: 600;
+      }
+      
+      p {
+        margin: 0;
+        color: #666;
+        font-size: 14px;
+      }
+    }
+  }
+
+  // ===== Input file caché =====
+  .file-input {
+    display: none;
+  }
+
+  // ===== Informations et conseils =====
+  .photo-info {
+    margin-top: 30px;
+    
+    .info-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 15px;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border-left: 4px solid #2196F3;
+      
+      .info-icon {
+        color: #2196F3;
+        margin-top: 2px;
+      }
+      
+      .info-text {
+        h4 {
+          margin: 0 0 10px 0;
+          font-size: 16px;
+          font-weight: 600;
+          color: #333;
+        }
+        
+        ul {
+          margin: 0;
+          padding-left: 16px;
+          
+          li {
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #666;
+            line-height: 1.4;
+            
+            &:last-child {
+              margin-bottom: 0;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// ===== Responsive =====
+@media (max-width: 600px) {
+  .profile-photo-upload {
+    padding: 15px;
+    
+    .photo-display-zone .current-photo {
+      width: 150px;
+      height: 150px;
+    }
+    
+    .upload-zone {
+      padding: 30px 15px;
+      
+      .upload-content {
+        .upload-icon {
+          font-size: 36px;
+          width: 36px;
+          height: 36px;
+        }
+        
+        h3 {
+          font-size: 18px;
+        }
+      }
+    }
+    
+    .photo-info .info-card {
+      flex-direction: column;
+      gap: 10px;
+      padding: 15px;
+    }
+  }
+}
+
+// ===== Animations =====
+@keyframes photoUpload {
+  0% { opacity: 0; transform: scale(0.8); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.current-photo {
+  animation: photoUpload 0.5s ease-out;
+}
+
+// ===== États d'erreur =====
+.upload-zone.error {
+  border-color: #f44336;
+  background: #ffebee;
+}
+
+// ===== Styles pour les snackbars =====
+::ng-deep {
+  .success-snackbar {
+    background: #4CAF50 !important;
+    color: white !important;
+  }
+  
+  .error-snackbar {
+    background: #f44336 !important;
+    color: white !important;
+  }
+}

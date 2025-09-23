@@ -1,0 +1,286 @@
+
+<!-- ========================================
+     COMPOSANT AVIS REÇUS
+======================================== -->
+
+<div class="avis-recus-container" [class.compact-mode]="compactMode">
+
+  <!-- Header avec statistiques -->
+  <div class="header-section" *ngIf="showHeader">
+    <div class="header-title">
+      <h2>
+        <mat-icon>{{ userType === 'freelance' ? 'person' : 'store' }}</mat-icon>
+        Avis de vos clients
+      </h2>
+      <button 
+        mat-icon-button 
+        class="refresh-btn"
+        (click)="actualiser()"
+        [disabled]="isLoading"
+        matTooltip="Actualiser">
+        <mat-icon [class.spinning]="isLoading">refresh</mat-icon>
+      </button>
+    </div>
+
+    <!-- Statistiques globales -->
+    <div class="stats-overview" *ngIf="!isLoadingStats">
+      <mat-card class="stats-card">
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-value">{{ statistiques.totalAvis }}</div>
+            <div class="stat-label">Avis reçus</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value average-rating">
+              {{ statistiques.noteMoyenne || 0 }}
+              <mat-icon class="star-icon">star</mat-icon>
+            </div>
+            <div class="stat-label">Note moyenne</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" [style.color]="getTendanceColor()">
+              <mat-icon>{{ getTendanceIcon() }}</mat-icon>
+            </div>
+            <div class="stat-label">Tendance</div>
+          </div>
+        </div>
+      </mat-card>
+    </div>
+
+    <!-- Loading stats -->
+    <div class="stats-loading" *ngIf="isLoadingStats">
+      <mat-progress-spinner diameter="40" mode="indeterminate"></mat-progress-spinner>
+      <span>Calcul des statistiques...</span>
+    </div>
+  </div>
+
+  <!-- Onglets de navigation -->
+  <mat-tab-group [(selectedIndex)]="selectedTabIndex" class="avis-tabs">
+    
+    <!-- Onglet Liste des avis -->
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <mat-icon>list</mat-icon>
+        Tous les avis ({{ avisRecus.length }})
+      </ng-template>
+
+      <div class="tab-content">
+        <!-- Filtres et contrôles -->
+        <div class="controls-section">
+          <div class="filters">
+            <div class="filter-group">
+              <label class="filter-label">Filtrer par note :</label>
+              <div class="note-filters">
+                <button 
+                  mat-stroked-button
+                  [class.active]="filtreNote === null"
+                  (click)="filtrerParNote(null)">
+                  Toutes
+                </button>
+                <button 
+                  *ngFor="let star of etoilesArray"
+                  mat-stroked-button
+                  [class.active]="filtreNote === star"
+                  (click)="filtrerParNote(star)">
+                  {{ star }} <mat-icon>star</mat-icon>
+                </button>
+              </div>
+            </div>
+
+            <div class="sort-group">
+              <label class="filter-label">Trier par :</label>
+              <mat-button-toggle-group [(value)]="triSelected" (change)="changerTri($event.value)">
+                <mat-button-toggle value="recent">Plus récents</mat-button-toggle>
+                <mat-button-toggle value="ancien">Plus anciens</mat-button-toggle>
+                <mat-button-toggle value="note_desc">Note ↓</mat-button-toggle>
+                <mat-button-toggle value="note_asc">Note ↑</mat-button-toggle>
+              </mat-button-toggle-group>
+            </div>
+          </div>
+        </div>
+
+        <!-- Liste des avis -->
+        <div class="avis-list">
+          <!-- Chargement -->
+          <div class="loading-section" *ngIf="isLoading">
+            <mat-progress-spinner diameter="50" mode="indeterminate"></mat-progress-spinner>
+            <p>Chargement de vos avis...</p>
+          </div>
+
+          <!-- Erreur -->
+          <div class="error-section" *ngIf="error && !isLoading">
+            <mat-icon class="error-icon">error_outline</mat-icon>
+            <p>{{ error }}</p>
+            <button mat-raised-button color="primary" (click)="actualiser()">
+              Réessayer
+            </button>
+          </div>
+
+          <!-- Aucun avis -->
+          <div class="empty-state" *ngIf="!isLoading && !error && avisRecus.length === 0">
+            <mat-icon class="empty-icon">chat_bubble_outline</mat-icon>
+            <h3>Aucun avis pour le moment</h3>
+            <p *ngIf="filtreNote === null">
+              Vos clients pourront laisser des avis après leurs prestations.
+            </p>
+            <p *ngIf="filtreNote !== null">
+              Aucun avis avec {{ filtreNote }} étoile(s).
+            </p>
+          </div>
+
+          <!-- Cartes d'avis -->
+          <div class="avis-cards" *ngIf="!isLoading && !error && avisRecus.length > 0">
+            <mat-card 
+              *ngFor="let avis of avisRecus; trackBy: trackByAvisId"
+              class="avis-card">
+              
+              <mat-card-header>
+                <div mat-card-avatar class="client-avatar">
+                  {{ getInitiales(avis.client.nom, avis.client.prenom) }}
+                </div>
+                <mat-card-title>
+                  {{ avis.client.prenom }} {{ avis.client.nom }}
+                </mat-card-title>
+                <mat-card-subtitle>
+                  {{ formatDate(avis.dateAvis) }} · {{ avis.reservation.serviceSalon.nom }}
+                </mat-card-subtitle>
+              </mat-card-header>
+
+              <mat-card-content>
+                <!-- Note avec étoiles -->
+                <div class="rating-display">
+                  <div class="stars">
+                    <mat-icon 
+                      *ngFor="let star of etoilesArray"
+                      [class.filled]="star <= avis.note"
+                      class="star-icon">
+                      {{ star <= avis.note ? 'star' : 'star_border' }}
+                    </mat-icon>
+                  </div>
+                  <span class="note-value">{{ avis.note }}/5</span>
+                </div>
+
+                <!-- Commentaire -->
+                <div class="comment-section" *ngIf="avis.commentaire">
+                  <p class="comment-text">"{{ avis.commentaire }}"</p>
+                </div>
+
+                <!-- Informations de la réservation -->
+                <div class="reservation-info">
+                  <mat-chip-set>
+                    <mat-chip>
+                      <mat-icon matChipAvatar>event</mat-icon>
+                      {{ formatDate(avis.reservation.dateReservation) }}
+                    </mat-chip>
+                    <mat-chip>
+                      <mat-icon matChipAvatar>design_services</mat-icon>
+                      {{ avis.reservation.serviceSalon.nom }}
+                    </mat-chip>
+                  </mat-chip-set>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+
+          <!-- Pagination -->
+          <div class="pagination-section" *ngIf="avisRecus.length > pageSize">
+            <div class="pagination-info">
+              Affichage {{ currentPage * pageSize + 1 }} - 
+              {{ getMin((currentPage + 1) * pageSize, avisRecus.length) }} 
+              sur {{ avisRecus.length }} avis
+            </div>
+            <div class="pagination-controls">
+              <button 
+                mat-icon-button
+                [disabled]="currentPage === 0"
+                (click)="pagePrecedente()">
+                <mat-icon>chevron_left</mat-icon>
+              </button>
+              <span class="page-indicator">{{ currentPage + 1 }}</span>
+              <button 
+                mat-icon-button
+                [disabled]="!hasMorePages"
+                (click)="pageSuivante()">
+                <mat-icon>chevron_right</mat-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- Onglet Statistiques détaillées -->
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <mat-icon>analytics</mat-icon>
+        Statistiques
+      </ng-template>
+
+      <div class="tab-content">
+        <div class="detailed-stats">
+          
+          <!-- Répartition des notes -->
+          <mat-card class="stats-chart-card">
+            <mat-card-header>
+              <mat-card-title>Répartition des notes</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="rating-distribution">
+                <div 
+                  *ngFor="let star of [5,4,3,2,1]" 
+                  class="rating-bar">
+                  <div class="rating-label">
+                    {{ star }} <mat-icon>star</mat-icon>
+                  </div>
+                  <div class="rating-progress">
+                    <div 
+                      class="rating-fill"
+                      [style.width.%]="getPercentage(statistiques.repartitionNotes[star] || 0, statistiques.totalAvis)">
+                    </div>
+                  </div>
+                  <div class="rating-count">
+                    {{ statistiques.repartitionNotes[star] || 0 }}
+                  </div>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Résumé global -->
+          <mat-card class="summary-card">
+            <mat-card-header>
+              <mat-card-title>Résumé de performance</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="summary-stats">
+                <div class="summary-item">
+                  <div class="summary-value">{{ getPositivePercentage() }}%</div>
+                  <div class="summary-label">Avis positifs (4-5★)</div>
+                </div>
+                <div class="summary-item">
+                  <div class="summary-value">{{ getNeutralPercentage() }}%</div>
+                  <div class="summary-label">Avis neutres (3★)</div>
+                </div>
+                <div class="summary-item">
+                  <div class="summary-value">{{ getNegativePercentage() }}%</div>
+                  <div class="summary-label">Avis négatifs (1-2★)</div>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+
+  <!-- Actions flottantes -->
+  <div class="floating-actions" *ngIf="!compactMode">
+    <button 
+      mat-fab 
+      class="export-btn"
+      (click)="exporterAvis()"
+      matTooltip="Exporter les avis">
+      <mat-icon>download</mat-icon>
+    </button>
+  </div>
+</div>

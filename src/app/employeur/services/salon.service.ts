@@ -378,6 +378,34 @@ export class SalonService {
     return [NaN, NaN];
   }
 
+  // ✅ MÉTHODE DE MODIFICATION - Appel de l'API de modification existante
+  updateSalon(salonId: number, salonData: any): Observable<any> {
+    console.log(`🔄 Service - Modification salon ID ${salonId}:`, salonData);
+    return this.http.put<any>(`${this.apiUrl}/salons/update/${salonId}`, salonData).pipe(
+      tap(response => {
+        console.log('✅ Service - Salon modifié avec succès:', response);
+      }),
+      catchError(error => {
+        console.error('❌ Service - Erreur modification salon:', error);
+        return of(null);
+      })
+    );
+  }
+
+  // ✅ MÉTHODE DE MODIFICATION AVEC FICHIER - Pour modification avec photo
+  updateSalonWithFile(salonId: number, formData: FormData): Observable<any> {
+    console.log(`🔄 Service - Modification salon avec fichier ID ${salonId}`);
+    return this.http.put<any>(`${this.apiUrl}/salons/update/${salonId}`, formData).pipe(
+      tap(response => {
+        console.log('✅ Service - Salon modifié avec fichier:', response);
+      }),
+      catchError(error => {
+        console.error('❌ Service - Erreur modification salon avec fichier:', error);
+        return of(null);
+      })
+    );
+  }
+
   private handleError<T>(operation = 'opération', result?: T) {
     return (error: any): Observable<T> => {
       console.error(`${operation} a échoué: ${error.message}`);

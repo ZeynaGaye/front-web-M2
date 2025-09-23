@@ -1,15 +1,25 @@
-<div class="booking-dialog">
+<div class="booking-dialog" (click)="onDialogClick($event)">
   <h2 mat-dialog-title>Réserver un service</h2>
   
-  <mat-dialog-content>
-    <div class="salon-info">
-      <h3>{{ data.salon.nom }}</h3>
-      <p class="address">
-        <mat-icon>location_on</mat-icon> {{ data.salon.adresse }}
+  <mat-dialog-content class="dialog-content">
+    <!-- Provider Info -->
+    <div class="provider-info" *ngIf="providerInfo">
+      <h3 *ngIf="!isFreelanceBooking">{{ providerInfo?.nom }}</h3>
+      <h3 *ngIf="isFreelanceBooking">{{ providerInfo?.prenom }} {{ providerInfo?.nom }}</h3>
+      
+      <p class="address" *ngIf="providerInfo?.adresse">
+        <mat-icon>location_on</mat-icon> 
+        {{ providerInfo.adresse }}
       </p>
+      
+      <div class="provider-type-badge">
+        <mat-icon>{{ isFreelanceBooking ? 'person' : 'store' }}</mat-icon>
+        <span>{{ isFreelanceBooking ? 'Freelance' : 'Salon' }}</span>
+      </div>
     </div>
     
-    <div class="service-summary">
+    <!-- Service Summary -->
+    <div class="service-summary" *ngIf="data?.service">
       <h4>Service sélectionné</h4>
       <div class="service-card">
         <div class="service-name">{{ data.service.nom }}</div>
@@ -17,7 +27,7 @@
           <div class="price">{{ data.service.prix | currency:'XOF':'' }} CFA</div>
           <div class="duration">
             <mat-icon>schedule</mat-icon>
-            <span>{{ data.service.duree || data.service.dureeEnMinutes || data.service.duree_minutes }} min</span>
+            <span>{{ data.service.duree || data.service.dureeEnMinutes || data.service.duree_minutes || '30' }} min</span>
           </div>
         </div>
         <div class="service-description" *ngIf="data.service.description">
@@ -26,12 +36,16 @@
       </div>
     </div>
     
+    <!-- Error Message -->
     <div class="error-message" *ngIf="errorMessage">
       <mat-icon color="warn">error</mat-icon>
       <p>{{ errorMessage }}</p>
     </div>
     
-    <form [formGroup]="bookingForm" *ngIf="!isLoading && !errorMessage">
+    <!-- Booking Form -->
+    <form [formGroup]="bookingForm" *ngIf="!isLoading && bookingForm" (click)="onDialogClick($event)">
+      
+      <!-- Date Field -->
       <div class="form-row">
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Date</mat-label>
@@ -40,23 +54,35 @@
             [matDatepicker]="datePicker" 
             formControlName="date" 
             [min]="minDate"
-            >
-          <mat-datepicker-toggle matIconSuffix [for]="datePicker">
+            readonly
+            (click)="openDatePicker(); $event.stopPropagation()"
+            placeholder="Sélectionnez une date">
+          
+          <mat-datepicker-toggle 
+            matIconSuffix 
+            [for]="datePicker" 
+            (click)="openDatePicker(); $event.stopPropagation()">
             <mat-icon matDatepickerToggleIcon>calendar_today</mat-icon>
           </mat-datepicker-toggle>
-          <mat-datepicker #datePicker></mat-datepicker>
-          <mat-error *ngIf="bookingForm.get('date')?.hasError('required')">
+          
+          <mat-datepicker 
+            #datePicker 
+            touchUi="false"></mat-datepicker>>          
+          <mat-error *ngIf="bookingForm.get('date')?.hasError('required') && bookingForm.get('date')?.touched">
             La date est requise
           </mat-error>
         </mat-form-field>
       </div>
       
-      <!-- ✅ CHAMP HEURE CORRIGÉ -->
+      <!-- Time Slot Field - ✅ CORRIGÉ : Plus d'attribut disabled -->
       <div class="form-row">
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Heure</mat-label>
-          <mat-select formControlName="timeSlot" [disabled]="isLoadingSlots">
-            
+          
+          <!-- ✅ SUPPRESSION de [disabled]="isLoadingSlots" -->
+          <mat-select 
+            formControlName="timeSlot"(click)="$event.stopPropagation()"
+            >    
             <!-- Loading créneaux -->
             <mat-option *ngIf="isLoadingSlots" disabled>
               <div class="loading-slots">
@@ -66,9 +92,11 @@
             </mat-option>
             
             <!-- Créneaux disponibles -->
+             
             <mat-option 
               *ngFor="let slot of availableTimeSlots" 
-              [value]="slot.value">
+              [value]="slot.value"
+              (click)="$event.stopPropagation()">
               {{ slot.label }}
             </mat-option>
             
@@ -82,42 +110,62 @@
             
           </mat-select>
           
-          <mat-error *ngIf="bookingForm.get('timeSlot')?.hasError('required')">
+          <mat-error *ngIf="bookingForm.get('timeSlot')?.hasError('required') && bookingForm.get('timeSlot')?.touched">
             L'heure est requise
           </mat-error>
         </mat-form-field>
         
-        <!-- ✅ Indicateur créneaux disponibles -->
+        <!-- Info créneaux -->
         <div class="slots-info" *ngIf="!isLoadingSlots && availableTimeSlots.length > 0">
           <mat-icon color="accent">check_circle</mat-icon>
           <span>{{ availableTimeSlots.length }} créneau{{ availableTimeSlots.length > 1 ? 'x' : '' }} disponible{{ availableTimeSlots.length > 1 ? 's' : '' }}</span>
         </div>
         
-        <!-- ✅ Info salon fermé -->
-        <div class="closed-info" *ngIf="!isLoadingSlots && availableTimeSlots.length === 0">
+        <!-- Info provider fermé -->
+        <div class="closed-info" *ngIf="!isLoadingSlots && availableTimeSlots.length === 0 && !errorMessage">
           <mat-icon color="warn">info</mat-icon>
-          <span>Le salon est fermé ce jour ou tous les créneaux sont réservés</span>
+          <span>{{ isFreelanceBooking ? 'Le freelance n\'est pas disponible ce jour' : 'Le salon est fermé ce jour ou tous les créneaux sont réservés' }}</span>
         </div>
       </div>
     </form>
     
+    <!-- Loading State -->
     <div class="loading-container" *ngIf="isLoading">
       <mat-spinner diameter="40"></mat-spinner>
       <p>Traitement de votre réservation...</p>
     </div>
   </mat-dialog-content>
   
-  <mat-dialog-actions align="end">
-    <button mat-button (click)="closeDialog()">Annuler</button>
+  <!-- Dialog Actions -->
+  <mat-dialog-actions align="end" class="dialog-actions">
+    <button 
+      mat-button 
+      (click)="closeDialog()"
+      type="button"
+      class="cancel-btn">
+      Annuler
+    </button>
+    
     <button 
       mat-raised-button 
       color="primary" 
-      [disabled]="bookingForm.invalid || isLoading || !userId || isLoadingSlots || availableTimeSlots.length === 0"
-      (click)="submitBooking()">
-      <!-- ✅ Texte dynamique -->
-      <span *ngIf="isLoadingSlots">Chargement...</span>
-      <span *ngIf="!isLoadingSlots && availableTimeSlots.length === 0">Aucun créneau</span>
-      <span *ngIf="!isLoadingSlots && availableTimeSlots.length > 0">Confirmer la réservation</span>
+      [disabled]="!canSubmitBooking()"
+      (click)="submitBooking(); $event.stopPropagation()"
+      type="button"
+      class="confirm-btn">
+      
+      <!-- Texte dynamique -->
+      <span *ngIf="isLoadingSlots">
+        <mat-icon class="spin">refresh</mat-icon>
+        Chargement...
+      </span>
+      <span *ngIf="!isLoadingSlots && availableTimeSlots.length === 0 && !errorMessage">
+        Aucun créneau
+      </span>
+      <span *ngIf="!isLoadingSlots && (availableTimeSlots.length > 0 || errorMessage)">
+        <mat-icon>check</mat-icon>
+        Confirmer la réservation
+      </span>
     </button>
   </mat-dialog-actions>
 </div>

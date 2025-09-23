@@ -1,5 +1,5 @@
 import { CommonModule, NgFor, NgIf, TitleCasePipe } from '@angular/common';
-import { Component, EventEmitter, Output, OnInit } from '@angular/core';
+import { Component, EventEmitter, Output, OnInit, Input } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormArray, FormsModule } from '@angular/forms';
 import { SalonService } from '../../services/salon.service';
 import { HttpClient } from '@angular/common/http';
@@ -22,8 +22,11 @@ import { GeocodingService } from '../../../core/servces/GeocodingService/geocodi
   styleUrls: ['./salon.component.scss']
 })
 export class SalonComponent implements OnInit {
+  @Input() salonToEdit: any = null; // ✅ Salon à modifier (null = création)
+  @Input() isEditMode: boolean = false; // ✅ Mode édition ou création
   @Output() closeModalEvent = new EventEmitter<void>();
   @Output() salonCreated = new EventEmitter<any>();
+  @Output() salonUpdated = new EventEmitter<any>(); // ✅ Nouvel événement pour modification
 
   currentStep = 1;
   joursSemaine = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
@@ -60,6 +63,11 @@ export class SalonComponent implements OnInit {
   ngOnInit() {
     this.servicesArray.valueChanges.subscribe(() => this.updateServiceSelection());
     this.customServicesArray.valueChanges.subscribe(() => this.updateServiceSelection());
+    
+    // ✅ Si mode édition, pré-remplir le formulaire
+    if (this.isEditMode && this.salonToEdit) {
+      this.populateFormForEdit();
+    }
   }
 
   updateServiceSelection() {
@@ -178,6 +186,16 @@ export class SalonComponent implements OnInit {
       status: 'PUBLISHED'
     };
 
+    // ✅ LOGIQUE DIFFÉRENCIÉE CRÉATION/MODIFICATION
+    if (this.isEditMode && this.salonToEdit) {
+      this.updateExistingSalon(salonData);
+    } else {
+      this.createNewSalon(salonData);
+    }
+  }
+
+  // ✅ NOUVELLE MÉTHODE - Créer nouveau salon
+  private createNewSalon(salonData: any) {
     const formData = new FormData();
     const file = this.salonForm.get('photoProfil')?.value;
     if (file) formData.append('file', file);
@@ -185,15 +203,51 @@ export class SalonComponent implements OnInit {
 
     this.salonService.createSalonWithFile(formData).subscribe({
       next: (response) => {
-        console.log('Salon créé :', response);
+        console.log('✅ Salon créé :', response);
         this.creerHorairesDefaut(response.id);
         this.salonCreated.emit(response);
         this.closeModal();
       },
       error: (error) => {
-        console.error('Erreur création salon :', error);
+        console.error('❌ Erreur création salon :', error);
       }
     });
+  }
+
+  // ✅ NOUVELLE MÉTHODE - Modifier salon existant
+  private updateExistingSalon(salonData: any) {
+    const salonId = this.salonToEdit.id;
+    const file = this.salonForm.get('photoProfil')?.value;
+    
+    if (file) {
+      // Modification avec nouvelle photo
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('salon', new Blob([JSON.stringify(salonData)], { type: 'application/json' }));
+      
+      this.salonService.updateSalonWithFile(salonId, formData).subscribe({
+        next: (response) => {
+          console.log('✅ Salon modifié avec photo :', response);
+          this.salonUpdated.emit(response);
+          this.closeModal();
+        },
+        error: (error) => {
+          console.error('❌ Erreur modification salon avec photo :', error);
+        }
+      });
+    } else {
+      // Modification sans photo
+      this.salonService.updateSalon(salonId, salonData).subscribe({
+        next: (response) => {
+          console.log('✅ Salon modifié :', response);
+          this.salonUpdated.emit(response);
+          this.closeModal();
+        },
+        error: (error) => {
+          console.error('❌ Erreur modification salon :', error);
+        }
+      });
+    }
   }
 
   private creerHorairesDefaut(salonId: number) {
@@ -209,6 +263,12 @@ export class SalonComponent implements OnInit {
   }
 
   onSaveDraft(): void {
+    // ✅ Mode brouillon seulement pour création
+    if (this.isEditMode) {
+      console.log('⚠️ Mode brouillon non disponible en édition');
+      return;
+    }
+    
     this.isSubmitting = true;
 
     const allServices = [...this.servicesArray.value, ...this.customServicesArray.value];
@@ -243,5 +303,48 @@ export class SalonComponent implements OnInit {
     if (file) {
       this.salonForm.patchValue({ photoProfil: file });
     }
+  }
+
+  // ✅ NOUVELLE MÉTHODE - Pré-remplir le formulaire pour édition
+  private populateFormForEdit() {
+    if (!this.salonToEdit) return;
+    
+    console.log('🔄 Pré-remplissage du formulaire pour édition:', this.salonToEdit);
+    
+    // Pré-remplir les champs de base
+    this.salonForm.patchValue({
+      nom: this.salonToEdit.nom || '',
+      adresse: this.salonToEdit.adresse || '',
+      specialites: this.salonToEdit.specialites || '',
+      description: this.salonToEdit.description || '',
+      telephone: this.salonToEdit.telephone || '',
+      email: this.salonToEdit.email || '',
+      latitude: this.salonToEdit.latitude || null,
+      longitude: this.salonToEdit.longitude || null
+    });
+    
+    // Pré-remplir les services prédéfinis
+    if (this.salonToEdit.typeSalon && this.typeSalon.includes(this.salonToEdit.typeSalon)) {
+      this.servicesArray.push(this.fb.control(this.salonToEdit.typeSalon));
+    }
+    
+    // Pré-remplir les horaires d'ouverture
+    if (this.salonToEdit.heuresOuverture) {
+      try {
+        const horaires = typeof this.salonToEdit.heuresOuverture === 'string' 
+          ? JSON.parse(this.salonToEdit.heuresOuverture) 
+          : this.salonToEdit.heuresOuverture;
+        
+        Object.keys(horaires).forEach(jour => {
+          if (this.joursSemaine.includes(jour)) {
+            this.salonForm.patchValue({ [jour]: horaires[jour] });
+          }
+        });
+      } catch (e) {
+        console.warn('⚠️ Erreur parsing horaires:', e);
+      }
+    }
+    
+    this.updateServiceSelection();
   }
 }

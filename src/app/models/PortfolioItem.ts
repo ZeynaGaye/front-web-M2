@@ -2,21 +2,22 @@ import { PortfolioImage } from "./PortfolioImage";
 
 // Interface Freelance pour contenir toutes les informations du freelance
 export interface Freelance {
-note: any;
-nombreAvis: any;
-  competences: any;
   id: number;
   nom: string;
   prenom: string;
-  profession?: string;
+  email?: string;
   telephone?: string;
   adresse?: string;
-  email?: string;
+  genre?: string;
+  profession?: string;
   ville?: string;
   codePostal?: string;
+  competences?: string;
+  experiences?: string;
+  portfolio?: string;
+  profileImage?: string;
   rating?: number;
   reviews?: number;
-  profileImage?: string;
 }
 
 // Interface PortfolioItem mise à jour

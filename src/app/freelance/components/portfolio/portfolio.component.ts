@@ -1,7 +1,6 @@
-import { isPlatformBrowser } from '@angular/common';
+import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { Component, Inject, OnDestroy, OnInit, PLATFORM_ID, CUSTOM_ELEMENTS_SCHEMA, AfterViewInit, Input, HostListener } from '@angular/core';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
-import { CommonModule } from '@angular/common';
 import { trigger, transition, style, animate, state, query, stagger } from '@angular/animations';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -744,11 +743,24 @@ isLikedByUser(itemId: number): boolean {
 
         this.portfolioService.deletePortfolioItem(item.id).subscribe({
           next: () => {
-            this.portfolioItems = this.portfolioItems.filter(i => i.id !== item.id);
+            console.log('✅ Élément supprimé côté serveur, mise à jour de l\'état local');
+            console.log('📊 Portfolio avant suppression:', this.portfolioItems.length, 'items');
             
+            // Supprimer immédiatement de la liste locale
+            const portfolioAvant = this.portfolioItems.length;
+            this.portfolioItems = this.portfolioItems.filter(i => i.id !== item.id);
+            console.log('📊 Portfolio après suppression locale:', this.portfolioItems.length, 'items (supprimé:', portfolioAvant - this.portfolioItems.length, ')');
+            
+            // Mettre à jour les statistiques
             this.stats.totalItems = (this.stats.totalItems || 0) - 1;
             this.stats.totalViews = (this.stats.totalViews || 0) - (item.nombreVues || 0);
             this.stats.totalLikes = (this.stats.totalLikes || 0) - (item.nombreLikes || 0);
+            
+            // Recharger le portfolio depuis le serveur pour s'assurer de la cohérence
+            setTimeout(() => {
+              console.log('🔄 Rechargement du portfolio pour validation depuis le serveur...');
+              this.loadPortfolioAndFreelanceInfo();
+            }, 1000);
             
             this.snackBar.open(`"${item.titre}" a été supprimé avec succès`, 'Fermer', {
               duration: 3000,
@@ -756,11 +768,21 @@ isLikedByUser(itemId: number): boolean {
             });
           },
           error: (err) => {
-            console.error('Erreur lors de la suppression:', err);
+            console.error('❌ Erreur lors de la suppression:', err);
             if (itemIndex !== -1) {
               this.portfolioItems[itemIndex] = { ...this.portfolioItems[itemIndex], isDeleting: false };
             }
-            this.snackBar.open('Erreur lors de la suppression. Veuillez réessayer.', 'Fermer', {
+            
+            let errorMessage = 'Erreur lors de la suppression. Veuillez réessayer.';
+            if (err.status === 404) {
+              errorMessage = 'Élément déjà supprimé ou introuvable.';
+              // Si 404, supprimer quand même de l'affichage local
+              this.portfolioItems = this.portfolioItems.filter(i => i.id !== item.id);
+            } else if (err.status === 403) {
+              errorMessage = 'Vous n\'avez pas les droits pour supprimer cet élément.';
+            }
+            
+            this.snackBar.open(errorMessage, 'Fermer', {
               duration: 4000,
               panelClass: 'error-snackbar'
             });

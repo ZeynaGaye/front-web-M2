@@ -1,0 +1,85 @@
+<nav class="nav-bar">
+  <div class="nav-container">
+    <div class="logo2">
+      <img src="assets/images/logo (2).png" alt="BeautyHub" />
+    </div>
+
+    <div class="main-nav">
+      <button class="mobile-menu-toggle" (click)="toggleMobileMenu()">
+        <i class="fas fa-bars"></i>
+      </button>
+
+      <div class="nav-links" [class.mobile-visible]="isMobileMenuOpen">
+        <div class="mobile-header" *ngIf="isMobileMenuOpen">
+          <img src="assets/images/logo (2).png" alt="BeautyHub" class="mobile-logo" />
+          <button class="close-menu" (click)="toggleMobileMenu()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <a routerLink="/" class="nav-link" (click)="isMobileMenuOpen ? toggleMobileMenu() : null">ACCUEIL</a>
+        <a class="contact-link" (click)="openContactModal(); isMobileMenuOpen ? toggleMobileMenu() : null">
+          CONTACTEZ-NOUS
+        </a>
+        <a class="free-pro" (click)="navigateToFreelancePage()">
+          DEVENIR FREELANCE
+        </a>
+        <a class="free-pro" (click)="navigateToHiring()">
+          RECRUTER
+        </a>
+        <a class="free-pro" (click)="navigateToSalonRegistration()">
+          INSCRIRE VOTRE ENTREPRISE
+        </a>
+
+        <div class="mobile-search" *ngIf="isMobileMenuOpen">
+          <input
+            type="text"
+            [(ngModel)]="searchTerm"
+            placeholder="Rechercher par nom, adresse, service..."
+            (keyup.enter)="searchSalonsAdvanced(); toggleMobileMenu()" />
+          <button (click)="searchSalonsAdvanced(); toggleMobileMenu()">
+            <i class="fas fa-search"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="auth-section">
+      <div *ngIf="isLoggedIn" class="user-profile">
+        <div class="user-dropdown" [class.open]="isProfileMenuOpen" (click)="toggleProfileMenu($event)">
+          <div class="user-icon">
+            <i class="fas fa-user-circle"></i>
+            <span class="user-name" *ngIf="isClient && clientName">{{ clientName }}</span>
+          </div>
+          <div class="profile-menu">
+            <ng-container *ngIf="isClient">
+              <a routerLink="/client-dashboard" (click)="closeAllMenus()">
+                <i class="fas fa-tachometer-alt"></i> Mon Espace Client
+              </a>
+            </ng-container>
+
+            <ng-container *ngIf="isFreelance">
+              <a routerLink="/home-freelance" (click)="closeAllMenus()">
+                <i class="fas fa-tachometer-alt"></i> Mon Espace Freelance
+              </a>
+            </ng-container>
+
+            <ng-container *ngIf="isEmployeur">
+              <a routerLink="/home-employeur" (click)="closeAllMenus()">
+                <i class="fas fa-tachometer-alt"></i> Mon Espace Employeur
+              </a>
+            </ng-container>
+
+            <a (click)="logout(); closeAllMenus()">
+              <i class="fas fa-sign-out-alt"></i> Déconnexion
+            </a>
+          </div>
+        </div>
+      </div>
+      
+      <div *ngIf="!isLoggedIn" class="signin-button" (click)="login()">
+        SE CONNECTER
+      </div>
+    </div>
+  </div>
+</nav>

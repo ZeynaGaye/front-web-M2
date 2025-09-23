@@ -1,0 +1,228 @@
+<div class="employe-form-container" [class.loading]="loading">
+  <div class="loading-overlay" *ngIf="loading">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+  <mat-card>
+    <mat-card-header>
+      <div class="form-icon">
+        <i class="fas {{ isEditMode ? 'fa-user-edit' : 'fa-user-plus' }}"></i>
+      </div>
+      <div class="mat-mdc-card-title-group">
+        <mat-card-title>
+          {{ isEditMode ? 'Modifier l\'employé' : 'Nouvel employé' }}
+        </mat-card-title>
+        <mat-card-subtitle>
+          {{ isEditMode ? 'Mettez à jour les informations de l\'employé' : 'Ajoutez un nouvel employé à votre salon' }}
+        </mat-card-subtitle>
+      </div>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="employeForm" (ngSubmit)="onSubmit()">
+        
+        <!-- Section Informations personnelles -->
+        <div class="form-section">
+          <div class="section-header">
+            <div class="section-icon">
+              <i class="fas fa-user"></i>
+            </div>
+            <h3>Informations personnelles</h3>
+          </div>
+          
+          <div class="form-row">
+            <!-- Nom -->
+            <mat-form-field  class="form-field">
+              <mat-label>Nom</mat-label>
+              <i class="fas fa-id-badge" matPrefix></i>
+              <input matInput formControlName="nom" placeholder="Nom de famille">
+              <mat-error *ngIf="employeForm.get('nom')?.invalid && employeForm.get('nom')?.touched">
+                {{ getErrorMessage('nom') }}
+              </mat-error>
+            </mat-form-field>
+
+            <!-- Prénom -->
+            <mat-form-field  class="form-field">
+              <mat-label>Prénom</mat-label>
+              <i class="fas fa-user-tag" matPrefix></i>
+              <input matInput formControlName="prenom" placeholder="Prénom">
+              <mat-error *ngIf="employeForm.get('prenom')?.invalid && employeForm.get('prenom')?.touched">
+                {{ getErrorMessage('prenom') }}
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <!-- Email -->
+            <mat-form-field  class="form-field">
+              <mat-label>Email</mat-label>
+              <i class="fas fa-envelope" matPrefix></i>
+              <input matInput formControlName="email" type="email" placeholder="email@example.com">
+              <mat-error *ngIf="employeForm.get('email')?.invalid && employeForm.get('email')?.touched">
+                {{ getErrorMessage('email') }}
+              </mat-error>
+            </mat-form-field>
+
+            <!-- Téléphone -->
+            <mat-form-field  class="form-field">
+              <mat-label>Téléphone</mat-label>
+              <i class="fas fa-phone" matPrefix></i>
+              <input matInput formControlName="telephone" placeholder="+221 XX XXX XX XX">
+              <mat-error *ngIf="employeForm.get('telephone')?.invalid && employeForm.get('telephone')?.touched">
+                {{ getErrorMessage('telephone') }}
+              </mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <!-- Section Informations professionnelles -->
+        <div class="form-section">
+          <div class="section-header">
+            <div class="section-icon">
+              <i class="fas fa-briefcase"></i>
+            </div>
+            <h3>Informations professionnelles</h3>
+          </div>
+          
+          <div class="form-row">
+            <!-- Spécialités -->
+            <mat-form-field  class="form-field">
+              <mat-label>Spécialités</mat-label>
+              <i class="fas fa-star" matPrefix></i>
+              <mat-select 
+                #selectSpecialites
+                formControlName="specialites" 
+                multiple 
+                panelClass="specialite-select-panel"
+                disableOptionCentering="true"
+                [disableRipple]="false"
+                (selectionChange)="onSpecialiteChange($event)">
+
+                <mat-option *ngFor="let specialite of specialiteOptions" [value]="specialite">
+                  {{ formatSpecialiteName(specialite) }}
+                </mat-option>
+                <div class="close-option-container">
+                  <button 
+                    type="button" 
+                    class="close-select-button"
+                    (click)="selectSpecialites.close()">
+                    <i class="fas fa-check"></i> Terminé
+                  </button>
+                </div>
+              </mat-select>
+              <mat-hint>Sélectionnez une ou plusieurs spécialités (max 5)</mat-hint>
+              <mat-error *ngIf="employeForm.get('specialites')?.invalid && employeForm.get('specialites')?.touched">
+                Veuillez sélectionner au moins une spécialité
+              </mat-error>
+            </mat-form-field>
+
+            <!-- Type de contrat -->
+            <mat-form-field  class="form-field">
+              <mat-label>Type de contrat</mat-label>
+              <i class="fas fa-file-contract" matPrefix></i>
+              <mat-select formControlName="typeContrat">
+                <mat-option *ngFor="let type of typeContratOptions" [value]="type">
+                  {{ formatContractType(type) }}
+                </mat-option>
+              </mat-select>
+              <mat-error *ngIf="employeForm.get('typeContrat')?.invalid && employeForm.get('typeContrat')?.touched">
+                Le type de contrat est requis
+              </mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <!-- Section Statut (en mode édition seulement) -->
+        <div class="form-section" *ngIf="isEditMode">
+          <div class="section-header">
+            <div class="section-icon">
+              <i class="fas fa-toggle-on"></i>
+            </div>
+            <h3>Statut de l'employé</h3>
+          </div>
+          
+          <div class="form-row">
+            <mat-form-field class="form-field">
+              <mat-label>Statut</mat-label>
+              <i class="fas fa-user-check" matPrefix></i>
+              <mat-select formControlName="statut">
+                <mat-option *ngFor="let statut of statutOptions" [value]="statut">
+                  {{ formatStatut(statut) }}
+                </mat-option>
+              </mat-select>
+              <mat-hint>Définit la disponibilité de l'employé</mat-hint>
+            </mat-form-field>
+            <div class="form-field"></div> <!-- Placeholder pour maintenir l'alignement -->
+          </div>
+        </div>
+
+        <!-- Section Horaires de travail -->
+        <div class="form-section">
+          <div class="section-header">
+            <div class="section-icon">
+              <i class="fas fa-clock"></i>
+            </div>
+            <h3>Horaires de travail</h3>
+          </div>
+          
+          <div class="form-row">
+            <!-- Heure de début -->
+            <mat-form-field  class="form-field">
+              <mat-label>Heure de début</mat-label>
+              <i class="fas fa-clock" matPrefix></i>
+              <mat-select formControlName="horaireDebut">
+                <mat-option *ngFor="let heure of heuresOptions" [value]="heure">
+                  {{ heure }}
+                </mat-option>
+              </mat-select>
+              <mat-error *ngIf="employeForm.get('horaireDebut')?.invalid && employeForm.get('horaireDebut')?.touched">
+                L'heure de début est requise
+              </mat-error>
+            </mat-form-field>
+
+            <!-- Heure de fin -->
+            <mat-form-field  class="form-field">
+              <mat-label>Heure de fin</mat-label>
+              <i class="fas fa-clock" matPrefix></i>
+              <mat-select formControlName="horaireFin">
+                <mat-option *ngFor="let heure of heuresOptions" [value]="heure">
+                  {{ heure }}
+                </mat-option>
+              </mat-select>
+              <mat-error *ngIf="employeForm.get('horaireFin')?.invalid && employeForm.get('horaireFin')?.touched">
+                L'heure de fin est requise
+              </mat-error>
+            </mat-form-field>
+          </div>
+          
+          <!-- Résumé des horaires -->
+          <div class="horaire-summary" *ngIf="employeForm.get('horaireDebut')?.value && employeForm.get('horaireFin')?.value && !hasHorairesError()">
+            <i class="fas fa-info-circle"></i>
+            <span>Durée de travail : {{ calculateWorkDuration() }}</span>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="form-actions">
+          <button 
+            mat-stroked-button 
+            type="button" 
+            class="cancel-btn"
+            (click)="annuler()" 
+            [disabled]="loading">
+            <mat-icon>close</mat-icon>
+            Annuler
+          </button>
+          <button 
+            mat-raised-button 
+            type="submit" 
+            class="submit-btn"
+            [disabled]="loading || employeForm.invalid || hasHorairesError()">
+            <mat-spinner *ngIf="loading" diameter="20"></mat-spinner>
+            <mat-icon *ngIf="!loading">{{ isEditMode ? 'save' : 'person_add' }}</mat-icon>
+            {{ isEditMode ? 'Modifier l\'employé' : 'Créer l\'employé' }}
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>

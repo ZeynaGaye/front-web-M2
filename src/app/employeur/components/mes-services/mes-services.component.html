@@ -1,58 +1,194 @@
+
 <div class="services-container">
   <div class="header">
-    <h2>Mes Services</h2>
-    <button mat-icon-button (click)="closeModal()" class="close-button">
-      <mat-icon>close</mat-icon>
-    </button>
+    <div class="header-info">
+      <h2>Mes Services</h2>
+      <span class="services-count" *ngIf="hasServices">({{ servicesCount }} service{{ servicesCount > 1 ? 's' : '' }})</span>
+    </div>
+    <div class="header-actions">
+      <!-- ✅ Bouton refresh -->
+      <button mat-icon-button 
+              (click)="refreshServices()" 
+              [disabled]="loading || !salonId"
+              title="Actualiser">
+        <mat-icon>refresh</mat-icon>
+      </button>
+      
+      <!-- ✅ Bouton debug (caché en production) -->
+      <button mat-icon-button 
+              (click)="debugState()" 
+              style="display: none;"
+              title="Debug">
+        <mat-icon>bug_report</mat-icon>
+      </button>
+      
+      <!-- Bouton fermer -->
+      <button mat-icon-button (click)="closeModal()" class="close-button" title="Fermer">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
   </div>
 
-  <!-- Chargement -->
-  <div *ngIf="loading" class="loading">
+  <!-- ✅ CHARGEMENT -->
+  <div *ngIf="loading" class="loading-state">
     <mat-spinner diameter="40"></mat-spinner>
     <p>Chargement des services...</p>
   </div>
 
-  <!-- Erreur s’il n’y a pas de salon sélectionné -->
-  <div *ngIf="error && !loading" class="error-message">
-    <mat-icon>error</mat-icon>
-    <p>{{ error }}</p>
+  <!-- ✅ ERREUR - AMÉLIORÉE -->
+  <div *ngIf="error && !loading" class="error-state">
+    <mat-icon class="error-icon">error</mat-icon>
+    <h3>Oops ! Une erreur s'est produite</h3>
+    <p class="error-message">{{ error }}</p>
+    
+    <!-- Actions selon le type d'erreur -->
+    <div class="error-actions">
+      <button mat-raised-button color="primary" (click)="retryLoadServices()" *ngIf="salonId">
+        <mat-icon>refresh</mat-icon>
+        Réessayer
+      </button>
+      
+      <button mat-stroked-button (click)="closeModal()" *ngIf="!salonId">
+        <mat-icon>close</mat-icon>
+        Fermer
+      </button>
+    </div>
   </div>
 
-  <!-- Liste des services uniquement si salonId est présent -->
-  <div *ngIf="!loading && !error && salonId" class="services-list">
+  <!-- ✅ CONTENU PRINCIPAL - Uniquement si salonId est présent et pas d'erreur -->
+  <div *ngIf="!loading && !error && salonId" class="services-content">
     
-    <!-- Aucun service -->
-    <div *ngIf="services.length === 0" class="no-services">
-      <p>Vous n'avez pas encore de services.</p>
-      <button mat-raised-button color="primary" (click)="openAddServiceDialog()">
-        <mat-icon>add</mat-icon> Ajouter un service
+    <!-- ✅ ÉTAT VIDE - AMÉLIORÉ -->
+    <div *ngIf="!hasServices" class="empty-state">
+      <div class="empty-icon">
+        <mat-icon>content_cut</mat-icon>
+      </div>
+      <h3>Aucun service disponible</h3>
+      <p>Commencez par ajouter votre premier service pour attirer plus de clients.</p>
+      
+      <button mat-raised-button 
+              color="primary" 
+              size="large"
+              (click)="openAddServiceDialog()"
+              [disabled]="!canAddService">
+        <mat-icon>add</mat-icon> 
+        Ajouter mon premier service
       </button>
     </div>
 
-    <!-- Liste avec au moins un service -->
-    <div *ngIf="services.length > 0" class="services-actions">
-      <button mat-raised-button color="primary" (click)="openAddServiceDialog()">
-        <mat-icon>add</mat-icon> Ajouter un service
-      </button>
-    </div>
+    <!-- ✅ LISTE AVEC SERVICES - AMÉLIORÉE -->
+    <div *ngIf="hasServices" class="services-list">
+      
+      <!-- Actions en haut -->
+      <div class="services-actions">
+        <button mat-raised-button 
+                color="primary" 
+                (click)="openAddServiceDialog()"
+                [disabled]="!canAddService">
+          <mat-icon>add</mat-icon> 
+          Ajouter un service
+        </button>
+        
+        <span class="services-summary">
+          {{ servicesCount }} service{{ servicesCount > 1 ? 's' : '' }} disponible{{ servicesCount > 1 ? 's' : '' }}
+        </span>
+      </div>
 
-    <mat-card *ngFor="let service of services" class="service-card">
-      <mat-card-header>
-        <mat-card-title>{{ service.nom }}</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <p>{{ service.description }}</p>
-        <p class="price">{{ service.prix | currency:'CFA' }}</p>
-        <p class="duration">Durée: {{ service.dureeEnMinutes }} minutes</p>
-      </mat-card-content>
-      <mat-card-actions>
-        <button mat-button color="primary" (click)="editService(service)">
-          <mat-icon>edit</mat-icon> MODIFIER
-        </button>
-        <button mat-button color="warn" (click)="deleteService(service.id)">
-          <mat-icon>delete</mat-icon> SUPPRIMER
-        </button>
-      </mat-card-actions>
-    </mat-card>
+      <!-- ✅ GRILLE DE SERVICES AMÉLIORÉE -->
+      <div class="services-grid">
+        <mat-card *ngFor="let service of services;" class="service-card">
+          
+          <!-- En-tête de la carte -->
+          <mat-card-header class="service-headerXXX">
+            <div class="service-icon">
+              <mat-icon>content_cut</mat-icon>
+            </div>
+            <div class="service-title-section">
+              <mat-card-title class="service-name">{{ service.nom }}</mat-card-title>
+              <mat-card-subtitle class="service-category" *ngIf="service.categorie">
+                {{ service.categorie }}
+              </mat-card-subtitle>
+            </div>
+            <div class="service-price">
+              <span class="price-amount">{{ service.prix | currency:'XOF':'symbol':'1.0-0' }}</span>
+              <span class="price-currency">CFA</span>
+            </div>
+          </mat-card-header>
+          
+          <!-- Contenu de la carte -->
+          <mat-card-content class="service-content">
+            <p class="service-description" *ngIf="service.description">
+              {{ service.description }}
+            </p>
+            
+            <div class="service-meta">
+              <div class="meta-item">
+                <mat-icon class="meta-icon">schedule</mat-icon>
+                <span>{{ service.dureeEnMinutes }} min</span>
+              </div>
+              
+              <div class="meta-item" *ngIf="service.prix">
+                <mat-icon class="meta-icon">attach_money</mat-icon>
+                <span>{{ service.prix | number:'1.0-0' }} CFA</span>
+              </div>
+            </div>
+          </mat-card-content>
+          
+          <!-- Actions de la carte -->
+          <mat-card-actions class="service-actions">
+            <button mat-button 
+                    color="primary" 
+                    (click)="editService(service)"
+                    [disabled]="loading">
+              <mat-icon>edit</mat-icon> 
+              Modifier
+            </button>
+            
+            <button mat-button 
+                    color="warn" 
+                    (click)="deleteService(service.id)"
+                    [disabled]="loading || !service.id">
+              <mat-icon>delete</mat-icon> 
+              Supprimer
+            </button>
+            
+            <!-- Menu plus d'actions -->
+            <button mat-icon-button [matMenuTriggerFor]="serviceMenu" title="Plus d'actions">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+            
+            <mat-menu #serviceMenu="matMenu">
+              <button mat-menu-item (click)="editService(service)">
+                <mat-icon>edit</mat-icon>
+                <span>Modifier</span>
+              </button>
+              <button mat-menu-item (click)="deleteService(service.id)">
+                <mat-icon>delete</mat-icon>
+                <span>Supprimer</span>
+              </button>
+              <mat-divider></mat-divider>
+              <button mat-menu-item disabled>
+                <mat-icon>visibility</mat-icon>
+                <span>Voir les statistiques</span>
+              </button>
+            </mat-menu>
+          </mat-card-actions>
+        </mat-card>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ FOOTER AVEC INFORMATIONS -->
+  <div class="services-footer" *ngIf="!loading && !error && hasServices">
+    <div class="footer-info">
+      <small>
+        Dernière mise à jour : {{ Date.now() | date:'dd/MM/yyyy HH:mm' }}
+      </small>
+    </div>
   </div>
 </div>
+
+<!-- ✅ TEMPLATE POUR LE TRACKBY -->
+<ng-template #trackByServiceId let-service>
+  {{ service.id }}
+</ng-template>

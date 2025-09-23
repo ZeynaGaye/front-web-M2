@@ -8,6 +8,12 @@ $secondary-dark: darken($secondary-color, 10%);
 $white: #ffffff;
 $dark-text: #333333;
 
+// Couleurs pour les statuts des employés
+$statut-actif: #4caf50;
+$statut-inactif: #9e9e9e;
+$statut-conge: #ff9800;
+$statut-suspendu: #f44336;
+
 .modal-container {
   padding: 20px;
   max-width: 100%;
@@ -556,5 +562,219 @@ $dark-text: #333333;
   
   .service-cards {
     grid-template-columns: 1fr;
+  }
+}
+
+// ✅ STYLES POUR LA SECTION EMPLOYÉS
+
+.employes-section {
+  padding: 20px;
+
+  h4 {
+    margin-bottom: 20px;
+    color: $primary-dark;
+    font-weight: 600;
+  }
+
+  h5 {
+    margin-bottom: 15px;
+    color: $dark-text;
+    font-weight: 500;
+  }
+}
+
+.employes-actions {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 25px;
+
+  .add-item-btn {
+    background-color: $primary-color;
+    color: white;
+    
+    &:hover {
+      background-color: $primary-dark;
+    }
+  }
+
+  .view-all-btn {
+    border: 1px solid $primary-color;
+    color: $primary-color;
+    
+    &:hover {
+      background-color: $primary-light;
+      color: white;
+    }
+  }
+}
+
+.employes-preview {
+  margin-bottom: 25px;
+}
+
+.employes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.employe-card {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e0e0e0;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.employe-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.employe-avatar {
+  background-color: $secondary-light;
+  color: $secondary-dark;
+  padding: 8px;
+  border-radius: 50%;
+  font-size: 24px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.employe-details {
+  flex: 1;
+
+  h6 {
+    margin: 0 0 4px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: $dark-text;
+  }
+
+  .employe-email {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    color: #666;
+  }
+}
+
+.employe-specialites {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.specialite-chip {
+  background-color: $primary-light;
+  color: $primary-dark;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.statut-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  
+  &.statut-actif {
+    background-color: lighten($statut-actif, 40%);
+    color: $statut-actif;
+  }
+  
+  &.statut-inactif {
+    background-color: lighten($statut-inactif, 40%);
+    color: $statut-inactif;
+  }
+  
+  &.statut-conge {
+    background-color: lighten($statut-conge, 40%);
+    color: $statut-conge;
+  }
+  
+  &.statut-suspendu {
+    background-color: lighten($statut-suspendu, 40%);
+    color: $statut-suspendu;
+  }
+}
+
+.employe-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+
+  button {
+    color: $secondary-color;
+    
+    &:hover {
+      background-color: $secondary-light;
+      color: $secondary-dark;
+    }
+  }
+}
+
+.more-employes {
+  text-align: center;
+  font-style: italic;
+  color: #666;
+  margin: 10px 0 0 0;
+}
+
+// Responsive pour employés
+@media (max-width: 768px) {
+  .employes-actions {
+    flex-direction: column;
+    gap: 10px;
+
+    button {
+      width: 100%;
+    }
+  }
+
+  .employes-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .employe-card {
+    padding: 12px;
+  }
+}
+
+// Styles globaux pour la modal employé
+::ng-deep .employe-form-dialog {
+  .mat-mdc-dialog-container {
+    padding: 0;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    max-height: 90vh;
+    overflow: hidden;
+  }
+
+  .mat-mdc-dialog-content {
+    padding: 0;
+    margin: 0;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .mat-mdc-dialog-actions {
+    display: none; // On utilise les actions du formulaire
   }
 }
