@@ -2,7 +2,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of, BehaviorSubject } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
+import { catchError, tap, map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
 export interface RecommendationData {
@@ -26,6 +26,15 @@ export interface RecommendationData {
   experience?: number; // Années d'expérience pour freelances
   availability?: string;
   specialite?: string; // Spécifique aux freelances
+  
+  // Nouvelles propriétés pour la disponibilité
+  availableSlots?: string[];
+  isAvailableNow?: boolean;
+  nextSlot?: string;
+  openUntil?: string;
+  
+  // Nouvelles propriétés pour la section unifiée
+  isNearby?: boolean;
 }
 
 export interface HomepageRecommendations {
@@ -58,16 +67,16 @@ export class RecommendationService {
   public recommendationsState$ = this.recommendationsState.asObservable();
 
   constructor(private http: HttpClient) {
-    console.log('🎯 RecommendationService initialisé avec URL:', this.apiUrl);
+
   }
 
   // ==================== MÉTHODES PRINCIPALES ====================
 
   /**
-   * 🏠 Obtenir les recommandations pour la page d'accueil (salons + freelancers)
+   *  Obtenir les recommandations pour la page d'accueil (salons + freelancers)
    */
   getHomepageRecommendations(lat?: number, lon?: number, type?: 'salon' | 'freelance' | 'both'): Observable<HomepageRecommendations> {
-    console.log('🏠 Chargement recommandations homepage...', { lat, lon, type });
+
     
     this.updateLoadingState(true);
 
@@ -83,14 +92,14 @@ export class RecommendationService {
 
     return this.http.get<HomepageRecommendations>(`${this.apiUrl}/homepage`, { params }).pipe(
       tap(data => {
-        console.log('✅ Recommandations homepage reçues:', data);
+
         // Enrichir les données avec des freelances si nécessaire
         this.enrichWithFreelancers(data, lat, lon);
         this.updateHomepageData(data);
         this.updateLoadingState(false);
       }),
       catchError(error => {
-        console.error('❌ Erreur recommandations homepage:', error);
+        console.error('Erreur recommandations homepage:', error);
         this.updateLoadingState(false);
         return of({
           sections: {},
@@ -103,52 +112,56 @@ export class RecommendationService {
   }
 
   /**
-   * 👤 Obtenir les recommandations de freelancers populaires
+   *  Obtenir les recommandations de freelancers populaires
    */
   getPopularFreelancers(limit: number = 6): Observable<RecommendationData[]> {
-    console.log('👤 Chargement freelancers populaires...');
+
 
     let params = new HttpParams().set('limit', limit.toString());
 
     return this.http.get<any[]>(`${this.freelanceApiUrl}/popular`, { params }).pipe(
       tap(data => {
-        console.log('✅ Freelancers populaires reçus:', data);
+
       }),
       catchError(error => {
-        console.error('❌ Erreur freelancers populaires:', error);
+        console.error('Erreur freelancers populaires:', error);
         return of([]);
       })
     );
   }
 
   /**
-   * 📍 Obtenir les freelancers à proximité
+   *  Obtenir les freelancers proches avec distance réelle
    */
   getNearbyFreelancers(lat: number, lon: number, radius: number = 5, limit: number = 6): Observable<RecommendationData[]> {
-    console.log(`📍 Freelancers proximité: ${lat}, ${lon} (${radius}km)`);
+
 
     let params = new HttpParams()
+      .set('service', 'tous')
       .set('lat', lat.toString())
-      .set('lon', lon.toString())
-      .set('radius', radius.toString())
+      .set('lng', lon.toString())
       .set('limit', limit.toString());
 
-    return this.http.get<any[]>(`${this.freelanceApiUrl}/nearby`, { params }).pipe(
-      tap(data => {
-        console.log('✅ Freelancers proximité reçus:', data);
+    return this.http.get<any>(`${this.freelanceApiUrl}/nearby`, { params }).pipe(
+      map(response => {
+        const freelances = response?.freelances || response || [];
+        return Array.isArray(freelances) ? freelances.map((item: any) => {
+          const f = item.freelance ? { ...item.freelance, distance: item.distance } : item;
+          return this.processFreelancerData([f])[0];
+        }) : [];
       }),
       catchError(error => {
-        console.error('❌ Erreur freelancers proximité:', error);
+        console.error('Erreur freelancers proximité:', error);
         return of([]);
       })
     );
   }
 
   /**
-   * 🎯 Obtenir des freelancers par service
+   * Obtenir des freelancers par service
    */
   getFreelancersByService(serviceName: string, lat?: number, lon?: number, limit: number = 6): Observable<RecommendationData[]> {
-    console.log(`🎯 Freelancers pour service: ${serviceName}`);
+
 
     let params = new HttpParams().set('limit', limit.toString());
     
@@ -158,20 +171,20 @@ export class RecommendationService {
 
     return this.http.get<any[]>(`${this.freelanceApiUrl}/by-service/${encodeURIComponent(serviceName)}`, { params }).pipe(
       tap(data => {
-        console.log('✅ Freelancers par service reçus:', data);
+
       }),
       catchError(error => {
-        console.error('❌ Erreur freelancers par service:', error);
+        console.error('Erreur freelancers par service:', error);
         return of([]);
       })
     );
   }
 
   /**
-   * 🎯 Obtenir des recommandations rapides pour un service
+   * Obtenir des recommandations rapides pour un service
    */
   getQuickRecommendations(service: string, lat?: number, lon?: number, limit: number = 6): Observable<any> {
-    console.log(`🎯 Recommandations rapides pour: ${service}`);
+
 
     let params = new HttpParams()
       .set('service', service)
@@ -183,39 +196,167 @@ export class RecommendationService {
 
     return this.http.get<any>(`${this.apiUrl}/quick`, { params }).pipe(
       tap(response => {
-        console.log('✅ Recommandations rapides reçues:', response);
+
       }),
       catchError(error => {
-        console.error('❌ Erreur recommandations rapides:', error);
+        console.error('Erreur recommandations rapides:', error);
         return of({ recommendations: [], total: 0 });
       })
     );
   }
 
   /**
-   * 🔍 Obtenir des salons similaires
+   * Obtenir des salons similaires
    */
   getSimilarSalons(salonId: number, limit: number = 5): Observable<any> {
-    console.log(`🔍 Recherche salons similaires à: ${salonId}`);
+
 
     let params = new HttpParams().set('limit', limit.toString());
 
     return this.http.get<any>(`${this.apiUrl}/similar/${salonId}`, { params }).pipe(
       tap(response => {
-        console.log('✅ Salons similaires reçus:', response);
+
       }),
       catchError(error => {
-        console.error('❌ Erreur salons similaires:', error);
+        console.error('Erreur salons similaires:', error);
         return of({ similarSalons: [], total: 0 });
       })
     );
   }
 
+  // ==================== NOUVELLES MÉTHODES DISPONIBILITÉ TEMPS RÉEL ====================
+
   /**
-   * 📍 Obtenir des recommandations par proximité
+   * Obtenir les professionnels disponibles maintenant
+   */
+  getAvailableNow(lat?: number, lon?: number, radius: number = 10, limit: number = 8): Observable<any> {
+
+
+    let params = new HttpParams()
+      .set('radius', radius.toString())
+      .set('limit', limit.toString());
+    
+    if (lat && lon) {
+      params = params.set('lat', lat.toString()).set('lon', lon.toString());
+    }
+
+    return this.http.get<any>(`${environment.apiUrl}/disponibilites/available-now`, { params }).pipe(
+      tap(response => {
+
+      }),
+      catchError(error => {
+        console.error('Erreur disponibilités temps réel:', error);
+        return of({ 
+          availableNow: [], 
+          availableCount: 0, 
+          message: 'Erreur lors du chargement des disponibilités' 
+        });
+      })
+    );
+  }
+
+  /**
+   * Obtenir la disponibilité d'aujourd'hui pour un salon
+   */
+  getSalonAvailabilityToday(salonId: number, dureeService: number = 30): Observable<any> {
+
+
+    let params = new HttpParams().set('dureeService', dureeService.toString());
+
+    return this.http.get<any>(`${environment.apiUrl}/disponibilites/salon/${salonId}/today`, { params }).pipe(
+      tap(response => {
+
+      }),
+      catchError(error => {
+        console.error('Erreur disponibilité salon aujourd\'hui:', error);
+        return of({ error: true, message: error.message });
+      })
+    );
+  }
+
+  /**
+   * Obtenir la disponibilité d'aujourd'hui pour un freelance
+   */
+  getFreelanceAvailabilityToday(freelanceId: number, dureeService: number = 30): Observable<any> {
+
+
+    let params = new HttpParams().set('dureeService', dureeService.toString());
+
+    return this.http.get<any>(`${environment.apiUrl}/disponibilites/freelance/${freelanceId}/today`, { params }).pipe(
+      tap(response => {
+
+      }),
+      catchError(error => {
+        console.error('Erreur disponibilité freelance aujourd\'hui:', error);
+        return of({ error: true, message: error.message });
+      })
+    );
+  }
+
+  /**
+   * Obtenir le prochain créneau disponible pour un salon
+   */
+  getSalonNextSlot(salonId: number, dureeService: number = 30): Observable<any> {
+
+
+    let params = new HttpParams().set('dureeService', dureeService.toString());
+
+    return this.http.get<any>(`${environment.apiUrl}/disponibilites/salon/${salonId}/next-slot`, { params }).pipe(
+      tap(response => {
+
+      }),
+      catchError(error => {
+        console.error('Erreur prochain créneau salon:', error);
+        return of({ hasSlot: false, error: true, message: error.message });
+      })
+    );
+  }
+
+  /**
+   * Obtenir le prochain créneau disponible pour un freelance
+   */
+  getFreelanceNextSlot(freelanceId: number, dureeService: number = 30): Observable<any> {
+
+
+    let params = new HttpParams().set('dureeService', dureeService.toString());
+
+    return this.http.get<any>(`${environment.apiUrl}/disponibilites/freelance/${freelanceId}/next-slot`, { params }).pipe(
+      tap(response => {
+
+      }),
+      catchError(error => {
+        console.error('Erreur prochain créneau freelance:', error);
+        return of({ hasSlot: false, error: true, message: error.message });
+      })
+    );
+  }
+
+  /**
+   *  Vérifier le statut temps réel d'un professionnel
+   */
+  getCurrentStatus(prestataireId: number, estSalon: boolean): Observable<any> {
+
+
+    let params = new HttpParams()
+      .set('prestataireId', prestataireId.toString())
+      .set('estSalon', estSalon.toString());
+
+    return this.http.get<any>(`${environment.apiUrl}/disponibilites/status`, { params }).pipe(
+      tap(response => {
+
+      }),
+      catchError(error => {
+        console.error(' Erreur statut temps réel:', error);
+        return of({ isOpenNow: false, error: true, message: error.message });
+      })
+    );
+  }
+
+  /**
+   *  Obtenir des recommandations par proximité
    */
   getNearbyRecommendations(lat: number, lon: number, radius: number = 5, limit: number = 10): Observable<any> {
-    console.log(`📍 Recommandations proximité: ${lat}, ${lon} (${radius}km)`);
+
 
     let params = new HttpParams()
       .set('lat', lat.toString())
@@ -225,20 +366,20 @@ export class RecommendationService {
 
     return this.http.get<any>(`${this.apiUrl}/nearby`, { params }).pipe(
       tap(response => {
-        console.log('✅ Recommandations proximité reçues:', response);
+
       }),
       catchError(error => {
-        console.error('❌ Erreur recommandations proximité:', error);
+        console.error(' Erreur recommandations proximité:', error);
         return of({ recommendations: [], total: 0 });
       })
     );
   }
 
   /**
-   * 🎯 Obtenir des recommandations par service spécifique
+   *  Obtenir des recommandations par service spécifique
    */
   getRecommendationsByService(serviceName: string, lat?: number, lon?: number, limit: number = 8): Observable<any> {
-    console.log(`🎯 Recommandations pour service: ${serviceName}`);
+
 
     let params = new HttpParams().set('limit', limit.toString());
     
@@ -248,10 +389,10 @@ export class RecommendationService {
 
     return this.http.get<any>(`${this.apiUrl}/by-service/${encodeURIComponent(serviceName)}`, { params }).pipe(
       tap(response => {
-        console.log('✅ Recommandations par service reçues:', response);
+
       }),
       catchError(error => {
-        console.error('❌ Erreur recommandations par service:', error);
+        console.error(' Erreur recommandations par service:', error);
         return of({ recommendations: [], total: 0 });
       })
     );
@@ -260,27 +401,27 @@ export class RecommendationService {
   // ==================== MÉTHODES D'INTERACTION ====================
 
   /**
-   * ❤️ Marquer/démarquer un salon comme favori
+   *  Marquer/démarquer un salon comme favori
    */
   updateFavorite(salonId: number, action: 'add' | 'remove'): Observable<any> {
-    console.log(`❤️ Mise à jour favori: salon ${salonId}, action: ${action}`);
+
 
     return this.http.post(`${this.apiUrl}/favorite`, { salonId, action }).pipe(
       tap(response => {
-        console.log('✅ Favori mis à jour:', response);
+
       }),
       catchError(error => {
-        console.error('❌ Erreur mise à jour favori:', error);
+        console.error(' Erreur mise à jour favori:', error);
         return of({ error: error.message });
       })
     );
   }
 
   /**
-   * 📝 Enregistrer une interaction utilisateur
+   *  Enregistrer une interaction utilisateur
    */
   recordInteraction(salonId: number, type: string, duration?: number): Observable<any> {
-    console.log(`📝 Enregistrement interaction: salon ${salonId}, type: ${type}`);
+
 
     const data: any = { salonId, type };
     if (duration) {
@@ -289,29 +430,29 @@ export class RecommendationService {
 
     return this.http.post(`${this.apiUrl}/interaction`, data).pipe(
       tap(response => {
-        console.log('✅ Interaction enregistrée:', response);
+
       }),
       catchError(error => {
-        console.error('❌ Erreur enregistrement interaction:', error);
+        console.error(' Erreur enregistrement interaction:', error);
         return of({ error: error.message });
       })
     );
   }
 
   /**
-   * 🔄 Rafraîchir les recommandations
+   *  Rafraîchir les recommandations
    */
   refreshRecommendations(): Observable<any> {
-    console.log('🔄 Rafraîchissement des recommandations...');
+
 
     return this.http.post(`${this.apiUrl}/refresh`, {}).pipe(
       tap(response => {
-        console.log('✅ Recommandations rafraîchies:', response);
+
         // Réinitialiser l'état local
         this.resetState();
       }),
       catchError(error => {
-        console.error('❌ Erreur rafraîchissement:', error);
+        console.error(' Erreur rafraîchissement:', error);
         return of({ error: error.message });
       })
     );
@@ -320,14 +461,14 @@ export class RecommendationService {
   // ==================== MÉTHODES UTILITAIRES ====================
 
   /**
-   * 📊 Obtenir l'état actuel des recommandations
+   *  Obtenir l'état actuel des recommandations
    */
   getCurrentState() {
     return this.recommendationsState.value;
   }
 
   /**
-   * 📊 Vérifier si des recommandations sont disponibles
+   *  Vérifier si des recommandations sont disponibles
    */
   hasRecommendations(): boolean {
     const state = this.getCurrentState();
@@ -335,7 +476,7 @@ export class RecommendationService {
   }
 
   /**
-   * 📊 Obtenir le nombre total de recommandations
+   *  Obtenir le nombre total de recommandations
    */
   getTotalRecommendations(): number {
     const state = this.getCurrentState();
@@ -343,7 +484,7 @@ export class RecommendationService {
   }
 
   /**
-   * 📊 Obtenir les recommandations d'une section spécifique
+   *  Obtenir les recommandations d'une section spécifique
    */
   getSectionRecommendations(sectionName: string): RecommendationData[] {
     const state = this.getCurrentState();
@@ -351,7 +492,7 @@ export class RecommendationService {
   }
 
   /**
-   * 📊 Obtenir toutes les sections disponibles
+   *  Obtenir toutes les sections disponibles
    */
   getAvailableSections(): string[] {
     const state = this.getCurrentState();
@@ -359,7 +500,7 @@ export class RecommendationService {
   }
 
   /**
-   * 🌍 Obtenir la géolocalisation de l'utilisateur
+   *  Obtenir la géolocalisation de l'utilisateur
    */
   getCurrentLocation(): Promise<{ lat: number, lon: number }> {
     return new Promise((resolve, reject) => {
@@ -387,7 +528,7 @@ export class RecommendationService {
   }
 
   /**
-   * 📦 Traiter les données de salon brutes
+   *  Traiter les données de salon brutes
    */
   processSalonData(data: any[]): RecommendationData[] {
     if (!Array.isArray(data)) {
@@ -419,15 +560,15 @@ export class RecommendationService {
   // ==================== MÉTHODES PRIVÉES ====================
 
   /**
-   * 🔄 Enrichir les recommandations avec des freelances
+   *  Enrichir les recommandations avec des freelances
    */
   private enrichWithFreelancers(data: HomepageRecommendations, lat?: number, lon?: number): void {
-    console.log('🔄 Enrichissement des données avec freelances...');
+
     
     // Ajouter les freelances populaires
     this.getPopularFreelancers(3).subscribe(freelances => {
       if (freelances && freelances.length > 0) {
-        const processedFreelances = this.processFreelancerData(freelances);
+        const processedFreelances = this.processFreelancerData(freelances as any[]);
         
         // Créer une section freelances populaires ou l'enrichir
         if (!data.sections['freelances_populaires']) {
@@ -441,7 +582,7 @@ export class RecommendationService {
           data.totalRecommendations += 2;
         }
         
-        console.log('✅ Freelances populaires ajoutés:', processedFreelances.length);
+
       }
     });
 
@@ -449,7 +590,7 @@ export class RecommendationService {
     if (lat && lon) {
       this.getNearbyFreelancers(lat, lon, 5, 3).subscribe(nearbyFreelances => {
         if (nearbyFreelances && nearbyFreelances.length > 0) {
-          const processedNearbyFreelances = this.processFreelancerData(nearbyFreelances);
+          const processedNearbyFreelances = nearbyFreelances; // déjà traités par getNearbyFreelancers
           
           // Créer une section freelances proches ou l'enrichir
           if (!data.sections['freelances_proches']) {
@@ -463,7 +604,7 @@ export class RecommendationService {
             data.totalRecommendations += 2;
           }
           
-          console.log('✅ Freelances proximité ajoutés:', processedNearbyFreelances.length);
+
         }
       });
     }
@@ -480,14 +621,14 @@ export class RecommendationService {
             data.totalRecommendations += processedServiceFreelances.length;
           }
           
-          console.log(`✅ Freelances ${service} ajoutés:`, processedServiceFreelances.length);
+
         }
       });
     });
   }
 
   /**
-   * 📦 Traiter les données de freelancer brutes
+   *  Traiter les données de freelancer brutes
    */
   private processFreelancerData(data: any[]): RecommendationData[] {
     if (!Array.isArray(data)) {
@@ -502,7 +643,7 @@ export class RecommendationService {
       adresse: item.adresse || item.address || 'Adresse non spécifiée',
       photoProfil: item.photoProfil || item.photoProfilUrl || item.imageUrl || item.avatar,
       note: item.note || item.rating || item.noteMoyenne || 0,
-      nombreAvis: item.nombreAvis || item.reviewCount || 0,
+      nombreAvis: item.nombreAvis || item.reviewCount || item.reviews || item.nbAvis || 0,
       services: this.extractServiceNames(item.services || item.serviceNoms || item.specialites || (item.specialite ? [item.specialite] : [])),
       distance: item.distance,
       latitude: item.latitude,
@@ -577,7 +718,7 @@ export class RecommendationService {
   // ==================== MÉTHODES DE CACHE ====================
 
   /**
-   * 💾 Vérifier si les données sont récentes (moins de 5 minutes)
+   *  Vérifier si les données sont récentes (moins de 5 minutes)
    */
   isDataFresh(): boolean {
     const state = this.getCurrentState();
@@ -588,32 +729,38 @@ export class RecommendationService {
   }
 
   /**
-   * 💾 Charger les recommandations avec cache
+   *  Charger les recommandations avec cache
    */
   loadRecommendationsWithCache(lat?: number, lon?: number): Observable<HomepageRecommendations> {
-    // Si les données sont récentes, les retourner
-    if (this.isDataFresh() && this.hasRecommendations()) {
-      console.log('📦 Utilisation du cache pour les recommandations');
-      return of(this.getCurrentState().homepage!);
+    const state = this.getCurrentState();
+
+    // Si les données sont récentes ET qu'on n'a pas de nouvelles coordonnées non encore utilisées, utiliser le cache
+    const hasNewLocation = lat != null && lon != null;
+    const cacheHasNearby = (state.homepage?.sections['proches']?.length ?? 0) > 0 ||
+                           (state.homepage?.sections['freelances_proches']?.length ?? 0) > 0;
+
+    if (this.isDataFresh() && this.hasRecommendations() && (!hasNewLocation || cacheHasNearby)) {
+
+      return of(state.homepage!);
     }
 
     // Sinon, charger depuis l'API
-`    console.log('🌐 Chargement des recommandations depuis l'API');`
+
     return this.getHomepageRecommendations(lat, lon);
   }
 
   // ==================== MÉTHODES DE DEBUG ====================
 
   /**
-   * 🐛 Afficher l'état de debug
+   *  Afficher l'état de debug
    */
   debugState(): void {
     const state = this.getCurrentState();
-    console.group('🐛 Recommendation Service Debug');
-    console.log('État actuel:', state);
-    console.log('Sections disponibles:', this.getAvailableSections());
-    console.log('Total recommandations:', this.getTotalRecommendations());
-    console.log('Données fraîches:', this.isDataFresh());
-    console.groupEnd();
+
+
+
+
+
+
   }
 }

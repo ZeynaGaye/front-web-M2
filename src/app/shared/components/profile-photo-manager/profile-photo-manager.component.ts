@@ -48,14 +48,9 @@ export class ProfilePhotoManagerComponent implements OnInit {
   readonly PREVIEW_SIZE = 150; // px
 
   ngOnInit(): void {
-    console.log('ProfilePhotoManager initialisé:', {
-      userId: this.userId,
-      userRole: this.userRole,
-      currentPhotoUrl: this.currentPhotoUrl
-    });
   }
 
-  // ✅ Gestion de la sélection de fichier
+  //  Gestion de la sélection de fichier
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
@@ -64,7 +59,7 @@ export class ProfilePhotoManagerComponent implements OnInit {
     }
   }
 
-  // ✅ Gestion du drag & drop
+  //  Gestion du drag & drop
   onDragOver(event: DragEvent): void {
     event.preventDefault();
     event.stopPropagation();
@@ -89,7 +84,7 @@ export class ProfilePhotoManagerComponent implements OnInit {
     }
   }
 
-  // ✅ Traitement du fichier
+  //  Traitement du fichier
   private processFile(file: File): void {
     // Validation du type
     if (!this.ACCEPTED_TYPES.includes(file.type)) {
@@ -103,36 +98,30 @@ export class ProfilePhotoManagerComponent implements OnInit {
       return;
     }
 
-    console.log('📁 Fichier sélectionné:', {
-      name: file.name,
-      type: file.type,
-      size: file.size
-    });
 
     this.uploadFile(file);
   }
 
-  // ✅ Upload du fichier
+  //  Upload du fichier
   private uploadFile(file: File): void {
     this.isUploading = true;
 
     this.profileService.uploadProfilePhoto(file).subscribe({
       next: (photoUrl) => {
-        console.log('✅ Photo uploadée avec succès:', photoUrl);
         this.currentPhotoUrl = photoUrl;
         this.isUploading = false;
         this.photoUploaded.emit(photoUrl);
         this.showSuccess('Photo de profil mise à jour avec succès');
       },
       error: (error) => {
-        console.error('❌ Erreur upload photo:', error);
+        console.error(' Erreur upload photo:', error);
         this.isUploading = false;
         this.showError(error.message || 'Erreur lors de l\'upload de la photo');
       }
     });
   }
 
-  // ✅ Suppression de la photo
+  //  Suppression de la photo
   onDeletePhoto(): void {
     if (!this.currentPhotoUrl) {
       return;
@@ -148,21 +137,20 @@ export class ProfilePhotoManagerComponent implements OnInit {
 
     this.profileService.deleteProfilePhoto().subscribe({
       next: () => {
-        console.log('✅ Photo supprimée avec succès');
         this.currentPhotoUrl = null;
         this.isDeleting = false;
         this.photoDeleted.emit();
         this.showSuccess('Photo de profil supprimée avec succès');
       },
       error: (error) => {
-        console.error('❌ Erreur suppression photo:', error);
+        console.error(' Erreur suppression photo:', error);
         this.isDeleting = false;
         this.showError(error.message || 'Erreur lors de la suppression de la photo');
       }
     });
   }
 
-  // ✅ Prévisualisation de l'image
+  //  Prévisualisation de l'image
   get photoPreviewUrl(): string {
     if (this.currentPhotoUrl) {
       // Si c'est une URL complète, l'utiliser directement
@@ -175,7 +163,7 @@ export class ProfilePhotoManagerComponent implements OnInit {
     return '';
   }
 
-  // ✅ Icône par défaut selon le rôle
+  //  Icône par défaut selon le rôle
   get defaultIcon(): string {
     switch (this.userRole?.toLowerCase()) {
       case 'freelance':
@@ -189,21 +177,12 @@ export class ProfilePhotoManagerComponent implements OnInit {
     }
   }
 
-  // ✅ Couleur selon le rôle
+  //  Couleur selon le rôle
   get roleColor(): string {
-    switch (this.userRole?.toLowerCase()) {
-      case 'freelance':
-        return '#FF6B9D';
-      case 'client':
-        return '#9C88FF';
-      case 'employeur':
-        return '#FFD93D';
-      default:
-        return '#757575';
-    }
+    return '#A4B1BD';
   }
 
-  // ✅ Formater la taille du fichier
+  //  Formater la taille du fichier
   formatFileSize(bytes: number): string {
     if (bytes === 0) return '0 B';
     const k = 1024;
@@ -212,7 +191,7 @@ export class ProfilePhotoManagerComponent implements OnInit {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
 
-  // ✅ Ouvrir le sélecteur de fichier
+  //  Ouvrir le sélecteur de fichier
   openFileSelector(): void {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
@@ -223,7 +202,7 @@ export class ProfilePhotoManagerComponent implements OnInit {
     fileInput.click();
   }
 
-  // ✅ Messages de notification
+  //  Messages de notification
   private showSuccess(message: string): void {
     this.snackBar.open(message, 'Fermer', {
       duration: 5000,
@@ -238,7 +217,7 @@ export class ProfilePhotoManagerComponent implements OnInit {
     });
   }
 
-  // ✅ Getters pour le template
+  //  Getters pour le template
   get isLoading(): boolean {
     return this.isUploading || this.isDeleting;
   }

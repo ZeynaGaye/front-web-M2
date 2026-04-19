@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, OnDestroy, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ReservationService } from '../../../shared/services/reservation/reservation.service';
 
@@ -41,11 +41,11 @@ interface Salon {
   templateUrl: './reservations.component.html',
   styleUrls: ['./reservations.component.scss']
 })
-export class ReservationsComponent implements OnInit {
+export class ReservationsComponent implements OnInit, OnDestroy {
 
   @Input() salons: Salon[] = [];
-  @Input() isFreelance: boolean = true; // ✅ NOUVEAU: Indique si c'est pour un freelance
-  @Input() isClient: boolean = false; // ✅ NOUVEAU: Indique si c'est pour un client
+  @Input() isFreelance: boolean = true; //  NOUVEAU: Indique si c'est pour un freelance
+  @Input() isClient: boolean = false; //  NOUVEAU: Indique si c'est pour un client
   @Output() closeEvent = new EventEmitter<void>();
   @Output() reservationUpdated = new EventEmitter<any>();
   @Output() statsUpdated = new EventEmitter<any>();
@@ -56,13 +56,13 @@ export class ReservationsComponent implements OnInit {
   loadingReservations = false;
   reservationsError: string | null = null;
 
-  // ✅ GESTION DES AVIS
+  //  GESTION DES AVIS
   avis: any[] = [];
   loadingAvis = false;
   avisError: string | null = null;
   showAvisSection = true;
 
-  // ✅ STATISTIQUES
+  //  STATISTIQUES
   confirmedReservationsCount = 0; // CONFIRMEE
   completedReservationsCount = 0; // TERMINEE
   todayReservationsCount = 0;
@@ -86,7 +86,7 @@ export class ReservationsComponent implements OnInit {
   }
 
   /**
-   * ✅ LABELS CORRIGÉS
+   *  LABELS CORRIGÉS
    */
   getStatusLabel(statut: string): string {
     const labels: { [key: string]: string } = {
@@ -99,45 +99,45 @@ export class ReservationsComponent implements OnInit {
   }
 
   /**
-   * ✅ CHARGEMENT CORRIGÉ - Utilise la bonne méthode selon le contexte
+   *  CHARGEMENT CORRIGÉ - Utilise la bonne méthode selon le contexte
    */
   loadReservations(): void {
     this.loadingReservations = true;
     this.reservationsError = null;
 
-    console.log(`🔄 Chargement des réservations ${this.isFreelance ? 'freelance' : 'employeur'}...`);
 
-    // ✅ CORRECTION: Utiliser la bonne méthode selon le contexte
+
+    //  CORRECTION: Utiliser la bonne méthode selon le contexte
     const reservationsObservable = this.isFreelance 
       ? this.reservationService.getFreelanceReservations()
       : this.reservationService.getEmployeurReservations();
 
     reservationsObservable.subscribe({
       next: (data: any[]) => {
-        console.log('✅ Réservations chargées:', data);
+
 
         this.reservations = data.map(reservation => ({
           id: reservation.id,
           clientId: reservation.clientId || reservation.client?.id || reservation.utilisateurId,
-          // ✅ MAPPING CLIENT
+          //  MAPPING CLIENT
           clientNom: reservation.clientNom || reservation.nomClient || reservation.client?.nom || `Client #${reservation.clientId}`,
           clientPrenom: reservation.clientPrenom || reservation.prenomClient || reservation.client?.prenom,
           clientAdresse: reservation.clientAdresse || reservation.adresseClient || reservation.client?.adresse,
           clientEmail: reservation.clientEmail || reservation.emailClient || reservation.client?.email,
           clientTelephone: reservation.clientTelephone || reservation.telephoneClient || reservation.client?.telephone,
-          // ✅ MAPPING SALON/FREELANCE
+          //  MAPPING SALON/FREELANCE
           salonId: reservation.salonId || reservation.salon?.id,
           salonNom: reservation.salonNom || reservation.nomSalon || reservation.salon?.nom,
           salonAdresse: reservation.salonAdresse || reservation.adresseSalon || reservation.salon?.adresse,
           freelanceId: reservation.freelanceId || reservation.freelance?.id,
           freelanceNom: reservation.freelanceNom || reservation.nomFreelance || reservation.freelance?.nom,
-          // ✅ MAPPING SERVICE
+          //  MAPPING SERVICE
           serviceId: reservation.serviceId || reservation.serviceSalon?.id || reservation.service?.id,
           serviceNom: reservation.serviceNom || reservation.nomService || reservation.serviceSalon?.nom || reservation.service?.nom || reservation.serviceName || 'Service',
           serviceDescription: reservation.serviceDescription || reservation.descriptionService || reservation.serviceSalon?.description || reservation.service?.description,
           serviceDuree: reservation.serviceDuree || reservation.dureeService || reservation.serviceSalon?.duree || reservation.service?.duree || 30,
           servicePrix: reservation.servicePrix || reservation.prixService || reservation.serviceSalon?.prix || reservation.service?.prix || reservation.prixTotal || 0,
-          // ✅ MAPPING DATES
+          //  MAPPING DATES
           datePrestation: new Date(reservation.datePrestation || reservation.dateRendezVous),
           dateCreation: new Date(reservation.dateCreation || reservation.createdAt || Date.now()),
           statut: this.normalizeStatut(reservation.statut || reservation.status || 'confirmee'),
@@ -150,13 +150,13 @@ export class ReservationsComponent implements OnInit {
         this.emitStatsToParent();
       },
       error: (error) => {
-        console.error('❌ Erreur lors du chargement des réservations:', error);
+        console.error(' Erreur lors du chargement des réservations:', error);
         this.reservationsError = 'Impossible de charger les réservations.';
         this.loadingReservations = false;
         
-        // ✅ En cas d'erreur, essayer de charger des données de test pour le développement
+        //  En cas d'erreur, essayer de charger des données de test pour le développement
         if (error.status === 403 || error.status === 401) {
-          console.warn('⚠️ Erreur d\'autorisation - Chargement de données de test');
+          console.warn(' Erreur d\'autorisation - Chargement de données de test');
           this.loadMockReservations();
         }
       }
@@ -164,7 +164,7 @@ export class ReservationsComponent implements OnInit {
   }
 
   /**
-   * ✅ MAPPING STATUTS CORRIGÉ
+   *  MAPPING STATUTS CORRIGÉ
    */
   private normalizeStatut(statut: string): 'confirmee' | 'terminee' | 'annulee' | 'non_presentee' {
     const statusMap: { [key: string]: 'confirmee' | 'terminee' | 'annulee' | 'non_presentee' } = {
@@ -183,7 +183,7 @@ export class ReservationsComponent implements OnInit {
   }
 
   /**
-   * ✅ STATISTIQUES CORRIGÉES
+   *  STATISTIQUES CORRIGÉES
    */
   private calculateReservationsStats(): void {
     const stats = {
@@ -226,7 +226,7 @@ export class ReservationsComponent implements OnInit {
     this.todayReservationsCount = stats.reservationsAujourdhui;
     this.totalRevenue = stats.chiffreAffaires;
 
-    console.log('📊 Statistiques calculées:', stats);
+
   }
 
   private emitStatsToParent(): void {
@@ -241,99 +241,101 @@ export class ReservationsComponent implements OnInit {
   }
 
   // ==========================================
-  // 🎯 ACTIONS CORRIGÉES POUR FREELANCE
+  //  ACTIONS CORRIGÉES POUR FREELANCE
   // ==========================================
 
   /**
-   * ✅ TERMINER (CONFIRMEE → TERMINEE)
+   *  TERMINER (CONFIRMEE → TERMINEE)
    */
   completeReservation(reservationId: number): void {
-    console.log('📝 Finalisation réservation:', reservationId);
+
 
     this.reservationService.terminerReservation(reservationId).subscribe({
       next: (updatedReservation) => {
-        console.log('✅ Réservation terminée:', updatedReservation);
+
         this.updateLocalReservation(reservationId, updatedReservation);
         this.showSuccessMessage('Réservation terminée avec succès');
         this.reservationUpdated.emit({ action: 'completed', reservation: updatedReservation });
       },
       error: (error) => {
-        console.error('❌ Erreur finalisation:', error);
+        console.error(' Erreur finalisation:', error);
         this.showErrorMessage('Impossible de terminer la réservation');
       }
     });
   }
 
   /**
-   * ✅ ANNULER/REFUSER (CONFIRMEE → ANNULEE_PRESTATAIRE)
+   *  ANNULER/REFUSER (CONFIRMEE → ANNULEE_PRESTATAIRE)
    */
   cancelReservation(reservationId: number): void {
-    console.log('❌ Annulation réservation:', reservationId);
+
 
     const motif = this.isFreelance ? 'Annulée par le freelance' : 'Annulée par le salon';
     
     this.reservationService.refuserReservation(reservationId, motif).subscribe({
       next: (updatedReservation) => {
-        console.log('✅ Réservation annulée:', updatedReservation);
+
         this.updateLocalReservation(reservationId, updatedReservation);
         this.showSuccessMessage('Réservation annulée');
         this.reservationUpdated.emit({ action: 'cancelled', reservation: updatedReservation });
       },
       error: (error) => {
-        console.error('❌ Erreur annulation:', error);
+        console.error(' Erreur annulation:', error);
         this.showErrorMessage('Impossible d\'annuler la réservation');
       }
     });
   }
 
   /**
-   * ✅ MARQUER COMME NON PRÉSENTÉ (CONFIRMEE → NON_PRESENTEE)
+   *  MARQUER COMME NON PRÉSENTÉ (CONFIRMEE → NON_PRESENTEE)
    */
   markNoShow(reservationId: number): void {
-    console.log('👻 Marquer non présenté:', reservationId);
+
 
     this.reservationService.marquerNonPresentee(reservationId).subscribe({
       next: (updatedReservation) => {
-        console.log('✅ Client marqué non présenté:', updatedReservation);
+
         this.updateLocalReservation(reservationId, updatedReservation);
         this.showSuccessMessage('Client marqué comme non présenté');
         this.reservationUpdated.emit({ action: 'no_show', reservation: updatedReservation });
       },
       error: (error) => {
-        console.error('❌ Erreur non présenté:', error);
+        console.error(' Erreur non présenté:', error);
         this.showErrorMessage('Impossible de marquer comme non présenté');
       }
     });
   }
 
   /**
-   * ✅ CONFIRMER UNE RÉSERVATION (pour freelance)
+   *  CONFIRMER UNE RÉSERVATION (pour freelance)
    */
   confirmReservation(reservationId: number): void {
-    console.log('✅ Confirmation réservation:', reservationId);
+
 
     this.reservationService.confirmerReservation(reservationId).subscribe({
       next: (updatedReservation) => {
-        console.log('✅ Réservation confirmée:', updatedReservation);
+
         this.updateLocalReservation(reservationId, updatedReservation);
         this.showSuccessMessage('Réservation confirmée');
         this.reservationUpdated.emit({ action: 'confirmed', reservation: updatedReservation });
       },
       error: (error) => {
-        console.error('❌ Erreur confirmation:', error);
+        console.error(' Erreur confirmation:', error);
         this.showErrorMessage('Impossible de confirmer la réservation');
       }
     });
   }
 
   /**
-   * ✅ Fermer modal
+   *  Fermer modal
    */
   closeReservationModal(event?: MouseEvent): void {
     if (event && (event.target as HTMLElement).classList.contains('modal')) {
       this.selectedReservation = null;
+      document.body.style.overflow = 'auto';
     } else if (!event) {
       this.selectedReservation = null;
+      document.body.style.overflow = 'auto';
     }
   }
 
@@ -359,7 +361,7 @@ export class ReservationsComponent implements OnInit {
   }
 
   // ==========================================
-  // 🔍 FILTRAGE ET RECHERCHE
+  //  FILTRAGE ET RECHERCHE
   // ==========================================
 
   filterReservations(): void {
@@ -406,6 +408,7 @@ export class ReservationsComponent implements OnInit {
 
   viewReservationDetails(reservation: Reservation): void {
     this.selectedReservation = reservation;
+    document.body.style.overflow = 'hidden';
   }
 
   setViewMode(mode: 'cards' | 'list' | 'calendar'): void {
@@ -425,7 +428,7 @@ export class ReservationsComponent implements OnInit {
   }
 
   // ==========================================
-  // 📅 MÉTHODES D'AFFICHAGE
+  //  MÉTHODES D'AFFICHAGE
   // ==========================================
 
   formatDay(date: Date): string {
@@ -462,7 +465,7 @@ export class ReservationsComponent implements OnInit {
     });
   }
 
-  // ✅ Méthodes pour gérer le nom et l'adresse du prestataire
+  //  Méthodes pour gérer le nom et l'adresse du prestataire
   getServiceProviderName(reservation: Reservation): string {
     if (reservation.salonId) {
       const salon = this.salons.find(s => s.id === reservation.salonId);
@@ -482,7 +485,7 @@ export class ReservationsComponent implements OnInit {
   }
 
   // ==========================================
-  // 🌟 GESTION DES AVIS
+  //  GESTION DES AVIS
   // ==========================================
 
   /**
@@ -498,12 +501,12 @@ export class ReservationsComponent implements OnInit {
 
     avisObservable.subscribe({
       next: (data: any[]) => {
-        console.log('✅ Avis chargés:', data);
+
         this.avis = data;
         this.loadingAvis = false;
       },
       error: (error) => {
-        console.error('❌ Erreur chargement avis:', error);
+        console.error(' Erreur chargement avis:', error);
         this.avisError = 'Impossible de charger les avis';
         this.loadingAvis = false;
       }
@@ -524,7 +527,7 @@ export class ReservationsComponent implements OnInit {
    * Formater les étoiles pour affichage
    */
   formatStars(rating: number): string {
-    const stars = '★'.repeat(rating) + '☆'.repeat(5 - rating);
+    const stars = ''.repeat(rating) + ''.repeat(5 - rating);
     return stars;
   }
 
@@ -545,20 +548,20 @@ export class ReservationsComponent implements OnInit {
   }
 
   private showSuccessMessage(message: string): void {
-    console.log('✅ Succès:', message);
+
     // Ici vous pouvez ajouter une notification toast
   }
 
   private showErrorMessage(message: string): void {
-    console.error('❌ Erreur:', message);
+    console.error(' Erreur:', message);
     // Ici vous pouvez ajouter une notification toast d'erreur
   }
 
   /**
-   * ✅ DONNÉES DE TEST POUR LE DÉVELOPPEMENT
+   *  DONNÉES DE TEST POUR LE DÉVELOPPEMENT
    */
   private loadMockReservations(): void {
-    console.log('🧪 Chargement de données de test pour freelance');
+
 
     this.reservations = [
       {
@@ -569,7 +572,7 @@ export class ReservationsComponent implements OnInit {
         clientAdresse: '123 Rue de la Paix, Paris',
         clientEmail: 'marie.dupont@email.com',
         clientTelephone: '0123456789',
-        freelanceId: 1, // ✅ Freelance, pas salon
+        freelanceId: 1, //  Freelance, pas salon
         freelanceNom: 'Votre Freelance',
         serviceId: 1,
         serviceNom: 'Maquillage Mariage',
@@ -630,5 +633,10 @@ export class ReservationsComponent implements OnInit {
     
     // Supprimer l'erreur puisque les données de test sont chargées
     this.reservationsError = null;
+  }
+
+  ngOnDestroy(): void {
+    // Restaurer le scroll de la page au cas où le modal serait ouvert
+    document.body.style.overflow = 'auto';
   }
 }

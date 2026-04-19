@@ -4,7 +4,7 @@ import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
 
-// ✅ INTERFACES POUR LES REQUÊTES
+//  INTERFACES POUR LES REQUÊTES
 export interface CreateServiceSalonRequest {
   servicePredefiniId?: number;
   nomService?: string;
@@ -31,7 +31,7 @@ export interface CreateServiceFreelanceRequest {
   disponibleSoir?: boolean;
 }
 
-// ✅ INTERFACES POUR LES RÉPONSES
+//  INTERFACES POUR LES RÉPONSES
 export interface ServiceCreationResponse {
   service?: any;
   type: 'SERVICE_PREDEFINI' | 'NOUVEAU_SERVICE';
@@ -75,7 +75,7 @@ export class ServiceCreationIntelligenteService {
   constructor(private http: HttpClient) {}
 
   /**
-   * 🏢 Créer un service pour salon avec détection intelligente
+   *  Créer un service pour salon avec détection intelligente
    */
   creerServiceSalonIntelligent(
     salonId: number, 
@@ -88,7 +88,7 @@ export class ServiceCreationIntelligenteService {
   }
 
   /**
-   * 👨‍💼 Créer un service pour freelance avec détection intelligente
+   * ‍ Créer un service pour freelance avec détection intelligente
    */
   creerServiceFreelanceIntelligent(
     freelanceId: number,
@@ -101,7 +101,7 @@ export class ServiceCreationIntelligenteService {
   }
 
   /**
-   * ✅ Confirmer la création après suggestion
+   *  Confirmer la création après suggestion
    */
   confirmerCreationServiceFreelance(
     freelanceId: number,
@@ -114,7 +114,7 @@ export class ServiceCreationIntelligenteService {
   }
 
   /**
-   * ✅ Confirmer la création salon (si vous l'implémentez côté backend)
+   *  Confirmer la création salon (si vous l'implémentez côté backend)
    */
   confirmerCreationServiceSalon(
     salonId: number,
@@ -128,7 +128,7 @@ export class ServiceCreationIntelligenteService {
   }
 
   /**
-   * 🔍 Prévisualiser la détection avant création (utilise votre endpoint)
+   *  Prévisualiser la détection avant création (utilise votre endpoint)
    */
   previsualiserDetection(
     nomService: string, 

@@ -1,55 +1,62 @@
-<div class="freelance-section">
-  <!-- Carrousel à gauche -->
-  <div class="image-carousel">
-    <div class="carousel-inner">
-      <div class="carousel-item" [ngClass]="{'active': currentSlide === 0}" [style.backgroundImage]="'url(/assets/images/femme noir.avif)'">
-        <div class="image-caption">
-          <h3>Créez votre portfolio</h3>
-          <p>Exposez vos plus belles réalisations</p>
+<div class="pro-section">
+
+  <div class="pro-content">
+    <span class="pro-label">POUR LES PROFESSIONNELS INDÉPENDANTS</span>
+
+    <h2>Propulsez votre carrière<br>vers de nouveaux<br>sommets</h2>
+
+    <p class="pro-desc">
+      Rejoignez la plus grande communauté de créateurs de beauté au
+      Sénégal. Gérez votre activité de A à Z avec nos outils digitaux.
+    </p>
+
+    <div class="pro-features">
+      <div class="feature-item">
+        <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
+        <div class="feature-text">
+          <strong>Développez votre activité</strong>
+          <span>Accédez à une base de clients premium.</span>
         </div>
       </div>
-      
-      <div class="carousel-item" [ngClass]="{'active': currentSlide === 1}" [style.backgroundImage]="'url(/assets/images/pexels-rdne-7755238.jpg)'">
-        <div class="image-caption">
-          <h3>Gagnez en visibilité</h3>
-          <p>Apparaissez dans les recherches locales</p>
+      <div class="feature-item">
+        <div class="feature-icon"><i class="fas fa-eye"></i></div>
+        <div class="feature-text">
+          <strong>Gagnez en visibilité</strong>
+          <span>Votre portfolio vu par des milliers.</span>
         </div>
       </div>
-      <div class="carousel-item" [ngClass]="{'active': currentSlide === 2}" [style.backgroundImage]="'url(/assets/images/pexels-barik5ive-3355696-5282408.jpg)'">
-        <div class="image-caption">
-          <h3>Recevez des demandes</h3>
-          <p>Clients et salons vous contactent directement</p>
+      <div class="feature-item">
+        <div class="feature-icon"><i class="fas fa-calendar-alt"></i></div>
+        <div class="feature-text">
+          <strong>Gérez vos réservations</strong>
+          <span>Planning intelligent et rappels auto.</span>
         </div>
       </div>
-      <div class="carousel-item" [ngClass]="{'active': currentSlide === 3}" [style.backgroundImage]="'url(/assets/images/photo-1522335789203-aabd1fc54bc9.avif)'">
-        <div class="image-caption">
-          <h3>Développez votre clientèle</h3>
-          <p>Attirez plus de clients grâce à votre expertise</p>
+      <div class="feature-item">
+        <div class="feature-icon"><i class="fas fa-credit-card"></i></div>
+        <div class="feature-text">
+          <strong>Paiements Sécurisés</strong>
+          <span>Recevez vos fonds en toute sérénité.</span>
         </div>
+      </div>
     </div>
+
+    <button class="pro-cta" (click)="openLoginModal()">REJOINDRE EN TANT QUE PRO</button>
+  </div>
+
+  <div class="pro-visuals">
+    <div class="pro-img pro-img-1">
+      <img src="/assets/images/pexels-rdne-7755238.jpg" alt="Professionnel beauté">
     </div>
-    <div class="carousel-dots">
-      <span *ngFor="let slide of slides; let i = index" 
-            [ngClass]="{'active': i === currentSlide}"
-            (click)="goToSlide(i)"></span>
-    </div>
-    <div class="carousel-controls">
-      <button class="control-btn prev" (click)="prevSlide()">&#10094;</button>
-      <button class="control-btn next" (click)="nextSlide()">&#10095;</button>
+    <div class="pro-img-right">
+      <div class="pro-img pro-img-2">
+        <img src="/assets/images/femme coiffure.png" alt="Coiffure">
+      </div>
+      <div class="pro-badge">
+        <span class="badge-number">{{ freelanceCount !== null ? freelanceCount + '+' : '...' }}</span>
+        <span class="badge-label">Pros déjà inscrits</span>
+      </div>
     </div>
   </div>
 
-  <!-- Texte original à droite -->
-  <div class="freelance-text-container" routerLink="/freelance-dashboard">
-    <p class="freelance-text">
-      Vous êtes un professionnel freelance de la beauté ? Rejoignez 
-      <span class="highlight">BeautyHub</span> et bénéficiez d'une visibilité unique.
-    </p>
-    <div class="additional-text">
-      Trouvez des missions près de chez vous, montrez votre portfolio, et soyez contacté par les salons à la recherche de vos talents.
-      <div class="cta-link">
-        Découvrir plus <span class="arrow">→</span>
-      </div>
-    </div>
-  </div>
 </div>

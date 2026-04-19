@@ -1,12 +1,16 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 1rem;
   z-index: 1000;
+  pointer-events: none;
+
+  .modal-content {
+    pointer-events: all;
+  }
 }
 
 .modal-content {
@@ -16,7 +20,9 @@
   width: 100%;
   max-width: 600px;
   max-height: 80vh; /* Limite la hauteur */
-  overflow-y: auto; /* Active le défilement */
+  overflow-y: auto;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
   z-index: 1001;
   display: flex;

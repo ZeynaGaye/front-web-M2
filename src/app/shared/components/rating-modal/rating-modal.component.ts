@@ -74,7 +74,6 @@ export class RatingModalComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    console.log('🌟 Modal de notation ouverte pour:', this.data);
 
     // Si c'est une modification d'un avis existant
     if (this.data.existingRating) {
@@ -85,7 +84,7 @@ export class RatingModalComponent implements OnInit {
   }
 
   // ==========================================
-  // 🌟 GESTION DES ÉTOILES
+  //  GESTION DES ÉTOILES
   // ==========================================
 
   /**
@@ -139,7 +138,7 @@ export class RatingModalComponent implements OnInit {
   }
 
   // ==========================================
-  // 🌟 NOTATION DÉTAILLÉE PAR CRITÈRES
+  //  NOTATION DÉTAILLÉE PAR CRITÈRES
   // ==========================================
 
   /**
@@ -177,7 +176,7 @@ export class RatingModalComponent implements OnInit {
   }
 
   // ==========================================
-  // 🌟 GESTION DU COMMENTAIRE
+  //  GESTION DU COMMENTAIRE
   // ==========================================
 
   /**
@@ -241,7 +240,7 @@ export class RatingModalComponent implements OnInit {
   }
 
   // ==========================================
-  // 🌟 ACTIONS PRINCIPALES
+  //  ACTIONS PRINCIPALES
   // ==========================================
 
   /**
@@ -281,7 +280,6 @@ export class RatingModalComponent implements OnInit {
       serviceId: this.data.reservation.serviceId,
     };
 
-    console.log('📝 Soumission de la notation:', ratingData);
 
     // 4. Appel au service pour créer ou mettre à jour l'avis
     const submitRequest = this.isEditMode
@@ -291,7 +289,6 @@ export class RatingModalComponent implements OnInit {
     // 5. Gestion de la réponse du serveur (succès ou échec)
     submitRequest.subscribe({
       next: (response) => {
-        console.log('✅ Notation soumise avec succès:', response);
         this.snackBar.open(
           this.isEditMode ? 'Avis modifié avec succès !' : 'Merci pour votre avis !',
           'Fermer',
@@ -308,16 +305,33 @@ export class RatingModalComponent implements OnInit {
         });
       },
       error: (error) => {
-        console.error('❌ Erreur lors de la soumission:', error);
+        console.error(' Erreur lors de la soumission:', error);
         this.isSubmitting = false;
-        this.snackBar.open(
-          'Erreur lors de l\'envoi de votre avis. Veuillez réessayer.',
-          'Fermer',
-          {
-            duration: 5000,
-            panelClass: ['error-snackbar']
-          }
-        );
+
+        const errorMessage: string = error?.message || '';
+        const alreadyReviewed = errorMessage.toLowerCase().includes('déjà') || errorMessage.toLowerCase().includes('already');
+
+        if (alreadyReviewed) {
+          // Passer en mode édition et afficher un message explicite
+          this.isEditMode = true;
+          this.snackBar.open(
+            'Vous avez déjà soumis un avis. Vous pouvez le modifier ci-dessous.',
+            'OK',
+            {
+              duration: 5000,
+              panelClass: ['warning-snackbar']
+            }
+          );
+        } else {
+          this.snackBar.open(
+            errorMessage || 'Erreur lors de l\'envoi de votre avis. Veuillez réessayer.',
+            'Fermer',
+            {
+              duration: 5000,
+              panelClass: ['error-snackbar']
+            }
+          );
+        }
       }
     });
   }
@@ -343,7 +357,7 @@ export class RatingModalComponent implements OnInit {
   }
 
   // ==========================================
-  // 🌟 HELPERS
+  //  HELPERS
   // ==========================================
 
   /**

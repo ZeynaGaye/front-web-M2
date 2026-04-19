@@ -149,7 +149,6 @@ export class ProfilePhotoUploadComponent implements OnInit {
     this.http.post<any>(`${environment.apiUrl}/api/freelances/${this.freelanceId}/upload-profile-photo`, formData)
       .subscribe({
         next: (response) => {
-          console.log('✅ Photo uploadée avec succès:', response);
           
           this.photoUrl = this.getFullPhotoUrl(response.photoUrl);
           this.hasPhoto = true;
@@ -164,7 +163,7 @@ export class ProfilePhotoUploadComponent implements OnInit {
           });
         },
         error: (error: HttpErrorResponse) => {
-          console.error('❌ Erreur upload photo:', error);
+          console.error(' Erreur upload photo:', error);
           this.isUploading = false;
           this.selectedFile = null;
           
@@ -185,7 +184,6 @@ export class ProfilePhotoUploadComponent implements OnInit {
     this.http.delete<any>(`${environment.apiUrl}/api/freelances/${this.freelanceId}/profile-photo`)
       .subscribe({
         next: (response) => {
-          console.log('✅ Photo supprimée avec succès:', response);
           
           this.photoUrl = '';
           this.hasPhoto = false;
@@ -199,7 +197,7 @@ export class ProfilePhotoUploadComponent implements OnInit {
           });
         },
         error: (error: HttpErrorResponse) => {
-          console.error('❌ Erreur suppression photo:', error);
+          console.error(' Erreur suppression photo:', error);
           this.isDeleting = false;
           
           const message = error.error?.message || 'Erreur lors de la suppression';
@@ -221,7 +219,7 @@ export class ProfilePhotoUploadComponent implements OnInit {
   }
 
   onImageError(event: any): void {
-    console.warn('❌ Erreur chargement image de profil');
+    console.warn(' Erreur chargement image de profil');
     event.target.src = 'assets/images/freelance-avatar-default.jpg';
     this.hasPhoto = false;
   }

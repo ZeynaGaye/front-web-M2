@@ -50,8 +50,8 @@ $neutral-light: map.get($neutral-palette, lighter);
 $neutral-dark: map.get($neutral-palette, darker);
 
 // Couleurs utilitaires modernes
-$success-color: #059669;
-$success-light: #ecfdf5;
+$success-color: #A4B1BD; // remplacé par couleur secondaire (supprime le vert)
+$success-light: rgba(#A4B1BD, 0.1);
 $warning-color: #d97706;
 $warning-light: #fffbeb;
 $error-color: #dc2626;
@@ -503,9 +503,9 @@ $shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
-        padding: 1.5rem 1.5rem 0.75rem;
-        background: linear-gradient(135deg, 
-          rgba($primary, 0.03) 0%, 
+        padding: 1rem 1rem 0.5rem;
+        background: linear-gradient(135deg,
+          rgba($primary, 0.03) 0%,
           rgba($secondary, 0.02) 100%);
 
         .header-left {
@@ -514,17 +514,20 @@ $shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 
           flex: 1;
 
           .service-icon {
+            width: 40px;
+            height: 40px;
+            min-width: 40px;
+            background: linear-gradient(135deg, rgba($primary, 0.12) 0%, rgba($primary, 0.2) 100%);
+            border-radius: $border-radius-sm;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
             mat-icon {
-              font-size: 2rem;
-              height: 2rem;
-              width: 2rem;
+              font-size: 20px !important;
+              height: 20px !important;
+              width: 20px !important;
               color: $primary;
-              background: linear-gradient(135deg, rgba($primary, 0.1) 0%, rgba($primary, 0.2) 100%);
-              border-radius: $border-radius-sm;
-              padding: 0.5rem;
-              display: flex;
-              align-items: center;
-              justify-content: center;
             }
           }
 
@@ -578,7 +581,7 @@ $shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 
 
       // ===== CONTENU PRINCIPAL =====
       .card-content {
-        padding: 0.75rem 1.5rem 1.5rem;
+        padding: 0.5rem 1rem 1rem;
 
         .description {
           display: flex;
@@ -774,7 +777,7 @@ $shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 
             font-size: 1rem;
 
             mat-icon {
-              color: $success-color;
+              color: $secondary;
               font-size: 1.3rem;
             }
           }
@@ -789,14 +792,14 @@ $shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 
               align-items: center;
               gap: 0.5rem;
               padding: 0.5rem 0.75rem;
-              background: rgba($success-color, 0.05);
+              background: rgba($secondary, 0.07);
               border-radius: $border-radius-sm;
               color: $text-dark;
               font-weight: 600;
               font-size: 0.9rem;
 
               mat-icon {
-                color: $success-color;
+                color: $secondary-dark;
                 font-size: 1rem;
               }
             }

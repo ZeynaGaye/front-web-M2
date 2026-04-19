@@ -64,7 +64,7 @@ export class OffresManagerComponent implements OnInit {
   totalPages = 0;
   paginatedOffres: OffreEmploi[] = [];
   
-  // ✅ Candidatures avec le bon type
+  //  Candidatures avec le bon type
   selectedOffreCandidatures: Candidature[] = [];
   dialogRef: MatDialogRef<any> | null = null;
   isLoadingCandidatures = false;
@@ -74,7 +74,7 @@ export class OffresManagerComponent implements OnInit {
 
   constructor(
     private offreEmploisService: OffreEmploisService,
-    private candidatureService: CandidatureService, // ✅ Injection du bon service
+    private candidatureService: CandidatureService, //  Injection du bon service
     private dialog: MatDialog,
     private snackBar: MatSnackBar
   ) {}
@@ -100,7 +100,7 @@ export class OffresManagerComponent implements OnInit {
     });
   }
 
-  // ✅ MÉTHODE CORRIGÉE : Utilise le bon service CandidatureService
+  //  MÉTHODE CORRIGÉE : Utilise le bon service CandidatureService
   private loadOffresWithCandidatesCount(offres: OffreEmploi[]) {
     if (offres.length === 0) {
       this.offres = [];
@@ -111,7 +111,7 @@ export class OffresManagerComponent implements OnInit {
 
     // Créer un tableau d'observables pour récupérer le nombre de candidatures
     const candidaturesRequests = offres.map(offre => 
-      this.offreEmploisService.getCandidaturesByOffreId(offre.id!) // ✅ Utilise OffreEmploisService
+      this.offreEmploisService.getCandidaturesByOffreId(offre.id!) //  Utilise OffreEmploisService
     );
 
     forkJoin(candidaturesRequests).subscribe({
@@ -120,16 +120,16 @@ export class OffresManagerComponent implements OnInit {
           ...offre,
           experienceRequise: offre.experienceRequise || '',
           status: offre.status || 'OUVERT',
-          candidaturesCount: candidaturesArrays[index].length // ✅ Nombre réel de candidatures
+          candidaturesCount: candidaturesArrays[index].length //  Nombre réel de candidatures
         }));
         
-        console.log('✅ Offres chargées avec candidatures:', this.offres);
+
         this.isLoading = false;
         this.checkExpiredOffres();
         this.initPagination();
       },
       error: (error) => {
-        console.error('❌ Erreur lors du chargement du nombre de candidatures:', error);
+        console.error(' Erreur lors du chargement du nombre de candidatures:', error);
         this.offres = offres.map(offre => ({
           ...offre,
           experienceRequise: offre.experienceRequise || '',
@@ -144,7 +144,7 @@ export class OffresManagerComponent implements OnInit {
     });
   }
 
-  // ✅ MÉTHODE CORRIGÉE : Utilise le bon service
+  //  MÉTHODE CORRIGÉE : Utilise le bon service
   viewCandidates(offreId: number) {
     const offre = this.offres.find(o => o.id === offreId);
     if (!offre) {
@@ -155,14 +155,14 @@ export class OffresManagerComponent implements OnInit {
     this.isLoadingCandidatures = true;
     this.selectedOffreCandidatures = [];
     
-    // ✅ Utilise candidatureService au lieu d'offreEmploisService
+    //  Utilise candidatureService au lieu d'offreEmploisService
     this.offreEmploisService.getCandidaturesByOffreId(offreId).subscribe({
       next: (candidatures) => {
         // Les données sont déjà normalisées par le service
-        console.log('🎯 Candidatures reçues dans le composant:', candidatures);
+
         candidatures.forEach((c, index) => {
-          console.log(`📝 Candidature ${index + 1}:`, c);
-          console.log(`👤 Freelance data:`, c.freelance);
+
+
         });
         
         this.selectedOffreCandidatures = candidatures;
@@ -182,7 +182,7 @@ export class OffresManagerComponent implements OnInit {
         });
       },
       error: (error) => {
-        console.error('❌ Erreur lors du chargement des candidatures:', error);
+        console.error(' Erreur lors du chargement des candidatures:', error);
         this.isLoadingCandidatures = false;
         this.snackBar.open('Erreur lors du chargement des candidatures', 'Fermer', {
           duration: 3000
@@ -191,7 +191,7 @@ export class OffresManagerComponent implements OnInit {
     });
   }
 
-  // ✅ MÉTHODE CORRIGÉE : Mise à jour du statut de candidature
+  //  MÉTHODE CORRIGÉE : Mise à jour du statut de candidature
   updateCandidatureStatus(candidature: Candidature, newStatus: string) {
     if (!candidature.id) {
       this.snackBar.open('Impossible de mettre à jour le statut', 'Fermer', {
@@ -233,9 +233,9 @@ export class OffresManagerComponent implements OnInit {
     });
   }
 
-  // ✅ Méthode pour contacter un candidat
+  //  Méthode pour contacter un candidat
   contactCandidate(candidature: Candidature) {
-    console.log('📧 Contact candidat:', candidature);
+
     
     // Récupérer l'email selon les différents formats possibles
     const email = candidature.freelance?.email 
@@ -255,7 +255,7 @@ export class OffresManagerComponent implements OnInit {
       ? `${prenom} ${nomCandidat}` 
       : prenom || nomCandidat || 'Candidat';
       
-    console.log('📧 Email trouvé:', email, 'Nom:', nom);
+
       
     if (!email || email === 'Email non disponible') {
       this.snackBar.open('Email non disponible pour ce candidat', 'Fermer', {
@@ -269,7 +269,7 @@ export class OffresManagerComponent implements OnInit {
     const body = `Bonjour ${nom},\n\nNous avons bien reçu votre candidature et souhaitons un entretien dans les procains jours .\n\nCordialement`;
     const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     
-    console.log('📧 Ouverture du lien mailto:', mailtoLink);
+
     window.open(mailtoLink);
     
     this.snackBar.open(`Email envoyé à ${nom}`, 'Fermer', {
@@ -397,7 +397,7 @@ export class OffresManagerComponent implements OnInit {
     this.loadOffres();
   }
 
-  // ✅ Méthodes d'affichage corrigées
+  //  Méthodes d'affichage corrigées
   getActiveOffresCount(): number {
     return this.offres.filter(offre => 
       offre.status === 'ACTIVE' || offre.status === 'OUVERT'
@@ -471,8 +471,8 @@ export class OffresManagerComponent implements OnInit {
                        || candidature['freelanceId']
                        || (candidature as any).freelance_id;
     
-    console.log('🔍 Recherche freelanceId dans:', candidature);
-    console.log('🆔 FreelanceId trouvé:', freelanceId);
+
+
     
     return freelanceId ? Number(freelanceId) : null;
   }
@@ -483,10 +483,10 @@ export class OffresManagerComponent implements OnInit {
   }
 
   viewCandidatureDetails(candidature: Candidature) {
-    console.log('🔍 Ouverture détails candidature:', candidature);
-    console.log('📋 Freelance data:', candidature.freelance);
-    console.log('🔍 Keys de candidature:', Object.keys(candidature));
-    console.log('🆔 FreelanceId récupéré:', this.getFreelanceId(candidature));
+
+
+
+
     
     // Ouvrir une modal avec tous les détails du freelance et de sa candidature
     const detailsDialog = this.dialog.open(this.candidateDetailsTemplate, {

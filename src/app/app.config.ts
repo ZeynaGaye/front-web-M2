@@ -1,5 +1,6 @@
+
 import { APP_INITIALIZER, ApplicationConfig, PLATFORM_ID, importProvidersFrom } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withInMemoryScrolling } from '@angular/router';
 import { routes } from './app.routes';
 import { KeycloakService } from 'keycloak-angular';
 import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi, withFetch } from '@angular/common/http';
@@ -48,7 +49,7 @@ function initializeKeycloak(keycloak: KeycloakService, config: ConfigService, pl
 // Configuration principale de l'application
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideRouter(routes),
+    provideRouter(routes, withInMemoryScrolling({ anchorScrolling: 'enabled', scrollPositionRestoration: 'enabled' })),
     provideHttpClient(withInterceptorsFromDi(), withFetch()),
     provideClientHydration(),
     provideAnimations(),

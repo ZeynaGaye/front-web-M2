@@ -55,7 +55,7 @@ export const routes: Routes = [
     component: SalonDetailsComponent 
   },
   
-  // ✅ ROUTES FREELANCE
+  //  ROUTES FREELANCE
   { 
     path: 'freelance-dashboard', 
     component: FreelanceDashbordComponent 
@@ -69,7 +69,7 @@ export const routes: Routes = [
     component: OpportunitesEmploiComponent 
   },
   
-  // ✅ ROUTES EMPLOYEUR
+  //  ROUTES EMPLOYEUR
   { 
     path: 'candidatures', 
     component: CandidaturesComponent 
@@ -83,7 +83,7 @@ export const routes: Routes = [
     component: OffresManagerComponent 
   },
   
-  // ✅ ROUTES PROTÉGÉES (avec guard)
+  //  ROUTES PROTÉGÉES (avec guard)
   {
     path: 'home-freelance',
     component: HomeFreelanceComponent,
@@ -103,7 +103,7 @@ export const routes: Routes = [
     data: { roles: ['EMPLOYEUR'] },
   },
   
-  // ✅ ROUTE WILDCARD (IMPORTANTE - toujours en dernier)
+  //  ROUTE WILDCARD (IMPORTANTE - toujours en dernier)
   { 
     path: '**', 
     redirectTo: '/', 

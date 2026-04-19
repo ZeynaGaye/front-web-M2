@@ -50,7 +50,7 @@ export class RegisterService {
   // Méthode d'inscription
  // Méthode d'inscription améliorée
 signup(request: SignupRequest): Observable<AuthResponse> {
-  console.log('Envoi de la demande d\'inscription:', request);
+
   
   // Vérifier que nous avons bien "password" et pas "motDePasse"
   const formattedRequest = {
@@ -68,7 +68,7 @@ signup(request: SignupRequest): Observable<AuthResponse> {
   return this.http.post<AuthResponse>(`${this.apiUrl}/signup`, formattedRequest)
     .pipe(
       tap(response => {
-        console.log('Réponse d\'inscription:', response);
+
         // Stocker les informations d'authentification
         this.storeAuthData(response);
       }),

@@ -66,15 +66,15 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
   showReservations = false;
   showNotifications = false;
 
-  // ✅ Données utilisateur
+  //  Données utilisateur
   currentUser: any = null;
   username = '';
 
-  // ✅ Données pour le composant réservations (si nécessaire)
+  //  Données pour le composant réservations (si nécessaire)
   salons: any[] = []; // Liste des salons si nécessaire pour le composant enfant
   reservationStats: any = null; // Statistiques reçues du composant enfant
   
-  // ✅ Données du tableau de bord
+  //  Données du tableau de bord
   upcomingAppointments: any[] = [];
   dashboardStats = {
     weeklyAppointments: 0,
@@ -83,19 +83,19 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
     portfolioPhotos: 0
   };
   
-  // ✅ États de chargement
+  //  États de chargement
   isLoadingStats = false;
   isLoadingAppointments = false;
   statsError: string | null = null;
 
-  // ✅ Notifications
+  //  Notifications
   notifications: Notification[] = [];
   unreadNotifications = 0;
 
-  // ✅ Activités récentes
+  //  Activités récentes
   recentActivities: any[] = [];
 
-  // ✅ Gestion des subscriptions
+  //  Gestion des subscriptions
   private subscriptions = new Subscription();
 
   // Services
@@ -108,7 +108,7 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
   private portfolioService = inject(PortfolioService);
   private platformId = inject(PLATFORM_ID);
 
-  // ✅ Propriété pour vérifier si on est côté browser
+  //  Propriété pour vérifier si on est côté browser
   private get isBrowser(): boolean {
     return isPlatformBrowser(this.platformId);
   }
@@ -119,7 +119,7 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
     this.loadNotifications();
     this.loadDashboardData();
     
-    // ✅ Seulement côté browser
+    //  Seulement côté browser
     if (this.isBrowser) {
       this.setupModalManagement();
       
@@ -137,7 +137,7 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.subscriptions.unsubscribe();
     
-    // ✅ Nettoyer les classes du body seulement côté browser
+    //  Nettoyer les classes du body seulement côté browser
     if (this.isBrowser && typeof document !== 'undefined') {
       this.renderer.removeClass(document.body, 'modal-open');
     }
@@ -145,13 +145,13 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
   
 
   
-  // ✅ Charger les données utilisateur
+  //  Charger les données utilisateur
   loadUserData(): void {
     this.currentUser = this.authService.getCurrentUser() as any;
     this.updateUsername();
   }
 
-  // ✅ Écouter les changements d'authentification
+  //  Écouter les changements d'authentification
   subscribeToUserChanges(): void {
     const userSub = this.authService.currentUser$.subscribe((user: any) => {
       this.currentUser = user as any;
@@ -161,7 +161,7 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
     this.subscriptions.add(userSub);
   }
 
-  // ✅ Mettre à jour le nom d'affichage
+  //  Mettre à jour le nom d'affichage
   updateUsername(): void {
     if (this.currentUser) {
       this.username = `${this.currentUser.prenom} ${this.currentUser.nom}`;
@@ -170,7 +170,7 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ✅ Getters pour le template
+  //  Getters pour le template
   get isAuthenticated(): boolean {
     return this.authService.isAuthenticated() as boolean;
   }
@@ -201,7 +201,7 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
     return '';
   }
 
-  // ✅ Charger les notifications
+  //  Charger les notifications
   loadNotifications(): void {
     this.subscriptions.add(
       forkJoin({
@@ -211,14 +211,14 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
         next: (data: any) => {
           this.notifications = data.notifications;
           this.unreadNotifications = data.unreadCount.count;
-          console.log('📨 Notifications freelance chargées:', data);
+
         },
         error: (error) => {
-          console.error('❌ Erreur chargement notifications freelance:', error);
+          console.error(' Erreur chargement notifications freelance:', error);
           // Utiliser des notifications de test en cas d'échec de l'API
           this.notifications = this.getMockNotifications();
           this.unreadNotifications = this.notifications.filter(n => !n.vue).length;
-          console.log('📨 Utilisation des notifications de test freelance:', this.notifications);
+
         }
       })
     );
@@ -231,7 +231,7 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
     );
   }
 
-  // ✅ Callback quand une notification est lue
+  //  Callback quand une notification est lue
   onNotificationRead(): void {
     this.loadNotifications();
   }
@@ -328,10 +328,10 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ✅ Charger les vraies données du tableau de bord
+  //  Charger les vraies données du tableau de bord
   loadDashboardData(): void {
     if (!this.currentUser?.id) {
-      console.warn('❌ Utilisateur non connecté - impossible de charger les stats');
+      console.warn(' Utilisateur non connecté - impossible de charger les stats');
       return;
     }
 
@@ -341,12 +341,12 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
     this.loadRecentActivities();
   }
 
-  // ✅ Charger les statistiques du freelance
+  //  Charger les statistiques du freelance
   private loadFreelanceStats(): void {
     this.isLoadingStats = true;
     this.statsError = null;
     
-    console.log('📊 Chargement des statistiques freelance...');
+
     
     // Utiliser directement des statistiques calculées à partir des vraies données
     this.calculateStatsFromReservations();
@@ -355,14 +355,14 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.reservationService.getFreelanceStats().pipe(
         catchError((error: any) => {
-          console.error('❌ Erreur lors du chargement des stats:', error);
+          console.error(' Erreur lors du chargement des stats:', error);
           this.statsError = 'Erreur lors du chargement des statistiques';
           this.calculateStatsFromReservations();
           return of({});
         })
       ).subscribe({
         next: (stats: any) => {
-          console.log('✅ Statistiques chargées:', stats);
+
           this.dashboardStats = {
             weeklyAppointments: stats.weeklyReservations || stats.todayReservations || 0,
             averageRating: stats.averageRating || 0,
@@ -372,7 +372,7 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
           this.isLoadingStats = false;
         },
         error: (error: any) => {
-          console.error('❌ Erreur finale stats:', error);
+          console.error(' Erreur finale stats:', error);
           this.isLoadingStats = false;
           this.statsError = 'Impossible de charger les statistiques';
         }
@@ -381,17 +381,17 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
     */
   }
 
-  // ✅ Calculer les statistiques à partir des vraies réservations
+  //  Calculer les statistiques à partir des vraies réservations
   private calculateStatsFromReservations(): void {
     this.subscriptions.add(
       this.reservationService.getFreelanceReservations().pipe(
         catchError((error: any) => {
-          console.error('❌ Erreur lors du calcul des stats:', error);
+          console.error(' Erreur lors du calcul des stats:', error);
           return of([]);
         })
       ).subscribe({
         next: (reservations: any[]) => {
-          console.log('📊 Calcul des stats à partir de', reservations.length, 'réservations');
+
           
           const today = new Date();
           const weekAgo = new Date();
@@ -424,34 +424,30 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
           // Charger la vraie note moyenne depuis les avis
           this.loadRealAverageRating();
           
-          console.log('📊 Stats détaillées:', {
-            totalReservations: reservations.length,
-            weeklyReservations: weeklyReservations.length,
-            monthlyRevenue: totalRevenue
-          });
+
           
           this.isLoadingStats = false;
-          console.log('✅ Stats calculées:', this.dashboardStats);
+
         }
       })
     );
   }
 
-  // ✅ Calculer la vraie note moyenne basée sur les avis clients
+  //  Calculer la vraie note moyenne basée sur les avis clients
   private loadRealAverageRating(): void {
     this.subscriptions.add(
       this.reservationService.getFreelanceAvis().pipe(
         catchError((error: any) => {
-          console.error('❌ Erreur lors du chargement des avis:', error);
+          console.error(' Erreur lors du chargement des avis:', error);
           return of([]);
         })
       ).subscribe({
         next: (avis: any[]) => {
-          console.log('📊 Avis reçus:', avis.length);
+
           
           if (avis.length === 0) {
             this.dashboardStats.averageRating = 4.5; // Note par défaut
-            console.log('📊 Aucun avis - note par défaut: 4.5');
+
             return;
           }
           
@@ -460,33 +456,33 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
           const average = total / avis.length;
           this.dashboardStats.averageRating = Math.round(average * 10) / 10;
           
-          console.log('✅ Note moyenne calculée:', this.dashboardStats.averageRating, 'sur', avis.length, 'avis');
+
         }
       })
     );
   }
 
-  // ✅ Charger les prochains rendez-vous
+  //  Charger les prochains rendez-vous
   private loadUpcomingAppointments(): void {
     this.isLoadingAppointments = true;
     
-    console.log('📅 Chargement des prochains rendez-vous...');
+
     
     this.subscriptions.add(
       this.reservationService.getFreelanceReservations().pipe(
         map((reservations: any[]) => {
-          console.log('📅 Toutes les réservations reçues:', reservations);
+
           
           // Prendre toutes les réservations et les trier par date de prestation
           const sortedReservations = reservations
             .sort((a, b) => new Date(b.datePrestation || b.dateReservation).getTime() - new Date(a.datePrestation || a.dateReservation).getTime())
             .slice(0, 3);
           
-          console.log('📅 Réservations sélectionnées pour affichage:', sortedReservations);
+
           return sortedReservations;
         }),
         catchError((error: any) => {
-          console.error('❌ Erreur lors du chargement des rendez-vous:', error);
+          console.error(' Erreur lors du chargement des rendez-vous:', error);
           // Données de fallback
           return of([
             {
@@ -501,7 +497,7 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
         })
       ).subscribe({
         next: (reservations: any[]) => {
-          console.log('✅ Rendez-vous chargés:', reservations);
+
           this.upcomingAppointments = reservations.map((r: any) => ({
             id: r.id,
             date: new Date(r.datePrestation || r.dateReservation),
@@ -513,52 +509,52 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
             statusLabel: this.getStatusLabel(r.status)
           }));
           
-          console.log('✅ Appointments mappés:', this.upcomingAppointments);
+
           this.isLoadingAppointments = false;
         },
         error: (error: any) => {
-          console.error('❌ Erreur finale rendez-vous:', error);
+          console.error(' Erreur finale rendez-vous:', error);
           this.isLoadingAppointments = false;
         }
       })
     );
   }
 
-  // ✅ Charger les statistiques du portfolio
+  //  Charger les statistiques du portfolio
   private loadPortfolioStats(): void {
     if (!this.currentUser?.id) return;
 
-    console.log('🖼️ Chargement des stats portfolio...');
+
     
     this.subscriptions.add(
       this.portfolioService.getFreelancePortfolio(this.currentUser.id).pipe(
         catchError((error: any) => {
-          console.error('❌ Erreur portfolio:', error);
+          console.error(' Erreur portfolio:', error);
           return of([]);
         })
       ).subscribe({
         next: (items: any[]) => {
           const photoCount = items?.length || 0;
-          console.log(`✅ Portfolio chargé: ${photoCount} photos`);
+
           this.dashboardStats.portfolioPhotos = photoCount;
         }
       })
     );
   }
 
-  // ✅ Charger les activités récentes
+  //  Charger les activités récentes
   private loadRecentActivities(): void {
-    console.log('📋 Chargement des activités récentes...');
+
     
     this.subscriptions.add(
       this.reservationService.getFreelanceReservations().pipe(
         catchError((error: any) => {
-          console.error('❌ Erreur lors du chargement des activités:', error);
+          console.error(' Erreur lors du chargement des activités:', error);
           return of([]);
         })
       ).subscribe({
         next: (reservations: any[]) => {
-          console.log('📋 Génération des activités à partir de', reservations.length, 'réservations');
+
           
           this.recentActivities = [];
           
@@ -622,13 +618,13 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
             })
             .slice(0, 4);
 
-          console.log('✅ Activités récentes générées:', this.recentActivities);
+
         }
       })
     );
   }
 
-  // ✅ Utilitaire pour les labels de statut
+  //  Utilitaire pour les labels de statut
   private getStatusLabel(status: string): string {
     const statusMap: { [key: string]: string } = {
       'CONFIRMEE': 'Confirmé',
@@ -644,7 +640,7 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
   }
 
   // ==========================================
-  // 🧭 MÉTHODES DE NAVIGATION
+  //  MÉTHODES DE NAVIGATION
   // ==========================================
 
   toggleSidebar() {
@@ -703,13 +699,13 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
   }
 
   // ==========================================
-  // 🔐 MÉTHODES D'AUTHENTIFICATION
+  //  MÉTHODES D'AUTHENTIFICATION
   // ==========================================
 
   login(): void {
     this.authService.triggerLoginModal();
     
-    // ✅ Forcer le modal au-dessus après un délai - seulement côté browser
+    //  Forcer le modal au-dessus après un délai - seulement côté browser
     if (this.isBrowser) {
       setTimeout(() => {
         this.forceModalOnTop();
@@ -723,16 +719,16 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
 
   logout(): void {
     this.authService.logout().subscribe(() => {
-      console.log('Déconnexion réussie');
+
       this.router.navigate(['/accueil']);
     });
   }
 
   // ==========================================
-  // 🎭 GESTION DES MODALS (SSR-SAFE)
+  //  GESTION DES MODALS (SSR-SAFE)
   // ==========================================
 
-  // ✅ Configuration de la gestion automatique des modals (seulement côté browser)
+  //  Configuration de la gestion automatique des modals (seulement côté browser)
   private setupModalManagement(): void {
     if (!this.isBrowser) return;
 
@@ -747,7 +743,7 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ✅ Appelé à l'ouverture d'un modal (SSR-safe)
+  //  Appelé à l'ouverture d'un modal (SSR-safe)
   private onModalOpen(): void {
     if (!this.isBrowser) return;
     
@@ -761,7 +757,7 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
     }, 50);
   }
 
-  // ✅ Appelé à la fermeture de tous les modals (SSR-safe)
+  //  Appelé à la fermeture de tous les modals (SSR-safe)
   private onModalClose(): void {
     if (!this.isBrowser) return;
     
@@ -771,14 +767,14 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ✅ Méthode utilitaire pour ouvrir un modal avec correction automatique
+  //  Méthode utilitaire pour ouvrir un modal avec correction automatique
   openModalWithFix(component: any, config?: any): any {
     if (!this.isBrowser) {
-      console.warn('⚠️ openModalWithFix called on server side - skipping');
+      console.warn(' openModalWithFix called on server side - skipping');
       return null;
     }
 
-    console.log('🎯 Ouverture modal avec correction automatique');
+
     
     // Ouvrir le modal
     const dialogRef = this.dialog.open(component, {
@@ -798,13 +794,13 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
   }
 
   // ==========================================
-  // 🔧 MÉTHODES DE DEBUG ET CORRECTION (SSR-SAFE)
+  //  MÉTHODES DE DEBUG ET CORRECTION (SSR-SAFE)
   // ==========================================
 
-  // ✅ Méthode de debug pour vérifier tous les z-index (SSR-safe)
+  //  Méthode de debug pour vérifier tous les z-index (SSR-safe)
   private debugZIndex(): void {
     if (!this.isBrowser || typeof document === 'undefined') {
-      console.warn('⚠️ debugZIndex called on server side - skipping');
+      console.warn(' debugZIndex called on server side - skipping');
       return;
     }
 
@@ -819,7 +815,7 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
       { name: 'Modal Pane', selector: '.cdk-overlay-pane' }
     ];
     
-    console.log('=== 🔍 DEBUG Z-INDEX COMPLET ===');
+
     elements.forEach(({ name, selector }) => {
       const element = document.querySelector(selector);
       if (element) {
@@ -828,25 +824,25 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
         const position = styles.position;
         const display = styles.display;
         
-        console.log(`- ${name} (${selector}): z-index: ${zIndex}, position: ${position}, display: ${display}`);
+
         
         if (selector === 'body') {
-          console.log(`  ↳ Classes: ${element.className}`);
+
         }
       } else {
-        console.log(`- ${name} (${selector}): Non trouvé`);
+
       }
     });
     
     // Compter les modals ouverts
     const openDialogs = document.querySelectorAll('.mat-dialog-container');
-    console.log(`- Nombre de modals ouverts: ${openDialogs.length}`);
+
   }
 
-  // ✅ Méthode pour forcer les modals au-dessus (SSR-safe)
+  //  Méthode pour forcer les modals au-dessus (SSR-safe)
   private forceModalOnTop(): void {
     if (!this.isBrowser || typeof document === 'undefined') {
-      console.warn('⚠️ forceModalOnTop called on server side - skipping');
+      console.warn(' forceModalOnTop called on server side - skipping');
       return;
     }
     
@@ -858,76 +854,76 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
     // Forcer le container overlay
     if (overlayContainer) {
       (overlayContainer as HTMLElement).style.zIndex = '99999';
-      console.log('  ✅ Container overlay: 99999');
+
     }
     
     // Forcer tous les backdrops
     backdrops.forEach((backdrop, index) => {
       (backdrop as HTMLElement).style.zIndex = '99998';
       (backdrop as HTMLElement).style.position = 'fixed';
-      console.log(`  ✅ Backdrop ${index + 1}: 99998`);
+
     });
     
     // Forcer tous les overlay panes
     overlayPanes.forEach((pane, index) => {
       (pane as HTMLElement).style.zIndex = '99999';
-      console.log(`  ✅ Overlay pane ${index + 1}: 99999`);
+
     });
     
     // Forcer tous les dialogs
     dialogs.forEach((dialog, index) => {
       (dialog as HTMLElement).style.zIndex = '100000';
       (dialog as HTMLElement).style.position = 'relative';
-      console.log(`  ✅ Dialog ${index + 1}: 100000`);
+
     });
     
     // Réduire le z-index de la sidebar
     const sidebars = document.querySelectorAll('.mat-sidenav, .beauty-sidebar');
     sidebars.forEach((sidebar, index) => {
       (sidebar as HTMLElement).style.zIndex = '50';
-      console.log(`  ✅ Sidebar ${index + 1}: 50`);
+
     });
     
     // Réduire le z-index des backdrops de sidebar
     const sidebarBackdrops = document.querySelectorAll('.mat-sidenav-backdrop');
     sidebarBackdrops.forEach((backdrop, index) => {
       (backdrop as HTMLElement).style.zIndex = '49';
-      console.log(`  ✅ Sidebar backdrop ${index + 1}: 49`);
+
     });
     
-    console.log('✅ Modals forcés au-dessus de la sidebar !');
+
   }
 
-  // ✅ Méthode pour corriger tous les modals ouverts (SSR-safe)
+  //  Méthode pour corriger tous les modals ouverts (SSR-safe)
   private fixAllModals(): void {
     if (!this.isBrowser || typeof document === 'undefined') {
-      console.warn('⚠️ fixAllModals called on server side - skipping');
+      console.warn(' fixAllModals called on server side - skipping');
       return;
     }
 
-    console.log('🔧 === CORRECTION COMPLÈTE DE TOUS LES MODALS ===');
+
     
     // Ajouter la classe au body
     this.renderer.addClass(document.body, 'modal-open');
-    console.log('📌 Classe modal-open ajoutée au body');
+
     
     // Forcer tous les z-index
     this.forceModalOnTop();
     
     // Vérifier le résultat
     setTimeout(() => {
-      console.log('🔍 Vérification après correction:');
+
       this.debugZIndex();
     }, 100);
   }
 
 
   // ==========================================
-  // 📸 MÉTHODES POUR GÉRER L'UPLOAD DE PHOTO DE PROFIL
+  //  MÉTHODES POUR GÉRER L'UPLOAD DE PHOTO DE PROFIL
   // ==========================================
 
   onProfilePhotoUploaded(photoUrl: string): void {
-    console.log('✅ Photo de profil uploadée:', photoUrl);
+
     
     // Mettre à jour les données utilisateur localement
     if (this.currentUser) {
@@ -939,7 +935,7 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
   }
 
   onProfilePhotoDeleted(): void {
-    console.log('🗑️ Photo de profil supprimée');
+
     
     // Mettre à jour les données utilisateur localement
     if (this.currentUser) {
@@ -951,40 +947,40 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
   }
 
   // ==========================================
-  // 📅 MÉTHODES CALLBACK POUR LE COMPOSANT RÉSERVATIONS
+  //  MÉTHODES CALLBACK POUR LE COMPOSANT RÉSERVATIONS
   // ==========================================
 
   /**
-   * ✅ Callback appelé quand une réservation est mise à jour
+   *  Callback appelé quand une réservation est mise à jour
    * @param event - Événement de mise à jour de la réservation
    */
   onReservationUpdated(event: any): void {
-    console.log('📅 Réservation mise à jour depuis le composant enfant:', event);
+
     
     // Ici vous pouvez gérer des actions supplémentaires si nécessaire
     // Par exemple : mettre à jour le dashboard, afficher une notification, etc.
     
     switch (event.action) {
       case 'completed':
-        console.log('✅ Réservation terminée:', event.reservation);
+
         break;
       case 'cancelled':
-        console.log('❌ Réservation annulée:', event.reservation);
+
         break;
       case 'no_show':
-        console.log('👻 Client non présenté:', event.reservation);
+
         break;
       default:
-        console.log('🔄 Action de réservation:', event.action);
+
     }
   }
 
   /**
-   * ✅ Callback appelé quand les statistiques des réservations sont mises à jour
+   *  Callback appelé quand les statistiques des réservations sont mises à jour
    * @param stats - Nouvelles statistiques
    */
   onReservationStatsUpdated(stats: any): void {
-    console.log('📊 Statistiques des réservations mises à jour:', stats);
+
     
     // Stocker les stats pour une utilisation ultérieure si nécessaire
     this.reservationStats = stats;
@@ -998,13 +994,13 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
         monthlyRevenue: statsData?.monthlyRevenue || this.dashboardStats.monthlyRevenue,
         averageRating: statsData?.averageRating || this.dashboardStats.averageRating
       };
-      console.log('✅ Dashboard stats mis à jour:', this.dashboardStats);
+
     }
   }
 
-  // ✅ Rafraîchir toutes les données
+  //  Rafraîchir toutes les données
   refreshDashboard(): void {
-    console.log('🔄 Rafraîchissement du dashboard...');
+
     this.loadDashboardData();
   }
 }

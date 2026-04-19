@@ -172,57 +172,40 @@
                 <h4>Services proposés</h4>
 
                 <div class="service-cards">
-                  <mat-card
+                  <div
                     *ngFor="let service of services[salon.id]"
                     class="service-card"
                     [@serviceAnimation]
                   >
-                    <mat-card-header>
-                      <mat-icon mat-card-avatar>spa</mat-icon>
-                      <mat-card-title>{{ service.nom }}</mat-card-title>
-                      <mat-card-subtitle>
-                        <strong>Prix :</strong> {{ service.prix }} CFA
-                      </mat-card-subtitle>
-                    </mat-card-header>
-                    <mat-card-content>
-                      <p>{{ service.description }}</p>
-                    </mat-card-content>
-                    <mat-card-actions class="service-actions">
-                      <button
-                        mat-icon-button
-                        matTooltip="Modifier le service"
+                    <div class="sc-left">
+                      <div class="sc-icon-box">
+                        <mat-icon>spa</mat-icon>
+                      </div>
+                      <div class="sc-info">
+                        <span class="sc-name">{{ service.nom }}</span>
+                        <span class="sc-price">{{ service.prix | number }} CFA</span>
+                        <span class="sc-desc" *ngIf="service.description">{{ service.description }}</span>
+                      </div>
+                    </div>
+                    <div class="sc-actions">
+                      <button mat-icon-button class="sc-edit-btn"
+                        matTooltip="Modifier"
                         (click)="editService(service.id, salon.id)"
-                        [disabled]="getLoadingState('update-service-' + service.id)"
-                      >
+                        [disabled]="getLoadingState('update-service-' + service.id)">
                         <mat-icon>edit</mat-icon>
-                        <mat-spinner
-                          *ngIf="getLoadingState('update-service-' + service.id)"
-                          diameter="20"
-                        ></mat-spinner>
                       </button>
-                      <button
-                        mat-icon-button
-                        color="warn"
-                        matTooltip="Supprimer le service"
-                        (click)="deleteService(service.id, salon.id)"
-                      >
+                      <button mat-icon-button class="sc-delete-btn"
+                        matTooltip="Supprimer"
+                        (click)="deleteService(service.id, salon.id)">
                         <mat-icon>delete</mat-icon>
                       </button>
-                    </mat-card-actions>
-                  </mat-card>
+                    </div>
+                  </div>
                 </div>
-                <button
-                  mat-raised-button
-                  color="primary"
+                <button class="add-service-btn"
                   (click)="addService(salon.id)"
-                  class="add-item-btn"
-                  [disabled]="getLoadingState('create-service-' + salon.id)"
-                >
+                  [disabled]="getLoadingState('create-service-' + salon.id)">
                   <mat-icon>add</mat-icon> Ajouter un service
-                  <mat-spinner
-                    *ngIf="getLoadingState('create-service-' + salon.id)"
-                    diameter="20"
-                  ></mat-spinner>
                 </button>
               </div>
 

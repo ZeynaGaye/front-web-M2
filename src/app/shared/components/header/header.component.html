@@ -41,9 +41,7 @@
             <i class="fas fa-search"></i>
           </button>
         </div>
-        <a *ngIf="!isLoggedIn" class="signin-button" (click)="login()">
-        SE CONNECTER
-        </a>
+       
       </div>
     </div>
 
@@ -55,31 +53,35 @@
             <span class="user-name" *ngIf="isClient && clientName">{{ clientName }}</span>
           </div>
           <div class="profile-menu">
-    <ng-container *ngIf="isClient">
-      <a routerLink="/client-dashboard" (click)="closeAllMenus()">
-        <i class="fas fa-tachometer-alt"></i> Mon Espace Client
-      </a>
-    </ng-container>
+            <ng-container *ngIf="isClient">
+              <a routerLink="/client-dashboard" (click)="closeAllMenus()">
+                <i class="fas fa-tachometer-alt"></i> Mon Espace Client
+              </a>
+            </ng-container>
 
-    <ng-container *ngIf="isFreelance">
-      <a routerLink="/home-freelance" (click)="closeAllMenus()">
-        <i class="fas fa-tachometer-alt"></i> Mon Espace Freelance
-      </a>
-    </ng-container>
+            <ng-container *ngIf="isFreelance">
+              <a routerLink="/home-freelance" (click)="closeAllMenus()">
+                <i class="fas fa-tachometer-alt"></i> Mon Espace Freelance
+              </a>
+            </ng-container>
 
-    <ng-container *ngIf="isEmployeur">
-      <a routerLink="/home-employee" (click)="closeAllMenus()">
-        <i class="fas fa-tachometer-alt"></i> Mon Espace Employeur
-      </a>
-    </ng-container>
-
-   <div *ngIf="!isLoggedIn" class="signin-button" (click)="login()">
-SE CONNECTER
-</div>
-   </div>
+            <ng-container *ngIf="isEmployeur">
+              <a routerLink="/home-employee" (click)="closeAllMenus()">
+                <i class="fas fa-tachometer-alt"></i> Mon Espace Employeur
+              </a>
+            </ng-container>
+            
+            <a class="logout-link" (click)="logout()">
+              <i class="fas fa-sign-out-alt"></i> Se déconnecter
+            </a>
+          </div>
+        </div>
+      </div>
+      
+      <div *ngIf="!isLoggedIn" class="signin-button" (click)="login()">
+        SE CONNECTER
+      </div>
     </div>
-    </div>
-  </div>
   </div>
 </nav>
 
@@ -108,11 +110,10 @@ SE CONNECTER
       <div class="header-container">
       </div>
       <h1 class="header-title">
-        Un monde de beauté, une<br />plateforme de talents
+        La Beauté, <em>simplifiée</em>.<br />Votre carrière, <em>sublimée</em>.
       </h1>
       <h4 class="header-title2">
-        Réservez des services de beauté ou trouvez des talents près de chez vous
-        <br/> ou votre prochain emploi en une seule place
+        Réservez les meilleurs services de beauté ou trouvez des talents près de chez vous. Une plateforme unique pour clients et professionnels passionnés.
       </h4>
 
       <div class="provider-toggle">
@@ -303,10 +304,10 @@ SE CONNECTER
     <div class="right-section">
       <div class="hero-image">
         <div class="hero-text">
-          Instantanée comme un<br />
-          coup de cœur, simple<br />
-          comme un coup de<br />
-          pousse
+          <em>"Propulsez votre carrière : Accédez aux meilleures offres d'emploi du secteur."</em>
+          <span class="hero-text-author" (click)="scrollToOffres()">
+            — BEAUTYHUB CAREERS <i class="fas fa-arrow-down"></i>
+          </span>
         </div>
       </div>
     </div>
@@ -322,6 +323,7 @@ SE CONNECTER
     <div class="service-buttons-container">
       <button
         class="service-btn"
+        data-service="Coiffure"
         [class.active]="selectedService === 'Coiffure'"
         (click)="filterSalonsByService('Coiffure')">
         <i class="fas fa-cut"></i>
@@ -330,14 +332,16 @@ SE CONNECTER
 
       <button
         class="service-btn"
-        [class.active]="selectedService === 'Pedicure,Manucure'"
-        (click)="filterSalonsByService('Pedicure,Manucure')">
+        data-service="Pedicure, Manucure"
+        [class.active]="selectedService === 'Pedicure, Manucure'"
+        (click)="filterSalonsByService('Pedicure, Manucure')">
         <i class="fas fa-hand-sparkles"></i>
-        <span class="service-name">Pédicure & Manucure</span>
+        <span class="service-name">Pedicure & Manucure</span>
       </button>
 
       <button
         class="service-btn"
+        data-service="Barbier"
         [class.active]="selectedService === 'Barbier'"
         (click)="filterSalonsByService('Barbier')">
         <i class="fas fa-user-tie"></i>
@@ -346,6 +350,7 @@ SE CONNECTER
 
       <button
         class="service-btn"
+        data-service="Maquillage"
         [class.active]="selectedService === 'Maquillage'"
         (click)="filterSalonsByService('Maquillage')">
         <i class="fas fa-palette"></i>
@@ -354,6 +359,7 @@ SE CONNECTER
 
       <button
         class="service-btn"
+        data-service="Soins de la peau"
         [class.active]="selectedService === 'Soins de la peau'"
         (click)="filterSalonsByService('Soins de la peau')">
         <i class="fas fa-spa"></i>
@@ -436,7 +442,7 @@ SE CONNECTER
   <div class="results-header" *ngIf="!isLoading">
     <h2>{{ getResultsTitle() }}</h2>
     <div class="results-summary">
-      <span class="result-count">{{ allProviders.length }} résultat(s) trouvé(s)</span>
+      <span class="result-count">{{ getProgressText() }}</span>
       <div class="view-options">
         <button
           class="view-toggle"
@@ -471,8 +477,8 @@ SE CONNECTER
     </div>
   </div>
 
-  <div class="salons-grid" [class.list-view]="viewMode === 'list'" *ngIf="!isLoading && allProviders.length > 0">
-    <div class="salon-card" *ngFor="let provider of allProviders">
+  <div class="salons-grid" [class.list-view]="viewMode === 'list'" *ngIf="!isLoading && displayedProviders.length > 0">
+    <div class="salon-card" *ngFor="let provider of displayedProviders">
       <div class="provider-badge" [ngClass]="provider.type || 'salon'">
         <i class="fas" [ngClass]="getProviderIcon(provider.type)"></i>
         {{ getProviderLabel(provider.type) }}
@@ -488,55 +494,64 @@ SE CONNECTER
       </div>
 
       <div class="salon-info">
-        <h3 class="salon-name">
+        <!-- En-tête principal -->
+        <div class="header-section">
+          <h3 class="salon-name">
+            <span *ngIf="provider.type === 'freelance' && provider.prenom">{{ provider.prenom }} </span>{{ provider.nom }}
+          </h3>
+          <div class="provider-type-label">
+            <i class="fas" [ngClass]="provider.type === 'freelance' ? 'fa-user-tie' : 'fa-store'"></i>
+            <span>{{ provider.type === 'freelance' ? 
+              (provider.specialite || 'Freelance Beauté') : 
+              'Salon de Beauté' }}</span>
+          </div>
+        </div>
+
+        <!-- Section note mise en évidence -->
+        <div class="rating-section">
+          <div class="salon-rating">
+            <div class="stars">
+              <i class="fas fa-star" *ngFor="let star of getStarArray(provider.rating)"></i>
+              <i class="fas fa-star-half-alt" *ngIf="hasHalfStar(provider.rating)"></i>
+            </div>
+            <div class="rating-text">
+              <span class="rating-value">{{ provider.rating | number:'1.1-1' }}</span>
+              <span class="review-count">({{ provider.reviewCount }} avis)</span>
+            </div>
+          </div>
+          <div class="distance-info" *ngIf="provider.distanceKm !== null && provider.distanceKm !== undefined">
+            <i class="fas fa-map-marker-alt"></i>
+            <span>{{ (provider.distanceKm | number:'1.1-1') }} km</span>
+          </div>
+        </div>
+
+        <!-- Adresse mise en évidence -->
+        <div class="address-section">
+          <i class="fas fa-map-marker-alt address-icon"></i>
+          <p class="address-text">{{ provider.adresse }}</p>
+        </div>
+
+
+        <!-- Info freelance redesignées -->
+        <div class="freelance-section" *ngIf="provider.type === 'freelance'">
+          <div class="freelance-header">Informations Freelance</div>
           
-          <span *ngIf="provider.type === 'freelance' && provider.prenom">{{ provider.prenom }} </span>{{ provider.nom }}
-        </h3>
-        <p class="salon-address">{{ provider.adresse }}</p>
-
-        <div class="distance-info" *ngIf="provider.distanceKm !== null && provider.distanceKm !== undefined">
-          <i class="fas fa-map-marker-alt"></i>
-          <span class="distance-text">{{ (provider.distanceKm | number:'1.1-1') + ' km' }}</span>
-        </div>
-        <p class="provider-specialty" *ngIf="provider.type === 'freelance' && provider.specialite">
-          <i class="fas fa-star"></i> {{ provider.specialite }}
-        </p>
-
-        <div class="salon-rating">
-          <div class="stars">
-            <i class="fas fa-star" *ngFor="let star of getStarArray(provider.rating)"></i>
-            <i class="fas fa-star-half-alt" *ngIf="hasHalfStar(provider.rating)"></i>
-          </div>
-          <span class="rating-value">{{ provider.rating }}</span>
-          <span class="review-count">({{ provider.reviewCount }} avis)</span>
-        </div>
-
-        <div class="salon-services">
-          <span class="service-tag" *ngFor="let service of provider.services.slice(0, 3)">{{ service }}</span>
-          <span class="more-services" *ngIf="provider.services.length > 3">+{{ provider.services.length - 3 }}</span>
-        </div>
-
-        <div class="freelance-info" *ngIf="provider.type === 'freelance'">
           <div class="freelance-details">
-            <div class="experience" *ngIf="provider.experience || provider.anneesExperience">
+            <div class="detail-item" *ngIf="provider.experience || provider.anneesExperience">
               <i class="fas fa-clock"></i>
-              {{ provider.experience || provider.anneesExperience }} ans d'expérience
+              <span>{{ provider.experience || provider.anneesExperience }} ans d'expérience</span>
             </div>
-            <div class="profession" *ngIf="provider.profession">
+            <div class="detail-item" *ngIf="provider.profession">
               <i class="fas fa-briefcase"></i>
-              {{ provider.profession }}
+              <span>{{ provider.profession }}</span>
             </div>
-            <div class="competences" *ngIf="provider.competences">
+            <div class="detail-item" *ngIf="provider.competences">
               <i class="fas fa-tools"></i>
-              {{ provider.competences }}
-            </div>
-            <div class="ville" *ngIf="provider.ville">
-              <i class="fas fa-map-marker-alt"></i>
-              {{ provider.ville }}
+              <span>{{ provider.competences }}</span>
             </div>
           </div>
 
-          <div class="freelance-badges">
+          <div class="freelance-badges" *ngIf="provider.disponibleWeekend || provider.disponibleSoir || provider.deplacementInclus">
             <span class="badge weekend" *ngIf="provider.disponibleWeekend">
               <i class="fas fa-calendar-weekend"></i> Weekend
             </span>
@@ -556,11 +571,50 @@ SE CONNECTER
     </div>
   </div>
 
-  <div class="no-results" *ngIf="!isLoading && allProviders.length === 0 && selectedService">
+  <!-- 📄 Indicateur de chargement pour infinite scroll -->
+  <div class="infinite-scroll-loader" *ngIf="isLoadingMore">
+    <div class="loading-skeleton">
+      <div class="skeleton-card" *ngFor="let item of [1,2,3,4,5,6]">
+        <div class="skeleton-image"></div>
+        <div class="skeleton-content">
+          <div class="skeleton-line skeleton-title"></div>
+          <div class="skeleton-line skeleton-subtitle"></div>
+          <div class="skeleton-line skeleton-rating"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 📊 Indicateur de fin de résultats -->
+  <div class="end-of-results" *ngIf="!isLoadingMore && !hasMoreResults && displayedProviders.length > 0">
+    <div class="end-indicator">
+      <i class="fas fa-check-circle"></i>
+      <span>Tous les résultats affichés</span>
+      <button class="scroll-to-top-btn" (click)="this['scrollToTop']()">
+        <i class="fas fa-arrow-up"></i>
+        Retour en haut
+      </button>
+    </div>
+  </div>
+
+  <div class="no-results" *ngIf="!isLoading && displayedProviders.length === 0 && selectedService">
     <div class="no-results-content">
       <i class="fas fa-search"></i>
       <h3>Aucun résultat trouvé</h3>
-      <p>Aucun {{ getProviderTypeLabel() }} proposant "{{ selectedService }}" n'a été trouvé.</p>
+      
+      <!-- Afficher le matchReason spécifique du backend si disponible -->
+      <p *ngIf="searchMetadata?.matchReason; else defaultMessage" class="match-reason-message">
+        {{ searchMetadata?.matchReason }}
+      </p>
+      <ng-template #defaultMessage>
+        <p>Aucun {{ getProviderTypeLabel() }} proposant "{{ selectedService }}" n'a été trouvé.</p>
+      </ng-template>
+      
+      <!-- Afficher le niveau de recherche si disponible -->
+      <div class="search-level-info" *ngIf="searchMetadata?.searchLevel">
+        <span class="search-level-badge">{{ searchMetadata?.searchLevel }}</span>
+      </div>
+      
       <div class="suggestions">
         <p>Suggestions :</p>
         <ul>

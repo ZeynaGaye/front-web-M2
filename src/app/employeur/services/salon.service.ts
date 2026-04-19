@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { catchError, Observable, of, map, tap } from 'rxjs';
 import { ServiceSalon } from '../../models/service-salon';
 
-// ✅ INTERFACES POUR LE TYPAGE
+//  INTERFACES POUR LE TYPAGE
 interface PhotosResponse {
   photos: any[];
   total: number;
@@ -31,58 +31,58 @@ export class SalonService {
   
   constructor(private http: HttpClient) {}
 
-  // ✅ TYPAGE CORRIGÉ - Récupération des photos
+  //  TYPAGE CORRIGÉ - Récupération des photos
   getSalonPhotos(salonId: number): Observable<any[]> {
     const url = `${this.apiUrl}/salons/${salonId}/photos`;
-    console.log(`🔍 Service - Requête GET vers: ${url}`);
+
     
     // Le backend peut retourner soit PhotosResponse soit any[]
     return this.http.get<PhotosResponse | any[]>(url).pipe(
       tap(response => {
-        console.log('📥 Service - Réponse brute reçue:', response);
-        console.log('📥 Service - Type de réponse:', typeof response);
-        console.log('📥 Service - Est un tableau:', Array.isArray(response));
+
+
+
       }),
       map((response: PhotosResponse | any[]) => {
-        console.log('🔄 Service - Traitement de la réponse...');
+
         
         // Vérifier si c'est un objet avec propriété photos
         if (response && !Array.isArray(response) && 'photos' in response) {
           const photosResponse = response as PhotosResponse;
-          console.log(`✅ Service - Format objet détecté: ${photosResponse.photos.length} photos`);
+
           
           // Valider chaque photo
           const validPhotos = photosResponse.photos.filter(photo => {
             const isValid = photo && photo.id && photo.url;
             if (!isValid) {
-              console.warn('⚠️ Service - Photo invalide détectée:', photo);
+              console.warn(' Service - Photo invalide détectée:', photo);
             }
             return isValid;
           });
           
-          console.log(`📊 Service - ${validPhotos.length}/${photosResponse.photos.length} photos valides`);
+
           return validPhotos;
         }
         
         // Si c'est directement un tableau
         if (Array.isArray(response)) {
-          console.log(`✅ Service - Format tableau direct détecté: ${response.length} photos`);
+
           return response.filter(photo => photo && photo.id && photo.url);
         }
         
         // Cas d'erreur: format non reconnu
-        console.warn('⚠️ Service - Format de réponse non reconnu:', response);
+        console.warn(' Service - Format de réponse non reconnu:', response);
         return [];
       }),
       catchError(error => {
-        console.error('❌ Service - Erreur lors de la récupération des photos:', error);
-        console.error('❌ Service - Status HTTP:', error.status);
-        console.error('❌ Service - Message:', error.message);
-        console.error('❌ Service - URL problématique:', url);
+        console.error(' Service - Erreur lors de la récupération des photos:', error);
+        console.error(' Service - Status HTTP:', error.status);
+        console.error(' Service - Message:', error.message);
+        console.error(' Service - URL problématique:', url);
         
         // Log détaillé de l'erreur
         if (error.error) {
-          console.error('❌ Service - Détails erreur backend:', error.error);
+          console.error(' Service - Détails erreur backend:', error.error);
         }
         
         // Retourner un tableau vide au lieu de propager l'erreur
@@ -91,34 +91,34 @@ export class SalonService {
     );
   }
 
-  // ✅ TYPAGE CORRIGÉ - Upload de photos
+  //  TYPAGE CORRIGÉ - Upload de photos
   uploadSalonPhotos(salonId: number, formData: FormData): Observable<UploadResponse> {
     const url = `${this.apiUrl}/salons/${salonId}/upload-photos`;
-    console.log(`📤 Service - Upload photos vers: ${url}`);
+
     
     // Log du contenu du FormData
-    console.log('📤 Service - Contenu FormData:');
+
     for (let pair of formData.entries()) {
-      console.log(`  - ${pair[0]}: ${pair[1]}`);
+
     }
     
     return this.http.post<UploadResponse | any[]>(url, formData).pipe(
       tap(response => {
-        console.log('📥 Service - Réponse upload brute:', response);
+
       }),
       map((response: UploadResponse | any[]): UploadResponse => {
-        console.log('🔄 Service - Traitement réponse upload...');
+
         
         // Format objet avec propriété photos
         if (response && !Array.isArray(response) && 'photos' in response) {
           const uploadResponse = response as UploadResponse;
-          console.log(`✅ Service - Upload réussi: ${uploadResponse.photos.length} photos`);
+
           return uploadResponse;
         }
         
         // Fallback: si c'est directement un tableau
         if (Array.isArray(response)) {
-          console.log(`✅ Service - Upload réussi (format tableau): ${response.length} photos`);
+
           return { 
             photos: response, 
             total: response.length, 
@@ -127,13 +127,13 @@ export class SalonService {
         }
         
         // Format inconnu
-        console.warn('⚠️ Service - Format réponse upload non reconnu:', response);
+        console.warn(' Service - Format réponse upload non reconnu:', response);
         return { photos: [], total: 0, message: 'Format de réponse invalide' };
       }),
       catchError(error => {
-        console.error('❌ Service - Erreur upload photos:', error);
-        console.error('❌ Service - Status:', error.status);
-        console.error('❌ Service - Message:', error.message);
+        console.error(' Service - Erreur upload photos:', error);
+        console.error(' Service - Status:', error.status);
+        console.error(' Service - Message:', error.message);
         
         // Retourner un objet d'erreur structuré
         return of({ 
@@ -145,17 +145,17 @@ export class SalonService {
     );
   }
 
-  // ✅ TYPAGE CORRIGÉ - Suppression de photo
+  //  TYPAGE CORRIGÉ - Suppression de photo
   deleteSalonPhoto(photoId: number): Observable<DeleteResponse> {
     const url = `${this.apiUrl}/salons/photos/${photoId}`;
-    console.log(`🗑️ Service - Suppression photo: ${url}`);
+
     
     return this.http.delete<any>(url).pipe(
       tap(response => {
-        console.log('📥 Service - Réponse suppression:', response);
+
       }),
       map((response: any): DeleteResponse => {
-        console.log('✅ Service - Photo supprimée avec succès');
+
         return { 
           success: true, 
           photoId: photoId,
@@ -163,9 +163,9 @@ export class SalonService {
         };
       }),
       catchError(error => {
-        console.error('❌ Service - Erreur suppression photo:', error);
-        console.error('❌ Service - Status:', error.status);
-        console.error('❌ Service - Photo ID:', photoId);
+        console.error(' Service - Erreur suppression photo:', error);
+        console.error(' Service - Status:', error.status);
+        console.error(' Service - Photo ID:', photoId);
         
         return of({ 
           success: false, 
@@ -176,40 +176,40 @@ export class SalonService {
     );
   }
 
-  // ✅ NOUVELLE MÉTHODE - Debug des photos
+  //  NOUVELLE MÉTHODE - Debug des photos
   debugSalonPhotos(salonId: number): Observable<any> {
     const url = `${this.apiUrl}/salons/${salonId}/photos/debug`;
-    console.log(`🔍 Service - Debug photos: ${url}`);
+
     
     return this.http.get<any>(url).pipe(
       tap(response => {
-        console.log('🔍 Service - Informations debug:', response);
+
       }),
       catchError(error => {
-        console.error('❌ Service - Erreur debug photos:', error);
+        console.error(' Service - Erreur debug photos:', error);
         return of({ error: error.message, salonId });
       })
     );
   }
 
-  // ✅ NOUVELLE MÉTHODE - Test de connectivité API
+  //  NOUVELLE MÉTHODE - Test de connectivité API
   testApiConnectivity(): Observable<boolean> {
     const url = `${this.apiUrl}/salons/all`;
-    console.log(`🧪 Service - Test connectivité: ${url}`);
+
     
     return this.http.get<any[]>(url).pipe(
       map(response => {
-        console.log('✅ Service - API accessible, nombre de salons:', response?.length || 0);
+
         return true;
       }),
       catchError(error => {
-        console.error('❌ Service - API non accessible:', error);
+        console.error(' Service - API non accessible:', error);
         return of(false);
       })
     );
   }
 
-  // ✅ MÉTHODES EXISTANTES INCHANGÉES
+  //  MÉTHODES EXISTANTES INCHANGÉES
   
   createSalon(salon: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/salons/create`, salon);
@@ -249,10 +249,10 @@ export class SalonService {
   }
   
   updateSalonProfilePhotoUrl(salonId: number, data: { photoUrl: string }): Observable<any> {
-    console.log(`🖼️ Service - Mise à jour photo de profil: ${this.apiUrl}/salons/${salonId}/profile-photo-url`);
+
     return this.http.put<any>(`${this.apiUrl}/salons/${salonId}/profile-photo-url`, data).pipe(
       catchError(error => {
-        console.error('❌ Service - Erreur mise à jour photo de profil:', error);
+        console.error(' Service - Erreur mise à jour photo de profil:', error);
         return of(null);
       })
     );
@@ -288,15 +288,15 @@ export class SalonService {
   }
 
   searchSalons(searchData: any): Observable<any[]> {
-    console.log('🔍 searchSalons appelé avec:', searchData);
+
     
     if (!searchData || typeof searchData !== 'object') {
-      console.error('❌ searchData invalide:', searchData);
+      console.error(' searchData invalide:', searchData);
       return of([]);
     }
 
     if (!searchData.term || typeof searchData.term !== 'string' || !searchData.term.trim()) {
-      console.error('❌ Terme de recherche invalide:', searchData.term);
+      console.error(' Terme de recherche invalide:', searchData.term);
       return of([]);
     }
 
@@ -321,12 +321,12 @@ export class SalonService {
       params = params.set('datetime', searchData.datetime);
     }
     
-    console.log('📤 URL:', url);
-    console.log('📤 Paramètres:', params.toString());
+
+
     
     return this.http.get<any[]>(url, { params }).pipe(
       catchError(error => {
-        console.error('❌ Erreur lors de la recherche:', error);
+        console.error(' Erreur lors de la recherche:', error);
         return of([]);
       })
     );
@@ -378,29 +378,29 @@ export class SalonService {
     return [NaN, NaN];
   }
 
-  // ✅ MÉTHODE DE MODIFICATION - Appel de l'API de modification existante
+  //  MÉTHODE DE MODIFICATION - Appel de l'API de modification existante
   updateSalon(salonId: number, salonData: any): Observable<any> {
-    console.log(`🔄 Service - Modification salon ID ${salonId}:`, salonData);
+
     return this.http.put<any>(`${this.apiUrl}/salons/update/${salonId}`, salonData).pipe(
       tap(response => {
-        console.log('✅ Service - Salon modifié avec succès:', response);
+
       }),
       catchError(error => {
-        console.error('❌ Service - Erreur modification salon:', error);
+        console.error(' Service - Erreur modification salon:', error);
         return of(null);
       })
     );
   }
 
-  // ✅ MÉTHODE DE MODIFICATION AVEC FICHIER - Pour modification avec photo
+  //  MÉTHODE DE MODIFICATION AVEC FICHIER - Pour modification avec photo
   updateSalonWithFile(salonId: number, formData: FormData): Observable<any> {
-    console.log(`🔄 Service - Modification salon avec fichier ID ${salonId}`);
+
     return this.http.put<any>(`${this.apiUrl}/salons/update/${salonId}`, formData).pipe(
       tap(response => {
-        console.log('✅ Service - Salon modifié avec fichier:', response);
+
       }),
       catchError(error => {
-        console.error('❌ Service - Erreur modification salon avec fichier:', error);
+        console.error(' Service - Erreur modification salon avec fichier:', error);
         return of(null);
       })
     );

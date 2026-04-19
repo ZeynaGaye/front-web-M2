@@ -77,6 +77,11 @@ export class SalonDetailsComponent implements OnInit {
   activeTab: string = 'presentation';
   isLoggedIn = false;
   isBrowser: boolean;
+  
+  // Propriétés pour les disponibilités
+  weekDays: any[] = [];
+  selectedDate: Date | null = null;
+  currentWeekStart: Date = new Date();
   salonId: number = 0;
   recentAvis: any[] = [];
   isLoadingAvis = false;
@@ -111,106 +116,107 @@ export class SalonDetailsComponent implements OnInit {
   }
 
   loadSalonDetails(): void {
-    console.log('🏢 Chargement des détails du salon avec ID:', this.salonId);
+
 
     this.salonService.getSalonById(this.salonId).subscribe({
       next: (salon) => {
-        console.log('✅ Salon récupéré:', salon);
+
 
         this.salon = salon;
 
         if (salon) {
           this.loadSalonServices();
           this.loadSalonPhotos();
+          this.initializeAvailability();
           this.loadSalonAvis();
         } else {
           this.errorMessage = 'Salon non trouvé';
         }
       },
       error: (error) => {
-        console.error('❌ Erreur lors du chargement du salon:', error);
+        console.error(' Erreur lors du chargement du salon:', error);
         this.errorMessage = `Impossible de charger les détails du salon: ${error.message || 'Erreur inconnue'}`;
       }
     });
   }
 
   loadSalonServices(): void {
-    console.log('🛎️ Chargement des services pour le salon ID:', this.salonId);
+
     this.isLoadingServices = true;
 
     this.serviceSalonService.getServicesBySalon(this.salonId).subscribe({
       next: (services) => {
-        console.log('✅ Services récupérés:', services);
+
 
         if (!services) {
-          console.warn('⚠️ La réponse services est undefined ou null');
+          console.warn(' La réponse services est undefined ou null');
           this.services = [];
         } else if (!Array.isArray(services)) {
-          console.warn('⚠️ La réponse n\'est pas un tableau:', services);
+          console.warn(' La réponse n\'est pas un tableau:', services);
           this.services = [];
         } else {
           this.services = services;
         }
 
         this.isLoadingServices = false;
-        console.log(`📊 Nombre de services chargés: ${this.services.length}`);
+
         
         // Debug: Afficher la structure du premier service
         if (this.services.length > 0) {
-          console.log('🔍 Structure du premier service:', this.services[0]);
-          console.log('🏷️ Nom:', this.services[0].nomService);
-          console.log('🏷️ Catégorie:', this.services[0].categorieService);
-          console.log('⏰ Durée (string):', this.services[0].duree);
-          console.log('⏰ Durée (minutes):', this.services[0].dureeEnMinutes);
-          console.log('💰 Prix:', this.services[0].prix);
+
+
+
+
+
+
         }
       },
       error: (error) => {
-        console.error('❌ Erreur lors du chargement des services:', error);
+        console.error(' Erreur lors du chargement des services:', error);
         this.services = [];
         this.isLoadingServices = false;
       }
     });
   }
 
-  // ✅ MÉTHODE CORRIGÉE - Chargement des photos
+  //  MÉTHODE CORRIGÉE - Chargement des photos
   // Dans salon-details.component.ts
 loadSalonPhotos(): void {
-  console.log('📸 Début chargement photos pour salon ID:', this.salonId);
+
   this.isLoadingPhotos = true;
 
-  // ✅ Cast explicite pour éviter l'erreur TypeScript
+  //  Cast explicite pour éviter l'erreur TypeScript
   (this.salonService.getSalonPhotos(this.salonId) as Observable<any>).subscribe({
     next: (response: any) => {
-      console.log('📥 Réponse photos brute:', response);
 
-      // ✅ Gérer les différents formats de réponse
+
+      //  Gérer les différents formats de réponse
       let photos: any[] = [];
 
       // Vérifier si response est un objet avec photos
       if (response && typeof response === 'object' && !Array.isArray(response) && 'photos' in response) {
         photos = Array.isArray(response.photos) ? response.photos : [];
-        console.log(`✅ Format objet détecté: ${photos.length} photos`);
+
       }
       // Vérifier si response est directement un tableau
       else if (Array.isArray(response)) {
         photos = response;
-        console.log(`✅ Format tableau détecté: ${photos.length} photos`);
+
       }
       // Fallback
       else {
-        console.warn('⚠️ Format de réponse photos non reconnu:', response);
+        console.warn(' Format de réponse photos non reconnu:', response);
         photos = [];
       }
 
-      // ✅ Traitement et validation des photos
+      //  Traitement et validation des photos
       this.photos = this.processPhotos(photos);
       this.isLoadingPhotos = false;
 
-      console.log(`📊 Photos finales chargées: ${this.photos.length}`);
+
     },
     error: (error) => {
-      console.error('❌ Erreur lors du chargement des photos:', error);
+      console.error(' Erreur lors du chargement des photos:', error);
       this.photos = [];
       this.isLoadingPhotos = false;
     }
@@ -218,19 +224,19 @@ loadSalonPhotos(): void {
 }
 
   loadSalonAvis(): void {
-    console.log('⭐ Chargement des avis pour le salon ID:', this.salonId);
+
     this.isLoadingAvis = true;
 
     this.reservationService.getAvisBySalon(this.salonId).subscribe({
       next: (avis) => {
-        console.log('✅ Avis récupérés:', avis);
-        console.log('✅ Structure du premier avis:', avis[0]);
+
+
         
         if (!avis) {
-          console.warn('⚠️ La réponse avis est undefined ou null');
+          console.warn(' La réponse avis est undefined ou null');
           this.recentAvis = [];
         } else if (!Array.isArray(avis)) {
-          console.warn('⚠️ La réponse avis n\'est pas un tableau:', avis);
+          console.warn(' La réponse avis n\'est pas un tableau:', avis);
           this.recentAvis = [];
         } else {
           // Trier les avis par date de création (plus récents en premier)
@@ -242,17 +248,17 @@ loadSalonPhotos(): void {
         }
 
         this.isLoadingAvis = false;
-        console.log(`📊 Nombre d'avis chargés: ${this.recentAvis.length}`);
+
       },
       error: (error) => {
-        console.error('❌ Erreur lors du chargement des avis:', error);
+        console.error(' Erreur lors du chargement des avis:', error);
         this.recentAvis = [];
         this.isLoadingAvis = false;
       }
     });
   }
 
-  // ✅ NOUVELLE MÉTHODE - Traitement des photos avec URLs
+  //  NOUVELLE MÉTHODE - Traitement des photos avec URLs
   private processPhotos(photos: any[]): any[] {
     if (!Array.isArray(photos)) return [];
 
@@ -271,11 +277,11 @@ loadSalonPhotos(): void {
       });
   }
 
-  // ✅ MÉTHODE DE TRAITEMENT D'URL D'IMAGE
+  //  MÉTHODE DE TRAITEMENT D'URL D'IMAGE
   private processImageUrl(imageUrl: string): string {
     if (!imageUrl) return 'assets/images/salon-placeholder.jpg';
 
-    console.log('🔧 Traitement URL image:', imageUrl);
+
 
     // Si c'est déjà une URL complète
     if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
@@ -301,13 +307,13 @@ loadSalonPhotos(): void {
     return `http://localhost:8081/uploads/${imageUrl}`;
   }
 
-  // ✅ GESTIONNAIRE D'ERREUR D'IMAGE
+  //  GESTIONNAIRE D'ERREUR D'IMAGE
   onImageError(event: any, photo: any): void {
-    console.warn('❌ Erreur chargement image:', event.target.src);
+    console.warn(' Erreur chargement image:', event.target.src);
 
     // Essayer l'URL originale si on utilisait l'URL traitée
     if (event.target.src === photo.processedUrl && photo.url !== photo.processedUrl) {
-      console.log('🔄 Tentative avec URL originale');
+
       event.target.src = photo.url;
       return;
     }
@@ -330,14 +336,14 @@ loadSalonPhotos(): void {
     }
   }
 
-  // ✅ CALLBACK SUCCÈS IMAGE
+  //  CALLBACK SUCCÈS IMAGE
   onImageLoad(event: any, photo: any): void {
-    console.log('✅ Image chargée avec succès:', photo.processedUrl);
+
     event.target.style.opacity = '1';
     event.target.classList.add('loaded');
   }
 
-  // ✅ CRÉER PLACEHOLDER POUR IMAGE
+  //  CRÉER PLACEHOLDER POUR IMAGE
   private createImagePlaceholder(imgElement: HTMLImageElement): void {
     const container = imgElement.parentElement;
     if (!container) return;
@@ -357,31 +363,31 @@ loadSalonPhotos(): void {
       font-size: 18px;
       font-weight: bold;
     `;
-    placeholder.textContent = '📷';
+    placeholder.textContent = '';
 
     container.style.position = 'relative';
     container.appendChild(placeholder);
   }
 
-  // ✅ MÉTHODE DE DEBUG
+  //  MÉTHODE DE DEBUG
   debugPhotos(): void {
-    console.log('🔍 DEBUG Photos:');
-    console.log('- Salon ID:', this.salonId);
-    console.log('- Photos loading:', this.isLoadingPhotos);
-    console.log('- Photos array:', this.photos);
-    console.log('- Photos count:', this.photos.length);
+
+
+
+
+
 
     // Test des URLs
     this.photos.forEach((photo, index) => {
-      console.log(`Test photo ${index + 1}:`, photo.processedUrl);
+
       const img = new Image();
-      img.onload = () => console.log(`✅ Photo ${index + 1} accessible`);
-      img.onerror = () => console.error(`❌ Photo ${index + 1} inaccessible`);
+      img.onload = () =>
+      img.onerror = () => console.error(` Photo ${index + 1} inaccessible`);
       img.src = photo.processedUrl;
     });
   }
 
-  // ✅ MÉTHODES EXISTANTES INCHANGÉES
+  //  MÉTHODES EXISTANTES INCHANGÉES
 
   closeDialog(): void {
     if (this.dialogRef && this.isBrowser) {
@@ -399,27 +405,48 @@ loadSalonPhotos(): void {
   }
 
   formatHoraires(horaires: string): string {
-    return horaires || 'Horaires non disponibles';
+    // Si les horaires sont fournis, les retourner
+    if (horaires && horaires.trim()) {
+      return horaires;
+    }
+    
+    // Sinon, afficher des horaires par défaut cohérents avec les disponibilités
+    return 'Lun-Sam 9h-18h, Fermé Dimanche';
   }
 
   setActiveTab(tab: string): void {
-    console.log(`🔄 Changement d'onglet: ${this.activeTab} → ${tab}`);
+
     this.activeTab = tab;
 
     // Charger les données spécifiques à l'onglet si nécessaire
     if (tab === 'photos' && this.photos.length === 0 && !this.isLoadingPhotos) {
-      console.log('📸 Rechargement des photos pour l\'onglet');
+
       this.loadSalonPhotos();
     }
     
     if (tab === 'reviews' && this.recentAvis.length === 0 && !this.isLoadingAvis) {
-      console.log('⭐ Rechargement des avis pour l\'onglet');
+
       this.loadSalonAvis();
     }
   }
 
   bookService(service: any): void {
     if (!this.isBrowser) return;
+
+    if (!this.isLoggedIn) {
+      if (this.dialogRef) {
+        this.dialogRef.close();
+      }
+
+      this.authService.triggerLoginModal();
+
+      this.snackBar.open('Veuillez vous connecter pour réserver un service', 'Fermer', {
+        duration: 5000,
+        panelClass: ['warning-snackbar']
+      });
+
+      return;
+    }
 
     if (!this.isLoggedIn) {
       if (this.dialogRef) {
@@ -469,21 +496,21 @@ loadSalonPhotos(): void {
   }
 
   /**
-   * ✅ Formater note en étoiles
+   *  Formater note en étoiles
    */
   formatStars(rating: number): string {
     return this.reservationService.formatRatingStars(rating);
   }
 
   /**
-   * ✅ Obtenir le temps relatif
+   *  Obtenir le temps relatif
    */
   getRelativeTime(date: string | Date): string {
     return this.reservationService.getTempsDepuisCreation(date);
   }
 
   /**
-   * ✅ Calculer la note moyenne du salon
+   *  Calculer la note moyenne du salon
    */
   getAverageRating(): number {
     if (!this.recentAvis || this.recentAvis.length === 0) {
@@ -495,9 +522,181 @@ loadSalonPhotos(): void {
   }
 
   /**
-   * ✅ Obtenir le nombre total d'avis
+   *  Obtenir le nombre total d'avis
    */
   getTotalReviews(): number {
     return this.recentAvis ? this.recentAvis.length : 0;
+  }
+
+  // ==========================================
+  //  MÉTHODES POUR LES DISPONIBILITÉS
+  // ==========================================
+
+  /**
+   * Générer la semaine courante avec disponibilités
+   */
+  generateWeekDays(): void {
+    this.weekDays = [];
+    const startOfWeek = new Date(this.currentWeekStart);
+    
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(startOfWeek);
+      date.setDate(startOfWeek.getDate() + i);
+      
+      const dayName = this.getDayName(date);
+      const slots = this.generateSlotsForDay(date);
+      
+      this.weekDays.push({
+        date: date,
+        name: dayName,
+        slots: slots
+      });
+    }
+  }
+
+  /**
+   * Générer les créneaux pour un jour donné
+   */
+  generateSlotsForDay(date: Date): any[] {
+    const slots = [];
+    const dayOfWeek = date.getDay(); // 0 = Dimanche, 1 = Lundi, etc.
+    
+    // Simulation des horaires d'ouverture (9h-18h)
+    const openingHour = 9;
+    const closingHour = 18;
+    const slotDuration = 30; // 30 minutes par créneau
+    
+    // Vérifier si le salon est ouvert ce jour
+    if (dayOfWeek === 0) { // Fermé le dimanche
+      return [];
+    }
+    
+    for (let hour = openingHour; hour < closingHour; hour++) {
+      for (let minute = 0; minute < 60; minute += slotDuration) {
+        const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        const isBooked = Math.random() < 0.3; // 30% de chance d'être réservé
+        
+        slots.push({
+          time: time,
+          isBooked: isBooked
+        });
+      }
+    }
+    
+    return slots;
+  }
+
+  /**
+   * Obtenir le nom du jour en français
+   */
+  getDayName(date: Date): string {
+    const days = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+    return days[date.getDay()];
+  }
+
+  /**
+   * Navigation - semaine précédente
+   */
+  previousWeek(): void {
+    const newDate = new Date(this.currentWeekStart);
+    newDate.setDate(newDate.getDate() - 7);
+    this.currentWeekStart = newDate;
+    this.generateWeekDays();
+  }
+
+  /**
+   * Navigation - semaine suivante
+   */
+  nextWeek(): void {
+    const newDate = new Date(this.currentWeekStart);
+    newDate.setDate(newDate.getDate() + 7);
+    this.currentWeekStart = newDate;
+    this.generateWeekDays();
+  }
+
+  /**
+   * Obtenir le titre de la semaine
+   */
+  getWeekTitle(): string {
+    const endOfWeek = new Date(this.currentWeekStart);
+    endOfWeek.setDate(this.currentWeekStart.getDate() + 6);
+    
+    const startMonth = this.currentWeekStart.toLocaleDateString('fr-FR', { month: 'short' });
+    const endMonth = endOfWeek.toLocaleDateString('fr-FR', { month: 'short' });
+    
+    if (startMonth === endMonth) {
+      return `${this.currentWeekStart.getDate()}-${endOfWeek.getDate()} ${startMonth} ${this.currentWeekStart.getFullYear()}`;
+    } else {
+      return `${this.currentWeekStart.getDate()} ${startMonth} - ${endOfWeek.getDate()} ${endMonth} ${this.currentWeekStart.getFullYear()}`;
+    }
+  }
+
+  /**
+   * Vérifier si une date est aujourd'hui
+   */
+  isToday(date: Date): boolean {
+    const today = new Date();
+    return date.toDateString() === today.toDateString();
+  }
+
+  /**
+   * Vérifier si deux dates sont le même jour
+   */
+  isSameDay(date1: Date, date2: Date): boolean {
+    return date1.toDateString() === date2.toDateString();
+  }
+
+  /**
+   * Sélectionner une date
+   */
+  selectDate(date: Date): void {
+    this.selectedDate = date;
+  }
+
+  /**
+   * Obtenir les créneaux du jour sélectionné
+   */
+  getSelectedDaySlots(): any[] {
+    if (!this.selectedDate) return [];
+    
+    const selectedDay = this.weekDays.find(day => 
+      this.isSameDay(day.date, this.selectedDate!)
+    );
+    
+    return selectedDay ? selectedDay.slots : [];
+  }
+
+  /**
+   * Obtenir la durée des créneaux
+   */
+  getSlotDuration(): number {
+    return 30; // minutes
+  }
+
+  /**
+   * Obtenir la limite de réservation à l'avance
+   */
+  getAdvanceBookingLimit(): number {
+    return 30; // jours
+  }
+
+  /**
+   * Initialiser les disponibilités
+   */
+  initializeAvailability(): void {
+    // Démarrer la semaine au lundi
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    
+    this.currentWeekStart = new Date(today);
+    this.currentWeekStart.setDate(today.getDate() + daysToMonday);
+    
+    this.generateWeekDays();
+    
+    // Sélectionner aujourd'hui par défaut si c'est dans la semaine courante
+    if (dayOfWeek !== 0 && dayOfWeek >= 1 && dayOfWeek <= 6) {
+      this.selectedDate = today;
+    }
   }
 }

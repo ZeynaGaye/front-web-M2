@@ -159,7 +159,7 @@ export class RegisterComponent implements OnInit {
           if (coords) {
             signupRequest.latitude = coords.lat;
             signupRequest.longitude = coords.lon;
-            console.log('Coordonnées trouvées:', coords);
+
           } else {
             console.warn('Adresse non trouvée par le géocodage');
           }

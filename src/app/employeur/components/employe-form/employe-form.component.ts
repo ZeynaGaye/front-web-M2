@@ -220,7 +220,7 @@ export class EmployeFormComponent implements OnInit {
           .subscribe({
             next: (employe) => {
               if (this.isModal) {
-                console.log('🔄 Fermeture modal après création employé');
+
                 this.employeCreated.emit(employe);
                 this.dialogRef?.close({ success: true, employe });
               } else {
@@ -355,7 +355,7 @@ export class EmployeFormComponent implements OnInit {
   onSpecialiteChange(_event: any): void {
     // Méthode pour gérer les changements de spécialités
     const selectedSpecialites = this.employeForm.get('specialites')?.value || [];
-    console.log('Spécialités sélectionnées:', selectedSpecialites);
+
     
     // Optionnel: Limiter le nombre de spécialités
     if (selectedSpecialites.length > 5) {

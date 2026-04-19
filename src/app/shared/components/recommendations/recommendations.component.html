@@ -1,5 +1,4 @@
 <div class="recommendations-section" *ngIf="showRecommendations">
-  
   <!-- En-tête moderne -->
   <div class="recommendations-header">
     <div class="header-content">
@@ -11,39 +10,7 @@
         </div>
       </div>
     </div>
-    
-    <!-- Panneau de géolocalisation -->
-    <div class="location-panel">
-      <div class="location-status" *ngIf="hasLocation()">
-        <div class="status-dot"></div>
-        <span>Position activée</span>
-      </div>
-      
-      <button 
-        class="location-btn" 
-        *ngIf="!hasLocation() && isGeolocationSupported()"
-        (click)="requestLocation()"
-        [disabled]="isGettingLocation">
-        <i class="fas fa-location-dot" [class.fa-pulse]="isGettingLocation"></i>
-        <span *ngIf="!isGettingLocation">Activer ma position</span>
-        <span *ngIf="isGettingLocation">Localisation...</span>
-      </button>
-      
-      <button 
-        class="refresh-btn" 
-        *ngIf="hasLocation()"
-        (click)="refreshWithLocation()"
-        [disabled]="isGettingLocation">
-        <i class="fas fa-arrow-rotate-right" [class.fa-spin]="isGettingLocation"></i>
-      </button>
-      
-      <div class="error-alert" *ngIf="locationError">
-        <i class="fas fa-triangle-exclamation"></i>
-        <span>{{ locationError }}</span>
-      </div>
-    </div>
   </div>
-
   <!-- Indicateur de chargement  -->
   <div class="loading-container" *ngIf="isLoading">
     <div class="loading-card">
@@ -58,10 +25,10 @@
   </div>
 
   <!-- Contenu principal -->
-  <div class="content-container" *ngIf="!isLoading && homepageData && getTotalRecommendations() > 0">
-    
+  <div class="content-container" *ngIf="!isLoading && homepageData && totalRecommendations > 0">
+
     <!-- Section Populaires -->
-    <section class="recommendations-section-block" *ngIf="getSectionCount('populaires') > 0">
+    <section class="recommendations-section-block" *ngIf="popularRecommendations.length > 0">
       <div class="section-header">
         <div class="header-left">
           <div class="section-icon">
@@ -69,55 +36,59 @@
           </div>
           <div class="header-text">
             <h3>Les plus populaires</h3>
-            <p>Plébiscités par la communauté</p>
+            <p>Plébiscités par la communauté <strong>BeautyHub</strong></p>
           </div>
         </div>
-        <button class="view-all-link" (click)="toggleSection('populaires')">
-          <span *ngIf="!isSectionExpanded('populaires')">Voir tout ({{ getSectionCount('populaires') }})</span>
-          <span *ngIf="isSectionExpanded('populaires')">Réduire</span>
-          <i class="fas" [class.fa-chevron-down]="!isSectionExpanded('populaires')" [class.fa-chevron-up]="isSectionExpanded('populaires')"></i>
-        </button>
+        <div class="carousel-controls">
+          <button class="carousel-btn prev" (click)="scrollCarousel('populaires', 'prev')" #popularPrevBtn>
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <button class="carousel-btn next" (click)="scrollCarousel('populaires', 'next')" #popularNextBtn>
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
       </div>
-      
-      <div class="salons-grid">
-        <article 
-          [class]="getItemTypeClass(salon)" 
-          *ngFor="let salon of getPopularRecommendations(); trackBy: trackBySalonId"
-          (click)="openItemDetail(salon)">
-          
+
+      <div class="carousel-container">
+        <div class="salons-carousel" #popularCarousel>
+          <article
+            [class]="getItemTypeClass(salon)"
+            *ngFor="let salon of popularRecommendations; trackBy: trackBySalonId"
+            (click)="openItemDetail(salon)">
+
           <div class="card-image">
             <img [src]="getSalonImage(salon)" [alt]="salon.nom" (error)="onImageError($event)" (load)="onImageLoad($event)">
             <div class="image-overlay"></div>
-            
+
             <!-- Badge type (salon/freelance) -->
             <div class="type-badge" [class.freelance]="isFreelance(salon)">
               <i [class]="getItemTypeIcon(salon)"></i>
               <span>{{ isFreelance(salon) ? 'Freelance' : 'Salon' }}</span>
             </div>
-            
+
             <!-- Badge note avec espacement -->
             <div class="rating-badge" *ngIf="salon.note && salon.note > 0">
               <i class="fas fa-star"></i>
               <span class="rating-text">{{ salon.note.toFixed(1) }}</span>
             </div>
-            
+
             <!-- Bouton favori -->
-            <button 
+            <button
               class="favorite-btn"
               [class.is-favorite]="isFavorite(salon.id)"
               (click)="onToggleFavorite(salon, $event)">
               <i class="fas fa-heart"></i>
             </button>
           </div>
-          
+
           <div class="card-content">
             <h4 class="salon-name">{{ salon.nom }}</h4>
-            
+
             <div class="salon-location">
-              <i class="fas fa-map-pin"></i>
+              <i class="fas fa-map-marker-alt"></i>
               <span>{{ salon.adresse }}</span>
             </div>
-            
+
             <!-- Services pour les salons seulement -->
             <div class="salon-services" *ngIf="!isFreelance(salon) && salon.services && salon.services.length > 0">
               <span class="service-tag" *ngFor="let service of salon.services.slice(0, 2)">
@@ -127,270 +98,203 @@
                 +{{ salon.services.length - 2 }}
               </span>
             </div>
-            
-            <!-- Spécialité et expérience pour les freelances (même style que les salons) -->
-            <div class="salon-services" *ngIf="isFreelance(salon)">
-              <span class="service-tag" *ngIf="salon.specialite">
-                {{ salon.specialite }}
-              </span>
-              <span class="service-tag" *ngIf="salon.experience">
-                {{ salon.experience }} 
-              </span>
+
+            <!-- Spécialité et expérience pour les freelances  -->
+            <div class="freelance-meta" *ngIf="isFreelance(salon)">
+              <div class="freelance-meta-item" *ngIf="salon.specialite">
+                <i class="fas fa-cut"></i>
+                <span>{{ salon.specialite }}</span>
+              </div>
+              <div class="freelance-meta-item" *ngIf="salon.experience">
+                <i class="fas fa-briefcase"></i>
+                <span>{{ salon.experience }}</span>
+              </div>
             </div>
+
+            <button class="popular-reserve-btn" (click)="bookNow(salon, $event)">
+              {{ isFreelance(salon) ? 'Réserver une mission' : 'Réserver un soin' }}
+            </button>
           </div>
-        </article>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Carte de demande de localisation -->
+    <section class="location-request-section" *ngIf="!hasLocation() && !isLoading">
+      <div class="location-request-card">
+        <div class="location-icon-wrapper" [class.requesting]="locationRequesting">
+          <i class="fas fa-location-dot"></i>
+        </div>
+        <div class="location-request-content">
+          <h3>Proche de vous</h3>
+          <p *ngIf="!locationDenied">Activez votre localisation pour découvrir les salons et freelances près de chez vous.</p>
+          <p *ngIf="locationDenied" class="location-denied-msg">
+            <i class="fas fa-triangle-exclamation"></i>
+            Localisation bloquée. Autorisez l'accès dans les paramètres de votre navigateur puis réessayez.
+          </p>
+        </div>
+        <button
+          class="location-request-btn"
+          [class.requesting]="locationRequesting"
+          [disabled]="locationRequesting"
+          (click)="requestLocation()">
+          <i class="fas fa-spinner fa-spin" *ngIf="locationRequesting"></i>
+          <i class="fas fa-crosshairs" *ngIf="!locationRequesting"></i>
+          <span>{{ locationRequesting ? 'Recherche...' : (locationDenied ? 'Réessayer' : 'Activer la localisation') }}</span>
+        </button>
       </div>
     </section>
 
     <!-- Section Proximité -->
-    <section class="recommendations-section-block" *ngIf="getSectionCount('proches') > 0">
+    <section class="recommendations-section-block nearby-section" *ngIf="nearbyTotalCount > 0">
+
+      <!-- En-tête avec filtres -->
       <div class="section-header">
         <div class="header-left">
           <div class="section-icon nearby">
             <i class="fas fa-location-dot"></i>
           </div>
           <div class="header-text">
-            <h3>Près de chez vous</h3>
+            <h3>Proche de vous</h3>
             <p>À quelques minutes de vous</p>
           </div>
         </div>
-        <button class="view-all-link" (click)="toggleSection('proches')">
-          <span *ngIf="!isSectionExpanded('proches')">Voir la zone ({{ getSectionCount('proches') }})</span>
-          <span *ngIf="isSectionExpanded('proches')">Réduire</span>
-          <i class="fas" [class.fa-chevron-down]="!isSectionExpanded('proches')" [class.fa-chevron-up]="isSectionExpanded('proches')"></i>
-        </button>
-      </div>
-      
-      <div class="salons-grid">
-        <article 
-          [class]="getItemTypeClass(salon)" 
-          *ngFor="let salon of getNearbyRecommendations(); trackBy: trackBySalonId"
-          (click)="openItemDetail(salon)">
-          
-          <div class="card-image">
-            <img [src]="getSalonImage(salon)" [alt]="salon.nom" (error)="onImageError($event)" (load)="onImageLoad($event)">
-            <div class="image-overlay"></div>
-            
-            <!-- Badge distance repositionné au centre -->
-            <div class="distance-badge" *ngIf="salon.distance">
-              <i class="fas fa-route"></i>
-              <span class="distance-text">{{ salon.distance.toFixed(1) }} km</span>
-            </div>
-            
-            <!-- Badge note -->
-            <div class="rating-badge" *ngIf="salon.note && salon.note > 0">
-              <i class="fas fa-star"></i>
-              <span class="rating-text">{{ salon.note.toFixed(1) }}</span>
-            </div>
-            
-            <button 
-              class="favorite-btn"
-              [class.is-favorite]="isFavorite(salon.id)"
-              (click)="onToggleFavorite(salon, $event)">
-              <i class="fas fa-heart"></i>
-            </button>
-          </div>
-          
-          <div class="card-content">
-            <h4 class="salon-name">{{ salon.nom }}</h4>
-            
-            <div class="salon-location">
-              <i class="fas fa-map-pin"></i>
-              <span>{{ salon.adresse }}</span>
-            </div>
-            
-            <!-- Services pour les salons seulement -->
-            <div class="salon-services" *ngIf="!isFreelance(salon) && salon.services && salon.services.length > 0">
-              <span class="service-tag" *ngFor="let service of salon.services.slice(0, 2)">
-                {{ service }}
-              </span>
-              <span class="more-count" *ngIf="salon.services.length > 2">
-                +{{ salon.services.length - 2 }}
-              </span>
-            </div>
-            
-            <!-- Spécialité et expérience pour les freelances (même style que les salons) -->
-            <div class="salon-services" *ngIf="isFreelance(salon)">
-              <span class="service-tag" *ngIf="salon.specialite">
-                {{ salon.specialite }}
-              </span>
-              <span class="service-tag" *ngIf="salon.experience">
-                {{ salon.experience }} ans
-              </span>
-            </div>
-          </div>
-        </article>
-      </div>
-    </section>
-
-    <!-- Section Spécialistes -->
-    <section class="recommendations-section-block" *ngIf="getSectionCount('coiffure') > 0">
-      <div class="section-header">
-        <div class="header-left">
-          <div class="section-icon specialist">
-            <i class="fas fa-cut"></i>
-          </div>
-          <div class="header-text">
-            <h3>Experts Coiffure</h3>
-            <p>Salons et freelances spécialisés</p>
-          </div>
-        </div>
-        <button class="view-all-link" (click)="toggleSection('coiffure')">
-          <span *ngIf="!isSectionExpanded('coiffure')">Tous les experts ({{ getSectionCount('coiffure') }})</span>
-          <span *ngIf="isSectionExpanded('coiffure')">Réduire</span>
-          <i class="fas" [class.fa-chevron-down]="!isSectionExpanded('coiffure')" [class.fa-chevron-up]="isSectionExpanded('coiffure')"></i>
-        </button>
-      </div>
-      
-      <div class="salons-grid">
-        <article 
-          [class]="getItemTypeClass(salon)" 
-          *ngFor="let salon of getSectionRecommendations('coiffure', 3); trackBy: trackBySalonId"
-          (click)="openItemDetail(salon)">
-          
-          <div class="card-image">
-            <img [src]="getSalonImage(salon)" [alt]="salon.nom" (error)="onImageError($event)" (load)="onImageLoad($event)">
-            <div class="image-overlay"></div>
-            
-            <!-- Badge type (salon/freelance) -->
-            <div class="type-badge" [class.freelance]="isFreelance(salon)">
-              <i [class]="getItemTypeIcon(salon)"></i>
-              <span>{{ isFreelance(salon) ? 'Freelance' : 'Salon' }}</span>
-            </div>
-            
-            <div class="rating-badge" *ngIf="salon.note && salon.note > 0">
-              <i class="fas fa-star"></i>
-              <span class="rating-text">{{ salon.note.toFixed(1) }}</span>
-            </div>
-            
-            <button 
-              class="favorite-btn"
-              [class.is-favorite]="isFavorite(salon.id)"
-              (click)="onToggleFavorite(salon, $event)">
-              <i class="fas fa-heart"></i>
-            </button>
-          </div>
-          
-          <div class="card-content">
-            <h4 class="salon-name">{{ salon.nom }}</h4>
-            
-            <div class="salon-location">
-              <i class="fas fa-map-pin"></i>
-              <span>{{ salon.adresse }}</span>
-            </div>
-            
-            <!-- Services pour les salons seulement -->
-            <div class="salon-services" *ngIf="!isFreelance(salon) && salon.services && salon.services.length > 0">
-              <span class="service-tag" *ngFor="let service of salon.services.slice(0, 2)">
-                {{ service }}
-              </span>
-              <span class="more-count" *ngIf="salon.services.length > 2">
-                +{{ salon.services.length - 2 }}
-              </span>
-            </div>
-            
-            <!-- Spécialité et expérience pour les freelances (même style que les salons) -->
-            <div class="salon-services" *ngIf="isFreelance(salon)">
-              <span class="service-tag" *ngIf="salon.specialite">
-                {{ salon.specialite }}
-              </span>
-              <span class="service-tag" *ngIf="salon.experience">
-                {{ salon.experience }}
-              </span>
-            </div>
-          </div>
-        </article>
-      </div>
-    </section>
-
-
-    <!-- Section Services -->
-    <section class="services-section" *ngIf="hasServiceRecommendations()">
-      <div class="services-header">
-        <h3>
-          <i class="fas fa-palette"></i>
-          Explorez par spécialité
-        </h3>
-        <p>Trouvez le service parfait pour vous</p>
-      </div>
-      
-      <div class="services-grid">
-        <div 
-          class="service-card" 
-          *ngIf="getSectionCount('coiffure') > 0"
-          (click)="onViewAllSection('coiffure')">
-          <div class="service-icon coiffure">
-            <i class="fas fa-cut"></i>
-          </div>
-          <div class="service-info">
-            <h4>Coiffure</h4>
-            <p>{{ getSectionCount('coiffure') }} professionnels</p>
-          </div>
-          <div class="service-preview" *ngIf="getFirstFromSection('coiffure')">
-            <img 
-              [src]="getSalonImage(getFirstFromSection('coiffure')!)"
-              [alt]="getFirstFromSection('coiffure')!.nom">
-          </div>
-        </div>
-
-        <div 
-          class="service-card" 
-          *ngIf="getSectionCount('manucure') > 0"
-          (click)="onViewAllSection('manucure')">
-          <div class="service-icon manucure">
-            <i class="fas fa-hand-sparkles"></i>
-          </div>
-          <div class="service-info">
-            <h4>Manucure</h4>
-            <p>{{ getSectionCount('manucure') }} spécialistes</p>
-          </div>
-          <div class="service-preview" *ngIf="getFirstFromSection('manucure')">
-            <img 
-              [src]="getSalonImage(getFirstFromSection('manucure')!)"
-              [alt]="getFirstFromSection('manucure')!.nom">
-          </div>
-        </div>
-
-        <div 
-          class="service-card" 
-          *ngIf="getSectionCount('barber') > 0"
-          (click)="onViewAllSection('barber')">
-          <div class="service-icon barber">
-            <i class="fas fa-user-tie"></i>
-          </div>
-          <div class="service-info">
-            <h4>Barbier</h4>
-            <p>{{ getSectionCount('barber') }} maîtres</p>
-          </div>
-          <div class="service-preview" *ngIf="getFirstFromSection('barber')">
-            <img 
-              [src]="getSalonImage(getFirstFromSection('barber')!)"
-              [alt]="getFirstFromSection('barber')!.nom">
-          </div>
-        </div>
-      </div>
-    </section>
-
-    
-    <section class="cta-section" *ngIf="showCta">
-      <div class="cta-card">
-        <div class="cta-content">
-          <h3>{{ ctaTitle }}</h3>
-          <p>{{ ctaDescription }}</p>
-          <button class="cta-button" (click)="onCtaClick()">
-            <span>{{ ctaButtonText }}</span>
-            <i class="fas fa-search"></i>
+        <div class="nearby-filters">
+          <button class="filter-btn" [class.active]="nearbyFilter === 'salons'" (click)="setNearbyFilter('salons')">
+            <i class="fas fa-store"></i> Salons
+          </button>
+          <button class="filter-btn" [class.active]="nearbyFilter === 'freelances'" (click)="setNearbyFilter('freelances')">
+            <i class="fas fa-user-tie"></i> Freelances
+          </button>
+          <button class="filter-btn filter-btn-disponible" [class.active]="nearbyFilter === 'disponible'" (click)="setNearbyFilter('disponible')">
+            <i class="fas fa-circle-dot"></i> Disponible maintenant
+            <span class="filter-count" *ngIf="disponibleNearbyCount > 0">{{ disponibleNearbyCount }}</span>
           </button>
         </div>
-        <div class="cta-decoration">
-          <i class="fas fa-sparkles"></i>
+      </div>
+
+      <!-- Layout split : carte à gauche, cartes à droite -->
+      <div class="nearby-split">
+
+        <!-- Panneau carte Leaflet -->
+        <div class="nearby-map-panel" *ngIf="isBrowser">
+          <div #nearbyMapContainer class="leaflet-map-container"></div>
+
+          <!-- Légende -->
+          <div class="map-legend">
+            <div class="legend-item">
+              <span class="legend-dot user"></span>
+              <span>Vous</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot salon"></span>
+              <span>Salon</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot freelance"></span>
+              <span>Freelance</span>
+            </div>
+            <div class="legend-item legend-count">
+              <i class="fas fa-map-pin"></i>
+              <span>{{ nearbyMapMarkersCount }} sur la carte</span>
+            </div>
+          </div>
         </div>
+
+        <!-- Panneau cartes (scroll interne) -->
+        <div class="nearby-cards-panel">
+          <div class="nearby-list">
+            <article
+              class="nearby-card"
+              [id]="'nearby-card-' + salon.id"
+              [class.active]="activeNearbyId === salon.id"
+              [class.has-coords]="salon.latitude != null && salon.longitude != null"
+              *ngFor="let salon of filteredNearbyRecommendations; trackBy: trackBySalonId"
+              (click)="openItemDetail(salon)"
+              (mouseenter)="highlightOnMap(salon)">
+              <div class="nearby-image">
+                <img [src]="getSalonImage(salon)" [alt]="salon.nom" (error)="onImageError($event)" (load)="onImageLoad($event)">
+                <div class="distance-badge-main" *ngIf="salon.distance && salon.distance > 0">
+                  <i class="fas fa-location-dot"></i>
+                  <span>{{ formatDistance(salon.distance) }}</span>
+                </div>
+                <div class="type-badge-overlay bottom" [class.freelance]="isFreelance(salon)">
+                  {{ isFreelance(salon) ? 'FREELANCE' : 'SALON' }}
+                </div>
+              </div>
+
+              <div class="nearby-content">
+                <div class="nearby-info">
+                  <h4 class="nearby-name">{{ salon.nom }}</h4>
+                  <p class="nearby-specialty">
+                    <span *ngIf="!isFreelance(salon)">
+                      <span *ngIf="salon.services && salon.services.length > 0; else salonFallback">{{ getServicesText(salon.services) }}</span>
+                      <ng-template #salonFallback>
+                        <span *ngIf="salon.specialite; else defaultSalon">{{ salon.specialite }}</span>
+                        <ng-template #defaultSalon>Salon de beauté</ng-template>
+                      </ng-template>
+                    </span>
+                    <span *ngIf="isFreelance(salon)">
+                      <span *ngIf="salon.specialite; else freelanceServices">{{ salon.specialite }}</span>
+                      <ng-template #freelanceServices>
+                        <span *ngIf="salon.services && salon.services.length > 0; else defaultFreelance">{{ getServicesText(salon.services) }}</span>
+                        <ng-template #defaultFreelance>Freelance de beauté</ng-template>
+                      </ng-template>
+                    </span>
+                  </p>
+                  <div class="nearby-meta">
+                    <div class="nearby-rating">
+                      <i class="fas fa-star"></i>
+                      <span class="rating-value">{{ (salon.note || salon.rating || 4.5).toFixed(1) }}</span>
+                      <span class="rating-count">({{ salon.nombreAvis || salon.reviewCount || 0 }} avis)</span>
+                    </div>
+                    <div class="nearby-time" *ngIf="salon.distance && salon.distance > 0">
+                      <i class="fas fa-clock"></i>
+                      <span>{{ calculateEstimatedTime(salon.distance) }}</span>
+                    </div>
+                  </div>
+                  <div class="nearby-address" *ngIf="(!salon.distance || salon.distance <= 0) && salon.adresse && salon.adresse !== 'Adresse non spécifiée' && salon.adresse !== 'Adresse non disponible'">
+                    <i class="fas fa-map-pin"></i>
+                    <span>{{ salon.adresse }}</span>
+                  </div>
+                  <div class="nearby-slot" *ngIf="checkIsAvailableNow(salon) && getNextSlotForItem(salon)">
+                    <i class="fas fa-clock"></i>
+                    <span>Libre à <strong>{{ getNextSlotForItem(salon) }}</strong></span>
+                  </div>
+                </div>
+                <div class="nearby-actions">
+                  <div class="libre-badge" *ngIf="checkIsAvailableNow(salon)">
+                    <div class="live-dot"></div>
+                    <span>LIBRE</span>
+                  </div>
+                  <button class="favorite-btn-minimal" [class.is-favorite]="isFavorite(salon.id)" (click)="onToggleFavorite(salon, $event)">
+                    <i class="fas fa-heart"></i>
+                  </button>
+                  <button class="reserve-btn" (click)="bookNow(salon, $event)">Réserver</button>
+                </div>
+              </div>
+            </article>
+          </div>
+
+          <!-- État vide filtre -->
+          <div class="nearby-filter-empty" *ngIf="filteredNearbyRecommendations.length === 0">
+            <i class="fas fa-filter"></i>
+            <p *ngIf="nearbyFilter !== 'disponible'">Aucun {{ nearbyFilter === 'salons' ? 'salon' : 'freelance' }} trouvé à proximité.</p>
+            <p *ngIf="nearbyFilter === 'disponible'">Aucun professionnel disponible maintenant à proximité.</p>
+          </div>
+        </div>
+
       </div>
     </section>
+
+
+
+
   </div>
 
   <!-- État vide -->
-  <div class="empty-state" *ngIf="!isLoading && (!homepageData || getTotalRecommendations() === 0)">
+  <div class="empty-state" *ngIf="!isLoading && (!homepageData || totalRecommendations === 0)">
     <div class="empty-content">
       <div class="empty-icon">
         <i class="fas fa-search"></i>

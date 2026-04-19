@@ -37,12 +37,9 @@ body {
 }
 
 /* ===============================================
-    HEADER AVEC GÉOLOCALISATION (Adapté au nouveau template)
+    HEADER AVEC GÉOLOCALISATION
 =============================================== */
 .recommendations-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
     margin-bottom: $spacing-unit * 1.5;
     padding: $spacing-unit + 5px;
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
@@ -51,27 +48,23 @@ body {
     box-shadow: $box-shadow;
 
     .header-content {
-        flex: 1;
-        margin-right: $spacing-unit;
-
         .title-wrapper {
             display: flex;
             align-items: center;
             gap: 10px;
+            justify-content: center;
 
             .header-icon {
                 color: $primary-color;
                 font-size: 1.7rem;
-                width: auto;
-                height: auto;
-                background: none;
-                border-radius: 0;
                 display: flex;
                 align-items: center;
                 justify-content: center;
             }
 
             .text-content {
+                text-align: center;
+
                 h2 {
                     font-size: 1.9rem;
                     font-weight: 700;
@@ -89,131 +82,10 @@ body {
             }
         }
     }
-
-    .location-panel {
-        display: flex;
-        flex-direction: column;
-        gap: $spacing-unit / 2;
-        align-items: flex-end;
-        min-width: 200px;
-
-        .location-status {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba($success-color, 0.1);
-            color: $success-color;
-            padding: 8px 12px;
-            border-radius: $border-radius;
-            font-size: 0.9rem;
-            font-weight: 500;
-            border: 1px solid rgba($success-color, 0.2);
-
-            .status-dot {
-                font-size: 0.8rem;
-                animation: pulse 2s infinite;
-            }
-        }
-
-        .location-btn {
-            background: $primary-color;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: $border-radius;
-            font-size: 0.95rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: $transition;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: $box-shadow;
-            min-width: 170px;
-            justify-content: center;
-
-            &:hover:not(:disabled) {
-                background: darken($primary-color, 10%);
-                transform: translateY(-2px);
-                box-shadow: $box-shadow-hover;
-            }
-
-            &:disabled {
-                background: $secondary-color;
-                cursor: not-allowed;
-                transform: none;
-                opacity: 0.7;
-            }
-
-            i {
-                font-size: 0.9rem;
-
-                &.fa-pulse {
-                    animation: spin 1s linear infinite;
-                }
-            }
-        }
-
-        .refresh-btn {
-            background: rgba($primary-color, 0.1);
-            color: $primary-color;
-            border: 1px solid $primary-color;
-            padding: 8px;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            cursor: pointer;
-            transition: $transition;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
-            &:hover:not(:disabled) {
-                background: $primary-color;
-                color: white;
-                transform: translateY(-2px) rotate(90deg);
-            }
-
-            &:disabled {
-                background: rgba($secondary-color, 0.1);
-                color: $secondary-color;
-                border-color: $secondary-color;
-                cursor: not-allowed;
-                transform: none;
-                opacity: 0.7;
-            }
-
-            i {
-                font-size: 0.9rem;
-
-                &.fa-spin {
-                    animation: spin 1s linear infinite;
-                }
-            }
-        }
-
-        .error-alert {
-            background: rgba($error-color, 0.1);
-            color: $error-color;
-            padding: 10px 15px;
-            border-radius: $border-radius;
-            font-size: 0.85rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            max-width: 220px;
-            text-align: right;
-            border: 1px solid rgba($error-color, 0.2);
-
-            i {
-                font-size: 0.8rem;
-            }
-        }
-    }
 }
 
 /* ===============================================
-    INDICATEUR DE CHARGEMENT (Adapté)
+    INDICATEUR DE CHARGEMENT
 =============================================== */
 .loading-container {
     display: flex;
@@ -285,7 +157,7 @@ body {
 }
 
 /* ===============================================
-    CONTENU DES RECOMMANDATIONS (Adapté)
+    CONTENU DES RECOMMANDATIONS
 =============================================== */
 .content-container {
     display: flex;
@@ -294,31 +166,25 @@ body {
 }
 
 /* ===============================================
-    SECTION INDIVIDUELLE DE RECOMMANDATIONS (Adapté)
+    SECTION INDIVIDUELLE DE RECOMMANDATIONS
 =============================================== */
 .recommendations-section-block {
-    background: white;
-    border-radius: $border-radius-large;
-    padding: $spacing-unit + 5px;
-    box-shadow: $box-shadow;
-    transition: $transition;
-    margin-bottom: $spacing-unit;
-
-    &:hover {
-        box-shadow: $box-shadow-hover;
-        transform: translateY(-3px);
-    }
+    background: transparent;
+    border-radius: 0;
+    padding: $spacing-unit + 5px 0;
+    box-shadow: none;
+    margin-bottom: $spacing-unit * 1.5;
 
     .section-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: $spacing-unit;
+        margin-bottom: 20px;
 
         .header-left {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
 
             .section-icon {
                 color: $primary-color;
@@ -342,42 +208,597 @@ body {
 
             .header-text {
                 h3 {
-                    font-size: 1.5rem;
+                    font-size: 1.9rem;
                     font-weight: 700;
                     color: $text-color;
                     margin: 0;
+                    font-family: Georgia, 'Times New Roman', serif;
                 }
 
                 p {
-                    font-size: 0.875rem;
+                    font-size: 0.9rem;
                     color: $text-light;
-                    margin: 0;
+                    margin: 4px 0 0;
                 }
             }
         }
 
-        .view-all-link {
-            background: transparent;
-            border: 1px solid $primary-color;
-            color: $primary-color;
-            padding: 10px 18px;
-            border-radius: $border-radius;
-            font-size: 0.95rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: $transition;
+        .carousel-controls {
+            display: flex;
+            gap: 8px;
 
-            &:hover {
+            .carousel-btn {
+                background: white;
+                border: 1px solid $primary-color;
+                color: $primary-color;
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                transition: $transition;
+                font-size: 0.9rem;
+
+                &:hover {
+                    background: $primary-color;
+                    color: white;
+                    transform: translateY(-1px);
+                    box-shadow: $box-shadow;
+                }
+
+                &:disabled {
+                    background: #f5f5f5;
+                    border-color: #ddd;
+                    color: #ccc;
+                    cursor: not-allowed;
+                    transform: none;
+                }
+
+                &.prev {
+                    margin-right: 4px;
+                }
+            }
+        }
+
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, rgba($primary-color, 0.15) 0%, rgba($primary-color, 0.05) 100%);
+            color: $primary-color;
+            padding: 6px 12px;
+            border-radius: $border-radius;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: 1px solid rgba($primary-color, 0.3);
+            animation: indicator-glow 2s infinite;
+            box-shadow: 0 2px 8px rgba($primary-color, 0.1);
+
+            .live-dot {
+                width: 8px;
+                height: 8px;
                 background: $primary-color;
-                color: white;
-                transform: translateY(-1px);
+                border-radius: 50%;
+                animation: live-pulse 1.5s infinite;
+                box-shadow: 0 0 6px rgba($primary-color, 0.4);
             }
         }
     }
 }
 
 /* ===============================================
-    GRILLE DES SALONS (Adapté au nouveau template)
+    CAROUSEL HORIZONTAL POUR RECOMMANDATIONS
+=============================================== */
+.carousel-container {
+    position: relative;
+    overflow: hidden;
+    margin: 0 -5px;
+}
+
+.salons-carousel {
+    display: flex;
+    gap: $spacing-unit;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    padding: 5px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
+
+    .salon-card, .freelance-card {
+        flex: 0 0 240px;
+        max-width: 240px;
+    }
+}
+
+.popular-reserve-btn {
+    display: block;
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px 0;
+    background: $secondary-color;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+
+    &:hover {
+        background: darken($secondary-color, 10%);
+    }
+}
+
+/* ===============================================
+    SECTION PROCHE DE VOUS
+=============================================== */
+/* ===============================================
+    SECTION PROCHE DE VOUS — SPLIT LAYOUT
+=============================================== */
+.nearby-section {
+    .section-header {
+        margin-bottom: $spacing-unit;
+    }
+}
+
+.nearby-filters {
+    display: flex;
+    gap: 8px;
+
+    .filter-btn {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        color: $text-light;
+        padding: 8px 18px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: $transition;
+
+        i { font-size: 0.8rem; }
+
+        &:hover {
+            background: #f0f0f0;
+            border-color: $primary-color;
+            color: $primary-color;
+        }
+
+        &.active {
+            background: $primary-color;
+            color: white;
+            border-color: $primary-color;
+            box-shadow: 0 2px 8px rgba($primary-color, 0.3);
+        }
+    }
+
+    .filter-btn-disponible {
+        border-color: #28a745;
+        color: #28a745;
+
+        &:hover {
+            background: #f0fff4;
+            border-color: #28a745;
+            color: #28a745;
+        }
+
+        &.active {
+            background: #28a745;
+            border-color: #28a745;
+            box-shadow: 0 2px 8px rgba(#28a745, 0.3);
+        }
+    }
+}
+
+.libre-badge {
+    background: rgba(#28a745, 0.92);
+    color: white;
+    padding: 3px 7px;
+    border-radius: 10px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    letter-spacing: 0.3px;
+
+    .live-dot {
+        width: 5px;
+        height: 5px;
+        background: white;
+        border-radius: 50%;
+        animation: live-pulse 1.2s infinite;
+    }
+}
+
+.nearby-slot {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.75rem;
+    color: #28a745;
+    margin-top: 3px;
+
+    i { font-size: 0.7rem; flex-shrink: 0; }
+    strong { font-weight: 600; }
+}
+
+/* Split : carte à gauche, liste à droite */
+.nearby-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: start;
+    min-height: 460px;
+
+    @media (max-width: 900px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Panneau carte Google Maps */
+.nearby-map-panel {
+    border-radius: $border-radius-large;
+    overflow: hidden;
+    height: 460px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: $box-shadow-hover;
+    position: sticky;
+    top: 20px;
+
+    google-map {
+        flex: 1;
+    }
+}
+
+.map-legend {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 10px 14px;
+    background: white;
+    border-top: 1px solid #f0f0f0;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: $text-light;
+
+    &.legend-count {
+        margin-left: auto;
+        color: $primary-color;
+        font-weight: 600;
+        i { font-size: 10px; }
+    }
+}
+
+.legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
+    flex-shrink: 0;
+
+    &.user      { background: #4285F4; }
+    &.salon     { background: $primary-color; }
+    &.freelance { background: $secondary-color; }
+}
+
+/* Panneau liste avec scroll interne */
+.nearby-cards-panel {
+    height: 460px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    padding-right: 4px;
+
+    scrollbar-width: thin;
+    scrollbar-color: rgba($primary-color, 0.3) transparent;
+
+    &::-webkit-scrollbar       { width: 4px; }
+    &::-webkit-scrollbar-track { background: transparent; }
+    &::-webkit-scrollbar-thumb { background: rgba($primary-color, 0.3); border-radius: 4px; }
+}
+
+.nearby-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Carte individuelle */
+.nearby-card {
+    background: white;
+    border-radius: $border-radius-large;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1.5px solid #f0f0f0;
+    transition: $transition;
+    cursor: pointer;
+    width: 100%;
+    box-shadow: $box-shadow;
+
+    &:hover {
+        border-color: rgba($primary-color, 0.4);
+        box-shadow: $box-shadow-hover;
+        transform: translateX(3px);
+    }
+
+    &.active {
+        border-color: $primary-color;
+        box-shadow: 0 0 0 3px rgba($primary-color, 0.15), $box-shadow-hover;
+        background: #fffaf9;
+
+        .nearby-name { color: $primary-color; }
+    }
+
+    .nearby-image {
+        position: relative;
+        width: 80px;
+        height: 80px;
+        border-radius: $border-radius;
+        overflow: hidden;
+        flex-shrink: 0;
+
+        img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .distance-badge-main {
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            background: rgba(darken($secondary-color, 10%), 0.9);
+            color: white;
+            padding: 3px 7px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .type-badge-overlay {
+            position: absolute;
+            bottom: 4px;
+            right: 4px;
+            background: rgba(0, 0, 0, 0.75);
+            color: white;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+
+            &.freelance { background: rgba($primary-color, 0.85); }
+        }
+    }
+
+    .nearby-content {
+        flex: 1;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+
+        .nearby-info {
+            flex: 1;
+            min-width: 0;
+
+            .nearby-name {
+                font-size: 0.95rem;
+                font-weight: 700;
+                color: $text-color;
+                margin: 0 0 3px;
+                line-height: 1.3;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                transition: color 0.2s ease;
+            }
+
+            .nearby-specialty {
+                font-size: 0.8rem;
+                color: $text-light;
+                margin: 0 0 5px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .nearby-meta {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                flex-wrap: wrap;
+            }
+
+            .nearby-rating {
+                display: flex;
+                align-items: center;
+                gap: 3px;
+
+                i { color: $warning-color; font-size: 0.75rem; }
+                .rating-value { font-size: 0.8rem; font-weight: 600; color: $text-color; }
+                .rating-count { font-size: 0.75rem; color: $text-light; }
+            }
+
+            .nearby-time {
+                display: flex;
+                align-items: center;
+                gap: 3px;
+                font-size: 0.75rem;
+                color: $secondary-color;
+                font-weight: 500;
+
+                i { font-size: 0.7rem; }
+            }
+
+            .nearby-address {
+                display: flex;
+                align-items: center;
+                gap: 3px;
+                font-size: 0.75rem;
+                color: $text-light;
+                margin-top: 3px;
+
+                i { color: $secondary-color; font-size: 0.7rem; flex-shrink: 0; }
+                span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            }
+        }
+
+        .nearby-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+
+            .favorite-btn-minimal {
+                background: none;
+                border: none;
+                color: #ddd;
+                cursor: pointer;
+                transition: $transition;
+                padding: 6px;
+                border-radius: 50%;
+                width: 30px;
+                height: 30px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+
+                &:hover     { color: $error-color; background: rgba($error-color, 0.08); }
+                &.is-favorite { color: $error-color; }
+                i { font-size: 0.9rem; }
+            }
+
+            .reserve-btn {
+                background: $primary-color;
+                color: white;
+                border: none;
+                padding: 6px 12px;
+                border-radius: 16px;
+                font-size: 0.78rem;
+                font-weight: 600;
+                cursor: pointer;
+                transition: $transition;
+                white-space: nowrap;
+
+                &:hover {
+                    background: darken($primary-color, 10%);
+                    transform: translateY(-1px);
+                }
+            }
+        }
+    }
+}
+
+/* État vide filtre */
+.nearby-filter-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 40px 20px;
+    color: $text-light;
+    text-align: center;
+
+    i { font-size: 28px; opacity: 0.4; }
+    p { margin: 0; font-size: 0.9rem; }
+}
+
+/* ===============================================
+    SECTION DISPONIBLE MAINTENANT - DESIGN COMPACT
+=============================================== */
+.available-now-section {
+    background: white;
+    border-radius: $border-radius-large;
+    padding: $spacing-unit + 5px;
+    box-shadow: $box-shadow;
+    border-left: 4px solid $primary-color;
+    margin-bottom: $spacing-unit;
+
+    .section-icon.available-now {
+        color: $primary-color;
+    }
+}
+
+.available-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: $spacing-unit;
+}
+
+.available-card {
+    background: white;
+    border-radius: $border-radius-large;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1.5px solid #f0f0f0;
+    transition: $transition;
+    cursor: pointer;
+    box-shadow: $box-shadow;
+
+    &:hover {
+        border-color: rgba(#28a745, 0.4);
+        box-shadow: $box-shadow-hover;
+        transform: translateX(3px);
+    }
+
+    .live-badge-small {
+        position: absolute;
+        top: 6px;
+        left: 6px;
+        background: rgba(#28a745, 0.9);
+        color: white;
+        padding: 3px 7px;
+        border-radius: 10px;
+        font-size: 0.65rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        letter-spacing: 0.3px;
+
+        .live-dot {
+            width: 5px;
+            height: 5px;
+            background: white;
+            border-radius: 50%;
+            animation: live-pulse 1.2s infinite;
+        }
+    }
+}
+
+/* ===============================================
+    GRILLE DES SALONS (pour sections non-carousel)
 =============================================== */
 .salons-grid {
     display: grid;
@@ -387,23 +808,24 @@ body {
 
 .salon-card {
     background: white;
-    border-radius: $border-radius;
+    border-radius: 16px;
     overflow: hidden;
-    border: 1px solid #f0f0f0;
+    border: 1px solid #ebebeb;
     transition: $transition;
     cursor: pointer;
     position: relative;
     display: flex;
     flex-direction: column;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
 
     &:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
-        border-color: darken($primary-color, 5%);
+        transform: translateY(-4px);
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+        border-color: rgba($primary-color, 0.3);
     }
 
     .card-image {
-        height: 140px;
+        height: 190px;
         overflow: hidden;
         position: relative;
         flex-shrink: 0;
@@ -494,66 +916,92 @@ body {
     }
 
     .card-content {
-        padding: $spacing-unit - 5px;
+        padding: 14px 16px 16px;
         display: flex;
         flex-direction: column;
+        gap: 6px;
         flex-grow: 1;
 
         .salon-name {
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: 700;
             color: $text-color;
-            margin: 0 0 8px 0;
-            line-height: 1.4;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
+            margin: 0;
+            line-height: 1.3;
+            white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
         .salon-location {
-            font-size: 0.9rem;
-            color: $text-light;
-            margin: 0 0 $spacing-unit - 5px 0;
+            font-size: 0.82rem;
+            color: $primary-color;
+            margin: 0;
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 4px;
 
             i {
                 color: $primary-color;
-                font-size: 0.875rem;
+                font-size: 0.75rem;
                 flex-shrink: 0;
             }
 
             span {
-                display: -webkit-box;
-                -webkit-line-clamp: 1;
-                -webkit-box-orient: vertical;
+                white-space: nowrap;
                 overflow: hidden;
-                line-height: 1.4;
+                text-overflow: ellipsis;
             }
         }
 
         .salon-services {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
-            margin-top: auto;
+            gap: 5px;
+            margin: 2px 0;
 
             .service-tag {
-                background: rgba($primary-color, 0.15);
+                background: rgba($primary-color, 0.12);
                 color: $primary-color;
-                padding: 4px 10px;
-                border-radius: 15px;
-                font-size: 0.8rem;
+                padding: 3px 8px;
+                border-radius: 12px;
+                font-size: 0.75rem;
                 font-weight: 600;
             }
 
             .more-count {
                 color: $text-light;
-                font-size: 0.8rem;
+                font-size: 0.75rem;
                 font-style: italic;
+                align-self: center;
+            }
+        }
+
+        .freelance-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin: 2px 0;
+
+            .freelance-meta-item {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 0.82rem;
+                color: $text-light;
+
+                i {
+                    color: $primary-color;
+                    font-size: 0.75rem;
+                    flex-shrink: 0;
+                    width: 12px;
+                }
+
+                span {
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
             }
         }
     }
@@ -845,6 +1293,7 @@ body {
     }
 }
 
+
 /* ===============================================
     ANIMATIONS
 =============================================== */
@@ -885,20 +1334,98 @@ body {
     }
 }
 
+@keyframes subtle-pulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.9;
+        transform: scale(1.02);
+    }
+}
+
+@keyframes tick {
+    0%, 100% {
+        transform: rotate(0deg);
+    }
+    25% {
+        transform: rotate(-5deg);
+    }
+    75% {
+        transform: rotate(5deg);
+    }
+}
+
+@keyframes live-glow {
+    0%, 100% {
+        box-shadow: 0 2px 8px rgba($primary-color, 0.4);
+        transform: scale(1);
+    }
+    50% {
+        box-shadow: 0 4px 16px rgba($primary-color, 0.6);
+        transform: scale(1.02);
+    }
+}
+
+@keyframes live-pulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+        box-shadow: 0 0 4px rgba(white, 0.5);
+    }
+    50% {
+        opacity: 0.6;
+        transform: scale(1.3);
+        box-shadow: 0 0 8px rgba(white, 0.8);
+    }
+}
+
+@keyframes button-ready {
+    0%, 90%, 100% {
+        transform: translateY(0);
+    }
+    5% {
+        transform: translateY(-1px);
+    }
+    10% {
+        transform: translateY(0);
+    }
+}
+
+@keyframes icon-bounce {
+    0%, 90%, 100% {
+        transform: scale(1);
+    }
+    45% {
+        transform: scale(1.1);
+    }
+}
+
+@keyframes card-appear {
+    0% {
+        opacity: 0;
+        transform: translateY(20px) scale(0.9);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes indicator-glow {
+    0%, 100% {
+        box-shadow: 0 2px 8px rgba($primary-color, 0.1);
+    }
+    50% {
+        box-shadow: 0 4px 12px rgba($primary-color, 0.2);
+    }
+}
+
 /* ===============================================
     RESPONSIVE DESIGN
 =============================================== */
 @media (max-width: 992px) {
-    .recommendations-header {
-        flex-direction: column;
-        gap: $spacing-unit;
-        align-items: flex-start;
-
-        .location-panel {
-            align-self: flex-end;
-            min-width: auto;
-        }
-    }
 
     .salons-grid {
         grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -916,16 +1443,35 @@ body {
         padding: 0 $spacing-unit / 1.5;
     }
 
+    .salons-carousel {
+        .salon-card, .freelance-card {
+            flex: 0 0 220px;
+            max-width: 220px;
+        }
+    }
+
+    .available-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 12px;
+    }
+
+    .available-card {
+        height: 200px;
+
+        .card-image-compact {
+            height: 90px;
+        }
+
+        .card-content-compact {
+            padding: 10px;
+        }
+    }
+
     .recommendations-header {
         padding: $spacing-unit;
-        flex-direction: column;
-        gap: $spacing-unit;
 
         .header-content {
             .title-wrapper {
-                justify-content: center;
-                text-align: center;
-
                 .text-content h2 {
                     font-size: 1.6rem;
                 }
@@ -933,26 +1479,6 @@ body {
                 .text-content .subtitle {
                     font-size: 0.95rem;
                 }
-            }
-        }
-
-        .location-panel {
-            align-self: stretch;
-            align-items: stretch;
-
-            .location-btn {
-                justify-content: center;
-                padding: 10px 14px;
-                min-width: auto;
-            }
-
-            .refresh-btn {
-                align-self: center;
-            }
-
-            .error-alert {
-                text-align: center;
-                max-width: none;
             }
         }
     }
@@ -1049,21 +1575,58 @@ body {
 }
 
 @media (max-width: 576px) {
-    .recommendations-header {
-        .location-panel {
-            .location-btn {
-                font-size: 0.85rem;
-                padding: 10px 14px;
 
-                span {
-                    white-space: nowrap;
+    .salons-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .salons-carousel {
+        .salon-card, .freelance-card {
+            flex: 0 0 200px;
+            max-width: 200px;
+        }
+    }
+
+    .available-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .available-card {
+        height: 180px;
+
+        .card-image-compact {
+            height: 80px;
+
+            .live-badge {
+                font-size: 0.65rem;
+                padding: 3px 6px;
+            }
+        }
+
+        .card-content-compact {
+            padding: 8px;
+            gap: 6px;
+
+            .salon-name-compact {
+                font-size: 0.9rem;
+            }
+
+            .availability-info {
+                .book-now-btn {
+                    padding: 5px 8px;
+                    font-size: 0.75rem;
                 }
             }
         }
     }
 
-    .salons-grid {
-        grid-template-columns: 1fr;
+    .carousel-controls {
+        .carousel-btn {
+            width: 36px;
+            height: 36px;
+            font-size: 0.8rem;
+        }
     }
 
     .service-card {
@@ -1098,9 +1661,7 @@ body {
 
 .view-all-link:focus,
 .cta-button:focus,
-.retry-button:focus,
-.location-btn:focus,
-.refresh-btn:focus {
+.retry-button:focus {
     outline: 2px solid rgba($primary-color, 0.6);
     outline-offset: 3px;
 }
@@ -1125,4 +1686,273 @@ body {
     .location-status .status-dot {
         animation: none !important;
     }
+}
+
+/* ===============================================
+    CARTE DEMANDE DE LOCALISATION
+=============================================== */
+.location-request-section {
+    width: 100%;
+}
+
+.location-request-card {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 24px 28px;
+    background: linear-gradient(135deg, #fff9f7 0%, #fff3ee 100%);
+    border: 1.5px dashed rgba($primary-color, 0.5);
+    border-radius: $border-radius-large;
+    box-shadow: $box-shadow;
+
+    @media (max-width: 600px) {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+
+.location-icon-wrapper {
+    flex-shrink: 0;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, $primary-color, darken($primary-color, 10%));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 22px;
+    box-shadow: 0 4px 12px rgba($primary-color, 0.35);
+
+    &.requesting {
+        animation: pulse-location 1.2s ease-in-out infinite;
+    }
+}
+
+@keyframes pulse-location {
+    0%, 100% { transform: scale(1); box-shadow: 0 4px 12px rgba($primary-color, 0.35); }
+    50%       { transform: scale(1.1); box-shadow: 0 6px 20px rgba($primary-color, 0.55); }
+}
+
+.location-request-content {
+    flex: 1;
+
+    h3 {
+        font-size: 16px;
+        font-weight: 700;
+        color: $text-color;
+        margin: 0 0 4px;
+    }
+
+    p {
+        font-size: 13px;
+        color: $text-light;
+        margin: 0;
+        line-height: 1.5;
+    }
+
+    .location-denied-msg {
+        color: #e07a5f;
+
+        i {
+            margin-right: 5px;
+        }
+    }
+}
+
+.location-request-btn {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: $primary-color;
+    color: #fff;
+    border: none;
+    border-radius: 25px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: $transition;
+    white-space: nowrap;
+
+    &:hover:not(:disabled) {
+        background: darken($primary-color, 8%);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba($primary-color, 0.4);
+    }
+
+    &:disabled,
+    &.requesting {
+        opacity: 0.75;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    @media (max-width: 600px) {
+        width: 100%;
+        justify-content: center;
+    }
+}
+/* ==========================================================================
+   SECTION CARTE PROXIMITÉ (LEAFLET)
+   ========================================================================== */
+
+.nearby-section {
+  margin-top: 2rem;
+
+  .nearby-split {
+    display: flex;
+    gap: 20px;
+    height: 500px; /* Hauteur fixe pour le conteneur split */
+    margin-top: 1.5rem;
+
+    @media (max-width: 992px) {
+      flex-direction: column;
+      height: auto;
+    }
+  }
+}
+
+/* Panneau de la carte */
+.nearby-map-panel {
+  flex: 1.2;
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #eee;
+
+  .leaflet-map-container {
+    width: 100%;
+    height: 100%;
+    min-height: 400px;
+    background-color: #f8f9fa;
+    z-index: 1;
+  }
+}
+
+/* ==========================================================================
+   STYLES DES MARQUEURS (PINS) - CRUCIAL
+   ========================================================================== */
+
+/* Marqueur utilisateur (Point bleu pulsant) */
+.lf-marker-user {
+  width: 18px;
+  height: 18px;
+  background: #007bff;
+  border: 3px solid white;
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.2), 0 2px 5px rgba(0,0,0,0.3);
+  z-index: 1000;
+}
+
+/* Marqueurs Salons & Freelances (Forme de goutte) */
+.lf-marker-pin {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 28px;
+  height: 28px;
+  background-color: #333;
+  border-radius: 50% 50% 50% 0; /* Crée la forme de goutte */
+  transform: rotate(-45deg);
+  border: 2px solid white;
+  box-shadow: 0 3px 7px rgba(0,0,0,0.3);
+  transition: all 0.2s ease;
+
+  /* Point blanc au centre */
+  .lf-pin-inner {
+    width: 8px;
+    height: 8px;
+    background: white;
+    border-radius: 50%;
+    transform: rotate(45deg); /* Annule la rotation pour rester bien rond */
+  }
+
+  /* Couleurs selon le type */
+  &.salon {
+    background-color: #e91e63 !important; // Rose/Corail
+  }
+
+  &.freelance {
+    background-color: #9c27b0 !important; // Violet
+  }
+
+  /* État au survol ou actif */
+  &:hover, &.active {
+    z-index: 2000 !important;
+    transform: rotate(-45deg) scale(1.2);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+  }
+
+  /* Position approximative (sans coordonnées réelles) */
+  &.approx {
+    opacity: 0.7;
+    border-style: dashed;
+  }
+}
+
+/* ==========================================================================
+   LÉGENDE ET POPUPS
+   ========================================================================== */
+
+.map-legend {
+  position: absolute;
+  bottom: 15px;
+  left: 15px;
+  z-index: 1000;
+  background: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  display: flex;
+  gap: 15px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  font-size: 0.8rem;
+  border: 1px solid #eee;
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      &.user { background: #007bff; }
+      &.salon { background: #e91e63; }
+      &.freelance { background: #9c27b0; }
+    }
+  }
+}
+
+/* Style des Popups Leaflet */
+.lf-popup {
+  padding: 5px;
+  font-family: 'Inter', sans-serif;
+
+  strong {
+    display: block;
+    font-size: 14px;
+    margin-bottom: 2px;
+    color: #333;
+  }
+
+  .lf-popup-type {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: #e91e63;
+    margin-bottom: 5px;
+    &.freelance { color: #9c27b0; }
+  }
+
+  p {
+    margin: 0;
+    font-size: 12px;
+    color: #666;
+    line-height: 1.4;
+  }
 }

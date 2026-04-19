@@ -19,114 +19,154 @@ import { NotificationService, Notification } from '../../services/notification/n
     MatBadgeModule
   ],
   template: `
-    <div class="notification-list" [class.expanded-mode]="expandedMode">
-      <div class="notification-header" *ngIf="showHeader">
-        <h3>Notifications</h3>
-        <button mat-icon-button (click)="markAllAsRead()" *ngIf="hasUnreadNotifications">
-          <mat-icon>done_all</mat-icon>
+    <div class="notif-panel">
+      <!-- Header -->
+      <div class="notif-panel-header">
+        <span class="notif-panel-title">Notifications</span>
+        <button class="mark-all-btn" (click)="markAllAsRead()" *ngIf="unreadList.length > 0">
+          Tout marquer comme lu
         </button>
       </div>
-      
-      <mat-list *ngIf="notifications.length > 0; else noNotifications">
-        <mat-list-item 
-          *ngFor="let notification of notifications" 
-          class="notification-item"
-          [class.unread]="!notification.vue"
-          (click)="markAsRead(notification)">
-          
-          <mat-icon matListItemIcon [color]="!notification.vue ? 'primary' : 'warn'">
-            {{ getNotificationIcon(notification) }}
-          </mat-icon>
-          
-          <div matListItemTitle class="notification-message">
-            {{ notification.message }}
+
+      <div class="notif-divider"></div>
+
+      <!-- Liste -->
+      <ng-container *ngIf="unreadList.length > 0; else noNotifications">
+        <div class="notif-item" *ngFor="let n of unreadList" (click)="markAsRead(n)">
+          <div class="notif-icon-circle" [ngClass]="getIconColor(n)">
+            <mat-icon>{{ getNotificationIcon(n) }}</mat-icon>
           </div>
-          
-          <div matListItemLine class="notification-date">
-            {{ formatDate(notification.dateNotif) }}
+          <div class="notif-body">
+            <p class="notif-message">{{ n.message }}</p>
+            <small class="notif-time">{{ timeAgo(n.dateNotif) }}</small>
           </div>
-          
-          <div matListItemMeta *ngIf="!notification.vue">
-            <mat-icon class="unread-indicator" color="primary">fiber_manual_record</mat-icon>
-          </div>
-        </mat-list-item>
-        <mat-divider></mat-divider>
-      </mat-list>
-      
+        </div>
+      </ng-container>
+
       <ng-template #noNotifications>
-        <div class="no-notifications">
+        <div class="notif-empty">
           <mat-icon>notifications_none</mat-icon>
-          <p>Aucune notification</p>
+          <p>Aucune nouvelle notification</p>
         </div>
       </ng-template>
+
+      <div class="notif-divider"></div>
+
+      <!-- Footer -->
+      <div class="notif-footer" (click)="notificationClicked.emit(unreadList[0])">
+        Voir toutes les notifications
+      </div>
     </div>
   `,
   styles: [`
-    .notification-list {
-      width: 100%;
-      max-width: 400px;
+    .notif-panel {
+      width: 360px;
+      background: #fff;
+      border-radius: 16px;
+      font-family: 'Inter', 'Segoe UI', sans-serif;
+      overflow: hidden;
     }
-    
-    .notification-list.expanded-mode {
-      max-width: none;
-      width: 100%;
-    }
-    
-    .notification-header {
+
+    .notif-panel-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 16px;
-      border-bottom: 1px solid #e0e0e0;
+      padding: 16px 18px 14px;
     }
-    
-    .notification-header h3 {
-      margin: 0;
-      font-weight: 500;
+    .notif-panel-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #1a1a2e;
     }
-    
-    .notification-item {
+    .mark-all-btn {
+      background: none;
+      border: none;
+      color: #F5A393;
+      font-size: 0.82rem;
+      font-weight: 600;
       cursor: pointer;
-      transition: background-color 0.2s;
+      padding: 0;
+      &:hover { text-decoration: underline; }
     }
-    
-    .notification-item:hover {
-      background-color: #f5f5f5;
+
+    .notif-divider {
+      height: 1px;
+      background: #f0f0f0;
+      margin: 0;
     }
-    
-    .notification-item.unread {
-      background-color: #e8f4fd;
+
+    .notif-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 18px;
+      cursor: pointer;
+      transition: background 0.15s;
     }
-    
-    .notification-message {
-      font-weight: 500;
-      color: #333;
+    .notif-item:hover { background: #fdf8f7; }
+
+    .notif-icon-circle {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
     }
-    
-    .notification-date {
-      color: #666;
-      font-size: 0.85em;
+    .notif-icon-circle mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
     }
-    
-    .unread-indicator {
-      font-size: 12px;
-      width: 12px;
-      height: 12px;
+    .notif-icon-circle.blue   { background: rgba(108,99,255,0.1); }
+    .notif-icon-circle.blue mat-icon { color: #6C63FF; }
+    .notif-icon-circle.orange { background: rgba(245,158,11,0.1); }
+    .notif-icon-circle.orange mat-icon { color: #F59E0B; }
+    .notif-icon-circle.green  { background: rgba(34,197,94,0.1); }
+    .notif-icon-circle.green mat-icon { color: #22C55E; }
+    .notif-icon-circle.pink   { background: rgba(245,163,147,0.12); }
+    .notif-icon-circle.pink mat-icon { color: #F5A393; }
+
+    .notif-body { flex: 1; min-width: 0; }
+    .notif-message {
+      margin: 0 0 3px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #222;
+      line-height: 1.35;
+      white-space: normal;
     }
-    
-    .no-notifications {
+    .notif-time {
+      font-size: 0.75rem;
+      color: #999;
+    }
+
+    .notif-empty {
       text-align: center;
-      padding: 40px 20px;
-      color: #666;
+      padding: 28px 20px;
+      color: #bbb;
     }
-    
-    .no-notifications mat-icon {
-      font-size: 48px;
-      width: 48px;
-      height: 48px;
-      margin-bottom: 16px;
-      color: #ccc;
+    .notif-empty mat-icon {
+      font-size: 38px;
+      width: 38px;
+      height: 38px;
+      display: block;
+      margin: 0 auto 8px;
+      color: #ddd;
     }
+    .notif-empty p { margin: 0; font-size: 0.83rem; }
+
+    .notif-footer {
+      text-align: center;
+      padding: 13px;
+      color: #999;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+    .notif-footer:hover { color: #F5A393; }
   `]
 })
 export class NotificationListComponent implements OnInit, OnChanges {
@@ -134,72 +174,74 @@ export class NotificationListComponent implements OnInit, OnChanges {
   @Input() showHeader: boolean = true;
   @Input() expandedMode: boolean = false;
   @Output() notificationRead = new EventEmitter<void>();
+  @Output() notificationClicked = new EventEmitter<Notification>();
 
-  hasUnreadNotifications = false;
+  unreadList: Notification[] = [];
 
   constructor(private notificationService: NotificationService) {}
 
   ngOnInit(): void {
-    this.checkUnreadNotifications();
+    this.refreshUnreadList();
   }
 
   ngOnChanges(): void {
-    this.checkUnreadNotifications();
+    this.refreshUnreadList();
   }
 
-  private checkUnreadNotifications(): void {
-    this.hasUnreadNotifications = this.notifications.some(n => !n.vue);
+  private refreshUnreadList(): void {
+    this.unreadList = this.notifications.filter(n => !n.vue);
   }
 
   markAsRead(notification: Notification): void {
-    if (!notification.vue) {
-      this.notificationService.markAsRead(notification.id).subscribe(() => {
-        notification.vue = true;
-        this.checkUnreadNotifications();
-        this.notificationRead.emit();
-      });
-    }
+    this.notificationService.markAsRead(notification.id).subscribe(() => {
+      notification.vue = true;
+      this.unreadList = this.unreadList.filter(n => n.id !== notification.id);
+      this.notificationRead.emit();
+      this.notificationClicked.emit(notification);
+    });
   }
 
   markAllAsRead(): void {
     this.notificationService.markAllAsRead().subscribe(() => {
       this.notifications.forEach(n => n.vue = true);
-      this.checkUnreadNotifications();
+      this.unreadList = [];
       this.notificationRead.emit();
     });
   }
 
   getNotificationIcon(notification: Notification): string {
-    if (notification.message.includes('annulée')) {
-      return 'cancel';
-    } else if (notification.message.includes('terminée')) {
-      return 'check_circle';
-    } else if (notification.message.includes('Nouvelle')) {
-      return 'event';
-    } else if (notification.message.includes('Rappel')) {
-      return 'schedule';
-    }
+    const msg = notification.message.toLowerCase();
+    if (msg.includes('annul')) return 'cancel';
+    if (msg.includes('termin')) return 'check_circle';
+    if (msg.includes('réservation') || msg.includes('reservation')) return 'event';
+    if (msg.includes('message')) return 'chat_bubble';
+    if (msg.includes('offre') || msg.includes('emploi')) return 'work';
+    if (msg.includes('rappel')) return 'schedule';
     return 'notifications';
   }
 
-  formatDate(dateString: string): string {
+  getIconColor(notification: Notification): string {
+    const msg = notification.message.toLowerCase();
+    if (msg.includes('réservation') || msg.includes('reservation')) return 'blue';
+    if (msg.includes('message')) return 'orange';
+    if (msg.includes('offre') || msg.includes('emploi') || msg.includes('termin')) return 'green';
+    if (msg.includes('annul')) return 'orange';
+    return 'pink';
+  }
+
+  timeAgo(dateString: string): string {
     const date = new Date(dateString);
     const now = new Date();
-    const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffDays === 1) {
-      return 'Aujourd\'hui';
-    } else if (diffDays === 2) {
-      return 'Hier';
-    } else if (diffDays <= 7) {
-      return `Il y a ${diffDays - 1} jours`;
-    } else {
-      return date.toLocaleDateString('fr-FR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      });
-    }
+    if (diffMins < 1) return "À l'instant";
+    if (diffMins < 60) return `Il y a ${diffMins}m`;
+    if (diffHours < 24) return `Il y a ${diffHours}h`;
+    if (diffDays === 1) return 'Hier';
+    if (diffDays < 7) return `Il y a ${diffDays}j`;
+    return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
   }
 }

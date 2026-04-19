@@ -13,20 +13,19 @@
                [alt]="freelance.prenom + ' ' + freelance.nom"
                (error)="onProfileImageError($event)">
         </div>
-
         <div class="freelance-info-overlay">
           <div class="freelance-name-section">
             <h2 class="freelance-name">{{ freelance.prenom }} {{ freelance.nom }}</h2>
             <p class="freelance-specialty">{{ freelance.profession }}</p>
           </div>
 
-          <div class="freelance-rating">
+          <div class="freelance-rating" *ngIf="getAverageRating() > 0">
             <span class="stars">
-              <i class="fas fa-star" *ngFor="let star of getStarArray(freelance.rating)"></i>
-              <i class="fas fa-star-half-alt" *ngIf="hasHalfStar(freelance.rating)"></i>
+              <i class="fas fa-star" *ngFor="let star of getStarArray(getAverageRating())"></i>
+              <i class="fas fa-star-half-alt" *ngIf="hasHalfStar(getAverageRating())"></i>
             </span>
-            <span class="rating-value">{{ freelance.rating || 0 }}</span>
-            <span class="review-count">({{ freelance.reviews || 0 }} avis)</span>
+            <span class="rating-value">{{ getAverageRating() }}</span>
+            <span class="review-count">({{ getTotalReviews() }} avis)</span>
           </div>
 
           <div class="freelance-meta">
@@ -75,24 +74,24 @@
               <mat-icon>person</mat-icon>
               <div class="info-text">
                 <h4>Nom Complet</h4>
-                <p>{{ freelance.prenom }} {{ freelance.nom }}</p>
+                <p>{{ freelance?.prenom }} {{ freelance?.nom }}</p>
               </div> -->
             <!-- </div> -->
             <!-- <div class="info-item" *ngIf="freelance.adresse">
               <mat-icon>location_on</mat-icon> -->
               <!-- <div class="info-text">
                 <h4>Adresse</h4>
-                <p>{{ freelance.adresse }}, {{ freelance.ville }}</p>
+                <p>{{ freelance?.adresse }}, {{ freelance?.ville }}</p>
               </div> -->
             <!-- </div> -->
-            <div class="info-item" *ngIf="freelance.telephone">
+            <div class="info-item" *ngIf="freelance?.telephone">
               <mat-icon>phone</mat-icon>
               <div class="info-text">
                 <h4>Téléphone</h4>
                 <p>{{ freelance.telephone }}</p>
               </div>
             </div>
-            <div class="info-item" *ngIf="freelance.email">
+            <div class="info-item" *ngIf="freelance?.email">
               <mat-icon>email</mat-icon>
               <div class="info-text">
                 <h4>Email</h4>
@@ -109,17 +108,17 @@
           </p>
         </div>
 
-        <div class="info-section" *ngIf="freelance.experiences || freelance.competences">
+        <div class="info-section" *ngIf="freelance?.experiences || freelance?.competences">
           <h3>Expérience et Compétences</h3>
           <div class="info-grid">
-            <div class="info-item" *ngIf="freelance.experiences">
+            <div class="info-item" *ngIf="freelance?.experiences">
               <mat-icon>history_edu</mat-icon>
               <div class="info-text">
                 <h4>Expérience</h4>
                 <p>{{ formatExperience(freelance.experiences) }}</p>
               </div>
             </div>
-            <div class="info-item" *ngIf="freelance.competences">
+            <div class="info-item" *ngIf="freelance?.competences">
               <mat-icon>verified</mat-icon>
               <div class="info-text">
                 <h4>Compétences Spécifiques</h4>

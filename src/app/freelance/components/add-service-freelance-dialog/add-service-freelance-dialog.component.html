@@ -24,10 +24,6 @@
       <mat-icon>error_outline</mat-icon>
       <h4>Impossible de charger les services</h4>
       <p>Vous pouvez continuer en saisissant manuellement.</p>
-      <button mat-button (click)="basculerVersSaisieLibre()">
-        <mat-icon>edit</mat-icon>
-        Saisie manuelle
-      </button>
     </div>
 
     <!-- ✅ CONFIRMATION -->
@@ -68,37 +64,18 @@
             Choisissez votre service
           </h3>
           
-          <!-- ✅ GRILLE 2x2 : Recherche + Sélection -->
-          <div class="form-row">
-            <mat-form-field appearance="outline">
-              <mat-label>Rechercher un service</mat-label>
-              <input matInput formControlName="rechercheQuery"
-                     placeholder="Ex: coupe, maquillage...">
-              <mat-icon matSuffix>search</mat-icon>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
+          <!-- ✅ SÉLECTION SERVICE SIMPLIFIÉE -->
+          <div class="form-row-single">
+            <mat-form-field appearance="outline" class="full-width">
               <mat-label>Sélectionnez votre service</mat-label>
               <mat-select formControlName="servicePredefini" 
                          (selectionChange)="onServicePredefiniSelected({target: {value: $event.value.id}})">
-                <!-- Résultats de recherche -->
-                <ng-container *ngIf="modeRecherche && aResultatsRecherche">
-                  <mat-optgroup label="🔍 Résultats de recherche">
-                    <mat-option *ngFor="let service of servicesPredefinisFiltres" [value]="service">
-                      <span class="service-nom">{{service.nom}}</span>
-                      <small class="service-categorie"> ({{service.categorie}})</small>
-                    </mat-option>
-                  </mat-optgroup>
-                </ng-container>
-                
                 <!-- Services par catégorie -->
-                <ng-container *ngIf="!modeRecherche">
-                  <mat-optgroup *ngFor="let groupe of servicesGroupes" [label]="groupe.categorie + ' (' + groupe.count + ')'">
-                    <mat-option *ngFor="let service of groupe.services" [value]="service">
-                      {{service.nom}}
-                    </mat-option>
-                  </mat-optgroup>
-                </ng-container>
+                <mat-optgroup *ngFor="let groupe of servicesGroupes" [label]="groupe.categorie + ' (' + groupe.count + ')'">
+                  <mat-option *ngFor="let service of groupe.services" [value]="service">
+                    {{service.nom}}
+                  </mat-option>
+                </mat-optgroup>
               </mat-select>
               <mat-error>{{ getFormErrorMessage() }}</mat-error>
             </mat-form-field>

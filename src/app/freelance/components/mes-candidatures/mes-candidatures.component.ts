@@ -56,7 +56,6 @@ export class MesCandidaturesComponent implements OnInit {
           new Date(b.dateCandidature || '').getTime() - new Date(a.dateCandidature || '').getTime()
         );
         this.isLoading = false;
-        console.log('Mes candidatures chargées:', this.candidatures);
       },
       error: (error) => {
         console.error('Erreur lors du chargement des candidatures:', error);

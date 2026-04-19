@@ -105,7 +105,7 @@ export class CandidaturesComponent {
         formData.append('lettreMotivation', this.lettreMotivationFile, this.lettreMotivationFile.name);
       }
       
-      console.log('Candidature soumise pour l\'offre ID:', this.offreId);
+
       // Ici, vous appelleriez votre service pour envoyer la candidature
       // this.candidatureService.submitCandidature(formData).subscribe(...);
       

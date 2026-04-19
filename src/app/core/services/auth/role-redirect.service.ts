@@ -20,10 +20,10 @@ export class RoleRedirectService {
       await new Promise(resolve => setTimeout(resolve, 300));
       
       const isLoggedIn = await this.keycloakService.isLoggedIn();
-      console.log('État de connexion:', isLoggedIn);
+
       
       if (!isLoggedIn) {
-        console.log('Utilisateur non connecté');
+
         return;
       }
   
@@ -35,10 +35,10 @@ export class RoleRedirectService {
       }
       
       const userRoles = this.keycloakService.getUserRoles(true);
-      console.log('Rôles détectés:', userRoles);
+
       
       const redirectUrl = this.getRedirectUrlForRole(userRoles);
-      console.log('URL de redirection:', redirectUrl);
+
       
       // Ne rediriger que si on n'est pas déjà sur cette URL
       if (redirectUrl && this.router.url !== redirectUrl) {
@@ -57,7 +57,7 @@ export class RoleRedirectService {
   getRedirectUrlForRole(userRoles: string[]): string {
     // Utilisation d'un Set pour optimiser la vérification des rôles
     const rolesSet = new Set(userRoles);
-    console.log('Rôles reçus pour redirection:', userRoles);
+
     if (rolesSet.has('FREELANCE')) {
       return '/home-freelance';
     } else if (rolesSet.has('CLIENT')) {

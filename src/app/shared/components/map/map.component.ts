@@ -55,7 +55,7 @@ export class MapComponent implements OnInit {
         (error) => {
           this.ngZone.run(() => {
             // Géolocalisation échouée, on utilise Dakar par défaut
-            console.log('Erreur de géolocalisation : ' + error.message);
+
             // Continuons avec la position par défaut (Dakar)
           });
         }

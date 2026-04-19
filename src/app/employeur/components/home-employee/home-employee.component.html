@@ -1,21 +1,16 @@
 <mat-sidenav-container class="beauty-container">
   <!-- ✨ SIDEBAR -->
-  <mat-sidenav #sidenav mode="side" [(opened)]="sidebarOpen" class="beauty-sidebar">
-    <div class="sidebar-header">
-      <div class="user-avatar">
-        <img [src]="userPhotoUrl || 'assets/images/logo (2).png'" 
-             [alt]="'Photo de ' + userFullName"
-             (error)="$any($event.target).src='assets/images/logo (2).png'">
-      </div>
-      <div *ngIf="currentUser" class="user-info-sidebar">
-        <p class="user-name">{{ currentUser.prenom }} {{ currentUser.nom }}</p>
-        <p class="user-email">{{ currentUser.email }}</p>
-        <p class="user-role">{{ currentUser.role }}</p>
-      </div>
+  <mat-sidenav #sidenav mode="side" [opened]="true" [disableClose]="true" class="beauty-sidebar">
+    <!-- Logo + Employer tag -->
+    <div class="sidebar-logo">
+      <img src="assets/images/logo (2).png" alt="BeautyHub Logo" class="logo-img"
+           (error)="$any($event.target).src='assets/images/logo (2).png'">
+      <span class="logo-name">BeautyHub</span>
+      <span class="employer-tag">EMPLOYER</span>
     </div>
 
     <mat-nav-list class="beauty-menu">
-      <a mat-list-item (click)="navigateTo('dashboard')" class="menu-item" 
+      <a mat-list-item (click)="navigateTo('dashboard')" class="menu-item"
          [class.active]="currentSection === 'dashboard'">
         <mat-icon class="menu-icon">dashboard</mat-icon>
         <span>Accueil</span>
@@ -31,37 +26,31 @@
       <a mat-list-item (click)="navigateToOffresManager()" class="menu-item" [class.active]="showOffresManager">
         <mat-icon class="menu-icon">work</mat-icon>
         <span>Offres d'emploi</span>
-        <!-- <span class="badge" *ngIf="offreCount > 0">{{ offreCount }}</span> -->
       </a>
       <a mat-list-item (click)="openReservations()" class="menu-item" [class.active]="showReservations">
         <mat-icon class="menu-icon">event</mat-icon>
         <span>Réservations & Avis</span>
       </a>
-      <!-- <a mat-list-item (click)="openAvailabilityManager()" class="menu-item" [class.active]="showAvailabilityManager">
-        <mat-icon class="menu-icon">schedule</mat-icon>
-        <span>Gérer Disponibilités</span>
-      </a> -->
       <a mat-list-item (click)="navigateToProfile()" class="menu-item" [class.active]="showProfile">
         <mat-icon class="menu-icon">person</mat-icon>
         <span>Mon Profil</span>
       </a>
     </mat-nav-list>
+
+    <!-- Sidebar Footer -->
+    <div class="sidebar-footer">
+      <button class="post-job-btn" (click)="navigateToOffresManager()">
+        <mat-icon>add</mat-icon>
+        Publier une offre
+      </button>
+    </div>
   </mat-sidenav>
 
   <!-- ✨ CONTENU PRINCIPAL -->
   <mat-sidenav-content>
     <!-- TOP BAR -->
     <mat-toolbar class="beauty-toolbar">
-      <button mat-icon-button (click)="toggleSidebar()" class="menu-button">
-        <mat-icon>menu</mat-icon>
-      </button>
-      
-      <div class="toolbar-title">
-        <span *ngIf="isAuthenticated">
-          Bienvenue, {{ userFullName }} ✨
-        </span>
-
-      </div>
+      <div class="toolbar-title"></div>
       
       <div class="toolbar-actions">
         <ng-container *ngIf="isAuthenticated">
@@ -73,14 +62,15 @@
                   class="notification-btn">
             <mat-icon>notifications</mat-icon>
           </button>
-          <button mat-raised-button class="btn btn-primary" [routerLink]="['/accueil']">
-            <mat-icon>home</mat-icon> Accueil
+          <button mat-icon-button class="home-icon-btn" [routerLink]="['/accueil']" matTooltip="Accueil">
+            <mat-icon>home</mat-icon>
           </button>
           <mat-menu #notificationMenu="matMenu" class="notification-menu">
             <div (click)="$event.stopPropagation()">
-              <app-notification-list 
+              <app-notification-list
                 [notifications]="notifications"
-                (notificationRead)="onNotificationRead()">
+                (notificationRead)="onNotificationRead()"
+                (notificationClicked)="openReservations()">
               </app-notification-list>
             </div>
           </mat-menu>
@@ -99,12 +89,12 @@
             </div>
             <mat-divider></mat-divider>
             <button mat-menu-item (click)="navigateToProfile()">
-              <mat-icon>person</mat-icon>
+              <mat-icon matMenuItemIcon>person</mat-icon>
               <span>Mon Profil</span>
             </button>
             <mat-divider></mat-divider>
             <button mat-menu-item (click)="logout()">
-              <mat-icon>logout</mat-icon>
+              <mat-icon matMenuItemIcon>logout</mat-icon>
               <span>Se déconnecter</span>
             </button>
           </mat-menu>
@@ -116,194 +106,159 @@
     <div *ngIf="isAuthenticated">
     
       <div class="dashboard-content" *ngIf="currentSection === 'dashboard'">
-        <!--  WELCOME SECTION -->
+
+        <!-- WELCOME -->
         <div class="welcome-section">
-          <h2>Votre espace de gestion</h2>
-          <p>Gérez vos salons, suivez vos performances et développez votre activité beauté.</p>
+          <div class="welcome-text">
+            <h2>Bienvenue, {{ currentUser?.prenom || userFullName }} !</h2>
+            <p>Voici un résumé de votre activité beauté.</p>
+          </div>
         </div>
 
-        <!--  STATS CARDS -->
+        <!-- STATS CARDS -->
         <div class="stats-grid">
-          <mat-card class="stat-card" (click)="openSalonsList()">
-            <mat-icon class="stat-icon">store</mat-icon>
-            <div class="stat-content">
-              <ng-container *ngIf="!isLoadingStats; else loadingTemplate">
-                <span class="stat-number">{{ salons.length || 0 }}</span>
-              </ng-container>
-              <ng-template #loadingTemplate>
-                <mat-icon class="loading-icon">hourglass_empty</mat-icon>
-              </ng-template>
-              <div class="stat-label">Salons gérés</div>
+          <div class="stat-card" (click)="openSalonsList()">
+            <div class="stat-icon-box salons"><mat-icon>store</mat-icon></div>
+            <div class="stat-label">Salons gérés</div>
+            <div class="stat-number">
+              <ng-container *ngIf="!isLoadingStats; else st1">{{ salons.length || 0 }}</ng-container>
+              <ng-template #st1><mat-icon class="loading-icon">hourglass_empty</mat-icon></ng-template>
             </div>
-          </mat-card>
-          
-          <mat-card class="stat-card" (click)="openReservations()">
-            <mat-icon class="stat-icon">event</mat-icon>
-            <div class="stat-content">
-              <ng-container *ngIf="!isLoadingStats; else loadingTemplate2">
-                <span class="stat-number">{{ reservationStats || 0 }}</span>
-              </ng-container>
-              <ng-template #loadingTemplate2>
-                <mat-icon class="loading-icon">hourglass_empty</mat-icon>
-              </ng-template>
-              <div class="stat-label">Réservations à venir</div>
-            </div>
-          </mat-card>
-          
-          <mat-card class="stat-card" (click)="navigateToOffresManager()">
-            <mat-icon class="stat-icon">work</mat-icon>
-            <div class="stat-content">
-              <ng-container *ngIf="!isLoadingStats; else loadingTemplate3">
-                <span class="stat-number">{{ offreCount || 0 }}</span>
-              </ng-container>
-              <ng-template #loadingTemplate3>
-                <mat-icon class="loading-icon">hourglass_empty</mat-icon>
-              </ng-template>
-              <div class="stat-label">Offres d'emploi actives</div>
-            </div>
-          </mat-card>
-          
-          <mat-card class="stat-card">
-            <mat-icon class="stat-icon">star</mat-icon>
-
-            <div class="stat-content">
-              <ng-container *ngIf="!isLoadingStats; else loadingTemplate4">
-                <span class="stat-number">{{ formattedAverageRating }}</span>
-              </ng-container>
-              <ng-template #loadingTemplate4>
-                <mat-icon class="loading-icon">hourglass_empty</mat-icon>
-              </ng-template>
-              <div class="stat-label">Note moyenne</div>
-            </div>
-          </mat-card>
-        </div>
-
-        <!--  PROCHAINS RENDEZ-VOUS -->
-        <div class="upcoming-appointments-overview" *ngIf="upcomingAppointments.length > 0">
-          <h3 class="section-title">
-            <mat-icon>schedule</mat-icon>
-            Prochains Rendez-vous
-            <span class="appointments-count">({{ upcomingAppointments.length }})</span>
-          </h3>
-          
-          <!--  AFFICHAGE DES 3 PROCHAINS RDV -->
-          <div class="appointments-list">
-            <mat-card class="appointment-card" *ngFor="let appointment of upcomingAppointments.slice(0, 3)">
-              <mat-card-content class="appointment-content">
-                <div class="appointment-header">
-                  <div class="appointment-service">
-                    <mat-icon class="service-icon">content_cut</mat-icon>
-                    <span class="service-name">{{ appointment.serviceName }}</span>
-                  </div>
-                  <span class="appointment-status-badge" [ngClass]="appointment.status.toLowerCase()">
-                    {{ appointment.status }}
-                  </span>
-                </div>
-                <div class="appointment-details">
-                  <div class="detail-item">
-                    <mat-icon>person</mat-icon>
-                    <span>{{ appointment.clientName }}</span>
-                  </div>
-                  <div class="detail-item">
-                    <mat-icon>access_time</mat-icon>
-                    <span>{{ appointment.date | date:'dd/MM/yyyy' }} à {{ appointment.time }}</span>
-                  </div>
-                  <div class="detail-item">
-                    <mat-icon>store</mat-icon>
-                    <span>{{ appointment.salonName }}</span>
-                  </div>
-                </div>
-              </mat-card-content>
-              <mat-card-actions class="appointment-actions">
-                <button mat-button color="primary" (click)="viewAppointmentDetails(appointment.id)">
-                  <mat-icon>visibility</mat-icon>
-                  Détails
-                </button>
-              </mat-card-actions>
-            </mat-card>
           </div>
 
-          <div class="appointments-see-all">
-            <button mat-raised-button color="primary" (click)="openReservations()">
-              <mat-icon>event</mat-icon>
-              Voir toutes les réservations
-            </button>
+          <div class="stat-card" (click)="openReservations()">
+            <div class="stat-icon-box reservations"><mat-icon>event</mat-icon></div>
+            <div class="stat-label">Réservations à venir</div>
+            <div class="stat-number">
+              <ng-container *ngIf="!isLoadingStats; else st2">{{ reservationStats || 0 }}</ng-container>
+              <ng-template #st2><mat-icon class="loading-icon">hourglass_empty</mat-icon></ng-template>
+            </div>
+          </div>
+
+          <div class="stat-card" (click)="navigateToOffresManager()">
+            <div class="stat-icon-box offers"><mat-icon>work</mat-icon></div>
+            <div class="stat-label">Offres d'emploi actives</div>
+            <div class="stat-number">
+              <ng-container *ngIf="!isLoadingStats; else st3">{{ offreCount || 0 }}</ng-container>
+              <ng-template #st3><mat-icon class="loading-icon">hourglass_empty</mat-icon></ng-template>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon-box rating"><mat-icon>star</mat-icon></div>
+            <div class="stat-label">Note moyenne</div>
+            <div class="stat-number">
+              <ng-container *ngIf="!isLoadingStats; else st4">{{ formattedAverageRating }}</ng-container>
+              <ng-template #st4><mat-icon class="loading-icon">hourglass_empty</mat-icon></ng-template>
+            </div>
           </div>
         </div>
 
-        <!-- ✅ ÉTAT VIDE RENDEZ-VOUS -->
-        <!-- <div class="no-appointments-overview" *ngIf="upcomingAppointments.length === 0">
-          <mat-card class="empty-appointments-card">
-            <mat-card-content>
-              <div class="empty-appointments-content">
-                <mat-icon class="empty-icon">event_busy</mat-icon>
-                <h3>Aucun rendez-vous planifié</h3>
-                <p>Vos prochains rendez-vous apparaîtront ici une fois confirmés.</p>
-                <button mat-raised-button color="primary" (click)="openAvailabilityManager()">
-                  <mat-icon>schedule</mat-icon>
-                  Gérer mes disponibilités
-                </button>
+        <!-- ACTIONS RAPIDES -->
+        <div class="quick-actions-section">
+          <h3 class="section-title">Actions Rapides</h3>
+          <div class="qa-grid">
+            <div class="qa-card" (click)="navigateToOffresManager()">
+              <div class="qa-icon offers"><mat-icon>work</mat-icon></div>
+              <div class="qa-text">
+                <strong>Publier une offre</strong>
+                <span>Trouvez de nouveaux talents</span>
               </div>
-            </mat-card-content>
-          </mat-card>
-        </div> -->
+            </div>
+            <div class="qa-card" (click)="openCreationForm()">
+              <div class="qa-icon salons"><mat-icon>add_business</mat-icon></div>
+              <div class="qa-text">
+                <strong>Nouveau Salon</strong>
+                <span>Développez votre activité</span>
+              </div>
+            </div>
+            <div class="qa-card" (click)="openReservations()">
+              <div class="qa-icon reservations"><mat-icon>calendar_month</mat-icon></div>
+              <div class="qa-text">
+                <strong>Voir le planning</strong>
+                <span>Gérer vos réservations</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
-        <!-- ✨ RECENT ACTIVITY
-        <div class="activity-section">
-          <h3 class="section-title">
-            <mat-icon>history</mat-icon>
-            Activité Récente
-          </h3>
-          
-          <mat-card class="activity-card">
-            <mat-card-content>
-              <ng-container *ngFor="let activity of recentActivities; let last = last">
+        <!-- BAS : Réservations + Activité -->
+        <div class="dashboard-bottom">
+
+          <!-- Prochains rendez-vous -->
+          <div class="upcoming-card">
+            <div class="card-header-row">
+              <h3>Prochains Rendez-vous</h3>
+              <a class="view-all-link" (click)="openReservations()">Voir tout</a>
+            </div>
+            <table class="rdv-table" *ngIf="upcomingAppointments.length > 0">
+              <thead>
+                <tr>
+                  <th>CLIENT</th>
+                  <th>SERVICE</th>
+                  <th>DATE & HEURE</th>
+                  <th>STATUT</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let apt of upcomingAppointments.slice(0, 3)">
+                  <td>
+                    <div class="client-cell">
+                      <div class="client-avatar">{{ apt.clientName?.charAt(0) | uppercase }}</div>
+                      <span>{{ apt.clientName }}</span>
+                    </div>
+                  </td>
+                  <td>{{ apt.serviceName }}</td>
+                  <td>{{ apt.date | date:'dd/MM/yyyy' }} · {{ apt.time }}</td>
+                  <td>
+                    <span class="status-badge" [ngClass]="apt.status?.toLowerCase()">
+                      {{ apt.status }}
+                    </span>
+                  </td>
+                  <td>
+                    <button class="row-menu-btn" (click)="viewAppointmentDetails(apt.id)">
+                      <mat-icon>more_horiz</mat-icon>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="empty-state" *ngIf="upcomingAppointments.length === 0">
+              <mat-icon>event_busy</mat-icon>
+              <p>Aucun rendez-vous à venir</p>
+            </div>
+          </div>
+
+          <!-- Activité récente -->
+          <div class="activity-card">
+            <div class="card-header-row">
+              <h3>Activité Récente</h3>
+            </div>
+            <div class="activity-list">
+              <ng-container *ngIf="recentActivities && recentActivities.length > 0; else noActivity">
+                <div class="activity-item" *ngFor="let act of recentActivities.slice(0, 3)">
+                  <div class="activity-icon-box"><mat-icon>{{ act.icon }}</mat-icon></div>
+                  <div class="activity-info">
+                    <strong>{{ act.title }}</strong>
+                    <span>{{ act.description }}</span>
+                    <small>{{ act.time }}</small>
+                  </div>
+                </div>
+              </ng-container>
+              <ng-template #noActivity>
                 <div class="activity-item">
-                  <mat-icon class="activity-icon">{{ activity.icon }}</mat-icon>
-                  <div class="activity-content">
-                    <div class="activity-title">{{ activity.title }}</div>
-                    <div class="activity-description">{{ activity.description }}</div>
+                  <div class="activity-icon-box"><mat-icon>notifications_none</mat-icon></div>
+                  <div class="activity-info">
+                    <strong>Aucune activité récente</strong>
+                    <span>Les événements apparaîtront ici</span>
                   </div>
-                  <div class="activity-time">{{ activity.time }}</div>
                 </div>
-                <mat-divider *ngIf="!last"></mat-divider>
-              </ng-container>
-              
-              <div *ngIf="recentActivities.length === 0" class="activity-item">
-                <mat-icon class="activity-icon">hourglass_empty</mat-icon>
-                <div class="activity-content">
-                  <div class="activity-title">Chargement...</div>
-                  <div class="activity-description">Récupération de vos activités récentes</div>
-                </div>
-                <div c
-                ty-time">...</div>
-              </div>
-            </mat-card-content>
-          </mat-card>
-        </div> -->
-
-        <!-- ✨ QUICK ACTIONS -->
-        <div class="actions-section">
-          <h3 class="section-title">
-            <mat-icon>flash_on</mat-icon>
-            Actions Rapides
-          </h3>
-          <p class="section-subtitle">Optimisez votre activité avec ces raccourcis</p>
-          
-          <div class="actions-grid">
-            <button mat-raised-button class="action-btn" (click)="openCreationForm()">
-              <mat-icon>add_business</mat-icon>
-              Nouveau Salon
-            </button>
-            <button mat-raised-button class="action-btn" (click)="navigateToOffresManager()">
-              <mat-icon>work</mat-icon>
-              Publier Offre
-            </button>
-            <button mat-raised-button class="action-btn" (click)="openReservations()">
-              <mat-icon>event</mat-icon>
-              Voir Réservations
-            </button>
+              </ng-template>
+            </div>
+            <button class="view-logs-btn" (click)="openReservations()">Voir tous les logs</button>
           </div>
+
         </div>
       </div>
 

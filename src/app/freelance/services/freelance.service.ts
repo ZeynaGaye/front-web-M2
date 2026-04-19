@@ -1,8 +1,22 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError, of } from 'rxjs';
-import { catchError, retry, tap, map } from 'rxjs/operators';
+import { catchError, retry, map } from 'rxjs/operators';
 import { Freelance } from '../../models/PortfolioItem';
+
+/** Normalise les noms de champs backend (FR) vers l'interface Freelance (EN) */
+function normalizeFreelance(data: any): Freelance {
+  return {
+    ...data,
+    profileImage: data.profileImage || data.photoProfil || data.photoProfilUrl || data.imageUrl || data.avatar || null,
+    rating:       data.rating       || data.noteMoyenne || data.note || 0,
+    reviews:      data.reviews      || data.nombreAvis  || data.nbAvis || data.reviewCount || 0,
+    profession:   data.profession   || data.specialite  || data.metier || null,
+    competences:  data.competences  || data.services?.map((s: any) => s.nom || s).join(', ') || null,
+    ville:        data.ville        || data.city        || null,
+    adresse:      data.adresse      || data.address     || null,
+  };
+}
 
 
 @Injectable({
@@ -17,9 +31,9 @@ export class FreelanceService {
    * Récupère les informations d'un freelance spécifique par ID
    */
   getFreelanceById(freelanceId: number): Observable<Freelance> {
-    return this.http.get<Freelance>(`${this.apiUrl}/${freelanceId}`).pipe(
+    return this.http.get<any>(`${this.apiUrl}/${freelanceId}`).pipe(
       retry(1),
-      tap((freelance) => console.log(`Freelance récupéré:`, freelance)),
+      map(data => normalizeFreelance(data)),
       catchError(this.handleError)
     );
   }
@@ -92,7 +106,6 @@ private handleError(error: HttpErrorResponse) {
   getAllFreelances(): Observable<Freelance[]> {
     return this.http.get<Freelance[]>(`${this.apiUrl}/all`).pipe(
       retry(1),
-      tap(freelances => console.log('Tous les freelances récupérés:', freelances)),
       catchError((error) => {
         console.error('Erreur API, utilisation des données de test:', error);
         return this.getMockFreelances();
@@ -105,7 +118,6 @@ private handleError(error: HttpErrorResponse) {
    */
   private getMockFreelances(): Observable<Freelance[]> {
     return this.http.get<Freelance[]>('/assets/mock-freelances.json').pipe(
-      tap(freelances => console.log('Données de test chargées:', freelances)),
       catchError(() => {
         console.error('Impossible de charger les données de test');
         return of(this.getHardcodedFreelances());

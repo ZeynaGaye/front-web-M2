@@ -1,5 +1,5 @@
 import { isPlatformBrowser } from '@angular/common';
-import { Component, Inject, OnDestroy, OnInit, PLATFORM_ID } from '@angular/core';
+import { Component, Inject, Input, OnChanges, OnDestroy, OnInit, PLATFORM_ID, SimpleChanges } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule, NgFor } from '@angular/common';
 import { trigger, transition, style, animate, state } from '@angular/animations';
@@ -61,7 +61,8 @@ import { FormsModule } from '@angular/forms';
     ])
   ]
 })
-export class ClientSectionComponent implements OnInit, OnDestroy {
+export class ClientSectionComponent implements OnInit, OnChanges, OnDestroy {
+  @Input() initialSearch = '';
 getStars(rating: number): number[] {
   const fullStars = Math.floor(rating);
   const hasHalfStar = rating % 1 >= 0.5;
@@ -190,7 +191,18 @@ getStars(rating: number): number[] {
     if (this.isBrowser) {
       this.startRotation();
     }
-    console.log('ClientSectionComponent initialisé');
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['initialSearch'] && this.initialSearch) {
+      this.searchTerm = this.initialSearch;
+      if (this.allFreelances.length === 0) {
+        this.showFreelancesSection = true;
+        this.loadAllFreelances();
+      } else {
+        this.filterFreelances();
+      }
+    }
   }
 
   ngOnDestroy() {
@@ -211,13 +223,13 @@ getStars(rating: number): number[] {
    * Change la feature active et reset le timer de rotation
    */
   setActiveFeature(index: number) {
-    console.log('Changement de feature active vers:', index);
+
     this.activeFeature = index;
     this.resetTimer();
     
     // Si on clique sur "Explorez les portfolios" (index 1)
     if (index === 1) {
-      console.log('Feature "Explorez les portfolios" sélectionnée');
+
     }
   }
 
@@ -254,18 +266,18 @@ getStars(rating: number): number[] {
   // ==========================================
 
   /**
-   * ✅ CORRIGÉ : Toggle l'affichage de la section freelances
+   *  CORRIGÉ : Toggle l'affichage de la section freelances
    */
   toggleFreelancesSection() {
-    console.log('Toggle freelances section. État actuel:', this.showFreelancesSection);
+
     
     this.showFreelancesSection = !this.showFreelancesSection;
     
-    console.log('Nouvel état:', this.showFreelancesSection);
+
     
     // Charger les freelances si la section est ouverte et qu'il n'y en a pas
     if (this.showFreelancesSection && this.allFreelances.length === 0) {
-      console.log('Chargement des freelances...');
+
       this.loadAllFreelances();
     }
     
@@ -281,16 +293,16 @@ getStars(rating: number): number[] {
   }
 
   /**
-   * ✅ CORRIGÉ : Charge tous les freelances
+   *  CORRIGÉ : Charge tous les freelances
    */
   loadAllFreelances() {
-    console.log('Début du chargement des freelances...');
+
     this.loadingFreelances = true;
     
     try {
       this.freelanceService.getAllFreelances().subscribe({
         next: (freelances: Freelance[]) => {
-          console.log('Freelances chargés:', freelances.length);
+
           this.allFreelances = freelances;
           this.filteredFreelances = [...freelances];
           this.totalPages = Math.ceil(this.filteredFreelances.length / this.itemsPerPage);
@@ -314,21 +326,21 @@ getStars(rating: number): number[] {
   }
 
   /**
-   * ✅ CORRIGÉ : Met à jour la liste paginée
+   *  CORRIGÉ : Met à jour la liste paginée
    */
   updatePaginatedFreelances() {
     const startIndex = (this.currentPage - 1) * this.itemsPerPage;
     const endIndex = Math.min(startIndex + this.itemsPerPage, this.filteredFreelances.length);
     this.paginatedFreelances = this.filteredFreelances.slice(startIndex, endIndex);
     
-    console.log(`Page ${this.currentPage}: affichage de ${startIndex + 1} à ${endIndex} sur ${this.filteredFreelances.length}`);
+
   }
 
   /**
-   * ✅ CORRIGÉ : Filtre les freelances selon le terme de recherche et le filtre actif
+   *  CORRIGÉ : Filtre les freelances selon le terme de recherche et le filtre actif
    */
   filterFreelances() {
-    console.log('Filtrage avec terme:', this.searchTerm, 'et filtre:', this.activeFilter);
+
     
     let result = [...this.allFreelances];
     
@@ -355,7 +367,7 @@ getStars(rating: number): number[] {
     this.currentPage = 1; // Reset à la page 1 lors du filtrage
     this.updatePaginatedFreelances();
     
-    console.log('Résultats filtrés:', this.filteredFreelances.length);
+
   }
 
   /**
@@ -499,13 +511,13 @@ getStars(rating: number): number[] {
   // ==========================================
 
   /**
-   * ✅ Ouvre la modal de contact pour un freelance
+   *  Ouvre la modal de contact pour un freelance
    */
   contactFreelance(freelance: Freelance, event: Event) {
     event.preventDefault();
     event.stopPropagation();
     
-    console.log('Ouverture du formulaire de contact pour:', freelance.prenom, freelance.nom);
+
     
     this.selectedFreelanceForContact = freelance;
     
@@ -527,7 +539,7 @@ getStars(rating: number): number[] {
   }
 
   /**
-   * ✅ Ferme la modal de contact
+   *  Ferme la modal de contact
    */
   closeContactModal() {
     this.showContactModal = false;
@@ -541,7 +553,7 @@ getStars(rating: number): number[] {
   }
 
   /**
-   * ✅ Soumet le formulaire de contact
+   *  Soumet le formulaire de contact
    */
   onSubmitContact() {
     if (this.contactForm.invalid) {
@@ -554,7 +566,7 @@ getStars(rating: number): number[] {
     this.isSubmittingContact = true;
     const formData = this.contactForm.value;
 
-    console.log('Envoi du message de contact:', formData);
+
 
     // Simulation avec gestion d'erreur
     setTimeout(() => {
@@ -566,7 +578,7 @@ getStars(rating: number): number[] {
         if (this.isBrowser) {
           alert(message);
         } else {
-          console.log(message);
+
         }
         
         this.closeContactModal();
@@ -578,7 +590,7 @@ getStars(rating: number): number[] {
   }
 
   /**
-   * ✅ Vérifie si un champ a une erreur
+   *  Vérifie si un champ a une erreur
    */
   hasFieldError(fieldName: string): boolean {
     const field = this.contactForm.get(fieldName);
@@ -586,7 +598,7 @@ getStars(rating: number): number[] {
   }
 
   /**
-   * ✅ Obtient le message d'erreur pour un champ
+   *  Obtient le message d'erreur pour un champ
    */
   getFieldError(fieldName: string): string {
     const field = this.contactForm.get(fieldName);
@@ -607,7 +619,7 @@ getStars(rating: number): number[] {
   }
 
   /**
-   * ✅ Obtient le label d'un champ
+   *  Obtient le label d'un champ
    */
   private getFieldLabel(fieldName: string): string {
     const labels: { [key: string]: string } = {
@@ -624,19 +636,19 @@ getStars(rating: number): number[] {
   // ==========================================
 
   /**
-   * ✅ Méthode pour déboguer l'état de la section freelances
+   *  Méthode pour déboguer l'état de la section freelances
    */
   debugFreelanceSection() {
-    console.log('=== DEBUG FREELANCE SECTION ===');
-    console.log('showFreelancesSection:', this.showFreelancesSection);
-    console.log('allFreelances.length:', this.allFreelances.length);
-    console.log('filteredFreelances.length:', this.filteredFreelances.length);
-    console.log('paginatedFreelances.length:', this.paginatedFreelances.length);
-    console.log('loadingFreelances:', this.loadingFreelances);
-    console.log('currentPage:', this.currentPage);
-    console.log('totalPages:', this.totalPages);
-    console.log('activeFeature:', this.activeFeature);
-    console.log('features[activeFeature]:', this.features[this.activeFeature]);
-    console.log('================================');
+
+
+
+
+
+
+
+
+
+
+
   }
 }

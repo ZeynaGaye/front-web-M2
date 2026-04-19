@@ -9,7 +9,7 @@ $shadow-light: rgba(0, 0, 0, 0.05);
 $shadow-medium: rgba(0, 0, 0, 0.1);
 
 :host {
-  display: block; // Assure que le composant prend sa propre disposition
+  display: block;
   --primary-color: #{$primary-color};
   --secondary-color: #{$secondary-color};
   --text-color: #{$text-color};
@@ -20,57 +20,134 @@ $shadow-medium: rgba(0, 0, 0, 0.1);
   --shadow-medium: #{$shadow-medium};
 }
 
-// Styles du dialogue (MatDialog)
+// Améliorer l'overlay du modal
+::ng-deep .cdk-overlay-backdrop.cdk-overlay-backdrop-showing {
+  background: rgba(0, 0, 0, 0.8) !important; // Overlay plus opaque pour meilleure lisibilité
+  backdrop-filter: blur(2px) !important; // Flou réduit pour éviter les problèmes de lisibilité
+}
+
+// Container du modal
+::ng-deep .cdk-overlay-pane {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 20px !important;
+  background: transparent !important;
+}
+
+// Masquer le content wrapper par défaut de Material
+::ng-deep .mat-mdc-dialog-content {
+  padding: 0 !important;
+  margin: 0 !important;
+  max-height: none !important;
+}
+
+// Supprimer la couche Material Dialog superflue
+::ng-deep .mat-mdc-dialog-container {
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  overflow: visible !important;
+}
+
+::ng-deep .mat-mdc-dialog-surface {
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  overflow: visible !important;
+  max-height: none !important;
+  max-width: none !important;
+}
+
+// Styles du dialogue améliorés
 .freelance-detail-dialog {
   background-color: white;
-  border-radius: 12px;
-  overflow: hidden; // Cache le débordement des images, etc.
-  box-shadow: 0 8px 24px var(--shadow-medium);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
-  max-height: 90vh; // Limite la hauteur du dialogue à 90% de la vue
-  max-width: 800px; // Largeur maximale pour les grands écrans
-  width: 95%; // Prend 95% de la largeur disponible sur les petits écrans
-  margin: auto; // Centre le dialogue
-  position: relative; // Pour positionner le bouton de fermeture
-
+  max-height: 85vh; // Réduit pour laisser plus d'espace à l'overlay
+  max-width: 700px; // Largeur plus raisonnable
+  width: 90%; // Réduit pour un meilleur ratio
+  margin: auto;
+  position: relative;
+  
+  // Animation d'entrée élégante
+  animation: modalSlideIn 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  
+  @keyframes modalSlideIn {
+    from {
+      opacity: 0;
+      transform: translateY(30px) scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  
+  // Amélioration responsive
+  @media (max-width: 1024px) {
+    max-width: 650px;
+    width: 85%;
+  }
+  
   @media (max-width: 768px) {
-    border-radius: 0; // Pleine largeur sur mobile
+    border-radius: 12px 12px 0 0; // Coins arrondis seulement en haut
+    max-width: 95vw;
+    width: 95vw;
+    max-height: 90vh;
+    margin: 5vh auto 0;
+    overflow-y: auto;
+  }
+  
+  @media (max-width: 480px) {
+    border-radius: 8px 8px 0 0;
     max-width: 100vw;
-    height: 100vh; // Pleine hauteur sur mobile
-    max-height: 100vh;
-    overflow-y: auto; // Permet le défilement du contenu
+    width: 100vw;
+    max-height: 95vh;
+    margin: 2.5vh auto 0;
   }
 }
 
 .dialog-header {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 100; // Assure que le bouton de fermeture est au-dessus
+  top: 16px;
+  right: 16px;
+  z-index: 100;
 }
 
 .close-button {
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.95);
   border-radius: 50%;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 5px var(--shadow-light);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
   color: var(--text-color);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.3s ease;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.9);
+    background: white;
     transform: scale(1.1);
-    transition: transform 0.2s ease-in-out;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    border-color: var(--primary-color);
+  }
+
+  &:active {
+    transform: scale(0.95);
   }
 
   mat-icon {
-    font-size: 20px;
-    height: 20px;
-    width: 20px;
+    font-size: 22px;
+    height: 22px;
+    width: 22px;
   }
 }
 
@@ -78,6 +155,14 @@ $shadow-medium: rgba(0, 0, 0, 0.1);
   flex-grow: 1;
   overflow-y: auto; // Permet le défilement du contenu interne
   padding-bottom: 20px; // Espace en bas pour le défilement
+  
+  // Masquer les barres de scroll tout en gardant la fonctionnalité
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+  
+  &::-webkit-scrollbar {
+    display: none; /* WebKit (Chrome, Safari, Edge) */
+  }
 }
 
 /* --- SECTION HERO (Haut de page du freelance) --- */

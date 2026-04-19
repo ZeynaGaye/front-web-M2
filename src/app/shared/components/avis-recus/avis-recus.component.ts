@@ -102,7 +102,7 @@ export class AvisRecusComponent implements OnInit, OnDestroy {
     this.subscriptions.unsubscribe();
   }
 
-  // ✅ Charger les avis reçus
+  //  Charger les avis reçus
   loadAvisRecus(): void {
     this.isLoading = true;
     this.error = null;
@@ -114,13 +114,11 @@ export class AvisRecusComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       avisObservable.subscribe({
         next: (avis) => {
-          console.log('✅ Avis reçus chargés:', avis);
           this.avisRecus = this.transformAvisData(avis);
-          console.log('🔄 Avis après transformation:', this.avisRecus);
           this.isLoading = false;
         },
         error: (error) => {
-          console.error('❌ Erreur lors du chargement des avis:', error);
+          console.error(' Erreur lors du chargement des avis:', error);
           this.isLoading = false;
           this.error = 'Erreur lors du chargement des avis: ' + (error.error?.message || error.message || 'Erreur inconnue');
           this.avisRecus = []; // Afficher une liste vide plutôt que des données mock
@@ -129,7 +127,7 @@ export class AvisRecusComponent implements OnInit, OnDestroy {
     );
   }
 
-  // ✅ Charger les statistiques
+  //  Charger les statistiques
   loadStatistiques(): void {
     this.isLoadingStats = true;
 
@@ -141,7 +139,7 @@ export class AvisRecusComponent implements OnInit, OnDestroy {
     }, 1000);
   }
 
-  // ✅ Calculer les statistiques à partir des avis
+  //  Calculer les statistiques à partir des avis
   private calculateStatistiques(): void {
     if (this.avisRecus.length === 0) {
       return;
@@ -176,7 +174,7 @@ export class AvisRecusComponent implements OnInit, OnDestroy {
     };
   }
 
-  // ✅ Transformer les données d'avis
+  //  Transformer les données d'avis
   private transformAvisData(avisData: any[]): AvisRecu[] {
     return avisData.map(avis => {
       // Extraction du nom et prénom depuis nomClient (format: "prénom nom")
@@ -218,7 +216,7 @@ export class AvisRecusComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ✅ Données de test en cas d'erreur API
+  //  Données de test en cas d'erreur API
   private getMockAvis(): any[] {
     return [
       {
@@ -260,7 +258,7 @@ export class AvisRecusComponent implements OnInit, OnDestroy {
     ];
   }
 
-  // ✅ Getters pour le template
+  //  Getters pour le template
   get avisFiltrés(): AvisRecu[] {
     let avis = [...this.avisRecus];
 
@@ -301,7 +299,7 @@ export class AvisRecusComponent implements OnInit, OnDestroy {
     return [1, 2, 3, 4, 5];
   }
 
-  // ✅ Actions de filtrage et tri
+  //  Actions de filtrage et tri
   filtrerParNote(note: number | null): void {
     this.filtreNote = note;
     this.currentPage = 0;
@@ -312,7 +310,7 @@ export class AvisRecusComponent implements OnInit, OnDestroy {
     this.currentPage = 0;
   }
 
-  // ✅ Navigation pages
+  //  Navigation pages
   pageSuivante(): void {
     if (this.hasMorePages) {
       this.currentPage++;
@@ -325,7 +323,7 @@ export class AvisRecusComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ✅ Utilitaires d'affichage
+  //  Utilitaires d'affichage
   formatDate(dateString: string): string {
     const date = new Date(dateString);
     const now = new Date();
@@ -367,7 +365,7 @@ export class AvisRecusComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ✅ Actions
+  //  Actions
   actualiser(): void {
     this.loadAvisRecus();
     this.loadStatistiques();
@@ -375,7 +373,6 @@ export class AvisRecusComponent implements OnInit, OnDestroy {
 
   exporterAvis(): void {
     // TODO: Implémenter l'export des avis en PDF/Excel
-    console.log('Export des avis en cours...');
   }
 
   // Méthode utilitaire pour Math.min (car Math n'est pas accessible dans les templates)
@@ -383,7 +380,7 @@ export class AvisRecusComponent implements OnInit, OnDestroy {
     return Math.min(a, b);
   }
 
-  // ✅ Méthodes pour les statistiques détaillées
+  //  Méthodes pour les statistiques détaillées
   getPercentage(value: number, total: number): number {
     return total > 0 ? Math.round((value / total) * 100) : 0;
   }
@@ -403,7 +400,7 @@ export class AvisRecusComponent implements OnInit, OnDestroy {
     return this.getPercentage(negatives, this.statistiques.totalAvis);
   }
 
-  // ✅ TrackBy function pour optimiser les performances
+  //  TrackBy function pour optimiser les performances
   trackByAvisId(index: number, avis: AvisRecu): number {
     return avis.id;
   }

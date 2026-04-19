@@ -1,214 +1,203 @@
-/* Styles modernisés */
-.freelance-section {
+$primary: #F5A393;
+$text-dark: #1a1a2e;
+$text-light: #666;
+$border: #e5e7eb;
+
+.pro-section {
   display: flex;
-  height: 500px;
-  border-radius: 25px;
-  overflow: hidden;
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
-  position: relative;
-  margin: 40px auto;
+  align-items: center;
+  gap: 60px;
   max-width: 1200px;
-  
-  @media (max-width: 768px) {
+  margin: 60px auto;
+  padding: 0 40px;
+
+  @media (max-width: 900px) {
     flex-direction: column;
-    height: auto;
+    padding: 0 20px;
+    gap: 40px;
   }
 }
 
-/* Carrousel à gauche (50% largeur) */
-.image-carousel {
-  width: 50%;
-  position: relative;
-  overflow: hidden;
-  
-  @media (max-width: 768px) {
-    width: 100%;
-    height: 300px;
-  }
+// ==================== CONTENU GAUCHE ====================
+
+.pro-content {
+  flex: 1;
+  min-width: 0;
 }
 
-.carousel-inner {
-  position: relative;
-  width: 100%;
-  height: 100%;
+.pro-label {
+  display: inline-block;
+  background: lighten($primary, 18%);
+  color: $primary;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 5px 14px;
+  border-radius: 20px;
+  margin-bottom: 20px;
 }
 
-.carousel-item {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-size: cover;
-  background-position: center;
-  opacity: 0;
-  transition: opacity 0.6s ease-in-out;
-  z-index: 1;
-  
-  &::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(to right,  #fb8f71 0%, transparent 100%);
-  }
-  
-  &.active {
-    opacity: 1;
-    z-index: 2;
-    
-    .image-caption {
-      transform: translateY(0);
-      opacity: 1;
-    }
-  }
-}
+h2 {
+  font-size: 2.4rem;
+  font-weight: 800;
+  color: $text-dark;
+  line-height: 1.15;
+  margin: 0 0 20px;
 
-.image-caption {
-  position: absolute;
-  left: 30px;
-  bottom: 30px;
-  color: white;
-  max-width: 70%;
-  z-index: 3;
-  transform: translateY(20px);
-  opacity: 0;
-  transition: all 0.6s ease;
-  
-  h3 {
+  @media (max-width: 600px) {
     font-size: 1.8rem;
-    margin-bottom: 0.5rem;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  }
-  
-  p {
-    font-size: 1rem;
-    opacity: 0.9;
   }
 }
 
-.carousel-dots {
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
+.pro-desc {
+  font-size: 1rem;
+  color: $text-light;
+  line-height: 1.65;
+  margin: 0 0 32px;
+  max-width: 480px;
+}
+
+.pro-features {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px 32px;
+  margin-bottom: 36px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.feature-item {
   display: flex;
-  gap: 10px;
-  z-index: 5;
-  
-  span {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.5);
-    cursor: pointer;
-    transition: all 0.3s ease;
-    
-    &.active {
-      background: white;
-      transform: scale(1.3);
-    }
-  }
+  align-items: flex-start;
+  gap: 12px;
 }
 
-.carousel-controls {
-  position: absolute;
-  top: 50%;
-  width: 100%;
-  transform: translateY(-50%);
-  z-index: 5;
+.feature-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: lighten($primary, 18%);
   display: flex;
-  justify-content: space-between;
-  padding: 0 15px;
-  
-  .control-btn {
-    background: rgba(255, 255, 255, 0.3);
-    border: none;
-    color: white;
-    font-size: 1.2rem;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-    
-    &:hover {
-      background: rgba(255, 255, 255, 0.5);
-    }
-    
-    &.prev {
-      margin-right: auto;
-    }
-    
-    &.next {
-      margin-left: auto;
-    }
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  i {
+    color: $primary;
+    font-size: 0.9rem;
   }
 }
 
-/* Conteneur texte original à droite */
-.freelance-text-container {
-  width: 50%;
-  padding: 40px;
+.feature-text {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  background: white;
-  transition: all 0.3s ease;
+  gap: 2px;
+
+  strong {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: $text-dark;
+  }
+
+  span {
+    font-size: 0.82rem;
+    color: $text-light;
+    line-height: 1.4;
+  }
+}
+
+.pro-cta {
+  background: $primary;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 16px 32px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
   cursor: pointer;
-  
+  transition: background 0.2s, transform 0.15s;
+
   &:hover {
-    // box-shadow: inset 0 0 0 2px #fb8f71;
-    background: #fbf8f1;
+    background: darken($primary, 8%);
+    transform: translateY(-1px);
   }
-  
-  @media (max-width: 768px) {
+}
+
+// ==================== VISUELS DROITE ====================
+
+.pro-visuals {
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+
+  @media (max-width: 900px) {
     width: 100%;
-    padding: 30px;
+    justify-content: center;
   }
 }
 
-.freelance-text {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #2f1a13;
-  line-height: 1.4;
-  margin-bottom: 1.5rem;
-  
-  @media (max-width: 768px) {
-    font-size: 1.3rem;
+.pro-img {
+  border-radius: 16px;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
   }
 }
 
-.highlight {
-  color: #fb8f71;
-  font-weight: 700;
-}
+.pro-img-1 {
+  width: 220px;
+  height: 300px;
+  margin-top: 40px;
 
-.additional-text {
-  font-size: 1rem;
-  color: #6b7280;
-  line-height: 1.6;
-}
-
-.cta-link {
-  margin-top: 1.5rem;
-  color: #fb8f71;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  
-  .arrow {
-    margin-left: 8px;
-    transition: transform 0.3s ease;
+  @media (max-width: 600px) {
+    width: 140px;
+    height: 200px;
   }
-  
-  &:hover .arrow {
-    transform: translateX(5px);
+}
+
+.pro-img-right {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pro-img-2 {
+  width: 180px;
+  height: 220px;
+
+  @media (max-width: 600px) {
+    width: 120px;
+    height: 160px;
+  }
+}
+
+.pro-badge {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  padding: 14px 20px;
+  display: flex;
+  flex-direction: column;
+
+  .badge-number {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: $primary;
+    line-height: 1;
+  }
+
+  .badge-label {
+    font-size: 0.8rem;
+    color: $text-dark;
+    font-weight: 600;
+    margin-top: 4px;
   }
 }

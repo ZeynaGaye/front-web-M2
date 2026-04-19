@@ -22,11 +22,11 @@ import { GeocodingService } from '../../../core/servces/GeocodingService/geocodi
   styleUrls: ['./salon.component.scss']
 })
 export class SalonComponent implements OnInit {
-  @Input() salonToEdit: any = null; // ✅ Salon à modifier (null = création)
-  @Input() isEditMode: boolean = false; // ✅ Mode édition ou création
+  @Input() salonToEdit: any = null; //  Salon à modifier (null = création)
+  @Input() isEditMode: boolean = false; //  Mode édition ou création
   @Output() closeModalEvent = new EventEmitter<void>();
   @Output() salonCreated = new EventEmitter<any>();
-  @Output() salonUpdated = new EventEmitter<any>(); // ✅ Nouvel événement pour modification
+  @Output() salonUpdated = new EventEmitter<any>(); //  Nouvel événement pour modification
 
   currentStep = 1;
   joursSemaine = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
@@ -41,7 +41,7 @@ export class SalonComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private salonService: SalonService,
-    private geocodingService: GeocodingService, // ✅ Injecté ici
+    private geocodingService: GeocodingService, //  Injecté ici
     private http: HttpClient
   ) {
     this.salonForm = this.fb.group({
@@ -64,7 +64,7 @@ export class SalonComponent implements OnInit {
     this.servicesArray.valueChanges.subscribe(() => this.updateServiceSelection());
     this.customServicesArray.valueChanges.subscribe(() => this.updateServiceSelection());
     
-    // ✅ Si mode édition, pré-remplir le formulaire
+    //  Si mode édition, pré-remplir le formulaire
     if (this.isEditMode && this.salonToEdit) {
       this.populateFormForEdit();
     }
@@ -158,11 +158,11 @@ export class SalonComponent implements OnInit {
           this.salonForm.patchValue({ latitude: coords.lat, longitude: coords.lon });
         }
 
-        this.submitSalonForm(); // 🔁 Appel logique réelle ici
+        this.submitSalonForm(); //  Appel logique réelle ici
       },
       error: err => {
         console.warn("Erreur géolocalisation :", err);
-        this.submitSalonForm(); // 🛑 même si géoloc échoue, on envoie quand même
+        this.submitSalonForm(); //  même si géoloc échoue, on envoie quand même
       }
     });
   }
@@ -186,7 +186,7 @@ export class SalonComponent implements OnInit {
       status: 'PUBLISHED'
     };
 
-    // ✅ LOGIQUE DIFFÉRENCIÉE CRÉATION/MODIFICATION
+    //  LOGIQUE DIFFÉRENCIÉE CRÉATION/MODIFICATION
     if (this.isEditMode && this.salonToEdit) {
       this.updateExistingSalon(salonData);
     } else {
@@ -194,7 +194,7 @@ export class SalonComponent implements OnInit {
     }
   }
 
-  // ✅ NOUVELLE MÉTHODE - Créer nouveau salon
+  //  NOUVELLE MÉTHODE - Créer nouveau salon
   private createNewSalon(salonData: any) {
     const formData = new FormData();
     const file = this.salonForm.get('photoProfil')?.value;
@@ -203,18 +203,18 @@ export class SalonComponent implements OnInit {
 
     this.salonService.createSalonWithFile(formData).subscribe({
       next: (response) => {
-        console.log('✅ Salon créé :', response);
+
         this.creerHorairesDefaut(response.id);
         this.salonCreated.emit(response);
         this.closeModal();
       },
       error: (error) => {
-        console.error('❌ Erreur création salon :', error);
+        console.error(' Erreur création salon :', error);
       }
     });
   }
 
-  // ✅ NOUVELLE MÉTHODE - Modifier salon existant
+  //  NOUVELLE MÉTHODE - Modifier salon existant
   private updateExistingSalon(salonData: any) {
     const salonId = this.salonToEdit.id;
     const file = this.salonForm.get('photoProfil')?.value;
@@ -227,24 +227,24 @@ export class SalonComponent implements OnInit {
       
       this.salonService.updateSalonWithFile(salonId, formData).subscribe({
         next: (response) => {
-          console.log('✅ Salon modifié avec photo :', response);
+
           this.salonUpdated.emit(response);
           this.closeModal();
         },
         error: (error) => {
-          console.error('❌ Erreur modification salon avec photo :', error);
+          console.error(' Erreur modification salon avec photo :', error);
         }
       });
     } else {
       // Modification sans photo
       this.salonService.updateSalon(salonId, salonData).subscribe({
         next: (response) => {
-          console.log('✅ Salon modifié :', response);
+
           this.salonUpdated.emit(response);
           this.closeModal();
         },
         error: (error) => {
-          console.error('❌ Erreur modification salon :', error);
+          console.error(' Erreur modification salon :', error);
         }
       });
     }
@@ -253,8 +253,8 @@ export class SalonComponent implements OnInit {
   private creerHorairesDefaut(salonId: number) {
     this.http.post(`http://localhost:8081/api/disponibilites/salon/${salonId}/horaires/defaut`, {})
       .subscribe({
-        next: (res) => console.log('✅ Horaires créés:', res),
-        error: (err) => console.error('❌ Erreur horaires:', err)
+        
+        error: (err) => console.error(' Erreur horaires:', err)
       });
   }
 
@@ -263,9 +263,9 @@ export class SalonComponent implements OnInit {
   }
 
   onSaveDraft(): void {
-    // ✅ Mode brouillon seulement pour création
+    //  Mode brouillon seulement pour création
     if (this.isEditMode) {
-      console.log('⚠️ Mode brouillon non disponible en édition');
+
       return;
     }
     
@@ -288,7 +288,7 @@ export class SalonComponent implements OnInit {
       finalize(() => this.isSubmitting = false)
     ).subscribe({
       next: (response) => {
-        console.log('Brouillon enregistré :', response);
+
         this.salonCreated.emit(response);
         this.closeModal();
       },
@@ -305,11 +305,11 @@ export class SalonComponent implements OnInit {
     }
   }
 
-  // ✅ NOUVELLE MÉTHODE - Pré-remplir le formulaire pour édition
+  //  NOUVELLE MÉTHODE - Pré-remplir le formulaire pour édition
   private populateFormForEdit() {
     if (!this.salonToEdit) return;
     
-    console.log('🔄 Pré-remplissage du formulaire pour édition:', this.salonToEdit);
+
     
     // Pré-remplir les champs de base
     this.salonForm.patchValue({
@@ -341,7 +341,7 @@ export class SalonComponent implements OnInit {
           }
         });
       } catch (e) {
-        console.warn('⚠️ Erreur parsing horaires:', e);
+        console.warn(' Erreur parsing horaires:', e);
       }
     }
     

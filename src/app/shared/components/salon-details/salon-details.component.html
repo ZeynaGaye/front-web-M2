@@ -38,6 +38,10 @@
         <mat-icon>spa</mat-icon>
         <span>Services</span>
       </div>
+      <div class="tab" [class.active]="activeTab === 'availability'" (click)="setActiveTab('availability'); $event.stopPropagation()">
+        <mat-icon>schedule</mat-icon>
+        <span>Disponibilités</span>
+      </div>
       <div class="tab" [class.active]="activeTab === 'photos'" (click)="setActiveTab('photos'); $event.stopPropagation()">
         <mat-icon>photo_library</mat-icon>
         <span>Photos</span>
@@ -133,6 +137,87 @@
                   Réserver
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Onglet Disponibilités -->
+      <div *ngIf="activeTab === 'availability'" class="availability-tab">
+        <h3>Disponibilités du salon</h3>
+
+        <div class="availability-selector">
+          <div class="week-navigation">
+            <button mat-icon-button (click)="previousWeek()" class="nav-button">
+              <mat-icon>chevron_left</mat-icon>
+            </button>
+            <span class="week-title">{{ getWeekTitle() }}</span>
+            <button mat-icon-button (click)="nextWeek()" class="nav-button">
+              <mat-icon>chevron_right</mat-icon>
+            </button>
+          </div>
+
+          <div class="days-grid">
+            <div 
+              class="day-card" 
+              *ngFor="let day of weekDays" 
+              [class.today]="isToday(day.date)"
+              [class.selected]="selectedDate && isSameDay(selectedDate, day.date)"
+              (click)="selectDate(day.date)">
+              
+              <div class="day-header">
+                <span class="day-name">{{ day.name }}</span>
+                <span class="day-number">{{ day.date | date:'d' }}</span>
+              </div>
+              
+              <div class="day-slots">
+                <div *ngIf="day.slots.length === 0" class="no-slots">
+                  <mat-icon>event_busy</mat-icon>
+                  <span>Fermé</span>
+                </div>
+                <div *ngIf="day.slots.length > 0" class="slots-available">
+                  <mat-icon>event_available</mat-icon>
+                  <span>{{ day.slots.length }} créneaux</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="selectedDate" class="selected-day-details">
+          <h4>Créneaux disponibles - {{ selectedDate | date:'EEEE d MMMM yyyy':'fr' }}</h4>
+          
+          <div *ngIf="getSelectedDaySlots().length === 0" class="empty-slots">
+            <mat-icon>event_busy</mat-icon>
+            <p>Aucun créneau disponible ce jour</p>
+          </div>
+
+          <div *ngIf="getSelectedDaySlots().length > 0" class="time-slots-grid">
+            <div 
+              class="time-slot" 
+              *ngFor="let slot of getSelectedDaySlots()"
+              [class.booked]="slot.isBooked">
+              
+              <div class="slot-time">{{ slot.time }}</div>
+              <div class="slot-status">
+                <mat-icon *ngIf="!slot.isBooked" color="primary">event_available</mat-icon>
+                <mat-icon *ngIf="slot.isBooked" color="warn">event_busy</mat-icon>
+                <span>{{ slot.isBooked ? 'Occupé' : 'Libre' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="availability-info">
+          <div class="info-card">
+            <mat-icon>info</mat-icon>
+            <div>
+              <h5>Informations importantes</h5>
+              <ul>
+                <li>Les créneaux sont affichés par tranches de {{ getSlotDuration() }} minutes</li>
+                <li>Horaires d'ouverture : {{ formatHoraires(salon.heuresOuverture) }}</li>
+                <li>Réservation possible jusqu'à {{ getAdvanceBookingLimit() }} jours à l'avance</li>
+              </ul>
             </div>
           </div>
         </div>

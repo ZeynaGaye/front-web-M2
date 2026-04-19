@@ -159,7 +159,7 @@ ngOnInit(): void {
     // Gérer la fermeture du modal
     dialogRef.afterClosed().subscribe(result => {
       if (result && result.success) {
-        console.log('Employé créé:', result.employe);
+
         this.snackBar.open(`Employé ${result.employe.nomComplet} créé avec succès!`, 'Fermer', { 
           duration: 4000,
           panelClass: ['success-snackbar']
@@ -170,7 +170,7 @@ ngOnInit(): void {
 
     // Gérer les événements du composant enfant
     dialogRef.componentInstance.employeCreated.subscribe((employe: any) => {
-      console.log('Événement employeCreated reçu:', employe);
+
       // Le rechargement sera fait dans afterClosed
     });
   }
@@ -194,7 +194,7 @@ ngOnInit(): void {
     // Gérer la fermeture du modal
     dialogRef.afterClosed().subscribe(result => {
       if (result && result.success) {
-        console.log('Employé modifié:', result.employe);
+
         this.snackBar.open(`Employé ${result.employe.nomComplet} modifié avec succès!`, 'Fermer', { 
           duration: 4000,
           panelClass: ['success-snackbar']
@@ -205,7 +205,7 @@ ngOnInit(): void {
 
     // Gérer les événements du composant enfant
     dialogRef.componentInstance.employeUpdated.subscribe((employe: any) => {
-      console.log('Événement employeUpdated reçu:', employe);
+
       // Le rechargement sera fait dans afterClosed
     });
   }
@@ -227,7 +227,7 @@ ngOnInit(): void {
 
     // Pas besoin de gérer les événements car c'est en lecture seule
     dialogRef.afterClosed().subscribe(() => {
-      console.log('Dialog de visualisation fermé');
+
     });
   }
 

@@ -47,7 +47,6 @@ export class NotificationService {
     return this.http.get<NotificationCount>(`${this.apiUrl}/unread/count`).pipe(
       tap(response => {
         this.unreadCountSubject.next(response.count);
-        console.log('🔔 Compteur notifications mis à jour:', response.count);
       })
     );
   }
@@ -89,7 +88,6 @@ export class NotificationService {
     };
     
     return this.http.post(`${this.apiUrl}/create`, notificationData).pipe(
-      tap(() => console.log('🔔 Notification nouvelle candidature créée:', message))
     );
   }
 
@@ -97,7 +95,7 @@ export class NotificationService {
   createCandidatureStatusNotification(freelanceId: number, statusChange: string, candidatureData: any): Observable<any> {
     let message = '';
     if (statusChange === 'ACCEPTEE') {
-      message = `🎉 Bonne nouvelle ! Votre candidature pour "${candidatureData.offreTitre || 'l\'offre d\'emploi'}" a été acceptée !`;
+      message = ` Bonne nouvelle ! Votre candidature pour "${candidatureData.offreTitre || 'l\'offre d\'emploi'}" a été acceptée !`;
     } else if (statusChange === 'REFUSEE') {
       message = `Votre candidature pour "${candidatureData.offreTitre || 'l\'offre d\'emploi'}" n'a pas été retenue cette fois.`;
     } else {
@@ -114,7 +112,6 @@ export class NotificationService {
     };
     
     return this.http.post(`${this.apiUrl}/create`, notificationData).pipe(
-      tap(() => console.log('🔔 Notification changement statut créée:', message))
     );
   }
 

@@ -50,10 +50,10 @@ export class ServicePredefiniService {
   constructor(private http: HttpClient) {}
 
   /**
-   * 📋 Récupérer tous les services prédéfinis (universels)
+   *  Récupérer tous les services prédéfinis (universels)
    */
   getTousLesServices(categorie?: string): Observable<ServicePredefiniDto[]> {
-    // ✅ CORRECTION: Construire les params correctement
+    //  CORRECTION: Construire les params correctement
     let params: any = {};
     if (categorie) {
       params.categorie = categorie;
@@ -62,37 +62,37 @@ export class ServicePredefiniService {
     return this.http.get<any>(`${this.API_URL}/all`, { params })
       .pipe(
         map((response: any) => {
-          console.log('✅ Services prédéfinis récupérés:', response);
+
           const services = response.services || response; // Gérer les deux formats
           this.servicesCache.next(services);
           return services as ServicePredefiniDto[];
         }),
         catchError(error => {
-          console.error('❌ Erreur récupération services prédéfinis:', error);
+          console.error(' Erreur récupération services prédéfinis:', error);
           return [];
         })
       );
   }
 
   /**
-   * 🎯 Récupérer les services pour salon (alias - tous les services)
+   *  Récupérer les services pour salon (alias - tous les services)
    */
   getServicesPourSalon(): Observable<ServicePredefiniDto[]> {
     return this.getTousLesServices(); // Tous les services sont disponibles pour salon
   }
 
   /**
-   * 🎯 Récupérer les services pour freelance (alias - tous les services)
+   *  Récupérer les services pour freelance (alias - tous les services)
    */
   getServicesPourFreelance(): Observable<ServicePredefiniDto[]> {
     return this.getTousLesServices(); // Tous les services sont disponibles pour freelance
   }
 
   /**
-   * 🔍 Rechercher des services
+   *  Rechercher des services
    */
   rechercherServices(query: string, limite: number = 10): Observable<ServicePredefiniDto[]> {
-    // ✅ CORRECTION: Params avec types corrects
+    //  CORRECTION: Params avec types corrects
     const params = { 
       query: query, 
       limit: limite.toString() 
@@ -101,18 +101,18 @@ export class ServicePredefiniService {
     return this.http.get<any>(`${this.API_URL}/search`, { params })
       .pipe(
         map((response: any) => {
-          console.log('🔍 Résultats recherche:', response);
+
           return (response.services || []) as ServicePredefiniDto[];
         }),
         catchError(error => {
-          console.error('❌ Erreur recherche services:', error);
+          console.error(' Erreur recherche services:', error);
           return [];
         })
       );
   }
 
   /**
-   * 🤖 Suggestion intelligente (utilise votre endpoint existant)
+   *  Suggestion intelligente (utilise votre endpoint existant)
    */
   detecterService(nomService: string): Observable<ServiceDetectionResponse> {
     const payload = { nomService: nomService };
@@ -120,7 +120,7 @@ export class ServicePredefiniService {
     return this.http.post<any>(`${this.API_URL}/suggest-alternative`, payload)
       .pipe(
         map((response: any) => {
-          console.log('💡 Suggestion reçue:', response);
+
           
           // Adapter la réponse à votre format
           if (response.hasAlternative) {
@@ -141,7 +141,7 @@ export class ServicePredefiniService {
           }
         }),
         catchError(error => {
-          console.error('❌ Erreur détection service:', error);
+          console.error(' Erreur détection service:', error);
           return [{
             typeDetection: 'NOUVEAU_SERVICE' as const,
             message: 'Service créé comme nouveau'
@@ -151,21 +151,21 @@ export class ServicePredefiniService {
   }
 
   /**
-   * 📊 Récupérer les statistiques
+   *  Récupérer les statistiques
    */
   getStatistiques(): Observable<any> {
     return this.http.get<any>(`${this.API_URL}/statistics`)
       .pipe(
         map((response: any) => response),
         catchError(error => {
-          console.error('❌ Erreur statistiques:', error);
+          console.error(' Erreur statistiques:', error);
           return [{}];
         })
       );
   }
 
   /**
-   * 📊 Grouper les services par catégorie
+   *  Grouper les services par catégorie
    */
   grouperParCategorie(services: ServicePredefiniDto[]): ServicePredefiniGroupe[] {
     const groupes = services.reduce((acc, service) => {
@@ -190,7 +190,7 @@ export class ServicePredefiniService {
   }
 
   /**
-   * 🔄 Rafraîchir le cache
+   *  Rafraîchir le cache
    */
   rafraichirCache(): void {
     this.getTousLesServices().subscribe();

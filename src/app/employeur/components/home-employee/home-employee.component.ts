@@ -115,7 +115,7 @@ export class HomeEmployeeComponent implements OnInit {
   showAvailabilityManager = false;
   selectedSalonForAvailability: Salon | null = null;
 
-  // ✅ NOUVELLES PROPRIÉTÉS POUR L'AFFICHAGE OPTIMISÉ
+  //  NOUVELLES PROPRIÉTÉS POUR L'AFFICHAGE OPTIMISÉ
   showCandidaturesModal = false;
   selectedOfferTitle = '';
   selectedOfferId: number | null = null;
@@ -136,7 +136,7 @@ export class HomeEmployeeComponent implements OnInit {
   reservationStats = 5; // À connecter avec un service de réservations
   offreCountTrend = 15; // Tendance en pourcentage
   
-  // ⭐ NOUVELLES STATS RÉSERVATIONS
+  //  NOUVELLES STATS RÉSERVATIONS
   pendingReservationsCount = 0; // Pour le badge sidebar
   confirmedReservationsCount = 0;
   todayReservationsCount = 0;
@@ -148,11 +148,11 @@ export class HomeEmployeeComponent implements OnInit {
   activePeriod = 'month';
   userMenuOpen = false;
   
-  // ✅ Notifications
+  //  Notifications
   notifications: Notification[] = [];
   unreadNotifications = 0;
 
-  // ✅ Availability and appointments
+  //  Availability and appointments
   formattedAverageRating = '4.5';
   upcomingAppointments: any[] = [];
   
@@ -241,16 +241,17 @@ export class HomeEmployeeComponent implements OnInit {
   }
 
   loadNotifications(): void {
-    console.log('🔔 Chargement des notifications...');
+
     
     // Charger toutes les notifications
     this.notificationService.getNotifications().subscribe({
       next: (notifications) => {
         this.notifications = notifications;
-        console.log('✅ Notifications chargées:', notifications.length);
+        this.initRecentActivities();
+
       },
       error: (error) => {
-        console.error('❌ Erreur lors du chargement des notifications:', error);
+        console.error(' Erreur lors du chargement des notifications:', error);
         this.notifications = [];
       }
     });
@@ -259,21 +260,74 @@ export class HomeEmployeeComponent implements OnInit {
     this.notificationService.getUnreadCount().subscribe({
       next: (countData) => {
         this.unreadNotifications = countData.count;
-        console.log('✅ Notifications non lues:', countData.count);
+
       },
       error: (error) => {
-        console.error('❌ Erreur lors du chargement du compteur:', error);
+        console.error(' Erreur lors du chargement du compteur:', error);
         this.unreadNotifications = 0;
       }
     });
   }
 
   initRecentActivities(): void {
-    this.recentActivities = [
-      { icon: 'store', title: 'Nouveau salon ajouté', description: 'Beauty Palace - Paris 15ème', time: 'Il y a 2h' },
-      { icon: 'work', title: 'Nouvelle candidature reçue', description: 'Pour le poste de coiffeuse', time: 'Il y a 3h' },
-      { icon: 'event', title: 'Réservation confirmée', description: 'Marie D. - Coupe et brushing', time: 'Il y a 5h' }
-    ];
+    const activities: { date: Date; icon: string; title: string; description: string; time: string }[] = [];
+
+    // 1. Depuis les notifications
+    for (const n of this.notifications) {
+      activities.push({
+        date: new Date(n.dateNotif),
+        icon: this.getActivityIcon(n.message),
+        title: n.message,
+        description: n.reservation?.serviceSalon?.nom || '',
+        time: ''
+      });
+    }
+
+    // 2. Depuis les candidatures (toutes offres confondues)
+    for (const offreId of Object.keys(this.candidatures)) {
+      const offre = this.offresEmploi.find(o => o.id === +offreId);
+      for (const c of this.candidatures[+offreId]) {
+        const rawDate = c.dateCandidature || c.dateCreation || c.datePostulation;
+        const date = rawDate ? new Date(rawDate) : new Date();
+        const nom = [c.freelancePrenom, c.freelanceNom].filter(Boolean).join(' ') || 'Un candidat';
+        activities.push({
+          date,
+          icon: 'person_add',
+          title: `Nouvelle candidature de ${nom}`,
+          description: offre?.titre || `Offre #${offreId}`,
+          time: ''
+        });
+      }
+    }
+
+    // Trier par date desc, prendre les 5 plus récentes
+    this.recentActivities = activities
+      .sort((a, b) => b.date.getTime() - a.date.getTime())
+      .slice(0, 5)
+      .map(a => ({ ...a, time: this.timeAgo(a.date.toISOString()) }));
+  }
+
+  private getActivityIcon(message: string): string {
+    const msg = message.toLowerCase();
+    if (msg.includes('réservation') || msg.includes('reservation')) return 'event';
+    if (msg.includes('annul')) return 'cancel';
+    if (msg.includes('termin')) return 'check_circle';
+    if (msg.includes('offre') || msg.includes('emploi')) return 'work';
+    if (msg.includes('candidature')) return 'person_add';
+    if (msg.includes('message')) return 'chat_bubble';
+    return 'notifications';
+  }
+
+  private timeAgo(dateString: string): string {
+    const diffMs = new Date().getTime() - new Date(dateString).getTime();
+    const mins = Math.floor(diffMs / 60000);
+    const hours = Math.floor(diffMs / 3600000);
+    const days = Math.floor(diffMs / 86400000);
+    if (mins < 1) return "À l'instant";
+    if (mins < 60) return `Il y a ${mins}m`;
+    if (hours < 24) return `Il y a ${hours}h`;
+    if (days === 1) return 'Hier';
+    return `Il y a ${days}j`;
   }
 
   loadUpcomingAppointments(): void {
@@ -304,7 +358,7 @@ export class HomeEmployeeComponent implements OnInit {
         // Mettre à jour les statistiques
         this.reservationStats = this.upcomingAppointments.length;
 
-        console.log('Prochains rendez-vous chargés depuis le service:', this.upcomingAppointments);
+
       },
       error: (error) => {
         console.error('Erreur lors du chargement des réservations:', error);
@@ -329,7 +383,7 @@ export class HomeEmployeeComponent implements OnInit {
         } else {
           this.formattedAverageRating = 'N/A';
         }
-        console.log(`Note moyenne calculée sur ${avis?.length || 0} avis de tous les salons:`, this.formattedAverageRating);
+
       },
       error: (error: any) => {
         console.error('Erreur lors du chargement de la note moyenne:', error);
@@ -349,7 +403,7 @@ export class HomeEmployeeComponent implements OnInit {
   }
 
   onNotificationRead(): void {
-    this.unreadNotifications = Math.max(0, this.unreadNotifications - 1);
+    this.unreadNotifications = this.notifications.filter(n => !n.vue).length;
   }
 
   logout(): void {
@@ -358,7 +412,7 @@ export class HomeEmployeeComponent implements OnInit {
   }
 
   // ==========================================
-  // 📅 GESTION DES RÉSERVATIONS
+  //  GESTION DES RÉSERVATIONS
   // ==========================================
 
   openReservations(): void {
@@ -366,12 +420,12 @@ export class HomeEmployeeComponent implements OnInit {
     this.currentSection = 'reservations';
     this.pageTitle = 'Réservations & Avis';
     this.showReservations = true;
-    console.log('Section réservations ouverte');
+
   }
 
   closeReservations(): void {
     this.navigateTo('dashboard');
-    console.log('Section réservations fermée');
+
   }
 
   onReservationStatsUpdated(stats: any): void {
@@ -380,11 +434,11 @@ export class HomeEmployeeComponent implements OnInit {
     this.todayReservationsCount = stats.todayReservationsCount || 0;
     this.totalRevenue = stats.totalRevenue || 0;
     this.reservationStats = stats.confirmedReservationsCount + stats.pendingReservationsCount;
-    console.log('Stats réservations mises à jour:', stats);
+
   }
 
   onReservationUpdated(event: any): void {
-    console.log('Réservation mise à jour:', event);
+
     switch (event.action) {
       case 'confirmed':
         this.showNotification('Réservation confirmée avec succès', 'success');
@@ -402,15 +456,15 @@ export class HomeEmployeeComponent implements OnInit {
   }
 
   private showNotification(message: string, type: 'success' | 'warning' | 'error' = 'success'): void {
-    console.log(`${type.toUpperCase()}: ${message}`);
+
   }
 
   // ==========================================
-  // 📋 GESTION DES CANDIDATURES 
+  //  GESTION DES CANDIDATURES 
   // ==========================================
 
   /**
-   * ✅ Ouvre le modal des candidatures pour une offre spécifique
+   *  Ouvre le modal des candidatures pour une offre spécifique
    */
   openCandidaturesModal(offer: RecentOffer): void {
     if (!offer.id || offer.applicationsCount === 0) return;
@@ -427,7 +481,7 @@ export class HomeEmployeeComponent implements OnInit {
   }
 
   /**
-   * ✅ Ferme le modal des candidatures
+   *  Ferme le modal des candidatures
    */
   closeCandidaturesModal(event?: MouseEvent): void {
     if (event && event.target !== event.currentTarget) return;
@@ -439,7 +493,7 @@ export class HomeEmployeeComponent implements OnInit {
   }
 
   /**
-   * ✅ Retourne les initiales d'un candidat
+   *  Retourne les initiales d'un candidat
    */
   getCandidateInitials(candidature: Candidature): string {
     const nom = this.getCandidateName(candidature);
@@ -451,7 +505,7 @@ export class HomeEmployeeComponent implements OnInit {
   }
 
   /**
-   * ✅ Retourne le nom du candidat depuis les données disponibles
+   *  Retourne le nom du candidat depuis les données disponibles
    */
   getCandidateName(candidature: Candidature): string {
     // Essayer d'extraire depuis l'objet freelance
@@ -469,7 +523,7 @@ export class HomeEmployeeComponent implements OnInit {
   }
 
   /**
-   * ✅ Retourne l'email du candidat depuis les données disponibles
+   *  Retourne l'email du candidat depuis les données disponibles
    */
   getCandidateEmail(candidature: Candidature): string {
     // Essayer d'extraire depuis l'objet freelance
@@ -481,7 +535,7 @@ export class HomeEmployeeComponent implements OnInit {
   }
 
   /**
-   * ✅ Formate le statut d'une candidature
+   *  Formate le statut d'une candidature
    */
   formatCandidatureStatus(status: string | undefined): string {
     const statusMap: { [key: string]: string } = {
@@ -501,7 +555,7 @@ export class HomeEmployeeComponent implements OnInit {
   }
 
   /**
-   * ✅ Contacter un candidat
+   *  Contacter un candidat
    */
   contactCandidate(candidature: Candidature): void {
     const email = this.getCandidateEmail(candidature);
@@ -516,7 +570,7 @@ export class HomeEmployeeComponent implements OnInit {
   }
 
   /**
-   * ✅ Ouvrir les détails complets d'un candidat
+   *  Ouvrir les détails complets d'un candidat
    */
   openCandidateDetails(candidature: Candidature): void {
     // Fermer le modal des candidatures
@@ -527,16 +581,16 @@ export class HomeEmployeeComponent implements OnInit {
   }
 
   /**
-   * ✅ Éditer une offre
+   *  Éditer une offre
    */
   editOffer(offerId: number): void {
-    console.log('Édition de l\'offre:', offerId);
+
     this.openOffreEmploiForm();
     // TODO: Charger les données de l'offre pour édition
   }
 
   /**
-   * ✅ Supprimer une offre
+   *  Supprimer une offre
    */
   deleteOffer(offerId: number): void {
     const offer = this.recentOffers.find(o => o.id === offerId);
@@ -555,7 +609,7 @@ export class HomeEmployeeComponent implements OnInit {
   }
 
   /**
-   * ✅ Partager une offre
+   *  Partager une offre
    */
   shareOffer(offerId: number): void {
     const offer = this.recentOffers.find(o => o.id === offerId);
@@ -569,14 +623,14 @@ export class HomeEmployeeComponent implements OnInit {
         });
       } else {
         navigator.clipboard.writeText(shareText).then(() => {
-          console.log('Lien copié dans le presse-papier');
+
         });
       }
     }
   }
 
   /**
-   * ✅ Vérifie s'il y a des filtres actifs
+   *  Vérifie s'il y a des filtres actifs
    */
   hasActiveFilters(): boolean {
     return !!(this.currentFilter.searchQuery.trim() || 
@@ -585,7 +639,7 @@ export class HomeEmployeeComponent implements OnInit {
   }
 
   // ==========================================
-  // 📋 GESTION DES OFFRES ET CANDIDATURES (ADAPTÉ)
+  //  GESTION DES OFFRES ET CANDIDATURES (ADAPTÉ)
   // ==========================================
 
   contactCandidat(candidature: Candidature): void {
@@ -640,7 +694,7 @@ export class HomeEmployeeComponent implements OnInit {
   }
 
   /**
-   * ✅ MÉTHODE ADAPTÉE : Charge les offres avec leurs candidatures
+   *  MÉTHODE ADAPTÉE : Charge les offres avec leurs candidatures
    */
   loadOffresWithCandidatures(): void {
     this.loadingCandidatures = true;
@@ -657,7 +711,8 @@ export class HomeEmployeeComponent implements OnInit {
         this.groupCandidaturesByOffer(data.candidatures);
         this.updateOffersCandidaturesCount();
         this.formatRecentOffers();
-        
+        this.initRecentActivities();
+
         this.loadingCandidatures = false;
       },
       error: (error) => {
@@ -724,7 +779,7 @@ export class HomeEmployeeComponent implements OnInit {
   }
 
   /**
-   * ✅ MÉTHODE ADAPTÉE : Charge les candidatures pour une offre
+   *  MÉTHODE ADAPTÉE : Charge les candidatures pour une offre
    */
   loadCandidaturesForOffer(offerId: number): void {
     if (this.candidatures[offerId] && this.candidatures[offerId].length > 0) {
@@ -765,7 +820,7 @@ export class HomeEmployeeComponent implements OnInit {
   }
 
   /**
-   * ✅ MÉTHODE ADAPTÉE : Charge toutes les candidatures
+   *  MÉTHODE ADAPTÉE : Charge toutes les candidatures
    */
   loadAllCandidatures(): void {
     this.loadingCandidatures = true;
@@ -816,7 +871,7 @@ export class HomeEmployeeComponent implements OnInit {
   }
 
   /**
-   * ✅ MÉTHODE ADAPTÉE : Met à jour le statut d'une candidature
+   *  MÉTHODE ADAPTÉE : Met à jour le statut d'une candidature
    */
   updateCandidatureStatus(candidatureId: number, newStatus: string): void {
     let candidatureToUpdate: Candidature | null = null;
@@ -891,7 +946,7 @@ export class HomeEmployeeComponent implements OnInit {
     this.pageTitle = 'Mes Salons';
     this.showSalonsList = true;
     
-    console.log('Section salons ouverte');
+
   }
 
   private resetAllSections(): void {
@@ -1096,7 +1151,7 @@ export class HomeEmployeeComponent implements OnInit {
   // ===== MÉTHODES UTILITAIRES SUPPLÉMENTAIRES =====
 
   /**
-   * ✅ Export simple des candidatures avec votre service
+   *  Export simple des candidatures avec votre service
    */
   exportCandidatures(): void {
     this.candidatureService.getAllCandidatures().subscribe({
@@ -1112,14 +1167,14 @@ export class HomeEmployeeComponent implements OnInit {
   }
 
   /**
-   * ✅ Recherche dans les candidatures
+   *  Recherche dans les candidatures
    */
   searchCandidatures(query: string): void {
     if (query.length < 2) return;
     
     this.candidatureService.searchCandidatures(query).subscribe({
       next: (results) => {
-        console.log('Résultats de recherche:', results);
+
         // Ici vous pouvez mettre à jour l'affichage avec les résultats
       },
       error: (error) => {
@@ -1144,7 +1199,7 @@ export class HomeEmployeeComponent implements OnInit {
   }
 
   viewAppointmentDetails(appointmentId: number): void {
-    console.log('Affichage des détails du rendez-vous:', appointmentId);
+
     // Pour l'instant, naviguer vers la section réservations pour voir tous les détails
     this.openReservations();
   }

@@ -143,7 +143,7 @@ export class OffreDetailsComponent implements OnInit, OnDestroy {
         this.isSubmitting = false;
         this.submitSuccess = true;
         this.aDejaPostule = true;
-        this.showForm = false; // Fermer le formulaire après soumission réussie
+        this.showForm = false; 
         setTimeout(() => this.closeDetails(), 2000);
       },
       error: (err) => {

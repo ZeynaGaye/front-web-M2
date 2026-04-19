@@ -43,12 +43,12 @@ export class CandidatureService {
                 };
                 
                 this.notificationService.createNewCandidatureNotification(offre.employeurId, notificationData).subscribe({
-                  next: () => console.log('✅ Notification employeur créée pour nouvelle candidature'),
-                  error: (error) => console.error('❌ Erreur création notification employeur:', error)
+                  
+                  error: (error) => console.error(' Erreur création notification employeur:', error)
                 });
               }
             },
-            error: (error) => console.error('❌ Erreur récupération détails offre:', error)
+            error: (error) => console.error(' Erreur récupération détails offre:', error)
           });
         }
       })
@@ -191,11 +191,11 @@ export class CandidatureService {
                   newStatus, 
                   notificationData
                 ).subscribe({
-                  next: () => console.log('✅ Notification statut candidature créée pour freelance'),
-                  error: (error) => console.error('❌ Erreur création notification freelance:', error)
+                  
+                  error: (error) => console.error(' Erreur création notification freelance:', error)
                 });
               },
-              error: (error) => console.error('❌ Erreur récupération détails offre pour notification:', error)
+              error: (error) => console.error(' Erreur récupération détails offre pour notification:', error)
             });
           }
         }
@@ -210,7 +210,7 @@ export class CandidatureService {
   // ===== NOUVELLES MÉTHODES POUR L'INTERFACE AMÉLIORÉE =====
 
   /**
-   * ✅ Normalise les données de candidature pour l'affichage optimisé
+   *  Normalise les données de candidature pour l'affichage optimisé
    */
   private normalizeCandidature(candidature: any): Candidature {
     // Extraire le nom réel - adaptée à la structure réelle des données
@@ -264,7 +264,7 @@ export class CandidatureService {
   }
 
   /**
-   * ✅ Détermine si une candidature est nouvelle
+   *  Détermine si une candidature est nouvelle
    */
   private isNewCandidature(candidature: any): boolean {
     const status = candidature.status;
@@ -280,7 +280,7 @@ export class CandidatureService {
   // ===== MÉTHODES OPTIONNELLES POUR FONCTIONNALITÉS AVANCÉES =====
 
   /**
-   * ✅ Marque une candidature comme lue (si votre backend le supporte)
+   *  Marque une candidature comme lue (si votre backend le supporte)
    */
   markAsRead(candidatureId: number): Observable<Candidature> {
     return this.updateCandidature(candidatureId, { 
@@ -290,7 +290,7 @@ export class CandidatureService {
   }
 
   /**
-   * ✅ Obtient les statistiques basiques
+   *  Obtient les statistiques basiques
    */
   getBasicStats(): Observable<{
     total: number;
@@ -327,7 +327,7 @@ export class CandidatureService {
   }
 
   /**
-   * ✅ Recherche simple dans les candidatures
+   *  Recherche simple dans les candidatures
    */
   searchCandidatures(query: string): Observable<Candidature[]> {
     return this.getAllCandidatures().pipe(
@@ -351,7 +351,7 @@ export class CandidatureService {
   }
 
   /**
-   * ✅ Export simple des candidatures (côté client)
+   *  Export simple des candidatures (côté client)
    */
   exportToCsv(candidatures: Candidature[]): void {
     const headers = [

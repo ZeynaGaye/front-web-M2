@@ -83,7 +83,7 @@ export class ProfileManagementComponent implements OnInit, OnDestroy {
     this.subscriptions.unsubscribe();
   }
 
-  // ✅ Initialisation des formulaires
+  //  Initialisation des formulaires
   private initializeForms(): void {
     this.profileForm = this.fb.group({
       nom: ['', [Validators.required, Validators.minLength(2)]],
@@ -112,7 +112,7 @@ export class ProfileManagementComponent implements OnInit, OnDestroy {
     }, { validators: this.passwordMatchValidator });
   }
 
-  // ✅ Validation des mots de passe
+  //  Validation des mots de passe
   private passwordMatchValidator(group: FormGroup) {
     const newPassword = group.get('newPassword')?.value;
     const confirmPassword = group.get('confirmPassword')?.value;
@@ -125,20 +125,19 @@ export class ProfileManagementComponent implements OnInit, OnDestroy {
     return null;
   }
 
-  // ✅ Charger le profil utilisateur
+  //  Charger le profil utilisateur
   loadUserProfile(): void {
     this.isLoading = true;
     
     this.subscriptions.add(
       this.profileService.getCurrentUserProfile().subscribe({
         next: (profile) => {
-          console.log('✅ Profil chargé:', profile);
           this.currentUser = profile;
           this.populateForm(profile);
           this.isLoading = false;
         },
         error: (error) => {
-          console.error('❌ Erreur chargement profil:', error);
+          console.error(' Erreur chargement profil:', error);
           this.showError('Impossible de charger le profil');
           this.isLoading = false;
         }
@@ -146,7 +145,7 @@ export class ProfileManagementComponent implements OnInit, OnDestroy {
     );
   }
 
-  // ✅ Remplir le formulaire avec les données du profil
+  //  Remplir le formulaire avec les données du profil
   private populateForm(profile: UserProfile): void {
     this.profileForm.patchValue({
       nom: profile.nom,
@@ -163,7 +162,7 @@ export class ProfileManagementComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ✅ Écouter les changements de profil
+  //  Écouter les changements de profil
   private subscribeToProfileChanges(): void {
     this.subscriptions.add(
       this.profileService.profileChanges$.subscribe(profile => {
@@ -174,7 +173,7 @@ export class ProfileManagementComponent implements OnInit, OnDestroy {
     );
   }
 
-  // ✅ Sauvegarder le profil
+  //  Sauvegarder le profil
   onSaveProfile(): void {
     if (this.profileForm.invalid) {
       this.markFormGroupTouched(this.profileForm);
@@ -209,13 +208,12 @@ export class ProfileManagementComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.profileService.updateProfile(profileData).subscribe({
         next: (updatedProfile) => {
-          console.log('✅ Profil mis à jour:', updatedProfile);
           this.currentUser = updatedProfile;
           this.isSaving = false;
           this.showSuccess('Profil mis à jour avec succès');
         },
         error: (error) => {
-          console.error('❌ Erreur mise à jour profil:', error);
+          console.error(' Erreur mise à jour profil:', error);
           this.isSaving = false;
           this.showError('Erreur lors de la mise à jour du profil');
         }
@@ -223,7 +221,7 @@ export class ProfileManagementComponent implements OnInit, OnDestroy {
     );
   }
 
-  // ✅ Changer le mot de passe (avec options Keycloak)
+  //  Changer le mot de passe (avec options Keycloak)
   onChangePassword(): void {
     if (this.passwordForm.invalid) {
       this.markFormGroupTouched(this.passwordForm);
@@ -236,13 +234,12 @@ export class ProfileManagementComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.profileService.updatePassword(passwordData).subscribe({
         next: () => {
-          console.log('✅ Mot de passe mis à jour via Keycloak');
           this.isChangingPassword = false;
           this.passwordForm.reset();
           this.showSuccess('Mot de passe mis à jour avec succès');
         },
         error: (error) => {
-          console.error('❌ Erreur changement mot de passe:', error);
+          console.error(' Erreur changement mot de passe:', error);
           this.isChangingPassword = false;
           this.showError('Erreur lors du changement de mot de passe. Vous pouvez aussi utiliser la console Keycloak.');
         }
@@ -250,13 +247,13 @@ export class ProfileManagementComponent implements OnInit, OnDestroy {
     );
   }
 
-  // ✅ Ouvrir la console de gestion de compte Keycloak
+  //  Ouvrir la console de gestion de compte Keycloak
   openKeycloakAccountManagement(): void {
     this.profileService.redirectToKeycloakAccountManagement();
     this.showSuccess('Console de gestion de compte Keycloak ouverte dans un nouvel onglet');
   }
 
-  // ✅ Callback pour la mise à jour de la photo
+  //  Callback pour la mise à jour de la photo
   onProfilePhotoUpdated(photoUrl: string): void {
     if (this.currentUser) {
       this.currentUser.photoProfile = photoUrl;
@@ -264,7 +261,7 @@ export class ProfileManagementComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ✅ Callback pour la suppression de la photo
+  //  Callback pour la suppression de la photo
   onProfilePhotoDeleted(): void {
     if (this.currentUser) {
       this.currentUser.photoProfile = undefined;
@@ -272,7 +269,7 @@ export class ProfileManagementComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ✅ Getters pour le template
+  //  Getters pour le template
   get isFreelance(): boolean {
     return this.currentUser?.role === 'FREELANCE';
   }
@@ -296,7 +293,7 @@ export class ProfileManagementComponent implements OnInit, OnDestroy {
     return this.profileService.getPasswordStrength(password);
   }
 
-  // ✅ Utilitaires
+  //  Utilitaires
   private markFormGroupTouched(formGroup: FormGroup): void {
     Object.keys(formGroup.controls).forEach(key => {
       const control = formGroup.get(key);
@@ -318,7 +315,7 @@ export class ProfileManagementComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ✅ Méthodes pour les messages d'erreur
+  //  Méthodes pour les messages d'erreur
   getFieldError(fieldName: string): string {
     const control = this.profileForm.get(fieldName);
     if (control?.errors && control.touched) {

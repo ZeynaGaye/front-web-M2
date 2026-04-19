@@ -1,37 +1,107 @@
-<div class="auth-container">
-  <h2>Connexion</h2>
+<div class="auth-page modal-context">
+  <div class="modal-auth-content">
+    <!-- Logo BeautyHub -->
+    <div class="logo-header">
+      <div class="brand-logo">
+        <div class="logo-circle">
+          <img src="assets/images/logo (2).png" alt="BeautyHub Logo" class="logo-image">
+        </div>
+        <div class="brand-text">
+          <div class="brand-name">BeautyHub</div>
+          <div class="brand-tagline">Ravi de vous revoir sur <strong>BeautyHub</strong></div>
+        </div>
+      </div>
+    </div>
 
-  <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-    <div class="input-group">
-      <i class="material-icons">person</i>
-      <input type="text" placeholder="Email" formControlName="email">
-      <small *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
-        Veuillez entrer une adresse email valide
-      </small>
+    <div class="login-title">
+      <h2>Connexion</h2>
     </div>
-    
-    <div class="input-group">
-      <i class="material-icons">lock</i>
-      <input [type]="hidePassword ? 'password' : 'text'" placeholder="Mot de passe" formControlName="motDePasse">
-      <mat-icon class="password-toggle" (click)="hidePassword = !hidePassword">
-        {{ hidePassword ? 'visibility_off' : 'visibility' }}
-      </mat-icon>
-      <small *ngIf="loginForm.get('motDePasse')?.invalid && loginForm.get('motDePasse')?.touched">
-        Le mot de passe doit contenir au moins 6 caractères
-      </small>
+
+    <!-- Formulaire -->
+    <div class="login-form-container">
+
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form">
+        <!-- Email -->
+        <div class="input-group" [class.error]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+          <div class="input-wrapper">
+            <i class="fas fa-envelope input-icon"></i>
+            <input
+              id="email"
+              type="email"
+              placeholder="Email ou Nom d'utilisateur"
+              formControlName="email"
+              autocomplete="email">
+          </div>
+          <small class="error-message" *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+            Veuillez entrer une adresse email valide
+          </small>
+        </div>
+        
+        <!-- Mot de passe -->
+        <div class="input-group" [class.error]="loginForm.get('motDePasse')?.invalid && loginForm.get('motDePasse')?.touched">
+          <div class="input-wrapper">
+            <i class="fas fa-lock input-icon"></i>
+            <input 
+              id="password"
+              [type]="hidePassword ? 'password' : 'text'" 
+              placeholder="••••••••" 
+              formControlName="motDePasse"
+              autocomplete="current-password">
+            <button 
+              type="button"
+              class="password-toggle" 
+              (click)="hidePassword = !hidePassword"
+              [attr.aria-label]="hidePassword ? 'Afficher le mot de passe' : 'Masquer le mot de passe'">
+              <i [class]="hidePassword ? 'fas fa-eye' : 'fas fa-eye-slash'"></i>
+            </button>
+          </div>
+          <small class="error-message" *ngIf="loginForm.get('motDePasse')?.invalid && loginForm.get('motDePasse')?.touched">
+            Le mot de passe doit contenir au moins 6 caractères
+          </small>
+        </div>
+
+        <div class="form-options">
+          <label class="remember-me">
+            <input type="checkbox" formControlName="rememberMe">
+            <span>Se souvenir de moi</span>
+          </label>
+          <a class="forgot-link" (click)="navigateToForgotPassword()">Mot de passe oublié ?</a>
+        </div>
+        
+        <!-- Bouton de connexion -->
+        <button type="submit" class="login-btn" [disabled]="loginForm.invalid || isLoading">
+          <div class="btn-content">
+            <div class="spinner" *ngIf="isLoading"></div>
+            <span>{{ isLoading ? 'Connexion...' : 'SE CONNECTER' }}</span>
+          </div>
+        </button>
+
+        <!-- Séparateur -->
+        <div class="divider">
+          <span>OU SE CONNECTER AVEC</span>
+        </div>
+
+        <!-- Connexion sociale -->
+        <div class="social-login">
+          <button type="button" class="social-btn facebook">
+            <i class="fab fa-facebook-f"></i>
+          </button>
+          <button type="button" class="social-btn google">
+            <i class="fab fa-google"></i>
+          </button>
+          <button type="button" class="social-btn instagram">
+            <i class="fab fa-instagram"></i>
+          </button>
+        </div>
+      </form>
+      
+      <!-- Inscription -->
+      <div class="register-section">
+        <p class="no-account">
+          Pas encore de compte ? 
+          <a (click)="switchToRegister()" class="register-link">S'inscrire</a>
+        </p>
+      </div>
     </div>
-    
-    <button type="submit" class="login-btn" [disabled]="loginForm.invalid || isLoading">
-      <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
-      <span *ngIf="!isLoading">Se Connecter</span>
-    </button>
-  </form>
-  
-  <p class="forgot-password">
-    <a (click)="navigateToForgotPassword()">Mot de passe oublié ?</a>
-  </p>
-  
-  <p class="no-account">
-    Pas encore de compte ? <a (click)="switchToRegister()">Créer un compte</a>
-  </p>
+  </div>
 </div>

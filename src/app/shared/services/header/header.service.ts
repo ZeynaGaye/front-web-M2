@@ -23,7 +23,7 @@ export class HeaderService {
       window.addEventListener('message', async (event) => {
         if (event.origin === window.location.origin) {
           if (event.data && event.data.type === 'authentication-complete') {
-            console.log('Authentification complétée dans la popup');
+
             await this.keycloakService.updateToken(10);
             await this.checkAuthStatus();
             this.roleRedirectService.redirectBasedOnRoles(); // Rediriger après l'authentification

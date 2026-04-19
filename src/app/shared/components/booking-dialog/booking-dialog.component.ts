@@ -14,6 +14,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ReservationService } from '../../services/reservation/reservation.service';
 import { AuthService } from '../../../core/servces/auth.service';
+import { PaymentService, BeautyPaymentRequest, BeautyPaymentResponse } from '../../../services/payment.service';
+
 
 @Component({
   selector: 'app-booking-dialog',
@@ -37,217 +39,237 @@ import { AuthService } from '../../../core/servces/auth.service';
 })
 export class BookingDialogComponent implements OnInit {
   @ViewChild('datePicker') datePicker!: MatDatepicker<Date>;
-  
+
+  // ========================================
+  // PROPRIÉTÉS EXISTANTES (conservées)
+  // ========================================
   bookingForm: FormGroup;
   isLoading = false;
   isLoadingSlots = false;
   errorMessage = '';
   minDate = new Date();
   userId: number | null = null;
-  
+
   // Support des deux types : salon et freelance
   isFreelanceBooking = false;
   providerInfo: any = null;
-  
+
   // Créneaux dynamiques depuis votre API
   availableTimeSlots: Array<{value: string, label: string, dateTime: string}> = [];
 
+  // ========================================
+  // NOUVELLES PROPRIÉTÉS POUR LE PAIEMENT
+  // ========================================
+  currentStep: 'booking' | 'payment' = 'booking';
+  selectedPaymentMethod: string = '';
+  paymentForm: FormGroup;
+  isProcessingPayment = false;
+  paymentStatus: BeautyPaymentResponse | null = null;
+  createdReservation: any = null; // Stocke la réservation créée
+
+  // ========================================
+  // NOUVELLES PROPRIÉTÉS POUR TEMPS RÉEL
+  // ========================================
+  private refreshInterval: any = null;
+  private currentSelectedDate: Date | null = null;
+  private pollSubscription: any = null;
+
+  // Opérateurs de paiement que l'utilisateur connaît
+  paymentMethods = [
+    {
+      id: 'orange_money',
+      name: 'Orange Money',
+      icon: 'assets/images/OM.jpg',
+      type: 'mobile',
+      description: 'Payez avec votre compte Orange Money',
+      phonePattern: '^(221)?(77|78)\\d{7}$'
+    },
+    {
+      id: 'wave',
+      name: 'Wave',
+      icon: 'assets/images/wave.png',
+      type: 'mobile',
+
+      description: 'Payez avec votre compte Wave',
+      phonePattern: '^(221)?(77|78|76|70)\\d{7}$'
+    },
+    {
+      id: 'carte_bancaire',
+      name: 'Carte Bancaire',
+      icon: 'assets/images/mastercard-visa.jpg',
+      type: 'mobile',
+      description: 'Payez par carte Visa/mastercard-visa',
+      phonePattern: null
+    }
+  ];
+
   constructor(
     public dialogRef: MatDialogRef<BookingDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { 
-      service: any, 
-      salon?: any, 
-      freelance?: any, 
-      type?: 'salon' | 'freelance' 
+    @Inject(MAT_DIALOG_DATA) public data: {
+      service: any,
+      salon?: any,
+      freelance?: any,
+      type?: 'salon' | 'freelance'
     },
     private fb: FormBuilder,
     private reservationService: ReservationService,
     private authService: AuthService,
+    private paymentService: PaymentService,
     private snackBar: MatSnackBar
   ) {
-    // ✅ Initialisation sécurisée du formulaire
+    // Formulaire de réservation existant
     this.bookingForm = this.fb.group({
       date: ['', Validators.required],
       timeSlot: ['', Validators.required]
     });
 
-    // ✅ Configuration dialog pour éviter fermeture accidentelle
+    // Nouveau formulaire de paiement avec validation dynamique
+    this.paymentForm = this.fb.group({
+      phoneNumber: ['', [Validators.required, this.phoneNumberValidator]],
+      email: ['', [Validators.email]],
+      customerName: ['', Validators.required]
+    });
+
     dialogRef.disableClose = true;
   }
 
-  // ==========================================
-  // 🔄 INITIALISATION SÉCURISÉE
-  // ==========================================
-
   ngOnInit(): void {
-    console.log('🔄 DEBUT ngOnInit - BookingDialog');
-    console.log('📋 Données reçues:', this.data);
-    
     try {
-      // ✅ VALIDATION DES DONNÉES D'ENTRÉE
       this.validateInputData();
-      
-      // ✅ DÉTECTION DU TYPE AVEC VALIDATION
       this.detectBookingType();
-      
-      // ✅ VALIDATION DU PROVIDER
       this.validateProvider();
-      
-      // ✅ VÉRIFICATION UTILISATEUR AVEC GESTION D'ERREUR
       this.checkUserAuthentication();
-      
-      // ✅ INITIALISATION DU FORMULAIRE AVEC GESTION D'ERREUR
       this.initializeForm();
-      
-      // ✅ CHARGEMENT INITIAL DES CRÉNEAUX
       this.setupInitialSlots();
-      
-      console.log('✅ Initialisation complète avec succès');
-      
-    } catch (error) {
-      console.error('❌ Erreur dans ngOnInit:', error);
-      this.errorMessage = `Erreur d'initialisation : ${typeof error === 'object' && error !== null && 'message' in error ? (error as any).message : String(error)}`;
-      // ⚠️ NE PAS FERMER LE DIALOG - Juste afficher l'erreur
-    }
-    
-    console.log('🔄 FIN ngOnInit - BookingDialog');
-  }
 
-  // ==========================================
-  // 🔍 MÉTHODES DE VALIDATION
-  // ==========================================
+    } catch (error) {
+      console.error(' Erreur dans ngOnInit:', error);
+      this.errorMessage = `Erreur d'initialisation : ${typeof error === 'object' && error !== null && 'message' in error ? (error as any).message : String(error)}`;
+    }
+  }
 
   private validateInputData(): void {
     if (!this.data) {
-      console.error('❌ Aucune donnée fournie au dialog');
+      console.error(' Aucune donnée fournie au dialog');
       throw new Error('Aucune donnée fournie');
     }
-    
+
     if (!this.data.service) {
-      console.error('❌ Service manquant dans les données');
+      console.error(' Service manquant dans les données');
       throw new Error('Service manquant');
     }
-    
+
     if (!this.data.salon && !this.data.freelance) {
-      console.error('❌ Informations du prestataire manquantes');
+      console.error(' Informations du prestataire manquantes');
       throw new Error('Informations du prestataire manquantes');
     }
-    
-    console.log('✅ Validation des données OK');
+
+
   }
 
   private detectBookingType(): void {
     try {
       if (this.data.type) {
         this.isFreelanceBooking = this.data.type === 'freelance';
-        console.log('🎯 Type détecté via data.type:', this.data.type);
+
       } else {
         this.isFreelanceBooking = !!this.data.freelance;
-        console.log('🎯 Type détecté automatiquement:', this.isFreelanceBooking ? 'freelance' : 'salon');
+
       }
-      
+
       this.providerInfo = this.isFreelanceBooking ? this.data.freelance : this.data.salon;
-      
+
     } catch (error) {
-      console.error('❌ Erreur détection type:', error);
+      console.error(' Erreur détection type:', error);
       throw new Error('Impossible de déterminer le type de réservation');
     }
   }
 
   private validateProvider(): void {
     if (!this.providerInfo) {
-      console.error('❌ Informations du prestataire manquantes après détection');
+      console.error(' Informations du prestataire manquantes après détection');
       throw new Error('Informations du prestataire manquantes');
     }
-    
+
     if (!this.providerInfo.id) {
-      console.error('❌ ID du prestataire manquant:', this.providerInfo);
+      console.error(' ID du prestataire manquant:', this.providerInfo);
       throw new Error('ID du prestataire manquant');
     }
-    
-    console.log('✅ Provider validé:', this.providerInfo);
+
+
   }
 
   private checkUserAuthentication(): void {
     try {
-      console.log('🔐 Vérification authentification...');
-      
-      // ⚠️ Cette ligne peut lancer une erreur
+
+
       const currentUser = this.authService.getCurrentUser();
-      console.log('👤 Utilisateur récupéré:', currentUser);
-      
+
+
       this.userId = currentUser?.id || null;
-      
+
       if (!this.userId) {
-        console.warn('⚠️ Utilisateur non connecté');
+        console.warn(' Utilisateur non connecté');
         this.errorMessage = 'Vous devez être connecté pour effectuer une réservation.';
-        
+
         this.snackBar.open(
-          'Veuillez vous connecter pour réserver un service', 
-          'Fermer', 
+          'Veuillez vous connecter pour réserver un service',
+          'Fermer',
           {
             duration: 5000,
             panelClass: ['warning-snackbar']
           }
         );
-        
-        // ⚠️ NE PAS faire return; ici - laissez l'utilisateur voir le message
       } else {
-        console.log('✅ Utilisateur connecté avec ID:', this.userId);
+
       }
-      
+
     } catch (error) {
-      console.error('❌ Erreur vérification auth:', error);
+      console.error(' Erreur vérification auth:', error);
       this.errorMessage = 'Erreur de vérification de connexion';
       this.userId = null;
-      // NE PAS lancer l'erreur - gérer gracieusement
     }
   }
 
   private initializeForm(): void {
     try {
-      console.log('📝 Initialisation du formulaire...');
-      
+
+
       const today = new Date();
-      console.log('📅 Date du jour:', today);
-      
-      // Vérifier que le FormGroup existe
+
+
       if (!this.bookingForm) {
         throw new Error('FormGroup non initialisé');
       }
-      
-      // Vérifier que le control 'date' existe
+
       const dateControl = this.bookingForm.get('date');
       if (!dateControl) {
         throw new Error('Control date non trouvé dans le formulaire');
       }
-      
+
       dateControl.setValue(today);
-      console.log('✅ Date initialisée dans le formulaire');
-      
+
+
     } catch (error) {
-      console.error('❌ Erreur initialisation formulaire:', error);
+      console.error(' Erreur initialisation formulaire:', error);
       throw new Error('Impossible d\'initialiser le formulaire');
     }
   }
 
   private setupInitialSlots(): void {
     try {
-      console.log('⏰ Configuration des créneaux initiaux...');
-      
+
+
       const today = new Date();
-      
-      // ⚠️ Cette méthode peut échouer mais ne doit pas crasher le dialog
+      this.currentSelectedDate = today;
       this.loadAvailableSlots(today);
-      
-      // ⚠️ Cette subscription peut échouer
       this.setupDateChangeListener();
-      
-      console.log('✅ Créneaux et listeners configurés');
-      
+      this.startAutoRefresh();
+
+
+
     } catch (error) {
-      console.error('❌ Erreur configuration créneaux:', error);
-      // NE PAS lancer l'erreur - le dialog peut fonctionner sans créneaux au début
+      console.error(' Erreur configuration créneaux:', error);
       this.errorMessage = 'Erreur de chargement des créneaux. Sélectionnez une date.';
     }
   }
@@ -258,14 +280,14 @@ export class BookingDialogComponent implements OnInit {
       if (!dateControl) {
         throw new Error('Control date non trouvé');
       }
-      
+
       dateControl.valueChanges.subscribe({
         next: (date) => {
-          console.log('📅 Changement de date détecté:', date);
+
           if (date) {
+            this.currentSelectedDate = date;
             this.loadAvailableSlots(date);
-            
-            // Reset du créneau sélectionné
+
             const timeSlotControl = this.bookingForm.get('timeSlot');
             if (timeSlotControl) {
               timeSlotControl.setValue('');
@@ -273,129 +295,103 @@ export class BookingDialogComponent implements OnInit {
           }
         },
         error: (error) => {
-          console.error('❌ Erreur dans valueChanges:', error);
+          console.error(' Erreur dans valueChanges:', error);
         }
       });
-      
+
     } catch (error) {
-      console.error('❌ Erreur setup listener:', error);
+      console.error(' Erreur setup listener:', error);
       throw error;
     }
   }
 
   // ==========================================
-  // 🎯 GESTION PROGRAMMATIQUE DES CONTRÔLES
+  // GESTION PROGRAMMATIQUE DES CONTRÔLES
   // ==========================================
 
-  /**
-   * ✅ Méthode pour gérer l'état du contrôle timeSlot
-   */
   private updateTimeSlotControlState(): void {
     try {
       const timeSlotControl = this.bookingForm.get('timeSlot');
       if (!timeSlotControl) {
-        console.warn('⚠️ TimeSlot control non trouvé');
+        console.warn(' TimeSlot control non trouvé');
         return;
       }
 
-      // Toujours garder le contrôle activé - l'UI gère l'état de chargement
       if (timeSlotControl.disabled) {
         timeSlotControl.enable();
-        console.log('🔓 TimeSlot réactivé');
+
       }
     } catch (error) {
-      console.error('❌ Erreur update timeSlot state:', error);
+      console.error(' Erreur update timeSlot state:', error);
     }
   }
 
-  /**
-   * ✅ Vérifier si on peut soumettre la réservation
-   */
   canSubmitBooking(): boolean {
     try {
-      // Vérifications de base
-      if (this.isLoading || this.isLoadingSlots) {
-        return false;
-      }
+      if (this.isLoading || this.isLoadingSlots) return false;
+      if (!this.userId) return false;
+      if (!this.bookingForm) return false;
 
-      if (!this.userId) {
-        return false;
-      }
-
-      if (!this.bookingForm) {
-        return false;
-      }
-
-      // Vérifier que les champs requis sont remplis
       const dateValue = this.bookingForm.get('date')?.value;
       const timeSlotValue = this.bookingForm.get('timeSlot')?.value;
 
-      if (!dateValue || !timeSlotValue) {
-        return false;
-      }
+      if (!dateValue || !timeSlotValue) return false;
+      if (this.availableTimeSlots.length === 0) return false;
 
-      // Vérifier qu'il y a des créneaux disponibles
-      if (this.availableTimeSlots.length === 0) {
-        return false;
-      }
-
-      // Vérifier que le créneau sélectionné existe dans la liste
       const selectedSlotExists = this.availableTimeSlots.some(slot => slot.value === timeSlotValue);
-      if (!selectedSlotExists) {
-        return false;
-      }
-
-      return true;
+      return selectedSlotExists;
     } catch (error) {
-      console.error('❌ Erreur canSubmitBooking:', error);
+      console.error(' Erreur canSubmitBooking:', error);
       return false;
     }
   }
 
   // ==========================================
-  // ⏰ CHARGEMENT DES CRÉNEAUX SÉCURISÉ
+  // CHARGEMENT DES CRÉNEAUX (conservé)
   // ==========================================
 
-  private loadAvailableSlots(date: Date): void {
-    console.log('⏰ Chargement créneaux pour:', date);
-    
+  private loadAvailableSlots(date: Date, silentRefresh: boolean = false): void {
+    if (!silentRefresh) {
+
+    }
+
     try {
-      // Validation des paramètres
       if (!date) {
-        console.warn('⚠️ Date manquante');
+        console.warn(' Date manquante');
         return;
       }
-      
+
       if (!this.providerInfo?.id) {
-        console.warn('⚠️ Provider ID manquant:', this.providerInfo);
+        console.warn(' Provider ID manquant:', this.providerInfo);
         return;
       }
-      
-      // ✅ Gérer l'état du contrôle
-      this.isLoadingSlots = true;
-      this.updateTimeSlotControlState(); // Désactiver le contrôle
-      
-      this.availableTimeSlots = [];
-      
-      const dateStr = date.toISOString().split('T')[0];
-      console.log('📅 Date formatée:', dateStr);
-      
-      // Calculer durée service avec fallback
-      const dureeService = this.getServiceDuration();
-      console.log('⏱️ Durée service:', dureeService, 'minutes');
-      
-      if (this.isFreelanceBooking) {
-        console.log('👤 Chargement créneaux freelance...');
-        this.loadFreelanceSlots(dateStr, dureeService);
-      } else {
-        console.log('🏢 Chargement créneaux salon...');
-        this.loadSalonSlots(dateStr, dureeService);
+
+      // Pour les refresh silencieux, on ne change pas les indicateurs de loading
+      if (!silentRefresh) {
+        this.isLoadingSlots = true;
+        this.updateTimeSlotControlState();
+        // On garde les créneaux existants pendant le refresh silencieux
+        this.availableTimeSlots = [];
       }
-      
+
+      const dateStr = date.toISOString().split('T')[0];
+
+
+      const dureeService = this.getServiceDuration();
+
+
+      if (this.isFreelanceBooking) {
+        if (!silentRefresh)
+        this.loadFreelanceSlots(dateStr, dureeService, silentRefresh);
+      } else {
+        if (!silentRefresh)
+        this.loadSalonSlots(dateStr, dureeService, silentRefresh);
+      }
+
     } catch (error) {
-      console.error('❌ Erreur dans loadAvailableSlots:', error);
+      console.error(' Erreur dans loadAvailableSlots:', error);
       this.isLoadingSlots = false;
-      this.updateTimeSlotControlState(); // Réactiver en cas d'erreur
+      this.updateTimeSlotControlState();
       this.availableTimeSlots = [];
       this.showSlotsError();
     }
@@ -403,127 +399,120 @@ export class BookingDialogComponent implements OnInit {
 
   private getServiceDuration(): number {
     try {
-      return this.data.service?.dureeEnMinutes || 
+      return this.data.service?.dureeEnMinutes ||
              this.data.service?.duree_minutes ||
-             this.parseServiceDuration(this.data.service?.duree) || 
-             30; // Fallback par défaut
+             this.parseServiceDuration(this.data.service?.duree) ||
+             30;
     } catch (error) {
-      console.warn('⚠️ Erreur parsing durée service:', error);
+      console.warn(' Erreur parsing durée service:', error);
       return 30;
     }
   }
 
-  // ✅ Chargement créneaux salon avec gestion du contrôle
-  private loadSalonSlots(dateStr: string, dureeService: number): void {
+  private loadSalonSlots(dateStr: string, dureeService: number, silentRefresh: boolean = false): void {
     this.reservationService.getCreneauxDisponibles(this.providerInfo.id, dateStr, dureeService)
       .subscribe({
         next: (response) => {
           try {
-            // ✅ Réactiver le contrôle
-            this.isLoadingSlots = false;
-            this.updateTimeSlotControlState();
-            
-            console.log('✅ Créneaux salon reçus:', response);
-            
+            if (!silentRefresh) {
+              this.isLoadingSlots = false;
+              this.updateTimeSlotControlState();
+
+            }
+
             if (response && response.creneaux && Array.isArray(response.creneaux)) {
               this.availableTimeSlots = response.creneaux.map((creneau: any) => ({
                 value: this.formatTimeForSelect(creneau.heureDebut),
                 label: this.formatTimeForDisplay(creneau.heureDebut),
                 dateTime: creneau.heureDebut
               }));
-              
-              console.log(`✅ ${this.availableTimeSlots.length} créneaux salon formatés`);
-              
-              if (this.availableTimeSlots.length === 0) {
-                this.showNoSlotsMessage(dateStr);
+
+              if (!silentRefresh) {
+
+
+                if (this.availableTimeSlots.length === 0) {
+                  this.showNoSlotsMessage(dateStr);
+                }
               }
             } else {
-              console.warn('⚠️ Format réponse salon inattendu:', response);
-              this.showNoSlotsMessage(dateStr);
+              if (!silentRefresh) {
+                console.warn(' Format réponse salon inattendu:', response);
+                this.showNoSlotsMessage(dateStr);
+              }
             }
           } catch (error) {
-            console.error('❌ Erreur traitement réponse salon:', error);
-            this.isLoadingSlots = false;
-            this.updateTimeSlotControlState();
-            this.showSlotsError();
+            console.error(' Erreur traitement réponse salon:', error);
+            if (!silentRefresh) {
+              this.isLoadingSlots = false;
+              this.updateTimeSlotControlState();
+              this.showSlotsError();
+            }
           }
         },
         error: (error) => {
-          // ✅ Réactiver le contrôle en cas d'erreur
-          this.isLoadingSlots = false;
-          this.updateTimeSlotControlState();
-          
-          console.error('❌ Erreur chargement créneaux salon:', error);
-          this.showSlotsError();
+          if (!silentRefresh) {
+            this.isLoadingSlots = false;
+            this.updateTimeSlotControlState();
+            console.error(' Erreur chargement créneaux salon:', error);
+            this.showSlotsError();
+          }
         }
       });
   }
 
-  // ✅ Chargement créneaux freelance avec gestion du contrôle
-  private loadFreelanceSlots(dateStr: string, dureeService: number): void {
-    try {
-      // Simulation API freelance (remplacer par vraie API plus tard)
-      setTimeout(() => {
-        try {
-          // ✅ Réactiver le contrôle
-          this.isLoadingSlots = false;
-          this.updateTimeSlotControlState();
-          
-          // Créneaux par défaut basés sur les disponibilités freelance
-          const baseSlots = [
-            '09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00'
-          ];
-          
-          // Ajouter créneaux weekend/soir selon disponibilités
-          const freelance = this.providerInfo;
-          const isWeekend = new Date(dateStr).getDay() === 0 || new Date(dateStr).getDay() === 6;
-          
-          let availableSlots = [...baseSlots];
-          
-          // Si freelance disponible en soirée
-          if (freelance.disponibleSoir) {
-            availableSlots.push('18:00', '19:00', '20:00');
+  private loadFreelanceSlots(dateStr: string, dureeService: number, silentRefresh: boolean = false): void {
+    this.reservationService.getCreneauxDisponiblesFreelance(this.providerInfo.id, dateStr, dureeService)
+      .subscribe({
+        next: (response) => {
+          try {
+            if (!silentRefresh) {
+              this.isLoadingSlots = false;
+              this.updateTimeSlotControlState();
+            }
+
+            if (response && response.creneaux && Array.isArray(response.creneaux)) {
+              this.availableTimeSlots = response.creneaux.map((creneau: any) => ({
+                value: this.formatTimeForSelect(creneau.heureDebut),
+                label: this.formatTimeForDisplay(creneau.heureDebut),
+                dateTime: creneau.heureDebut
+              }));
+
+              if (!silentRefresh && this.availableTimeSlots.length === 0) {
+                this.showNoSlotsMessage(dateStr);
+              }
+            } else {
+              if (!silentRefresh) {
+                console.warn(' Format réponse freelance inattendu:', response);
+                this.showNoSlotsMessage(dateStr);
+              }
+            }
+          } catch (error) {
+            console.error(' Erreur traitement réponse freelance:', error);
+            if (!silentRefresh) {
+              this.isLoadingSlots = false;
+              this.updateTimeSlotControlState();
+              this.showSlotsError();
+            }
           }
-          
-          // Si c'est le weekend et freelance pas disponible weekend
-          if (isWeekend && !freelance.disponibleWeekend) {
-            availableSlots = []; // Pas disponible le weekend
+        },
+        error: (error) => {
+          if (!silentRefresh) {
+            this.isLoadingSlots = false;
+            this.updateTimeSlotControlState();
+            console.error(' Erreur chargement créneaux freelance:', error);
+            this.showSlotsError();
           }
-          
-          this.availableTimeSlots = availableSlots.map(time => ({
-            value: time,
-            label: time.replace(':', 'h'),
-            dateTime: `${dateStr}T${time}:00`
-          }));
-          
-          console.log(`✅ ${this.availableTimeSlots.length} créneaux freelance générés`);
-          
-          if (this.availableTimeSlots.length === 0) {
-            this.showNoSlotsMessage(dateStr);
-          }
-        } catch (error) {
-          console.error('❌ Erreur génération créneaux freelance:', error);
-          this.isLoadingSlots = false;
-          this.updateTimeSlotControlState();
-          this.showSlotsError();
         }
-      }, 1000); // Simulation délai API
-      
-    } catch (error) {
-      console.error('❌ Erreur setup freelance slots:', error);
-      this.isLoadingSlots = false;
-      this.updateTimeSlotControlState();
-      this.showSlotsError();
-    }
+      });
   }
 
   // ==========================================
-  // 🛠️ UTILITAIRES SÉCURISÉS
+  // UTILITAIRES
   // ==========================================
 
   private parseServiceDuration(duree: string): number | null {
     if (!duree) return null;
-    
+
     try {
       const d = duree.toLowerCase().trim();
       if (d.includes('h')) {
@@ -535,7 +524,7 @@ export class BookingDialogComponent implements OnInit {
         return parseInt(d.replace(/\D/g, '')) || null;
       }
     } catch (error) {
-      console.warn('⚠️ Erreur parsing durée:', duree, error);
+      console.warn(' Erreur parsing durée:', duree, error);
       return null;
     }
   }
@@ -548,7 +537,7 @@ export class BookingDialogComponent implements OnInit {
         hour12: false
       });
     } catch (error) {
-      console.warn('⚠️ Erreur formatage time select:', dateTime, error);
+      console.warn(' Erreur formatage time select:', dateTime, error);
       return dateTime;
     }
   }
@@ -558,14 +547,10 @@ export class BookingDialogComponent implements OnInit {
       const time = this.formatTimeForSelect(dateTime);
       return time.replace(':', 'h');
     } catch (error) {
-      console.warn('⚠️ Erreur formatage time display:', dateTime, error);
+      console.warn(' Erreur formatage time display:', dateTime, error);
       return dateTime;
     }
   }
-
-  // ==========================================
-  // 📱 GESTION DES MESSAGES
-  // ==========================================
 
   private showNoSlotsMessage(date: string): void {
     try {
@@ -575,7 +560,7 @@ export class BookingDialogComponent implements OnInit {
         { duration: 4000, panelClass: ['info-snackbar'] }
       );
     } catch (error) {
-      console.error('❌ Erreur affichage message no slots:', error);
+      console.error(' Erreur affichage message no slots:', error);
     }
   }
 
@@ -587,29 +572,519 @@ export class BookingDialogComponent implements OnInit {
         { duration: 3000, panelClass: ['warning-snackbar'] }
       );
     } catch (error) {
-      console.error('❌ Erreur affichage message erreur slots:', error);
+      console.error(' Erreur affichage message erreur slots:', error);
     }
   }
 
   // ==========================================
-  // 🎬 ACTIONS UTILISATEUR
+  //  NOUVELLES MÉTHODES POUR TEMPS RÉEL
   // ==========================================
 
-  // ✅ Empêcher fermeture accidentelle
+  /**
+   * Démarrer le rafraîchissement automatique des créneaux (15 secondes)
+   */
+  private startAutoRefresh(): void {
+    // Arrêter le timer existant s'il y en a un
+    this.stopAutoRefresh();
+
+
+
+    this.refreshInterval = setInterval(() => {
+      // Ne pas rafraîchir si :
+      // - On est en étape paiement (pour ne pas perturber)
+      // - Pas de date sélectionnée
+      // - Chargement en cours
+      if (this.currentStep === 'payment' ||
+          !this.currentSelectedDate ||
+          this.isLoadingSlots) {
+        return;
+      }
+
+
+      this.loadAvailableSlots(this.currentSelectedDate, true); // true = refresh silencieux
+    }, 15000); // 15 secondes
+  }
+
+  /**
+   * Arrêter le rafraîchissement automatique
+   */
+  private stopAutoRefresh(): void {
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval);
+      this.refreshInterval = null;
+
+    }
+  }
+
+  /**
+   * Vérifier la disponibilité d'un créneau avant paiement
+   */
+  private async verifySlotBeforePayment(): Promise<boolean> {
+
+
+    try {
+      const formValues = this.bookingForm.value;
+      const selectedSlot = this.availableTimeSlots.find(slot => slot.value === formValues.timeSlot);
+
+      if (!selectedSlot) {
+        console.warn(' Créneau sélectionné non trouvé dans la liste');
+        return false;
+      }
+
+      // Calculer heure de fin
+      const debut = new Date(selectedSlot.dateTime);
+      const fin = new Date(debut.getTime() + (this.getServiceDuration() * 60000));
+
+      // Vérifier via l'API
+      const verification = await this.reservationService.verifierDisponibilite(
+        this.providerInfo.id,
+        debut.toISOString(),
+        fin.toISOString(),
+        !this.isFreelanceBooking
+      ).toPromise();
+
+      const isAvailable = verification?.estDisponible || false;
+
+
+
+      return isAvailable;
+
+    } catch (error) {
+      console.error(' Erreur vérification disponibilité:', error);
+      // En cas d'erreur, on assume que c'est disponible pour ne pas bloquer
+      return true;
+    }
+  }
+
+  /**
+   * Afficher message de créneau pris
+   */
+  private showSlotTakenMessage(): void {
+    this.snackBar.open(
+      ' Ce créneau vient d\'être pris par quelqu\'un d\'autre. Veuillez en choisir un autre.',
+      'Choisir un autre',
+      {
+        duration: 8000,
+        panelClass: ['warning-snackbar']
+      }
+    );
+
+    // Retourner à l'étape de réservation
+    this.goBackToBooking();
+
+    // Rafraîchir la liste des créneaux
+    if (this.currentSelectedDate) {
+      this.loadAvailableSlots(this.currentSelectedDate);
+    }
+  }
+
+  /**
+   * Afficher message d'erreur de vérification
+   */
+  private showVerificationError(): void {
+    this.snackBar.open(
+      ' Impossible de vérifier la disponibilité. Veuillez réessayer.',
+      'Réessayer',
+      {
+        duration: 5000,
+        panelClass: ['error-snackbar']
+      }
+    );
+  }
+
+  // ==========================================
+  //  MÉTHODES POUR LE PAIEMENT (MISES À JOUR)
+  // ==========================================
+
+  /**
+   * Validation personnalisée selon l'opérateur sélectionné
+   */
+  phoneNumberValidator = (control: any) => {
+    const value = control.value?.replace(/\D/g, '');
+    if (!value || !this.selectedPaymentMethod) return null;
+
+    const selectedMethod = this.paymentMethods.find(m => m.id === this.selectedPaymentMethod);
+    if (!selectedMethod?.phonePattern) return null; // Pas de validation pour carte bancaire
+
+    const isValid = new RegExp(selectedMethod.phonePattern).test(value);
+    return isValid ? null : { invalidPhone: true };
+  }
+
+  /**
+   * Sélectionner une méthode de paiement
+   */
+  selectPaymentMethod(methodId: string): void {
+    this.selectedPaymentMethod = methodId;
+    this.errorMessage = '';
+
+    // Adapter les validations selon la méthode
+    if (methodId === 'carte_bancaire') {
+      this.paymentForm.get('email')?.setValidators([Validators.required, Validators.email]);
+      this.paymentForm.get('phoneNumber')?.clearValidators();
+    } else {
+      this.paymentForm.get('email')?.setValidators([Validators.email]);
+      this.paymentForm.get('phoneNumber')?.setValidators([Validators.required, this.phoneNumberValidator]);
+    }
+
+    this.paymentForm.get('email')?.updateValueAndValidity();
+    this.paymentForm.get('phoneNumber')?.updateValueAndValidity();
+  }
+
+  /**
+   * Obtenir le nom de l'opérateur sélectionné
+   */
+  getSelectedOperatorName(): string {
+    const selectedMethod = this.paymentMethods.find(m => m.id === this.selectedPaymentMethod);
+    return selectedMethod?.name || '';
+  }
+
+  /**
+   * Formater le numéro de téléphone
+   */
+  formatPhoneNumber(phoneNumber: string): string {
+    const cleanPhone = phoneNumber.replace(/\D/g, '');
+    if (cleanPhone.length === 12 && cleanPhone.startsWith('221')) {
+      return cleanPhone.substring(3); // Remove 221 prefix
+    }
+    if (cleanPhone.length === 9) {
+      return cleanPhone; // Already in correct format
+    }
+    return cleanPhone;
+  }
+
+  /**
+   * Récupérer les informations du créneau sélectionné
+   */
+  getSelectedTimeSlotLabel(): string {
+    const selectedValue = this.bookingForm.get('timeSlot')?.value;
+    const selectedSlot = this.availableTimeSlots.find(slot => slot.value === selectedValue);
+    return selectedSlot?.label || '';
+  }
+
+  /**
+   * Calculer le montant total
+   */
+  getTotalAmount(): number {
+    const s = this.data.service;
+    if (!s) return 0;
+    return s.prix || s.prixMin || s.prixMoyen || 0;
+  }
+
+  /**
+   * Naviguer vers l'étape paiement
+   */
+  goToPaymentStep(): void {
+    if (!this.canSubmitBooking()) return;
+
+    this.currentStep = 'payment';
+
+    // Pré-remplir le nom du client si disponible
+    const currentUser = this.authService.getCurrentUser();
+    if (currentUser) {
+      this.paymentForm.patchValue({
+        customerName: `${currentUser.prenom || ''} ${currentUser.nom || ''}`.trim() || 'Client',
+        email: currentUser.email || ''
+      });
+    }
+  }
+
+  /**
+   * Revenir à l'étape réservation
+   */
+  goBackToBooking(): void {
+    this.currentStep = 'booking';
+    this.selectedPaymentMethod = '';
+    this.paymentStatus = null;
+    this.errorMessage = '';
+  }
+
+  /**
+   * MODIFICATION DE submitBooking() - maintenant va vers le paiement
+   */
+  submitBooking(): void {
+
+
+    if (!this.canSubmitBooking()) {
+      this.markFormGroupTouched();
+      return;
+    }
+
+    this.goToPaymentStep();
+  }
+
+  /**
+   * Confirmer le paiement et créer la réservation
+   */
+  async confirmPayment(): Promise<void> {
+    if (!this.selectedPaymentMethod || this.paymentForm.invalid) {
+      this.markFormGroupTouched();
+      this.paymentForm.markAllAsTouched();
+      return;
+    }
+
+    // Ouvrir la fenêtre ICI (contexte synchrone du clic) pour éviter le blocage popup
+    const paymentWindow = window.open('about:blank', '_blank', 'width=680,height=760,scrollbars=yes,resizable=yes');
+
+    try {
+      this.isProcessingPayment = true;
+      this.errorMessage = '';
+
+      // 1. Créer la réservation
+      const reservationData = await this.createPendingReservation();
+
+      if (!reservationData?.id || reservationData.id === 0) {
+        paymentWindow?.close();
+        throw new Error('Impossible de créer la réservation');
+      }
+
+      this.createdReservation = reservationData;
+
+      // 2. Initier le paiement
+      const paymentRequest: BeautyPaymentRequest = {
+        bookingId: reservationData.id,
+        method: 'PAYDUNYA',
+        phoneNumber: this.formatPhoneNumber(this.paymentForm.value.phoneNumber),
+        email: this.paymentForm.value.email,
+        customerName: this.paymentForm.value.customerName,
+        preferredOperator: this.selectedPaymentMethod
+      };
+
+      const initResponse = await new Promise<any>((resolve, reject) => {
+        this.paymentService.initiatePayment(paymentRequest).subscribe({
+          next: resolve,
+          error: reject
+        });
+      });
+
+      if (!initResponse || initResponse.status === 'FAILED') {
+        paymentWindow?.close();
+        throw new Error(initResponse?.message || 'Échec de l\'initialisation du paiement');
+      }
+
+      // 3. Naviguer la fenêtre déjà ouverte vers PayDunya
+      if (initResponse.paymentUrl) {
+        if (paymentWindow && !paymentWindow.closed) {
+          paymentWindow.location.href = initResponse.paymentUrl;
+        } else {
+          window.open(initResponse.paymentUrl, '_blank');
+        }
+      } else {
+        paymentWindow?.close();
+      }
+
+      // 4. Stopper le spinner et afficher statut en attente
+      this.isProcessingPayment = false;
+      this.paymentStatus = { ...initResponse, status: 'PENDING' } as any;
+
+      // 5. Polling en arrière-plan
+      if (initResponse.transactionId) {
+        this.monitorPaymentStatus(initResponse.transactionId);
+      }
+
+    } catch (error: any) {
+      console.error(' Erreur lors du paiement:', error);
+      this.isProcessingPayment = false;
+      paymentWindow?.close();
+      this.errorMessage = error.message || 'Erreur lors du paiement';
+      this.snackBar.open(this.errorMessage, 'Fermer', {
+        duration: 5000,
+        panelClass: ['error-snackbar']
+      });
+    }
+  }
+
+  /**
+   * Créer une réservation avec statut en attente de paiement
+   */
+  private async createPendingReservation(): Promise<any> {
+    const formValues = this.bookingForm.value;
+    const selectedSlot = this.availableTimeSlots.find(slot => slot.value === formValues.timeSlot);
+
+    let datePrestation: Date;
+
+    if (selectedSlot && selectedSlot.dateTime) {
+      datePrestation = new Date(selectedSlot.dateTime);
+    } else {
+      const selectedDate = new Date(formValues.date);
+      const [hours, minutes] = formValues.timeSlot.split(':');
+      datePrestation = new Date(
+        selectedDate.getFullYear(),
+        selectedDate.getMonth(),
+        selectedDate.getDate(),
+        parseInt(hours),
+        parseInt(minutes)
+      );
+    }
+
+    const reservationData = this.isFreelanceBooking ? {
+      clientId: this.userId,
+      freelanceId: this.providerInfo.id,
+      serviceId: this.data.service.id,
+      datePrestation: datePrestation.toISOString(),
+      status: 'EN_ATTENTE_PAIEMENT',
+      type: 'freelance'
+    } : {
+      clientId: this.userId,
+      salonId: this.providerInfo.id,
+      serviceId: this.data.service.id,
+      datePrestation: datePrestation.toISOString(),
+      status: 'EN_ATTENTE_PAIEMENT',
+      type: 'salon'
+    };
+
+    return this.reservationService.createReservation(reservationData).toPromise();
+  }
+
+  /**
+   * Surveiller le statut du paiement
+   */
+  private monitorPaymentStatus(transactionId: string): void {
+
+
+    this.pollSubscription?.unsubscribe();
+    this.pollSubscription = this.paymentService.pollPaymentStatus(transactionId, 3000).subscribe({
+      next: (response) => {
+        this.paymentStatus = response;
+        if (response.status === 'COMPLETED') {
+          this.handlePaymentSuccess(response);
+        } else if (['FAILED', 'CANCELLED', 'EXPIRED'].includes(response.status)) {
+          this.handlePaymentFailure(response);
+        }
+      },
+      error: (error) => {
+        console.error(' Erreur surveillance paiement:', error);
+        this.isProcessingPayment = false;
+        this.errorMessage = 'Erreur lors de la vérification du paiement';
+      }
+    });
+  }
+
+  /**
+   * Gérer le succès du paiement
+   */
+  private handlePaymentSuccess(response: BeautyPaymentResponse): void {
+    this.isProcessingPayment = false;
+
+
+    this.snackBar.open('Paiement effectué avec succès ! Réservation confirmée.', 'Fermer', {
+      duration: 5000,
+      panelClass: ['success-snackbar']
+    });
+
+    // Optionnel : fermer automatiquement après 2 secondes
+    setTimeout(() => {
+      this.dialogRef.close({
+        success: true,
+        reservation: this.createdReservation,
+        payment: response
+      });
+    }, 2000);
+  }
+
+  /**
+   * Gérer l'échec du paiement
+   */
+  private handlePaymentFailure(response: BeautyPaymentResponse): void {
+    this.isProcessingPayment = false;
+
+
+    this.errorMessage = response.message || 'Le paiement a échoué';
+
+    this.snackBar.open('Paiement échoué. Vous pouvez réessayer ou choisir un autre mode de paiement.', 'Fermer', {
+      duration: 7000,
+      panelClass: ['error-snackbar']
+    });
+  }
+
+  /**
+   * Obtenir le message de statut du paiement
+   */
+  getPaymentStatusMessage(): string {
+    if (!this.paymentStatus) return '';
+    return this.paymentService.getStatusMessage(this.paymentStatus.status);
+  }
+
+  /**
+   * Vérifier si on peut réessayer le paiement
+   */
+  canRetryPayment(): boolean {
+    return this.paymentStatus ? this.paymentService.canRetry(this.paymentStatus.status) : false;
+  }
+
+  /**
+   * Réessayer le paiement
+   */
+  retryPayment(): void {
+    this.paymentStatus = null;
+    this.errorMessage = '';
+    this.confirmPayment();
+  }
+
+  /**
+   * Vérifier si on peut confirmer le paiement
+   */
+  canConfirmPayment(): boolean {
+    return !this.isProcessingPayment &&
+           !!this.selectedPaymentMethod &&
+           this.paymentForm.valid;
+  }
+
+  // ==========================================
+  // MÉTHODES UTILITAIRES MISES À JOUR
+  // ==========================================
+
+  private markFormGroupTouched(): void {
+    try {
+      // Formulaire de réservation
+      Object.keys(this.bookingForm.controls).forEach(key => {
+        const control = this.bookingForm.get(key);
+        if (control) control.markAsTouched();
+      });
+
+      // Formulaire de paiement
+      if (this.currentStep === 'payment') {
+        Object.keys(this.paymentForm.controls).forEach(key => {
+          const control = this.paymentForm.get(key);
+          if (control) control.markAsTouched();
+        });
+      }
+    } catch (error) {
+      console.error(' Erreur marking forms touched:', error);
+    }
+  }
+
+  // ==========================================
+  // GESTION DES ÉVÉNEMENTS (mise à jour)
+  // ==========================================
+
   onDialogClick(event: Event): void {
     event.stopPropagation();
   }
 
-  // ✅ Gestion propre de la fermeture
   closeDialog(result?: any): void {
-    console.log('🚪 Fermeture dialog:', result);
+    // Si un paiement est en cours, demander confirmation
+    if (this.isProcessingPayment) {
+      const confirmClose = confirm('Un paiement est en cours. Êtes-vous sûr de vouloir fermer ?');
+      if (!confirmClose) return;
+
+      // Réinitialiser l'état du paiement
+      this.paymentService.resetPaymentState();
+    }
+
+
     this.dialogRef.close(result);
   }
 
-  // ✅ Gestion ESC key
   @HostListener('keydown.escape', ['$event'])
   onEscapeKey(event: KeyboardEvent): void {
-    if (this.bookingForm.dirty) {
+    if (this.isProcessingPayment) {
+      event.preventDefault();
+      event.stopPropagation();
+      this.snackBar.open('Impossible de fermer pendant le paiement', 'OK', { duration: 3000 });
+      return;
+    }
+
+    if (this.bookingForm.dirty || this.paymentForm.dirty) {
       const confirmClose = confirm('Vous avez des modifications non sauvegardées. Voulez-vous vraiment fermer ?');
       if (!confirmClose) {
         event.preventDefault();
@@ -620,189 +1095,142 @@ export class BookingDialogComponent implements OnInit {
     this.closeDialog();
   }
 
-  // ✅ Ouverture datepicker sécurisée
   openDatePicker(): void {
     try {
       if (this.datePicker) {
-        console.log('📅 Ouverture datepicker');
+
         this.datePicker.open();
       } else {
-        console.warn('⚠️ DatePicker non disponible');
+        console.warn(' DatePicker non disponible');
       }
     } catch (error) {
-      console.error('❌ Erreur ouverture datepicker:', error);
+      console.error(' Erreur ouverture datepicker:', error);
     }
   }
 
   // ==========================================
-  // 📤 SOUMISSION RÉSERVATION SÉCURISÉE
-  // ==========================================
-
-  submitBooking(): void {
-    console.log('📤 Tentative soumission réservation...');
-    
-    try {
-      // Validations préliminaires
-      if (this.bookingForm.invalid) {
-        console.warn('⚠️ Formulaire invalide');
-        this.markFormGroupTouched();
-        return;
-      }
-      
-      if (!this.userId) {
-        console.warn('⚠️ Utilisateur non connecté');
-        this.errorMessage = 'Vous devez être connecté pour effectuer une réservation.';
-        return;
-      }
-      
-      if (this.isLoading) {
-        console.warn('⚠️ Soumission déjà en cours');
-        return;
-      }
-      
-      this.isLoading = true;
-      this.errorMessage = '';
-      
-      const formValues = this.bookingForm.value;
-      const selectedSlot = this.availableTimeSlots.find(slot => slot.value === formValues.timeSlot);
-      
-      let datePrestation: Date;
-      
-      if (selectedSlot && selectedSlot.dateTime) {
-        // Utiliser datetime exact du créneau
-        datePrestation = new Date(selectedSlot.dateTime);
-      } else {
-        // Fallback : construire datetime
-        const selectedDate = new Date(formValues.date);
-        const [hours, minutes] = formValues.timeSlot.split(':');
-        datePrestation = new Date(
-          selectedDate.getFullYear(),
-          selectedDate.getMonth(),
-          selectedDate.getDate(),
-          parseInt(hours),
-          parseInt(minutes)
-        );
-      }
-      
-      // ✅ Créer données de réservation selon le type
-      const reservationData = this.isFreelanceBooking ? {
-        clientId: this.userId,
-        freelanceId: this.providerInfo.id,
-        serviceId: this.data.service.id,
-        datePrestation: datePrestation.toISOString(),
-        type: 'freelance'
-      } : {
-        clientId: this.userId,
-        salonId: this.providerInfo.id,
-        serviceId: this.data.service.id,
-        datePrestation: datePrestation.toISOString(),
-        type: 'salon'
-      };
-      
-      console.log('📤 Données réservation:', reservationData);
-      
-      this.reservationService.createReservation(reservationData)
-        .subscribe({
-          next: (reservation) => {
-            try {
-              this.isLoading = false;
-              if (reservation) {
-                console.log('✅ Réservation créée:', reservation);
-                this.snackBar.open('Réservation confirmée avec succès !', 'Fermer', {
-                  duration: 5000,
-                  panelClass: ['success-snackbar']
-                });
-                this.dialogRef.close({ success: true, reservation });
-              } else {
-                this.errorMessage = 'Impossible de créer la réservation. Veuillez réessayer.';
-              }
-            } catch (error) {
-              console.error('❌ Erreur traitement succès:', error);
-              this.isLoading = false;
-              this.errorMessage = 'Erreur lors du traitement de la réponse.';
-            }
-          },
-          error: (error) => {
-            this.isLoading = false;
-            let errorMsg = error.message || 'Une erreur est survenue lors de la création de la réservation.';
-            
-            // Gestion spéciale pour les erreurs de créneaux
-            if (errorMsg.includes('créneau') || errorMsg.includes('disponible')) {
-              errorMsg = '⚠️ ' + errorMsg + '\n\n💡 Conseil: Rechargez les créneaux ou choisissez une autre date.';
-              
-              // Recharger les créneaux automatiquement
-              const currentDate = this.bookingForm.get('date')?.value;
-              if (currentDate) {
-                console.log('🔄 Rechargement automatique des créneaux après erreur...');
-                setTimeout(() => {
-                  this.loadAvailableSlots(currentDate);
-                }, 1000);
-              }
-            }
-            
-            this.errorMessage = errorMsg;
-            console.error('❌ Erreur création réservation:', error);
-            
-            this.snackBar.open(errorMsg, 'Fermer', {
-              duration: 10000,
-              panelClass: ['error-snackbar']
-            });
-          }
-        });
-        
-    } catch (error) {
-      this.isLoading = false;
-      this.errorMessage = 'Erreur lors de la préparation de la réservation.';
-      console.error('❌ Erreur préparation réservation:', error);
-    }
-  }
-
-  private markFormGroupTouched(): void {
-    try {
-      Object.keys(this.bookingForm.controls).forEach(key => {
-        const control = this.bookingForm.get(key);
-        if (control) {
-          control.markAsTouched();
-        }
-      });
-    } catch (error) {
-      console.error('❌ Erreur marking form touched:', error);
-    }
-  }
-
-  // ==========================================
-  // 🔍 MÉTHODES DE DEBUG
+  // MÉTHODES DE DEBUG
   // ==========================================
 
   ngAfterViewInit(): void {
-    console.log('👁️ Vue initialisée');
-    console.log('📅 DatePicker disponible:', !!this.datePicker);
-    console.log('📝 FormGroup:', this.bookingForm);
-    console.log('🎛️ Contrôles form:', {
-      date: this.bookingForm.get('date'),
-      timeSlot: this.bookingForm.get('timeSlot')
-    });
+
+
+
+
   }
 
   ngOnDestroy(): void {
-    console.log('💀 Destruction du composant BookingDialog');
+    this.stopAutoRefresh();
+
+    // Arrêter le polling de statut si en cours
+    if (this.pollSubscription) {
+      this.pollSubscription.unsubscribe();
+      this.pollSubscription = null;
+    }
+
+    // Réinitialiser l'état paiement si besoin
+    if (this.isProcessingPayment) {
+      this.isProcessingPayment = false;
+      this.paymentService.resetPaymentState();
+    }
   }
 
-  /**
-   * ✅ Debug state du composant
-   */
   logComponentState(): void {
-    console.log('🔍 État du composant:', {
-      isLoading: this.isLoading,
-      isLoadingSlots: this.isLoadingSlots,
-      errorMessage: this.errorMessage,
-      userId: this.userId,
-      isFreelanceBooking: this.isFreelanceBooking,
-      providerInfo: this.providerInfo,
-      availableTimeSlots: this.availableTimeSlots.length,
-      formValid: this.bookingForm?.valid,
-      formValue: this.bookingForm?.value,
-      canSubmit: this.canSubmitBooking()
-    });
+
+  }
+
+  // ==========================================
+  // NOUVELLES MÉTHODES - REDESIGN UI
+  // ==========================================
+
+  // Créneaux standards affichés (disponibles + grisés)
+  readonly standardSlots = [
+    '09:00', '10:00', '11:00', '12:00',
+    '14:00', '15:00', '16:00', '17:00',
+    '18:00', '19:00'
+  ];
+
+  isSlotAvailable(time: string): boolean {
+    return this.availableTimeSlots.some(s => s.value === time);
+  }
+
+  getSlotLabel(time: string): string {
+    const slot = this.availableTimeSlots.find(s => s.value === time);
+    return slot ? slot.label : time.replace(':', 'h');
+  }
+
+    onCalendarDateSelect(date: Date | null): void {
+    this.bookingForm.get('date')?.setValue(date);
+  }
+
+  selectTimeSlot(value: string): void {
+    if (!this.isSlotAvailable(value)) return;
+    this.bookingForm.get('timeSlot')?.setValue(value);
+  }
+
+  canConfirmAll(): boolean {
+    if (this.isLoading || this.isProcessingPayment || this.isLoadingSlots) return false;
+    if (!this.userId) return false;
+    const dateValue = this.bookingForm.get('date')?.value;
+    const timeSlotValue = this.bookingForm.get('timeSlot')?.value;
+    if (!dateValue || !timeSlotValue) return false;
+    if (this.availableTimeSlots.length === 0) return false;
+    if (!this.selectedPaymentMethod) return false;
+    return this.paymentForm.get('customerName')?.valid === true &&
+           this.paymentForm.get('phoneNumber')?.valid === true;
+  }
+
+  submitAll(): void {
+    if (!this.canConfirmAll()) {
+      this.markFormGroupTouched();
+      this.paymentForm.markAllAsTouched();
+      return;
+    }
+    this.currentStep = 'payment';
+    this.confirmPayment();
+  }
+
+  getProviderImage(): string {
+    if (!this.providerInfo) return 'assets/images/default-salon.jpg';
+    return this.providerInfo.photoProfilUrl ||
+           this.providerInfo.profileImage ||
+           this.providerInfo.image ||
+           this.providerInfo.photo ||
+           this.providerInfo.imageUrl ||
+           this.providerInfo.photoProfil ||
+           this.providerInfo.photoUrl ||
+           'assets/images/default-salon.jpg';
+  }
+
+  onImgError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    img.src = 'assets/images/default-salon.jpg';
+  }
+
+  getServiceDurationDisplay(): string {
+    const service = this.data?.service;
+    if (!service) return '30 min';
+    const minutes = service.dureeEnMinutes ||
+                    service.duree_minutes ||
+                    this.parseDurationMinutes(service.duree);
+    if (!minutes) return '30 min';
+    if (minutes >= 60) {
+      const h = Math.floor(minutes / 60);
+      const m = minutes % 60;
+      return m > 0 ? `${h}h ${m}min` : `${h}h`;
+    }
+    return `${minutes} min`;
+  }
+
+  private parseDurationMinutes(duree: string | undefined): number {
+    if (!duree) return 0;
+    const d = duree.toLowerCase().trim();
+    if (d.includes('h')) {
+      const parts = d.split('h');
+      const h = parseInt(parts[0]) || 0;
+      const m = parts[1] ? parseInt(parts[1].replace(/\D/g, '')) || 0 : 0;
+      return h * 60 + m;
+    }
+    return parseInt(d.replace(/\D/g, '')) || 0;
   }
 }

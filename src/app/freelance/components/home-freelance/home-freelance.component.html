@@ -1,9 +1,9 @@
 <mat-sidenav-container class="beauty-container">
   <!-- ✨ SIDEBAR -->
-  <mat-sidenav #sidenav mode="side" [(opened)]="sidebarOpen" class="beauty-sidebar">
+  <mat-sidenav #sidenav mode="side" [opened]="true" [disableClose]="true" class="beauty-sidebar">
     <div class="sidebar-header">
       <div class="user-avatar">
-        <img [src]="userPhotoUrl || 'assets/images/logo (2).png'" 
+        <img [src]="userPhotoUrl || 'assets/images/logo (2).png'"
              [alt]="'Photo de ' + userFullName"
              (error)="$any($event.target).src='assets/images/logo (2).png'">
       </div>
@@ -59,45 +59,33 @@
   <mat-sidenav-content>
     <!-- TOP BAR -->
     <mat-toolbar class="beauty-toolbar">
-      <button mat-icon-button (click)="toggleSidebar()" class="menu-button">
-        <mat-icon>menu</mat-icon>
-      </button>
-      
-      <div class="toolbar-title">
-        <span *ngIf="isAuthenticated; else notConnected">
-          Bienvenue, {{ userFullName }} ✨
-        </span>
-        <ng-template #notConnected>
-          <span>Veuillez vous connecter</span>
-        </ng-template>
-      </div>
-      
+      <div class="toolbar-title"></div>
+
       <div class="toolbar-actions">
         <ng-container *ngIf="isAuthenticated">
-          <button mat-icon-button [matMenuTriggerFor]="notificationMenu" 
-                  [matBadge]="unreadNotifications" 
+          <button mat-icon-button [matMenuTriggerFor]="notificationMenu"
+                  [matBadge]="unreadNotifications"
                   [matBadgeHidden]="unreadNotifications === 0"
                   matBadgeColor="warn"
                   matBadgeSize="small"
                   class="notification-btn">
             <mat-icon>notifications</mat-icon>
           </button>
+          <button mat-icon-button class="home-icon-btn" [routerLink]="['/accueil']" matTooltip="Accueil">
+            <mat-icon>home</mat-icon>
+          </button>
           <mat-menu #notificationMenu="matMenu" class="notification-menu">
             <div (click)="$event.stopPropagation()">
-              <app-notification-list 
+              <app-notification-list
                 [notifications]="notifications"
                 (notificationRead)="onNotificationRead()">
               </app-notification-list>
             </div>
           </mat-menu>
-          
+
           <button mat-icon-button [matMenuTriggerFor]="userMenu">
             <mat-icon>account_circle</mat-icon>
           </button>
-          <button mat-raised-button class="btn btn-primary" [routerLink]="['/accueil']">
-        <mat-icon>home</mat-icon>
-        Home
-      </button>
           <mat-menu #userMenu="matMenu">
             <div class="user-menu-header">
               <strong>{{ userFullName }}</strong>
@@ -141,7 +129,7 @@
             <mat-icon class="stat-icon">event</mat-icon>
             <div class="stat-content">
               <ng-container *ngIf="!isLoadingStats; else loadingTemplate">
-                <span class="stat-number">{{ dashboardStats?.weeklyAppointments || 12 }}</span>
+                <span class="stat-number">{{ dashboardStats.weeklyAppointments || 12 }}</span>
               </ng-container>
               <ng-template #loadingTemplate>
                 <mat-icon class="loading-icon">hourglass_empty</mat-icon>
@@ -154,7 +142,7 @@
             <mat-icon class="stat-icon">star</mat-icon>
             <div class="stat-content">
               <ng-container *ngIf="!isLoadingStats; else loadingTemplate2">
-                <span class="stat-number">{{ dashboardStats?.averageRating || 4.9 | number:'1.1-1' }}</span>
+                <span class="stat-number">{{ dashboardStats.averageRating || 4.9 | number:'1.1-1' }}</span>
               </ng-container>
               <ng-template #loadingTemplate2>
                 <mat-icon class="loading-icon">hourglass_empty</mat-icon>
@@ -167,7 +155,7 @@
             <mat-icon class="stat-icon">payments</mat-icon>
             <div class="stat-content">
               <ng-container *ngIf="!isLoadingStats; else loadingTemplate3">
-                <span class="stat-number">{{ (dashboardStats?.monthlyRevenue || 85000) / 1000 | number:'1.0-0' }}K</span>
+                <span class="stat-number">{{ (dashboardStats.monthlyRevenue || 85000) / 1000 | number:'1.0-0' }}K</span>
               </ng-container>
               <ng-template #loadingTemplate3>
                 <mat-icon class="loading-icon">hourglass_empty</mat-icon>
@@ -180,7 +168,7 @@
             <mat-icon class="stat-icon">photo_camera</mat-icon>
             <div class="stat-content">
               <ng-container *ngIf="!isLoadingStats; else loadingTemplate4">
-                <span class="stat-number">{{ dashboardStats?.portfolioPhotos || 47 }}</span>
+                <span class="stat-number">{{ dashboardStats.portfolioPhotos || 47 }}</span>
               </ng-container>
               <ng-template #loadingTemplate4>
                 <mat-icon class="loading-icon">hourglass_empty</mat-icon>
@@ -376,19 +364,12 @@
       </div>
 
       <div *ngIf="showOpportunities" class="opportunities-section">
-        <div class="section-header">
-          <button mat-icon-button (click)="backToHome()">
-            <mat-icon>arrow_back</mat-icon>
-          </button>
-          <h2>Opportunités & Mes Candidatures</h2>
-        </div>
-        <div class="section-content">
-          <app-opportunites-emploi 
-            [freelanceId]="currentUser?.id"
-            [compactMode]="false"
-            [showHeader]="true">
-          </app-opportunites-emploi>
-        </div>
+        <app-opportunites-emploi
+          [freelanceId]="currentUser?.id"
+          [compactMode]="false"
+          [hideNav]="true"
+          [showHeader]="true">
+        </app-opportunites-emploi>
       </div>
       <div *ngIf="showServices" class="services-section">
         <div class="section-header">

@@ -30,19 +30,19 @@ export class PortfolioAuthManagerService {
     
     // Si l'utilisateur n'est pas connecté, il n'est pas propriétaire
     if (!currentUser) {
-      console.log('Utilisateur non connecté, donc non propriétaire');
+
       return false;
     }
     
     // Si l'utilisateur n'est pas un freelance, il n'est pas propriétaire
     if (currentUser.role !== 'FREELANCE') {
-      console.log('Utilisateur non freelance, donc non propriétaire');
+
       return false;
     }
     
     // Vérifier si l'ID de l'utilisateur correspond à l'ID du freelance
     const isOwner = currentUser.id === freelanceId;
-    console.log(`Vérification propriétaire: ${currentUser.id} === ${freelanceId} = ${isOwner}`);
+
     return isOwner;
   }
 

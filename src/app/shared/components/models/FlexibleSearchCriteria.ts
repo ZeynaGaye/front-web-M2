@@ -53,7 +53,7 @@ interface FlexibleSearchCriteria {
   sortBy?: 'price' | 'rating' | 'distance' | 'availability' | 'popularity';
   sortOrder?: 'asc' | 'desc';
   
-  // ✅ NOUVEAUX CRITÈRES SPÉCIFIQUES AUX FREELANCES
+  //  NOUVEAUX CRITÈRES SPÉCIFIQUES AUX FREELANCES
   freelancePreferences?: {
     disponibleWeekend?: boolean;
     disponibleSoir?: boolean;

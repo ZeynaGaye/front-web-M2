@@ -14,7 +14,7 @@ export class ReservationService {
   constructor(private http: HttpClient) { }
 
   // ==========================================
-  // 🔑 AUTHENTIFICATION ET ID CLIENT
+  //  AUTHENTIFICATION ET ID CLIENT
   // ==========================================
   
   private getCurrentClientId(): number | null {
@@ -32,7 +32,7 @@ export class ReservationService {
       
       return null;
     } catch (error) {
-      console.error('❌ Erreur récupération ID client:', error);
+      console.error(' Erreur récupération ID client:', error);
       return null;
     }
   }
@@ -65,17 +65,16 @@ export class ReservationService {
       );
       return JSON.parse(jsonPayload);
     } catch (error) {
-      console.error('❌ Erreur parsing JWT:', error);
+      console.error(' Erreur parsing JWT:', error);
       return {};
     }
   }
 
   // Créer une nouvelle réservation
   createReservation(reservationData: any): Observable<any> {
-    console.log('Création d\'une réservation avec les données:', reservationData);
+
 
     return this.http.post<any>(`${this.apiUrl}/create`, reservationData).pipe(
-      tap(reservation => console.log('Réservation créée avec succès:', reservation)),
       catchError(this.handleError)
     );
   }
@@ -83,16 +82,14 @@ export class ReservationService {
   // Récupérer les réservations de l'utilisateur connecté
   getUserReservations(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/user`).pipe(
-      tap(reservations => console.log(`${reservations.length} réservations récupérées`)),
       catchError(this.handleError)
     );
   }
 
   // Annuler une réservation
-  cancelReservation(reservationId: number): Observable<any> {
-    console.log(`[Service] Appel PUT pour annuler réservation ${reservationId} vers: ${this.apiUrl}/${reservationId}/cancel`);
-    return this.http.put<any>(`${this.apiUrl}/${reservationId}/cancel`, {}).pipe(
-      tap(_ => console.log(`Réservation ${reservationId} annulée`)),
+  cancelReservation(reservationId: number, reason?: string): Observable<any> {
+    const body = reason ? { raison: reason } : {};
+    return this.http.put<any>(`${this.apiUrl}/${reservationId}/cancel`, body).pipe(
       catchError(this.handleError)
     );
   }
@@ -100,26 +97,24 @@ export class ReservationService {
   // Récupérer les détails d'une réservation
   getReservationById(reservationId: number): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/${reservationId}`).pipe(
-      tap(reservation => console.log('Réservation récupérée:', reservation)),
       catchError(this.handleError)
     );
   }
 
   // Mettre à jour une réservation
   updateReservation(reservationId: number, updateData: any): Observable<any> {
-    console.log(`[Service] Appel PUT pour mettre à jour réservation ${reservationId} vers: ${this.apiUrl}/${reservationId} avec données:`, updateData);
+
     return this.http.put<any>(`${this.apiUrl}/${reservationId}`, updateData).pipe(
-      tap(updatedReservation => console.log('Réservation mise à jour:', updatedReservation)),
       catchError(this.handleError)
     );
   }
 
   // ==========================================
-  // 🚀 NOUVELLES MÉTHODES POUR CRÉNEAUX DYNAMIQUES
+  //  NOUVELLES MÉTHODES POUR CRÉNEAUX DYNAMIQUES
   // ==========================================
 
   /**
-   * ✅ NOUVEAU : Récupérer créneaux disponibles pour un salon
+   *  NOUVEAU : Récupérer créneaux disponibles pour un salon
    * Utilisé par booking-dialog pour afficher créneaux réels
    */
   getCreneauxDisponibles(salonId: number, date: string, dureeService: number = 30): Observable<any> {
@@ -127,19 +122,19 @@ export class ReservationService {
       .set('date', date)
       .set('dureeService', dureeService.toString());
 
-    console.log(`Récupération créneaux salon ${salonId} pour ${date} (${dureeService}min)`);
+
 
     return this.http.get<any>(`${this.disponibilitesUrl}/salon/${salonId}`, { params }).pipe(
       tap(response => {
         const nbCreneaux = response?.creneaux?.length || 0;
-        console.log(`${nbCreneaux} créneaux disponibles récupérés`);
+
       }),
       catchError(this.handleError)
     );
   }
 
   /**
-   * ✅ NOUVEAU : Récupérer créneaux pour une semaine
+   *  NOUVEAU : Récupérer créneaux pour une semaine
    * Optimisation pour afficher plusieurs jours d'un coup
    */
   getCreneauxSemaine(salonId: number, dateDebut: string, dureeService: number = 30): Observable<any> {
@@ -147,79 +142,96 @@ export class ReservationService {
       .set('dateDebut', dateDebut)
       .set('dureeService', dureeService.toString());
 
-    console.log(`Récupération créneaux semaine salon ${salonId} depuis ${dateDebut}`);
+
 
     return this.http.get<any>(`${this.disponibilitesUrl}/salon/${salonId}/semaine`, { params }).pipe(
       tap(response => {
         const nbJours = response?.disponibilites?.length || 0;
-        console.log(`Créneaux pour ${nbJours} jours récupérés`);
+
       }),
       catchError(this.handleError)
     );
   }
 
   /**
-   * ✅ NOUVEAU : Vérifier disponibilité d'un créneau spécifique
+   * Récupérer créneaux disponibles pour un freelance
+   * Utilisé par booking-dialog pour afficher créneaux réels du freelance
+   */
+  getCreneauxDisponiblesFreelance(freelanceId: number, date: string, dureeService: number = 30): Observable<any> {
+    const params = new HttpParams()
+      .set('date', date)
+      .set('dureeService', dureeService.toString());
+
+    return this.http.get<any>(`${this.disponibilitesUrl}/freelance/${freelanceId}`, { params }).pipe(
+      tap(response => {
+        const nbCreneaux = response?.creneaux?.length || 0;
+      }),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   *  NOUVEAU : Vérifier disponibilité d'un créneau spécifique
    * Utilisé avant création réservation pour éviter conflits
    */
-  verifierDisponibilite(salonId: number, debut: string, fin: string): Observable<any> {
+  verifierDisponibilite(salonId: number, debut: string, fin: string, estSalon: boolean = true): Observable<any> {
     const params = new HttpParams()
       .set('prestataireId', salonId.toString())
-      .set('estSalon', 'true')
+      .set('estSalon', estSalon.toString())
       .set('debut', debut)
       .set('fin', fin);
 
-    console.log(`Vérification disponibilité salon ${salonId} : ${debut} → ${fin}`);
+
 
     return this.http.get<any>(`${this.disponibilitesUrl}/verifier`, { params }).pipe(
       tap(response => {
         const disponible = response?.estDisponible ? 'disponible' : 'occupé';
-        console.log(`Créneau ${disponible}`);
+
       }),
       catchError(this.handleError)
     );
   }
 
   /**
-   * ✅ NOUVEAU : Récupérer créneaux par service ID
+   *  NOUVEAU : Récupérer créneaux par service ID
    * Alternative si vous préférez passer par service plutôt que salon
    */
   getCreneauxParService(serviceId: number, date: string): Observable<any> {
     const params = new HttpParams().set('date', date);
 
-    console.log(`Récupération créneaux service ${serviceId} pour ${date}`);
+
 
     return this.http.get<any>(`${environment.apiUrl}/creneaux/service/${serviceId}`, { params }).pipe(
       tap(response => {
         const nbCreneaux = Array.isArray(response) ? response.length : 0;
-        console.log(`${nbCreneaux} créneaux service récupérés`);
+
       }),
       catchError(this.handleError)
     );
   }
 
   /**
-   * ✅ NOUVEAU : Récupérer horaires d'un salon
+   *  NOUVEAU : Récupérer horaires d'un salon
    * Utile pour afficher infos horaires dans l'interface
    */
   getHorairesSalon(salonId: number): Observable<any> {
-    console.log(`Récupération horaires salon ${salonId}`);
+
 
     return this.http.get<any>(`${this.disponibilitesUrl}/salon/${salonId}/horaires`).pipe(
       tap(response => {
         const nbHoraires = response?.horaires?.length || 0;
-        console.log(`${nbHoraires} horaires récupérés`);
+
       }),
       catchError(this.handleError)
     );
   }
 
   // ==========================================
-  // 🛠️ MÉTHODES UTILITAIRES POUR CRÉNEAUX
+  //  MÉTHODES UTILITAIRES POUR CRÉNEAUX
   // ==========================================
 
   /**
-   * ✅ UTILITAIRE : Formater heure pour affichage
+   *  UTILITAIRE : Formater heure pour affichage
    * "2025-06-16T14:30:00" → "14h30"
    */
   formatHeurePourAffichage(dateTime: string): string {
@@ -237,7 +249,7 @@ export class ReservationService {
   }
 
   /**
-   * ✅ UTILITAIRE : Vérifier si une date est aujourd'hui
+   *  UTILITAIRE : Vérifier si une date est aujourd'hui
    */
   isToday(dateStr: string): boolean {
     const today = new Date().toISOString().split('T')[0];
@@ -245,7 +257,7 @@ export class ReservationService {
   }
 
   /**
-   * ✅ UTILITAIRE : Obtenir prochaine date disponible
+   *  UTILITAIRE : Obtenir prochaine date disponible
    */
   getProchaineDateDisponible(): string {
     const tomorrow = new Date();
@@ -254,7 +266,7 @@ export class ReservationService {
   }
 
   /**
-   * ✅ UTILITAIRE : Parser durée service
+   *  UTILITAIRE : Parser durée service
    * "1h30" → 90, "45min" → 45, "2h" → 120
    */
   parseServiceDuration(duree: string): number {
@@ -281,17 +293,12 @@ export class ReservationService {
   private handleError(error: HttpErrorResponse) {
     let errorMessage = '';
 
-    if (error.error instanceof ErrorEvent) {
-      // Erreur côté client
+    if (error.error && typeof ErrorEvent !== 'undefined' && error.error instanceof ErrorEvent) {
+      // Erreur côté client (browser uniquement)
       errorMessage = `Erreur: ${error.error.message}`;
     } else {
       // Erreur côté serveur
-      console.log('🔍 Détails erreur serveur:', {
-        status: error.status,
-        statusText: error.statusText,
-        error: error.error,
-        message: error.message
-      });
+
 
       // Gestion spéciale pour les erreurs de disponibilité
       if (error.status === 404 && error.error && typeof error.error === 'object') {
@@ -322,84 +329,84 @@ export class ReservationService {
 
 
   /**
-  * ✅ NOUVEAU : Récupérer toutes les réservations des salons de l'employeur
+  *  NOUVEAU : Récupérer toutes les réservations des salons de l'employeur
   * Utilisé dans le dashboard employeur pour afficher toutes les réservations
   */
   getEmployeurReservations(): Observable<any[]> {
-    console.log('Récupération des réservations employeur');
+
 
     return this.http.get<any[]>(`${this.apiUrl}/employeur`).pipe(
       tap(reservations => {
-        console.log(`${reservations.length} réservations employeur récupérées`);
-        console.log('Premières réservations:', reservations.slice(0, 3));
+
+
       }),
       catchError(this.handleError)
     );
   }
 
   /**
-  * ✅ NOUVEAU : Récupérer toutes les réservations du freelance connecté
+  *  NOUVEAU : Récupérer toutes les réservations du freelance connecté
   * Utilisé dans le dashboard freelance pour afficher toutes les réservations
   */
   getFreelanceReservations(): Observable<any[]> {
-    console.log('Récupération des réservations freelance');
+
 
     return this.http.get<any[]>(`${this.apiUrl}/freelance`).pipe(
       tap(reservations => {
-        console.log(`${reservations.length} réservations freelance récupérées`);
-        console.log('Premières réservations:', reservations.slice(0, 3));
+
+
       }),
       catchError(this.handleError)
     );
   }
 
   /**
-  * ✅ NOUVEAU : Récupérer les statistiques du freelance connecté
+  *  NOUVEAU : Récupérer les statistiques du freelance connecté
   * Utilisé dans le dashboard freelance pour afficher les stats
   */
   getFreelanceStats(): Observable<any> {
-    console.log('Récupération des statistiques freelance');
+
 
     return this.http.get<any>(`${this.apiUrl}/freelance/stats`).pipe(
       tap(stats => {
-        console.log('Statistiques freelance récupérées:', stats);
+
       }),
       catchError(this.handleError)
     );
   }
 
   /**
-  * ✅ NOUVEAU : Récupérer les réservations d'aujourd'hui pour le freelance
+  *  NOUVEAU : Récupérer les réservations d'aujourd'hui pour le freelance
   * Utilisé pour afficher les réservations du jour
   */
   getFreelanceTodayReservations(): Observable<any[]> {
-    console.log('Récupération des réservations freelance du jour');
+
 
     return this.http.get<any[]>(`${this.apiUrl}/freelance/today`).pipe(
       tap(reservations => {
-        console.log(`${reservations.length} réservations freelance aujourd'hui`);
+
       }),
       catchError(this.handleError)
     );
   }
 
   /**
-  * ✅ NOUVEAU : Récupérer les réservations d'un salon spécifique
+  *  NOUVEAU : Récupérer les réservations d'un salon spécifique
   * Utilisé pour filtrer par salon dans l'interface
   */
   getSalonReservations(salonId: number): Observable<any[]> {
-    console.log(`Récupération réservations salon ${salonId}`);
+
 
     return this.http.get<any[]>(`${this.apiUrl}/salon/${salonId}`).pipe(
       tap(reservations => {
-        console.log(`${reservations.length} réservations salon ${salonId} récupérées`);
+
       }),
       catchError(this.handleError)
     );
   }
 
   /**
-  * ✅ NOUVEAU : Mettre à jour le statut d'une réservation (employeur)
+  *  NOUVEAU : Mettre à jour le statut d'une réservation (employeur)
   * Statuts possibles: 'confirmee', 'annulee', 'terminee'
   */
   updateReservationStatus(reservationId: number, newStatus: string): Observable<any> {
@@ -407,52 +414,52 @@ export class ReservationService {
       statut: newStatus,
       updatedAt: new Date().toISOString()
     };
-    console.log(`[Service] Appel PUT pour statut réservation ${reservationId} vers: ${this.apiUrl}/${reservationId}/status avec données:`, statusData);
+
 
     return this.http.put<any>(`${this.apiUrl}/${reservationId}/status`, statusData).pipe(
       tap(updatedReservation => {
-        console.log(`Réservation ${reservationId} mise à jour:`, updatedReservation);
+
       }),
       catchError(this.handleError)
     );
   }
 
   /**
-  * ✅ NOUVEAU : Confirmer une réservation en attente
+  *  NOUVEAU : Confirmer une réservation en attente
   * Raccourci pour updateReservationStatus avec statut 'confirmee'
   */
   confirmerReservation(reservationId: number): Observable<any> {
-    console.log(`Confirmation réservation ${reservationId}`);
+
     return this.updateReservationStatus(reservationId, 'confirmee');
   }
 
  /**
- * ✅ TERMINER une réservation 
+ *  TERMINER une réservation 
  */
 terminerReservation(reservationId: number): Observable<any> {
-  console.log(`[Service] 🎯 TERMINER réservation ${reservationId} vers: ${this.apiUrl}/${reservationId}/complete`);
+
   
   if (!reservationId || reservationId === undefined) {
-    console.error('❌ ID manquant dans terminerReservation');
+    console.error(' ID manquant dans terminerReservation');
     return throwError(() => new Error('ID de réservation manquant'));
   }
   
   return this.http.put<any>(`${this.apiUrl}/${reservationId}/complete`, {}).pipe(
     tap(updatedReservation => {
-      console.log(`✅ Réservation ${reservationId} terminée:`, updatedReservation);
+
     }),
     catchError(this.handleError)
   );
 }
 
 /**
- * ✅ REFUSER/ANNULER une réservation 
+ *  REFUSER/ANNULER une réservation 
  */
 refuserReservation(reservationId: number, motif?: string): Observable<any> {
-  console.log(`[Service] 🎯 REFUSER réservation ${reservationId} vers: ${this.apiUrl}/${reservationId}/refuse`);
+
   
   if (!reservationId || reservationId === undefined) {
-    console.error('❌ ID manquant dans refuserReservation');
+    console.error(' ID manquant dans refuserReservation');
     return throwError(() => new Error('ID de réservation manquant'));
   }
   
@@ -462,20 +469,20 @@ refuserReservation(reservationId: number, motif?: string): Observable<any> {
   
   return this.http.put<any>(`${this.apiUrl}/${reservationId}/refuse`, statusData).pipe(
     tap(updatedReservation => {
-      console.log(`✅ Réservation ${reservationId} refusée:`, updatedReservation);
+
     }),
     catchError(this.handleError)
   );
 }
 
 /**
- * ✅ MARQUER NON PRÉSENTÉ
+ *  MARQUER NON PRÉSENTÉ
  */
 marquerNonPresentee(reservationId: number, motif?: string): Observable<any> {
-  console.log(`[Service] 🎯 NON PRÉSENTÉ réservation ${reservationId} vers: ${this.apiUrl}/${reservationId}/no-show`);
+
   
   if (!reservationId || reservationId === undefined) {
-    console.error('❌ ID manquant dans marquerNonPresentee');
+    console.error(' ID manquant dans marquerNonPresentee');
     return throwError(() => new Error('ID de réservation manquant'));
   }
   
@@ -485,7 +492,7 @@ marquerNonPresentee(reservationId: number, motif?: string): Observable<any> {
   
   return this.http.put<any>(`${this.apiUrl}/${reservationId}/no-show`, statusData).pipe(
     tap(updatedReservation => {
-      console.log(`✅ Réservation ${reservationId} marquée non présentée:`, updatedReservation);
+
     }),
     catchError(this.handleError)
   );
@@ -493,44 +500,44 @@ marquerNonPresentee(reservationId: number, motif?: string): Observable<any> {
 
 
   /**
-  * ✅ NOUVEAU : Récupérer les statistiques des réservations employeur
+  *  NOUVEAU : Récupérer les statistiques des réservations employeur
   * Dashboard stats: total, en attente, confirmées, etc.
   */
   getReservationStats(): Observable<any> {
-    console.log('Récupération statistiques réservations employeur');
+
 
     return this.http.get<any>(`${this.apiUrl}/employeur/stats`).pipe(
       tap(stats => {
-        console.log('Statistiques récupérées:', stats);
+
       }),
       catchError(this.handleError)
     );
   }
 
   /**
-  * ✅ NOUVEAU : Récupérer les réservations d'aujourd'hui
+  *  NOUVEAU : Récupérer les réservations d'aujourd'hui
   * Pour le widget "Réservations du jour" du dashboard
   */
   getReservationsAujourdhui(): Observable<any[]> {
     const today = new Date().toISOString().split('T')[0];
-    console.log(`Récupération réservations du jour: ${today}`);
+
 
     const params = new HttpParams().set('date', today);
 
     return this.http.get<any[]>(`${this.apiUrl}/employeur/today`, { params }).pipe(
       tap(reservations => {
-        console.log(`${reservations.length} réservations aujourd'hui`);
+
       }),
       catchError(this.handleError)
     );
   }
 
   /**
-  * ✅ NOUVEAU : Récupérer réservations par période
+  *  NOUVEAU : Récupérer réservations par période
   * Pour les filtres de date dans l'interface
   */
   getReservationsPeriode(dateDebut: string, dateFin: string, salonId?: number): Observable<any[]> {
-    console.log(`Récupération réservations période: ${dateDebut} → ${dateFin}`);
+
 
     let params = new HttpParams()
       .set('dateDebut', dateDebut)
@@ -542,14 +549,14 @@ marquerNonPresentee(reservationId: number, motif?: string): Observable<any> {
 
     return this.http.get<any[]>(`${this.apiUrl}/employeur/periode`, { params }).pipe(
       tap(reservations => {
-        console.log(`${reservations.length} réservations trouvées pour la période`);
+
       }),
       catchError(this.handleError)
     );
   }
 
   /**
-  * ✅ NOUVEAU : Rechercher réservations par critères
+  *  NOUVEAU : Rechercher réservations par critères
   * Pour la barre de recherche dans l'interface
   */
   rechercherReservations(terme: string, filtres?: {
@@ -558,7 +565,7 @@ marquerNonPresentee(reservationId: number, motif?: string): Observable<any> {
     dateDebut?: string;
     dateFin?: string;
   }): Observable<any[]> {
-    console.log(`Recherche réservations: "${terme}"`, filtres);
+
 
     let params = new HttpParams().set('q', terme);
 
@@ -571,23 +578,23 @@ marquerNonPresentee(reservationId: number, motif?: string): Observable<any> {
 
     return this.http.get<any[]>(`${this.apiUrl}/employeur/search`, { params }).pipe(
       tap(reservations => {
-        console.log(`${reservations.length} réservations trouvées pour "${terme}"`);
+
       }),
       catchError(this.handleError)
     );
   }
 
   // ==========================================
-  // 📊 MÉTHODES DE CALCUL CÔTÉ CLIENT
+  //  MÉTHODES DE CALCUL CÔTÉ CLIENT
   // (Si les stats ne viennent pas du backend)
   // ==========================================
 
   /**
-  * ✅ UTILITAIRE : Calculer stats depuis liste de réservations
+  *  UTILITAIRE : Calculer stats depuis liste de réservations
   * Utilisé si le backend ne fournit pas d'endpoint /stats
   */
   calculateStatsFromReservations(reservations: any[]): any {
-    console.log(`Calcul statistiques pour ${reservations.length} réservations`);
+
 
     const stats = {
       total: reservations.length,
@@ -631,12 +638,12 @@ marquerNonPresentee(reservationId: number, motif?: string): Observable<any> {
       }
     });
 
-    console.log('Statistiques calculées:', stats);
+
     return stats;
   }
 
   /**
-  * ✅ UTILITAIRE : Filtrer réservations par statut
+  *  UTILITAIRE : Filtrer réservations par statut
   */
   filterByStatus(reservations: any[], statut: string): any[] {
     return reservations.filter(r =>
@@ -646,7 +653,7 @@ marquerNonPresentee(reservationId: number, motif?: string): Observable<any> {
   }
 
   /**
-  * ✅ UTILITAIRE : Filtrer réservations d'aujourd'hui
+  *  UTILITAIRE : Filtrer réservations d'aujourd'hui
   */
   filterTodayReservations(reservations: any[]): any[] {
     const today = new Date().toISOString().split('T')[0];
@@ -658,7 +665,7 @@ marquerNonPresentee(reservationId: number, motif?: string): Observable<any> {
   }
 
   /**
-  * ✅ UTILITAIRE : Filtrer réservations par salon
+  *  UTILITAIRE : Filtrer réservations par salon
   */
   filterBySalon(reservations: any[], salonId: number): any[] {
     return reservations.filter(r =>
@@ -667,7 +674,7 @@ marquerNonPresentee(reservationId: number, motif?: string): Observable<any> {
   }
 
   /**
-  * ✅ UTILITAIRE : Trier réservations par date
+  *  UTILITAIRE : Trier réservations par date
   */
   sortByDate(reservations: any[], ordre: 'asc' | 'desc' = 'desc'): any[] {
     return [...reservations].sort((a, b) => {
@@ -681,11 +688,11 @@ marquerNonPresentee(reservationId: number, motif?: string): Observable<any> {
   }
 
   // ==========================================
-  // 🎨 MÉTHODES D'AFFICHAGE ET FORMATAGE
+  //  MÉTHODES D'AFFICHAGE ET FORMATAGE
   // ==========================================
 
   /**
-  * ✅ UTILITAIRE : Formater statut pour affichage
+  *  UTILITAIRE : Formater statut pour affichage
   */
   formatStatutPourAffichage(statut: string): string {
     const statutsMap: { [key: string]: string } = {
@@ -703,7 +710,7 @@ marquerNonPresentee(reservationId: number, motif?: string): Observable<any> {
   }
 
   /**
-  * ✅ UTILITAIRE : Obtenir couleur du statut
+  *  UTILITAIRE : Obtenir couleur du statut
   */
   getStatutColor(statut: string): string {
     const colorsMap: { [key: string]: string } = {
@@ -721,7 +728,7 @@ marquerNonPresentee(reservationId: number, motif?: string): Observable<any> {
   }
 
   /**
-  * ✅ UTILITAIRE : Formater prix avec devise
+  *  UTILITAIRE : Formater prix avec devise
   */
   formatPrix(prix: number, devise: string = 'CFA'): string {
     if (!prix || prix === 0) return `0 ${devise}`;
@@ -730,7 +737,7 @@ marquerNonPresentee(reservationId: number, motif?: string): Observable<any> {
   }
 
   /**
-  * ✅ UTILITAIRE : Formater date pour affichage français
+  *  UTILITAIRE : Formater date pour affichage français
   */
   formatDateFrancaise(date: string | Date): string {
     try {
@@ -748,7 +755,7 @@ marquerNonPresentee(reservationId: number, motif?: string): Observable<any> {
   }
 
   /**
-  * ✅ UTILITAIRE : Formater heure pour affichage
+  *  UTILITAIRE : Formater heure pour affichage
   */
   formatHeureComplete(date: string | Date): string {
     try {
@@ -764,7 +771,7 @@ marquerNonPresentee(reservationId: number, motif?: string): Observable<any> {
   }
 
   /**
-  * ✅ UTILITAIRE : Calculer durée depuis création
+  *  UTILITAIRE : Calculer durée depuis création
   */
   getTempsDepuisCreation(dateCreation: string | Date): string {
     try {
@@ -868,10 +875,10 @@ marquerNonPresentee(reservationId: number, motif?: string): Observable<any> {
   // ===== MÉTHODES POUR NOTIFICATION ET RATING =====
 
   /**
-   * ✅ NOUVEAU : Envoyer notification de demande de notation
+   *  NOUVEAU : Envoyer notification de demande de notation
    */
   sendRatingRequest(reservationId: number, clientEmail?: string): Observable<any> {
-    console.log(`[Service] 📧 Demande de notation pour réservation ${reservationId}`);
+
     
     const requestBody = {
       reservationId: reservationId,
@@ -880,31 +887,31 @@ marquerNonPresentee(reservationId: number, motif?: string): Observable<any> {
     
     return this.http.post<any>(`${this.apiUrl}/${reservationId}/request-rating`, requestBody).pipe(
       tap(response => {
-        console.log(`✅ Demande de notation envoyée pour réservation ${reservationId}`);
+
       }),
       catchError(this.handleError)
     );
   }
 
   /**
-   * ✅ NOUVEAU : Soumettre une note/avis
+   *  NOUVEAU : Soumettre une note/avis
    */
   submitRating(reservationId: number, ratingData: {
     note: number;
     commentaire?: string;
     recommande?: boolean;
   }): Observable<any> {
-    console.log(`[Service] ⭐ Soumission note pour réservation ${reservationId}:`, ratingData);
+
     
     return this.http.post<any>(`${this.apiUrl}/${reservationId}/rating`, ratingData).pipe(
       tap(response => {
-        console.log(`✅ Note soumise pour réservation ${reservationId}`);
+
       }),
       catchError(this.handleError)
     );
   }
  /**
-   * ✅ Vérifie si un freelance peut marquer un client comme absent
+   *  Vérifie si un freelance peut marquer un client comme absent
    */
   canMarkClientAbsent(reservation: any): boolean {
     const status = reservation.status?.toLowerCase() || reservation.bookstatus?.toLowerCase();
@@ -916,7 +923,7 @@ marquerNonPresentee(reservationId: number, motif?: string): Observable<any> {
     return (status === 'confirmee' || status === 'confirmed') && delayMinutes > 15;
   }
   /**
-   * ✅ Vérifie si un client peut terminer une réservation
+   *  Vérifie si un client peut terminer une réservation
    */
   canClientTerminateReservation(reservation: any): boolean {
     const status = reservation.status?.toLowerCase() || reservation.bookstatus?.toLowerCase();
@@ -928,7 +935,7 @@ marquerNonPresentee(reservationId: number, motif?: string): Observable<any> {
   }
 
   /**
-   * ✅ Vérifie si un client peut annuler une réservation
+   *  Vérifie si un client peut annuler une réservation
    */
   canClientCancelReservation(reservation: any): boolean {
     const status = reservation.status?.toLowerCase() || reservation.bookstatus?.toLowerCase();
@@ -941,7 +948,7 @@ marquerNonPresentee(reservationId: number, motif?: string): Observable<any> {
   }
 
   /**
-   * ✅ Obtient les actions disponibles pour un freelance
+   *  Obtient les actions disponibles pour un freelance
    */
   getFreelanceAvailableActions(reservation: any): string[] {
     const actions: string[] = ['details', 'contact'];
@@ -954,7 +961,7 @@ marquerNonPresentee(reservationId: number, motif?: string): Observable<any> {
   }
 
   /**
-   * ✅ Obtient les actions disponibles pour un client
+   *  Obtient les actions disponibles pour un client
    */
   getClientAvailableActions(reservation: any): string[] {
     const actions: string[] = ['details'];
@@ -970,46 +977,46 @@ marquerNonPresentee(reservationId: number, motif?: string): Observable<any> {
     return actions;
   }
 // ==========================================
-// 👤 MÉTHODES CLIENT (À AJOUTER AU SERVICE ANGULAR)
+//  MÉTHODES CLIENT (À AJOUTER AU SERVICE ANGULAR)
 // ==========================================
 
 /**
- * ✅ NOUVEAU : Récupérer toutes les réservations du client connecté
+ *  NOUVEAU : Récupérer toutes les réservations du client connecté
  */
 getClientReservations(): Observable<any[]> {
-  console.log('Récupération des réservations utilisateur connecté');
+
   
   return this.http.get<any[]>(`${this.apiUrl}/user`).pipe(
     tap(reservations => {
-      console.log(`${reservations.length} réservations client récupérées`);
+
     }),
     catchError(this.handleError)
   );
 }
 
 /**
- * ✅ NOUVEAU : Récupérer les réservations à venir du client
+ *  NOUVEAU : Récupérer les réservations à venir du client
  */
 getClientUpcomingReservations(): Observable<any[]> {
-  console.log('Récupération des réservations à venir de l\'utilisateur connecté');
+
   
   return this.http.get<any[]>(`${this.apiUrl}/user/upcoming`).pipe(
     tap(reservations => {
-      console.log(`${reservations.length} réservations à venir récupérées`);
+
     }),
     catchError(this.handleError)
   );
 }
 
 /**
- * ✅ NOUVEAU : Récupérer l'historique des réservations terminées du client
+ *  NOUVEAU : Récupérer l'historique des réservations terminées du client
  */
 getClientReservationHistory(): Observable<any[]> {
-  console.log('Récupération de l\'historique utilisateur connecté');
+
   
   return this.http.get<any[]>(`${this.apiUrl}/user/history`).pipe(
     tap(reservations => {
-      console.log(`${reservations.length} réservations historiques récupérées`);
+
     }),
     catchError(this.handleError)
   );
@@ -1017,69 +1024,69 @@ getClientReservationHistory(): Observable<any[]> {
 
 
 /**
- * ✅ NOUVEAU : Récupérer les réservations d'aujourd'hui pour le client
+ *  NOUVEAU : Récupérer les réservations d'aujourd'hui pour le client
  */
 getClientTodayReservations(): Observable<any[]> {
-  console.log('Récupération des réservations utilisateur du jour');
+
   
   return this.http.get<any[]>(`${this.apiUrl}/user/today`).pipe(
     tap(reservations => {
-      console.log(`${reservations.length} réservations utilisateur aujourd'hui`);
+
     }),
     catchError(this.handleError)
   );
 }
 
 /**
- * ✅ NOUVEAU : Récupérer les prestataires favoris du client
+ *  NOUVEAU : Récupérer les prestataires favoris du client
  */
 getClientFavoriteProviders(): Observable<any[]> {
-  console.log('Récupération des prestataires favoris de l\'utilisateur connecté');
+
   
   return this.http.get<any[]>(`${environment.apiUrl}/client/stats/favorites`).pipe(
     tap(favorites => {
-      console.log(`${favorites.length} prestataires favoris récupérés`);
+
     }),
     catchError(this.handleError)
   );
 }
 
 /**
- * ✅ NOUVEAU : Ajouter un prestataire aux favoris
+ *  NOUVEAU : Ajouter un prestataire aux favoris
  */
 addToFavorites(favoriteData: any): Observable<any> {
-  console.log('Ajout d\'un prestataire aux favoris:', favoriteData);
+
   
   return this.http.post<any>(`${environment.apiUrl}/client/favorites`, favoriteData).pipe(
     tap(response => {
-      console.log('✅ Prestataire ajouté aux favoris avec succès:', response);
+
     }),
     catchError(error => {
-      console.error('❌ Erreur lors de l\'ajout aux favoris:', error);
+      console.error(' Erreur lors de l\'ajout aux favoris:', error);
       return this.handleError(error);
     })
   );
 }
 
 /**
- * ✅ NOUVEAU : Supprimer un prestataire des favoris
+ *  NOUVEAU : Supprimer un prestataire des favoris
  */
 removeFromFavorites(prestataireId: number, type: string): Observable<any> {
-  console.log(`Suppression du prestataire ${prestataireId} (${type}) des favoris`);
+
   
   return this.http.delete<any>(`${environment.apiUrl}/client/favorites/${prestataireId}?type=${type}`).pipe(
     tap(response => {
-      console.log('✅ Prestataire supprimé des favoris:', response);
+
     }),
     catchError(this.handleError)
   );
 }
 
 /**
- * ✅ NOUVEAU : Récupérer le montant dépensé par période
+ *  NOUVEAU : Récupérer le montant dépensé par période
  */
 getClientSpending(dateDebut: string, dateFin: string): Observable<any> {
-  console.log(`Récupération dépenses client: ${dateDebut} → ${dateFin}`);
+
   
   const params = new HttpParams()
     .set('dateDebut', dateDebut)
@@ -1087,290 +1094,290 @@ getClientSpending(dateDebut: string, dateFin: string): Observable<any> {
   
   return this.http.get<any>(`${this.apiUrl}/client/spending`, { params }).pipe(
     tap(response => {
-      console.log('Dépenses client récupérées:', response);
+
     }),
     catchError(this.handleError)
   );
 }
 
 /**
- * ✅ NOUVEAU : Vérifier si le client peut annuler une réservation
+ *  NOUVEAU : Vérifier si le client peut annuler une réservation
  */
 canClientCancelReservationCheck(reservationId: number, heuresAvantAnnulation: number = 24): Observable<any> {
-  console.log(`Vérification possibilité annulation réservation ${reservationId}`);
+
   
   const params = new HttpParams().set('heuresAvantAnnulation', heuresAvantAnnulation.toString());
   
   return this.http.get<any>(`${this.apiUrl}/client/${reservationId}/can-cancel`, { params }).pipe(
     tap(response => {
-      console.log(`Possibilité annulation: ${response.canCancel}`);
+
     }),
     catchError(this.handleError)
   );
 }
 
 // ==========================================
-// 🌟 MÉTHODES AVIS (NOUVEAU SYSTÈME)
+//  MÉTHODES AVIS (NOUVEAU SYSTÈME)
 // ==========================================
 
 
 
 /**
- * ✅ NOUVEAU : Créer un avis pour une réservation terminée
+ *  NOUVEAU : Créer un avis pour une réservation terminée
  */
 createAvis(avisData: {
   reservationId: number;
   note: number;
   commentaire?: string;
 }): Observable<any> {
-  console.log('Création d\'un avis:', avisData);
+
   
   return this.http.post<any>(this.avisUrl, avisData).pipe(
     tap(avis => {
-      console.log('Avis créé avec succès:', avis);
+
     }),
     catchError(this.handleError)
   );
 }
 
 /**
- * ✅ NOUVEAU : Modifier un avis existant
+ *  NOUVEAU : Modifier un avis existant
  */
 updateAvis(avisId: number, avisData: {
   note?: number;
   commentaire?: string;
 }): Observable<any> {
-  console.log(`Modification avis ${avisId}:`, avisData);
+
   
   return this.http.put<any>(`${this.avisUrl}/${avisId}`, avisData).pipe(
     tap(avis => {
-      console.log('Avis modifié avec succès:', avis);
+
     }),
     catchError(this.handleError)
   );
 }
 
 /**
- * ✅ NOUVEAU : Supprimer un avis
+ *  NOUVEAU : Supprimer un avis
  */
 deleteAvis(avisId: number): Observable<any> {
-  console.log(`Suppression avis ${avisId}`);
+
   
   return this.http.delete<any>(`${this.avisUrl}/${avisId}`).pipe(
     tap(() => {
-      console.log('Avis supprimé avec succès');
+
     }),
     catchError(this.handleError)
   );
 }
 
 /**
- * ✅ NOUVEAU : Récupérer tous les avis du client connecté
+ *  NOUVEAU : Récupérer tous les avis du client connecté
  */
 getClientAvis(): Observable<any[]> {
-  console.log('Récupération des avis de l\'utilisateur connecté');
+
   
   return this.http.get<any[]>(`${this.avisUrl}/user`).pipe(
     tap(avis => {
-      console.log(`${avis.length} avis utilisateur récupérés`);
+
     }),
     catchError(this.handleError)
   );
 }
 
 /**
- * ✅ NOUVEAU : Récupérer tous les avis du freelance connecté
+ *  NOUVEAU : Récupérer tous les avis du freelance connecté
  */
 getFreelanceAvis(): Observable<any[]> {
-  console.log('Récupération des avis du freelance connecté');
+
   
   return this.http.get<any[]>(`${this.avisUrl}/freelance`).pipe(
     tap(avis => {
-      console.log(`${avis.length} avis freelance récupérés`);
+
     }),
     catchError(this.handleError)
   );
 }
 
 /**
- * ✅ NOUVEAU : Récupérer tous les avis des salons de l'employeur connecté
+ *  NOUVEAU : Récupérer tous les avis des salons de l'employeur connecté
  */
 getSalonAvis(): Observable<any[]> {
-  console.log('Récupération des avis des salons de l\'employeur connecté');
+
   
   return this.http.get<any[]>(`${this.avisUrl}/salon`).pipe(
     tap(avis => {
-      console.log(`${avis.length} avis salon récupérés`);
+
     }),
     catchError(this.handleError)
   );
 }
 
 /**
- * ✅ NOUVEAU : Récupérer les statistiques du client connecté
+ *  NOUVEAU : Récupérer les statistiques du client connecté
  */
 getClientStats(): Observable<any> {
-  console.log('Récupération des statistiques client');
+
   
   return this.http.get<any>(`${environment.apiUrl}/client/stats`).pipe(
     tap(stats => {
-      console.log('Statistiques client récupérées:', stats);
+
     }),
     catchError(this.handleError)
   );
 }
 
 /**
- * ✅ NOUVEAU : Récupérer les notifications du client connecté
+ *  NOUVEAU : Récupérer les notifications du client connecté
  */
 getClientNotifications(): Observable<any> {
-  console.log('Récupération des notifications client');
+
   
   return this.http.get<any>(`${environment.apiUrl}/client/stats/notifications`).pipe(
     tap(notifications => {
-      console.log('Notifications client récupérées:', notifications);
+
     }),
     catchError(this.handleError)
   );
 }
 
 /**
- * ✅ NOUVEAU : Marquer une notification comme lue
+ *  NOUVEAU : Marquer une notification comme lue
  */
 markNotificationAsRead(notificationId: number): Observable<any> {
-  console.log(`Marquage notification ${notificationId} comme lue`);
+
   
   return this.http.put<any>(`${environment.apiUrl}/client/stats/notifications/${notificationId}/read`, {}).pipe(
     tap(() => {
-      console.log(`Notification ${notificationId} marquée comme lue`);
+
     }),
     catchError(this.handleError)
   );
 }
 
 /**
- * ✅ NOUVEAU : Marquer toutes les notifications comme lues
+ *  NOUVEAU : Marquer toutes les notifications comme lues
  */
 markAllNotificationsAsRead(): Observable<any> {
-  console.log('Marquage toutes notifications comme lues');
+
   
   return this.http.put<any>(`${environment.apiUrl}/client/stats/notifications/read-all`, {}).pipe(
     tap(() => {
-      console.log('Toutes les notifications marquées comme lues');
+
     }),
     catchError(this.handleError)
   );
 }
 
 /**
- * ✅ NOUVEAU : Récupérer l'avis pour une réservation spécifique
+ *  NOUVEAU : Récupérer l'avis pour une réservation spécifique
  */
 getAvisByReservation(reservationId: number): Observable<any> {
-  console.log(`Récupération avis pour réservation ${reservationId}`);
+
   
   return this.http.get<any>(`${this.avisUrl}/reservation/${reservationId}`).pipe(
     tap(avis => {
-      console.log('Avis trouvé:', avis);
+
     }),
     catchError(this.handleError)
   );
 }
 
 /**
- * ✅ NOUVEAU : Vérifier si le client peut noter une réservation
+ *  NOUVEAU : Vérifier si le client peut noter une réservation
  */
 canRateReservation(reservationId: number): Observable<any> {
-  console.log(`Vérification possibilité notation réservation ${reservationId}`);
+
   
   return this.http.get<any>(`${this.avisUrl}/can-rate/${reservationId}`).pipe(
     tap(response => {
-      console.log(`Peut noter: ${response.canRate}`);
+
     }),
     catchError(this.handleError)
   );
 }
 
 /**
- * ✅ NOUVEAU : Récupérer les réservations que le client peut noter
+ *  NOUVEAU : Récupérer les réservations que le client peut noter
  */
 getReservationsToRate(): Observable<any> {
-  console.log('Récupération des réservations à noter pour l\'utilisateur connecté');
+
   
   return this.http.get<any>(`${this.avisUrl}/user/to-rate`).pipe(
     tap(response => {
-      console.log(`${response.total} réservations à noter trouvées`);
+
     }),
     catchError(this.handleError)
   );
 }
 
 /**
- * ✅ NOUVEAU : Récupérer les avis d'un salon
+ *  NOUVEAU : Récupérer les avis d'un salon
  */
 getAvisBySalon(salonId: number): Observable<any> {
-  console.log(`Récupération avis salon ${salonId}`);
+
   
   return this.http.get<any>(`${this.avisUrl}/salon/${salonId}`).pipe(
     tap(response => {
       const avisCount = response?.avis?.length || 0;
-      console.log(`${avisCount} avis salon récupérés`);
+
     }),
     catchError(this.handleError)
   );
 }
 
 /**
- * ✅ NOUVEAU : Récupérer les avis d'un freelance
+ *  NOUVEAU : Récupérer les avis d'un freelance
  */
 getAvisByFreelance(freelanceId: number): Observable<any> {
-  console.log(`Récupération avis freelance ${freelanceId}`);
+
   
   return this.http.get<any>(`${this.avisUrl}/freelance/${freelanceId}`).pipe(
     tap(response => {
       const avisCount = response?.avis?.length || 0;
-      console.log(`${avisCount} avis freelance récupérés`);
+
     }),
     catchError(this.handleError)
   );
 }
 
 /**
- * ✅ NOUVEAU : Récupérer les statistiques d'un salon
+ *  NOUVEAU : Récupérer les statistiques d'un salon
  */
 getSalonAvisStats(salonId: number): Observable<any> {
-  console.log(`Récupération stats avis salon ${salonId}`);
+
   
   return this.http.get<any>(`${this.avisUrl}/stats/salon/${salonId}`).pipe(
     tap(stats => {
-      console.log('Stats salon:', stats);
+
     }),
     catchError(this.handleError)
   );
 }
 
 /**
- * ✅ NOUVEAU : Récupérer les statistiques d'un freelance
+ *  NOUVEAU : Récupérer les statistiques d'un freelance
  */
 getFreelanceAvisStats(freelanceId: number): Observable<any> {
-  console.log(`Récupération stats avis freelance ${freelanceId}`);
+
   
   return this.http.get<any>(`${this.avisUrl}/stats/freelance/${freelanceId}`).pipe(
     tap(stats => {
-      console.log('Stats freelance:', stats);
+
     }),
     catchError(this.handleError)
   );
 }
 
 // ==========================================
-// 🔧 MÉTHODES UTILITAIRES CLIENT
+//  MÉTHODES UTILITAIRES CLIENT
 // ==========================================
 
 /**
- * ✅ NOUVEAU : Calculer statistiques client côté frontend
+ *  NOUVEAU : Calculer statistiques client côté frontend
  */
 calculateClientStats(reservations: any[]): any {
-  console.log(`Calcul stats client pour ${reservations.length} réservations`);
+
   
   const stats = {
     total: reservations.length,
@@ -1430,12 +1437,12 @@ calculateClientStats(reservations: any[]): any {
   stats.moyenneDepenseParReservation = stats.terminees > 0 ? 
     Math.round(stats.totalDepense / stats.terminees) : 0;
   
-  console.log('Stats client calculées:', stats);
+
   return stats;
 }
 
 /**
- * ✅ NOUVEAU : Vérifier si une réservation peut être notée
+ *  NOUVEAU : Vérifier si une réservation peut être notée
  */
 isReservationRatable(reservation: any): boolean {
   const status = reservation.status?.toLowerCase() || reservation.bookstatus?.toLowerCase();
@@ -1447,7 +1454,7 @@ isReservationRatable(reservation: any): boolean {
 }
 
 /**
- * ✅ NOUVEAU : Obtenir les actions disponibles pour un client
+ *  NOUVEAU : Obtenir les actions disponibles pour un client
  * CORRECTION : Logique simplifiée et cohérente avec le component
  */
 getClientAvailableActionsForReservation(reservation: any): string[] {
@@ -1481,7 +1488,7 @@ getClientAvailableActionsForReservation(reservation: any): string[] {
 }
 
 /**
- * ✅ NOUVEAU : Formater statut pour client
+ *  NOUVEAU : Formater statut pour client
  */
 formatClientReservationStatus(status: string): string {
   const statusMap: { [key: string]: string } = {
@@ -1499,7 +1506,7 @@ formatClientReservationStatus(status: string): string {
 }
 
 /**
- * ✅ NOUVEAU : Obtenir la couleur du statut pour client
+ *  NOUVEAU : Obtenir la couleur du statut pour client
  */
 getClientStatusColor(status: string): string {
   const colorMap: { [key: string]: string } = {
@@ -1517,19 +1524,19 @@ getClientStatusColor(status: string): string {
 }
 
 /**
- * ✅ NOUVEAU : Formater note en étoiles
+ *  NOUVEAU : Formater note en étoiles
  */
 formatRatingStars(note: number): string {
-  if (!note || note < 1 || note > 5) return '☆☆☆☆☆';
+  if (!note || note < 1 || note > 5) return '';
   
-  const fullStars = '★'.repeat(Math.floor(note));
-  const emptyStars = '☆'.repeat(5 - Math.floor(note));
+  const fullStars = ''.repeat(Math.floor(note));
+  const emptyStars = ''.repeat(5 - Math.floor(note));
   
   return fullStars + emptyStars;
 }
 
 /**
- * ✅ NOUVEAU : Obtenir le prochain rendez-vous client
+ *  NOUVEAU : Obtenir le prochain rendez-vous client
  */
 getNextClientAppointment(reservations: any[]): any | null {
   const now = new Date();

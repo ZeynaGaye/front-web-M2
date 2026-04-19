@@ -1,340 +1,309 @@
- 
-<div class="opportunites-container" [class.compact-mode]="compactMode">
-  
-  <!--  NOTIFICATION GLOBALE DES CHANGEMENTS DE STATUT -->
-  <div class="status-notifications" *ngIf="hasRecentStatusChanges() && !compactMode">
-    <div class="notification-banner" 
-         [ngClass]="getGlobalNotificationClass()"
-         (click)="scrollToStatusChanges()">
-      <div class="notification-icon">
-        <i class="fas fa-bell"></i>
-      </div>
-      <div class="notification-content">
-        <h4>{{ getGlobalNotificationTitle() }}</h4>
-        <p>{{ getGlobalNotificationMessage() }}</p>
-      </div>
-      <div class="notification-action">
-        <i class="fas fa-arrow-down"></i>
-        <span>Voir</span>
-      </div>
+<div class="opp-page">
+
+  <!-- MINI-NAV (page dédiée uniquement) -->
+  <nav class="mini-nav" *ngIf="!compactMode && !hideNav">
+    <a routerLink="/" class="mini-nav-logo">
+      <img src="assets/images/logo (2).png" alt="BeautyHub" />
+    </a>
+    <div class="mini-nav-links">
+      <a routerLink="/">Accueil</a>
+      <a routerLink="/opportunites-emploi" class="active">Offres d'emploi</a>
+      <a routerLink="/contacts">Contact</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <div class="opp-hero" *ngIf="!compactMode">
+    <div class="hero-content">
+      <h1>Trouvez votre prochain défi beauté</h1>
+      <p class="hero-subtitle">Les meilleures opportunités professionnelles dans les salons du Sénégal</p>
+      <form class="hero-search" [formGroup]="searchForm">
+        <div class="hero-search-field">
+          <i class="fas fa-search"></i>
+          <input formControlName="searchTerm" type="text" placeholder="Poste (ex: Coiffeur Expert)">
+        </div>
+        <div class="hero-search-field">
+          <i class="fas fa-map-marker-alt"></i>
+          <input formControlName="ville" type="text" placeholder="Ville ou quartier (ex: Dakar Plateau)">
+        </div>
+        <div class="hero-search-field select-wrap">
+          <i class="fas fa-tag"></i>
+          <select formControlName="specialisation">
+            <option value="">Toutes spécialisations</option>
+            <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+          </select>
+          <i class="fas fa-chevron-down chev"></i>
+        </div>
+        <button type="button" class="hero-search-btn" (click)="applyFilters()">Rechercher</button>
+      </form>
     </div>
   </div>
-  
-  <!-- En-tête conditionnel -->
-  <div class="header-section" *ngIf="showHeader">
-    <h1>
-      <i class="fas fa-briefcase"></i>
-      {{ displayTitle }}
-    </h1>
-    <p>{{ displaySubtitle }}</p>
-  </div>
-  <!-- Filtres rapides -->
-  <div class="job-quick-filters" *ngIf="!compactMode">
-    <button 
-      class="filter-chip" 
-      [class.active]="!searchForm.get('status')?.value && !showOnlyApplied"
-      (click)="resetFilters()">
-      <i class="fas fa-globe"></i>
-      Toutes les offres
-    </button>
-    
-    <button 
-      class="filter-chip"
-      [class.active]="searchForm.get('status')?.value === 'OUVERT' && !showOnlyApplied"
-      (click)="setStatusFilter('OUVERT')">
-      <i class="fas fa-check-circle"></i>
-      Ouvertes
-    </button>
-    
-    <!-- <button 
-      class="filter-chip"
-      [class.active]="searchForm.get('status')?.value === 'URGENT' && !showOnlyApplied"
-      (click)="setStatusFilter('URGENT')">
-      <i class="fas fa-exclamation-circle"></i>
-      Urgentes
-    </button> -->
-    
-    <button 
-      class="filter-chip"
-      [class.active]="searchForm.get('status')?.value === 'FREELANCE' && !showOnlyApplied"
-      (click)="setStatusFilter('FREELANCE')">
-      <i class="fas fa-user-tie"></i>
-      Freelance
-    </button>
-    
-    <button 
-      class="filter-chip"
-      [class.active]="searchForm.get('status')?.value === 'FEATURED' && !showOnlyApplied"
-      (click)="setStatusFilter('FEATURED')">
-      <i class="fas fa-star"></i>
-      À la une
-    </button>
-    
-    <!-- BOUTON "DÉJÀ POSTULÉ" -->
-    <button 
-      class="filter-chip applied-filter"
-      [class.active]="showOnlyApplied"
-      [class.loading]="isLoadingAppliedOffers"
-      (click)="toggleAppliedFilter()"
-      [disabled]="isLoadingAppliedOffers">
-      
-      <i class="fas fa-spinner fa-spin" *ngIf="isLoadingAppliedOffers"></i>
-      <i class="fas fa-user-check" *ngIf="!isLoadingAppliedOffers"></i>
-      
-      <span>Déjà postulé ({{ appliedOffersCount || 0 }})</span>
-    </button>
-  </div>
 
-  <!-- Section de recherche -->
-  <div class="search-section" *ngIf="!compactMode">
-    <form [formGroup]="searchForm">
-      <div class="search-input">
-        <i class="search-icon fas fa-search"></i>
-        <input 
-          type="text" 
-          formControlName="searchTerm"
-          placeholder="Rechercher par titre, compétence, lieu..."
-        >
+  <!-- ============================================ -->
+  <!-- VUE COMPACTE HOMEPAGE (card grid)           -->
+  <!-- ============================================ -->
+  <div class="compact-view" *ngIf="compactMode">
+    <div class="compact-header">
+      <div class="compact-header-left">
+        <h2>Offres d'Emploi Récentes</h2>
+        <p>Les salons les plus prestigieux recrutent leurs futurs talents sur BeautyHub. Trouvez l'opportunité qui vous correspond.</p>
       </div>
-      
-      <div class="status-filter">
-        <select formControlName="status">
-          <option value="">Tous les statuts</option>
-          <option *ngFor="let status of statusOptions" [value]="status">
-            {{ getStatusDisplayName(status) }}
-          </option>
-        </select>
-      </div>
-      
-      <button type="button" class="reset-btn" (click)="resetFilters()">
-        <i class="reset-icon fas fa-redo"></i> 
-        Réinitialiser
+      <button class="voir-toutes-btn" (click)="onViewAllJobs()">
+        VOIR TOUTES LES OFFRES <i class="fas fa-chevron-right"></i>
       </button>
-    </form>
-  </div>
+    </div>
 
-  <!-- Affichage des offres -->
-  <div class="offers-container">
-    
-    <!-- Chargement -->
-    <div class="loading" *ngIf="isLoading">
+    <div class="loading-state" *ngIf="isLoading">
       <div class="spinner"></div>
-      <p>{{ compactMode ? 'Chargement...' : 'Chargement des opportunités...' }}</p>
+      <p>Chargement des offres...</p>
     </div>
 
-    <!-- Aucune offre trouvée -->
-    <div class="no-results" *ngIf="!isLoading && filteredOffres.length === 0 && offres.length > 0">
-      <div class="no-results-icon">
-        <i class="fas fa-search fa-3x"></i>
+    <div class="compact-cards-grid" *ngIf="!isLoading" [class.animating]="compactAnimating">
+      <div class="compact-offer-card"
+           *ngFor="let offre of compactDisplayedOffers; trackBy: trackByOffreId"
+           (click)="viewOffreDetails(offre)">
+
+        <div class="card-top-row">
+          <span class="contract-badge">{{ offre.typeContrat || 'Non spécifié' }}</span>
+          <span class="card-date">
+            {{ offre.status === 'URGENT' ? 'Urgent' : ((offre.dateCreation || offre.datePublication) ? 'Publié ' + getCompactDate(offre.dateCreation || offre.datePublication || '') : 'Nouveau') }}
+          </span>
+        </div>
+
+        <h3 class="card-title">{{ offre.titre }}</h3>
+
+        <div class="card-meta">
+          <span *ngIf="offre.salonNom">
+            <i class="fas fa-building"></i> {{ offre.salonNom }}
+          </span>
+          <span>
+            <i class="fas fa-map-marker-alt"></i> {{ offre.lieu || 'Lieu non spécifié' }}
+          </span>
+        </div>
+
+        <button class="card-view-btn" (click)="$event.stopPropagation(); viewOffreDetails(offre)">
+          Voir l'offre
+        </button>
       </div>
-      <h3>{{ compactMode ? 'Aucun résultat' : 'Aucune offre ne correspond à votre recherche' }}</h3>
-      <p *ngIf="!compactMode">
-        Essayez de modifier vos critères de recherche ou réinitialisez les filtres pour voir toutes les opportunités disponibles.
-      </p>
-      <button class="reset-btn" (click)="resetFilters()" *ngIf="!compactMode" style="margin-top: 1rem;">
-        <i class="reset-icon fas fa-redo"></i> Voir toutes les offres
+    </div>
+
+    <div class="compact-empty" *ngIf="!isLoading && paginatedOffres.length === 0">
+      <i class="fas fa-briefcase"></i>
+      <p>Aucune offre disponible pour le moment.</p>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- BANNIÈRE NOTIFICATIONS STATUT CANDIDATURES -->
+  <!-- ============================================ -->
+  <div class="candidature-notif-banner" *ngIf="!compactMode && freelanceId && appliedOffersCount > 0"
+       [ngClass]="getGlobalNotificationClass()">
+    <div class="notif-banner-inner">
+
+      <!-- Icône -->
+      <i class="fas notif-icon"
+         [ngClass]="{
+           'fa-check-circle': getGlobalNotificationClass() === 'notification-success',
+           'fa-times-circle': getGlobalNotificationClass() === 'notification-warning',
+           'fa-info-circle': getGlobalNotificationClass() === 'notification-info'
+         }"></i>
+
+      <div class="notif-banner-texts">
+        <strong>{{ getGlobalNotificationTitle() }}</strong>
+
+        <!-- Messages personnalisés acceptées -->
+        <span class="notif-msg notif-accepted" *ngFor="let msg of getAcceptedMessages()">
+          <i class="fas fa-check-circle"></i> {{ msg }}
+        </span>
+
+        <!-- Messages personnalisés refusées -->
+        <span class="notif-msg notif-refused" *ngFor="let msg of getRefusedMessages()">
+          <i class="fas fa-times-circle"></i> {{ msg }}
+        </span>
+
+        <!-- Résumé en attente / en cours -->
+        <span class="notif-msg notif-pending" *ngIf="getPendingSummary()">
+          <i class="fas fa-clock"></i> {{ getPendingSummary() }}
+        </span>
+      </div>
+
+      <button class="notif-see-btn" (click)="scrollToStatusChanges()">
+        <i class="fas fa-arrow-right"></i> Voir
       </button>
     </div>
+  </div>
 
-    <!-- Aucune offre du tout -->
-    <div class="no-results" *ngIf="!isLoading && offres.length === 0">
-      <div class="no-results-icon">
-        <i class="fas fa-inbox fa-3x"></i>
+  <!-- ============================================ -->
+  <!-- VUE COMPLÈTE (sidebar + liste)              -->
+  <!-- ============================================ -->
+  <!-- BODY: sidebar + main -->
+  <div class="opp-body" [formGroup]="searchForm" *ngIf="!compactMode">
+
+    <!-- SIDEBAR -->
+    <aside class="opp-sidebar" *ngIf="!compactMode">
+      <div class="sidebar-top">
+        <span class="sidebar-title">Filtres</span>
+        <button class="reset-link" (click)="resetFilters()">RÉINITIALISER</button>
       </div>
-      <h3>{{ compactMode ? 'Aucune opportunité' : 'Aucune opportunité disponible pour le moment' }}</h3>
-      <p *ngIf="!compactMode">
-        De nouvelles offres d'emploi sont régulièrement publiées. Revenez bientôt pour découvrir de nouvelles opportunités !
-      </p>
-    </div>
 
-    <!-- ===============================================
-         UNE SEULE SECTION DE CARTES (CORRIGÉE)
-    =============================================== -->
-    <div class="offers-grid" 
-         [class.compact-grid]="compactMode"
-         *ngIf="!isLoading && displayedOffres.length > 0">
-      
-      <div class="offer-card" 
-           [class.compact-card]="compactMode"
-           [class.applied-card]="hasAppliedToOffer(offre.id)"
-           *ngFor="let offre of displayedOffres; trackBy: trackByOffreId" 
-           (click)="viewOffreDetails(offre)"
-           [attr.aria-label]="'Voir les détails de l\'offre ' + offre.titre">
-        
-        <!-- Header de la carte -->
-        <div class="offer-header">
-          <h3>{{ offre.titre }}</h3>
-          <span class="status-badge" [ngClass]="getStatusClass(offre.status)">
-            {{ getStatusDisplayName(offre.status) }}
-          </span>
-        </div>
-        
-        <!-- Détails principaux -->
-        <div class="offer-details">
-          <div class="detail-item">
-            <i class="location-icon fas fa-map-marker-alt"></i>
-            <span>{{ offre.lieu || 'Lieu non spécifié' }}</span>
-          </div>
-          
-          <div class="detail-item">
-            <i class="contract-icon fas fa-file-contract"></i>
-            <span>{{ offre.typeContrat || 'Type non spécifié' }}</span>
-          </div>
-          
-          <div class="detail-item" *ngIf="offre.salaire">
-            <i class="salary-icon fas fa-euro-sign"></i>
-            <span>{{ offre.salaire }}</span>
-          </div>
+      <!-- Filtre Mes candidatures (visible uniquement si freelanceId fourni) -->
+      <div class="filter-group" *ngIf="freelanceId">
+        <button class="applied-filter-btn"
+                [class.active]="showOnlyApplied"
+                (click)="toggleAppliedFilter()">
+          <span class="applied-dot" [class.active]="showOnlyApplied"></span>
+          Mes candidatures
+          <span class="applied-count" *ngIf="appliedOffersCount > 0">({{ appliedOffersCount }})</span>
+        </button>
+      </div>
 
-          <div class="detail-item" *ngIf="!offre.salaire">
-            <i class="time-icon fas fa-clock"></i>
-            <span>{{ getJobDuration(offre) }}</span>
-          </div>
-          
-          <!-- Salon info en mode compact -->
-          <div class="detail-item" *ngIf="compactMode && offre.salonNom">
-            <i class="salon-icon fas fa-store"></i>
-            <span>{{ offre.salonNom }}</span>
+      <div class="filter-group">
+        <h5>CATÉGORIE</h5>
+        <label class="cb-label" *ngFor="let cat of categories">
+          <input type="checkbox" [checked]="isCategorySelected(cat)" (change)="toggleCategory(cat)">
+          <span>{{ cat }}</span>
+        </label>
+      </div>
+
+      <div class="filter-group">
+        <h5>TYPE DE CONTRAT</h5>
+        <label class="radio-label" *ngFor="let ct of contractTypes">
+          <input type="radio" formControlName="typeContrat" [value]="ct">
+          <span>{{ ct }}</span>
+        </label>
+        <label class="radio-label">
+          <input type="radio" formControlName="typeContrat" value="">
+          <span>Tous</span>
+        </label>
+      </div>
+
+      <div class="filter-group">
+        <h5>EXPÉRIENCE</h5>
+        <input type="text" formControlName="experience" class="filter-select" placeholder="ex: 2 ans, débutant, senior...">
+      </div>
+
+      <div class="filter-group">
+        <h5>SALAIRE (CFA)</h5>
+        <input type="text" formControlName="salaire" class="filter-select" placeholder="ex: 300k, 250000...">
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="opp-main">
+
+      <!-- Loading -->
+      <div class="loading-state" *ngIf="isLoading">
+        <div class="spinner"></div>
+        <p>Chargement des opportunités...</p>
+      </div>
+
+      <ng-container *ngIf="!isLoading">
+
+        <!-- Results header -->
+        <div class="results-header" *ngIf="filteredOffres.length > 0">
+          <span class="results-count"><strong>{{ filteredOffres.length }}</strong> offres d'emploi trouvées</span>
+          <div class="sort-control">
+            <span>TRIER PAR:</span>
+            <select [(ngModel)]="sortBy" [ngModelOptions]="{standalone: true}" (change)="applyFilters()">
+              <option value="recent">Plus récentes</option>
+              <option value="titre">Titre</option>
+            </select>
+            <i class="fas fa-chevron-down"></i>
           </div>
         </div>
-        
-        <!-- Description -->
-        <div class="offer-description">
-          <p>{{ truncateText(offre.description, compactMode ? 100 : 150) }}</p>
+
+        <!-- Empty state -->
+        <div class="empty-state" *ngIf="filteredOffres.length === 0 && !isLoading">
+          <i class="fas fa-search fa-2x"></i>
+          <h3>Aucune offre ne correspond à vos critères</h3>
+          <button (click)="resetFilters()">Réinitialiser les filtres</button>
         </div>
-        
-        <!-- Compétences -->
-        <div class="offer-skills" *ngIf="offre.competences && !compactMode">
-          <p>
-            <strong>Compétences recherchées :</strong> 
-            {{ truncateText(offre.competences, 100) }}
-          </p>
-        </div>
-        
-        <!-- Informations du salon -->
-        <div class="salon-info" *ngIf="offre.salonNom && !compactMode">
-          <div class="salon-header">
-            <i class="fas fa-store"></i>
-            <strong>{{ offre.salonNom }}</strong>
-          </div>
-          <div class="salon-details">
-            <div class="salon-address" *ngIf="offre.salonAdresse">
-              <i class="fas fa-map-marker-alt"></i>
-              <span>{{ offre.salonAdresse }}</span>
+
+        <!-- Offer list -->
+        <div class="offers-list">
+          <div class="offer-row"
+               [class.offer-closed]="offre.status === 'FERMÉ'"
+               *ngFor="let offre of paginatedOffres; trackBy: trackByOffreId"
+               (click)="viewOffreDetails(offre)">
+
+            <div class="offer-img">
+              <img *ngIf="getSalonImage(offre)" [src]="getSalonImage(offre)" [alt]="offre.salonNom" (error)="$any($event.target).style.display='none'">
+              <span *ngIf="!getSalonImage(offre)">{{ (offre.salonNom || offre.titre || 'B').charAt(0).toUpperCase() }}</span>
             </div>
-            <div class="salon-description" *ngIf="offre.salonDescription">
-              <p>{{ truncateText(offre.salonDescription, 120) }}</p>
-            </div>
-          </div>
-        </div>
-        
-        <!--  FOOTER AVEC STATUT DE CANDIDATURE -->
-        <div class="offer-footer">
-          <span class="experience">
-            <i class="fas fa-graduation-cap"></i>
-            {{ offre.experienceRequise || 'Expérience à définir' }}
-          </span>
-          
-          <!--  STATUT DE CANDIDATURE PROÉMINENT (si postulé) -->
-          <div class="candidature-status" *ngIf="hasAppliedToOffer(offre.id) && getCandidatureStatus(offre.id)">
-            <!-- Badge normal pour EN_ATTENTE -->
-            <span class="status-badge candidature" 
-                  [ngClass]="getCandidatureStatusClass(offre.id)"
-                  *ngIf="getCandidatureStatus(offre.id) === 'EN_ATTENTE'">
-              <i class="fas fa-clock"></i>
-              {{ getCandidatureStatusText(offre.id) }}
-            </span>
-            
-            <!-- Alerte proéminente pour ACCEPTEE -->
-            <div class="status-alert status-accepted" 
-                 *ngIf="getCandidatureStatus(offre.id) === 'ACCEPTEE'">
-              <div class="alert-content">
-                <i class="fas fa-check-circle"></i>
-                <span class="alert-text">
-                  <strong>CANDIDATURE ACCEPTÉE !</strong>
-                  <small>Vous avez été sélectionné pour cette offre</small>
+
+            <div class="offer-info">
+              <div class="offer-title-row">
+                <h3>{{ offre.titre }}</h3>
+                <span class="badge-urgent" *ngIf="offre.status === 'URGENT'">URGENT</span>
+                <span class="badge-closed" *ngIf="offre.status === 'FERMÉ'">FERMÉ</span>
+                <!-- Badge statut candidature -->
+                <span *ngIf="hasAppliedToOffer(offre.id)"
+                      class="badge-candidature"
+                      [ngClass]="getCandidatureStatusClass(offre.id)">
+                  <i class="fas"
+                     [ngClass]="{
+                       'fa-clock': getCandidatureStatus(offre.id) === 'EN_ATTENTE',
+                       'fa-check': getCandidatureStatus(offre.id) === 'ACCEPTEE',
+                       'fa-times': getCandidatureStatus(offre.id) === 'REFUSEE',
+                       'fa-spinner fa-spin': getCandidatureStatus(offre.id) === 'EN_COURS'
+                     }"></i>
+                  {{ getCandidatureStatusText(offre.id) }}
                 </span>
               </div>
-              <div class="alert-action">
-                <i class="fas fa-bell animated-bell"></i>
+              <div class="offer-meta">
+                <span *ngIf="offre.salonNom"><i class="fas fa-building"></i> {{ offre.salonNom }}</span>
+                <span><i class="fas fa-map-marker-alt"></i> {{ offre.lieu || 'Lieu non spécifié' }}</span>
+                <span *ngIf="offre.salaire"><i class="fas fa-coins"></i> {{ offre.salaire }}</span>
+                <span *ngIf="offre.dateCreation || offre.datePublication"><i class="fas fa-clock"></i> Publié {{ getCompactDate(offre.dateCreation || offre.datePublication || '') }}</span>
               </div>
             </div>
-            
-            <!-- Alerte proéminente pour REFUSEE -->
-            <div class="status-alert status-rejected" 
-                 *ngIf="getCandidatureStatus(offre.id) === 'REFUSEE'">
-              <div class="alert-content">
-                <i class="fas fa-times-circle"></i>
-                <span class="alert-text">
-                  <strong>Candidature non retenue</strong>
-                  <small>Votre Cnadidature pour ce poste n'a pas ete retenue</small>
-                </span>
-              </div>
+
+            <div class="offer-contract">
+              <span class="contract-label">CONTRAT</span>
+              <strong>{{ offre.typeContrat || 'Non spécifié' }}</strong>
             </div>
-            
-            <!-- Badge pour EN_COURS -->
-            <div class="status-alert status-in-progress" 
-                 *ngIf="getCandidatureStatus(offre.id) === 'EN_COURS'">
-              <div class="alert-content">
-                <i class="fas fa-spinner fa-spin"></i>
-                <span class="alert-text">
-                  <strong>EN COURS D'ÉVALUATION</strong>
-                  <small>Votre candidature est à l'étude</small>
-                </span>
-              </div>
-            </div>
+
+            <button class="postuler-btn"
+                    [class.postuler-btn-applied]="hasAppliedToOffer(offre.id)"
+                    [class.postuler-btn-closed]="offre.status === 'FERMÉ'"
+                    [disabled]="offre.status === 'FERMÉ' || hasAppliedToOffer(offre.id)"
+                    (click)="$event.stopPropagation(); viewOffreDetails(offre)">
+              <ng-container *ngIf="hasAppliedToOffer(offre.id); else defaultBtn">
+                <i class="fas fa-paper-plane"></i> Postulé
+              </ng-container>
+              <ng-template #defaultBtn>
+                {{ offre.status === 'FERMÉ' ? 'Clôturée' : 'Postuler' }}
+              </ng-template>
+            </button>
           </div>
-          
-          <button class="view-details-btn" 
-                  (click)="$event.stopPropagation(); viewOffreDetails(offre)"
-                  [attr.aria-label]="'Voir les détails de ' + offre.titre">
-            <i class="fas fa-eye"></i>
-            {{ compactMode ? 'Détails' : 'Voir les détails' }}
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" *ngIf="totalPages > 1 && !compactMode">
+          <button class="pg-btn" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <ng-container *ngFor="let page of getPageNumbers()">
+            <span class="pg-ellipsis" *ngIf="page === '...'">...</span>
+            <button class="pg-btn" *ngIf="page !== '...'"
+                    [class.active]="page === currentPage"
+                    (click)="goToPage(+page)">
+              {{ page }}
+            </button>
+          </ng-container>
+          <button class="pg-btn" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)">
+            <i class="fas fa-chevron-right"></i>
           </button>
         </div>
-      </div>
+
+      </ng-container>
     </div>
-  </div>
-  
-  <!-- Section "Voir plus" pour le mode compact -->
-  <div class="view-more-section" 
-       *ngIf="compactMode && hasMoreOffers">
-    <div class="view-more-info">
-      <p>
-        <strong>{{ hiddenOffersCount }}</strong> autre{{ hiddenOffersCount > 1 ? 's' : '' }} 
-        opportunité{{ hiddenOffersCount > 1 ? 's' : '' }} disponible{{ hiddenOffersCount > 1 ? 's' : '' }}
-      </p>
-      <button class="view-all-btn" (click)="onViewAllOffers()">
-        <i class="fas fa-list"></i>
-        Voir toutes les offres
-      </button>
-    </div>
-  </div>
-  
-  <!-- CTA Section finale -->
-  <div class="job-opportunities-cta" 
-       *ngIf="!compactMode && displayedOffres.length > 0 && hasMoreOffers">
-    <div class="cta-content">
-      <h3>{{ hiddenOffersCount }} autres opportunités vous attendent</h3>
-      <p>Découvrez toutes nos offres d'emploi et trouvez votre prochain défi professionnel</p>
-      <button class="cta-button" (click)="onViewAllOffers()">
-        <i class="fas fa-arrow-right"></i>
-        Voir toutes les {{ offres.length }} offres
-      </button>
-    </div>
-  </div>
-  
-  <!-- Compteur d'offres -->
-  <div *ngIf="!isLoading && (!compactMode || isExpanded) && filteredOffres.length > 0" 
-       class="offers-counter">
-    <i class="fas fa-chart-bar"></i>
-    {{ filteredOffres.length }} offre{{ filteredOffres.length > 1 ? 's' : '' }} 
-    {{ filteredOffres.length !== offres.length ? 'sur ' + offres.length + ' au total' : 'disponible' + (offres.length > 1 ? 's' : '') }}
   </div>
 
   <!-- Détails de l'offre -->
-  <app-offre-details *ngIf="showDetails && selectedOffre" 
-                     [offre]="selectedOffre" 
+  <app-offre-details *ngIf="showDetails && selectedOffre"
+                     [offre]="selectedOffre"
                      (closeEvent)="closeDetails()">
   </app-offre-details>
+
 </div>

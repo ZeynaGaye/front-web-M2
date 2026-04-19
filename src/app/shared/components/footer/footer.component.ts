@@ -17,6 +17,6 @@ export class FooterComponent {
   // Par exemple, une méthode pour gérer l'inscription à la newsletter
   subscribeToNewsletter(email: string) {
     // Logique pour gérer l'inscription
-    console.log('Inscription à la newsletter :', email);
+
   }
 }

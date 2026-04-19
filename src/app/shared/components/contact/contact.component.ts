@@ -24,7 +24,7 @@ export class ContactComponent {
 
   onSubmit() {
     if (this.contactForm.valid) {
-      console.log('Formulaire soumis :', this.contactForm.value);
+
       alert('Merci pour votre message ! Nous vous répondrons bientôt.');
       this.contactForm.reset();
     } else {

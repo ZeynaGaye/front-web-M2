@@ -37,48 +37,42 @@ export class FreelanceDashbordComponent {
   openLoginModal() {
     this.showLoginModal = true;
     this.showRegisterModal = false; // Assure que le modal d'inscription est fermé
-    console.log('Modal de connexion ouvert');
+
   }
 
   closeLoginModal() {
     this.showLoginModal = false;
-    console.log('Modal de connexion fermé');
+
   }
 
   openRegisterModal() {
     this.showRegisterModal = true;
     this.showLoginModal = false; // Assure que le modal d'inscription est fermé
-    console.log("Modal d'inscription ouvert");
+
   }
 
   closeRegisterModal() {
     this.showRegisterModal = false;
-    console.log("Modal d'inscription fermé");
+
   }
 
   login(): void {
     // Ouvre simplement le modal de connexion
     this.openLoginModal();
-    console.log(
-      "Ouverture du modal de connexion depuis le bouton S'inscrire maintenant"
-    );
+
   }
 
   // Méthode pour basculer du login vers l'inscription
   switchToRegister(): void {
     this.closeLoginModal();
     this.openRegisterModal();
-    console.log(
-      "Basculement du modal de connexion vers le modal d'inscription"
-    );
+
   }
 
   // Méthode pour basculer de l'inscription vers le login
   switchToLogin(): void {
     this.closeRegisterModal();
     this.openLoginModal();
-    console.log(
-      "Basculement du modal d'inscription vers le modal de connexion"
-    );
+
   }
 }

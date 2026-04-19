@@ -2,15 +2,15 @@
 
 @import '../../../styles/colors.scss';
 
-/* ✨ VOTRE PALETTE DE COULEURS EXCLUSIVE */
+/*  VOTRE PALETTE DE COULEURS EXCLUSIVE */
 $beauty-primary: #A4B1BD;           // Couleur principale bleu-gris
 $beauty-primary-light: #C1CDD6;     // Version plus claire
 $beauty-primary-dark: #8A97A3;      // Version plus foncée  
-$beauty-secondary: #F5A393;         // Couleur secondaire corail
-$beauty-secondary-light: #F8C5B8;   // Version plus claire de la secondaire
+$beauty-secondary: #A4B1BD;         // Couleur secondaire (harmonisée avec la principale)
+$beauty-secondary-light: #C1CDD6;   // Version plus claire de la secondaire
 $beauty-accent: #A4B1BD;            // Accent principal
 
-/* ✨ PALETTE NEUTRE COMPLÉMENTAIRE */
+/*  PALETTE NEUTRE COMPLÉMENTAIRE */
 $white: #FFFFFF;
 $off-white: #FEFEFE;
 $light-gray: #F8F9FA;
@@ -26,7 +26,8 @@ $gray-800: #1F2937;
 $gray-900: #111827;
 $black: #000000;
 
-/* ✨ COULEURS D'ÉTAT */
+/* 
+ COULEURS D'ÉTAT */
 $success: #10B981;
 $success-light: #D1FAE5;
 $warning: #F59E0B;
@@ -42,7 +43,7 @@ $info-light: rgba($beauty-primary, 0.1);
   --beauty-gradient-primary: linear-gradient(135deg, #{$beauty-primary} 0%, #{$beauty-primary-dark} 100%);
   --beauty-gradient-secondary: linear-gradient(135deg, #{$beauty-secondary} 0%, #{$beauty-secondary-light} 100%);
   --beauty-gradient-soft: linear-gradient(135deg, #{$beauty-primary-light} 0%, #{$beauty-secondary-light} 100%);
-  --beauty-gradient-glass: linear-gradient(135deg, rgba(164, 177, 189, 0.15) 0%, rgba(245, 163, 147, 0.05) 100%);
+  --beauty-gradient-glass: linear-gradient(135deg, rgba(164, 177, 189, 0.15) 0%, rgba(164, 177, 189, 0.05) 100%);
   
   // Ombres modernes
   --shadow-xs: 0 1px 2px rgba(164, 177, 189, 0.06);
@@ -212,6 +213,15 @@ $info-light: rgba($beauty-primary, 0.1);
       backdrop-filter: blur(20px);
       background: rgba(255, 255, 255, 0.95);
       margin-bottom: 0;
+      // Overrides MDC tokens pour supprimer le bleu du thème global
+      --mdc-tab-indicator-active-indicator-color: #{$beauty-primary};
+      --mat-tab-header-active-label-text-color: #{$beauty-primary};
+      --mat-tab-header-active-ripple-color: #{$beauty-primary};
+      --mat-tab-header-inactive-ripple-color: #{$beauty-primary};
+      --mat-tab-header-active-focus-indicator-color: #{$beauty-primary};
+      --mat-tab-header-active-hover-indicator-color: #{$beauty-primary};
+      --mat-tab-header-inactive-focus-label-text-color: #{$gray-600};
+      --mat-tab-header-inactive-hover-label-text-color: #{$beauty-primary};
     }
 
     .mat-mdc-tab-labels {
@@ -269,7 +279,7 @@ $info-light: rgba($beauty-primary, 0.1);
 
 /* ✨ CONTENU DES ONGLETS */
 .tab-content {
-  padding: var(--spacing-2xl);
+  padding: var(--spacing-lg);
 }
 
 /* ✨ CARTES MODERNES */
@@ -277,7 +287,7 @@ $info-light: rgba($beauty-primary, 0.1);
   border-radius: var(--radius-xl) !important;
   box-shadow: var(--shadow-md) !important;
   border: 1px solid $gray-200 !important;
-  margin-bottom: var(--spacing-xl) !important;
+  margin-bottom: var(--spacing-md) !important;
   transition: var(--transition-normal) !important;
   background: $white !important;
   backdrop-filter: blur(20px) !important;
@@ -295,8 +305,8 @@ $info-light: rgba($beauty-primary, 0.1);
 
   // Header de carte moderne
   ::ng-deep mat-card-header {
-    padding: var(--spacing-xl) var(--spacing-xl) var(--spacing-md) !important;
-    background: linear-gradient(135deg, rgba(164, 177, 189, 0.03) 0%, rgba(245, 163, 147, 0.02) 100%);
+    padding: var(--spacing-md) var(--spacing-lg) var(--spacing-sm) !important;
+    background: linear-gradient(135deg, rgba(164, 177, 189, 0.03) 0%, rgba(164, 177, 189, 0.01) 100%);
     border-bottom: 1px solid rgba(164, 177, 189, 0.08);
     
     .mat-mdc-card-header-text {
@@ -345,21 +355,41 @@ $info-light: rgba($beauty-primary, 0.1);
 
   // Contenu de carte
   ::ng-deep mat-card-content {
-    padding: var(--spacing-xl) !important;
-    padding-top: var(--spacing-lg) !important;
+    padding: var(--spacing-md) var(--spacing-lg) !important;
+    padding-top: var(--spacing-sm) !important;
   }
 }
 
 /* ✨ GRILLE DE FORMULAIRE RESPONSIVE */
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: var(--spacing-lg);
-  margin-top: var(--spacing-md);
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-md);
+  align-items: start;
+  margin-top: var(--spacing-sm);
+
+  // Champ seul en dernière position → pleine largeur
+  mat-form-field:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
 
   .full-width {
     grid-column: 1 / -1;
   }
+}
+
+// Force full-width dans les grilles (bypass scoping Angular sur mat-form-field)
+::ng-deep .form-grid .full-width {
+  grid-column: 1 / -1 !important;
+}
+
+// Cartes avec champs hors form-grid → flex colonne pour empiler correctement
+::ng-deep .profile-freelance-card mat-card-content,
+::ng-deep .profile-client-card mat-card-content,
+::ng-deep .profile-employer-card mat-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 /* ✨ CHAMPS DE FORMULAIRE MODERNES */
@@ -367,6 +397,12 @@ $info-light: rgba($beauty-primary, 0.1);
   .mat-mdc-form-field {
     width: 100%;
     font-family: 'Inter', sans-serif;
+    // MDC token overrides pour supprimer le bleu du thème global
+    --mdc-outlined-text-field-focus-outline-color: #{$beauty-primary};
+    --mdc-outlined-text-field-focus-label-text-color: #{$beauty-primary};
+    --mdc-outlined-text-field-hover-outline-color: #{$beauty-primary-light};
+    --mat-select-focused-arrow-color: #{$beauty-primary};
+    --mat-form-field-focus-select-arrow-color: #{$beauty-primary};
 
     // Bordures et outline
     .mat-mdc-form-field-outline {
@@ -974,7 +1010,7 @@ $error-color: #F8C5B8;
 
 /* ✨ VARIABLES GLOBALES */
 :root {
-  --beauty-gradient: linear-gradient(135deg, #A4B1BD 0%, #F5A393 100%);
+  --beauty-gradient: linear-gradient(135deg, #A4B1BD 0%, #8A97A3 100%);
   --beauty-gradient-soft: linear-gradient(135deg, #C1CDD6 0%, #F8C5B8 100%);
   --shadow-soft: 0 4px 20px rgba(164, 177, 189, 0.15);
   --shadow-medium: 0 8px 32px rgba(164, 177, 189, 0.2);
@@ -1079,6 +1115,14 @@ $error-color: #F8C5B8;
       box-shadow: var(--shadow-soft);
       border: 1px solid rgba(164, 177, 189, 0.1);
       border-bottom: none;
+      --mdc-tab-indicator-active-indicator-color: #{$beauty-primary};
+      --mat-tab-header-active-label-text-color: #{$beauty-primary};
+      --mat-tab-header-active-ripple-color: #{$beauty-primary};
+      --mat-tab-header-inactive-ripple-color: #{$beauty-primary};
+      --mat-tab-header-active-focus-indicator-color: #{$beauty-primary};
+      --mat-tab-header-active-hover-indicator-color: #{$beauty-primary};
+      --mat-tab-header-inactive-focus-label-text-color: #{$gray-600};
+      --mat-tab-header-inactive-hover-label-text-color: #{$beauty-primary};
     }
 
     .mat-mdc-tab-labels {
@@ -1124,7 +1168,7 @@ $error-color: #F8C5B8;
 
 /* ✨ CONTENU DES ONGLETS */
 .tab-content {
-  padding: 2rem;
+  padding: 1.25rem;
 }
 
 /* ✨ CARTES MODERNES */
@@ -1132,7 +1176,7 @@ mat-card {
   border-radius: var(--border-radius) !important;
   box-shadow: var(--shadow-soft) !important;
   border: 1px solid rgba(164, 177, 189, 0.08) !important;
-  margin-bottom: 1.5rem !important;
+  margin-bottom: 0.75rem !important;
   transition: var(--transition) !important;
   background: $white !important;
   max-width: 800px;
@@ -1146,7 +1190,7 @@ mat-card {
   }
 
   mat-card-header {
-    padding: 1rem 1.5rem 0 1.5rem !important;
+    padding: 0.75rem 1.25rem 0 1.25rem !important;
     
     mat-card-title {
       display: flex;
@@ -1173,7 +1217,7 @@ mat-card {
   }
 
   mat-card-content {
-    padding: 1.2rem !important;
+    padding: 0.75rem 1.25rem 1rem !important;
   }
 }
 
@@ -1190,9 +1234,14 @@ mat-card {
 /* ✨ FORMULAIRES MODERNES */
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  align-items: start;
   margin-top: 0.5rem;
+
+  mat-form-field:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
 
   .full-width {
     grid-column: 1 / -1;

@@ -41,27 +41,27 @@ export class CandidaturesComponent implements OnInit {
   // Valider une candidature
   validerCandidature(candidature: any) {
     candidature.statut = 'Validée';
-    console.log('Candidature validée :', candidature);
+
     // Envoyer une requête au backend pour mettre à jour le statut
   }
 
   // Rejeter une candidature
   rejeterCandidature(candidature: any) {
     candidature.statut = 'Rejetée';
-    console.log('Candidature rejetée :', candidature);
+
     // Envoyer une requête au backend pour mettre à jour le statut
   }
 
   // Accepter une candidature
   accepterCandidature(candidature: any) {
     candidature.statut = 'Acceptée';
-    console.log('Candidature acceptée :', candidature);
+
     // Envoyer une requête au backend pour mettre à jour le statut
   }
 
   // Voir les détails d'une candidature
   voirDetails(candidature: any) {
-    console.log('Voir détails de la candidature :', candidature);
+
     // Ouvrir un dialog ou naviguer vers une page de détails
   }
 

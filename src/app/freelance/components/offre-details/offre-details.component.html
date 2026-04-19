@@ -1,4 +1,4 @@
-re<div class="modal-overlay" (click)="closeDetails()" *ngIf="offreExists">
+<div class="modal-overlay" (click)="closeDetails()" *ngIf="offreExists">
   <div class="modal-content" (click)="$event.stopPropagation()">
     <!-- En-tête du modal -->
     <div class="modal-header">
@@ -45,6 +45,22 @@ re<div class="modal-overlay" (click)="closeDetails()" *ngIf="offreExists">
             <div>
               <h4>Expérience requise</h4>
               <p>{{ offre?.experienceRequise }}</p>
+            </div>
+          </div>
+
+          <div class="info-item" *ngIf="offre?.dateCreation">
+            <mat-icon class="icon">calendar_today</mat-icon>
+            <div>
+              <h4>Date de publication</h4>
+              <p>{{ offre?.dateCreation | date:'dd/MM/yyyy' }}</p>
+            </div>
+          </div>
+
+          <div class="info-item" *ngIf="offre?.dateLimite">
+            <mat-icon class="icon">event_busy</mat-icon>
+            <div>
+              <h4>Date d'échéance</h4>
+              <p>{{ offre?.dateLimite | date:'dd/MM/yyyy' }}</p>
             </div>
           </div>
         </div>

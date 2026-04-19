@@ -1,171 +1,221 @@
-<div class="booking-dialog" (click)="onDialogClick($event)">
-  <h2 mat-dialog-title>Réserver un service</h2>
-  
-  <mat-dialog-content class="dialog-content">
-    <!-- Provider Info -->
-    <div class="provider-info" *ngIf="providerInfo">
-      <h3 *ngIf="!isFreelanceBooking">{{ providerInfo?.nom }}</h3>
-      <h3 *ngIf="isFreelanceBooking">{{ providerInfo?.prenom }} {{ providerInfo?.nom }}</h3>
-      
-      <p class="address" *ngIf="providerInfo?.adresse">
-        <mat-icon>location_on</mat-icon> 
-        {{ providerInfo.adresse }}
-      </p>
-      
-      <div class="provider-type-badge">
-        <mat-icon>{{ isFreelanceBooking ? 'person' : 'store' }}</mat-icon>
-        <span>{{ isFreelanceBooking ? 'Freelance' : 'Salon' }}</span>
+<div class="booking-modal" (click)="onDialogClick($event)">
+
+  <!-- Bouton fermer -->
+  <button class="close-btn" (click)="closeDialog()" [disabled]="isProcessingPayment">
+    <i class="fas fa-times"></i>
+  </button>
+
+  <!-- ===== PANNEAU GAUCHE : infos prestataire ===== -->
+  <div class="modal-left">
+
+    <div class="modal-logo">
+      <img src="assets/images/logo (2).png" alt="BeautyHub" class="modal-logo-img">
+
+      <span><strong>Beauty</strong>Hub</span>
+    </div>
+
+    <!-- Image du prestataire -->
+    <div class="provider-img-wrapper">
+      <!-- Freelance : profileImage -->
+      <img
+        *ngIf="isFreelanceBooking && providerInfo?.profileImage"
+        [src]="providerInfo.profileImage"
+        [alt]="providerInfo.prenom + ' ' + providerInfo.nom"
+        (error)="$any($event.target).style.display='none'">
+      <!-- Salon : photoProfilUrl -->
+      <img
+        *ngIf="!isFreelanceBooking && providerInfo?.photoProfilUrl"
+        [src]="providerInfo.photoProfilUrl"
+        [alt]="providerInfo.nom"
+        (error)="$any($event.target).style.display='none'">
+      <!-- Placeholder si pas de photo -->
+      <div class="provider-placeholder"
+           *ngIf="(isFreelanceBooking && !providerInfo?.profileImage) || (!isFreelanceBooking && !providerInfo?.photoProfilUrl)">
+        <i class="fas fa-{{ isFreelanceBooking ? 'user-circle' : 'store' }}"></i>
+        <span>{{ isFreelanceBooking ? (providerInfo?.prenom + ' ' + providerInfo?.nom) : providerInfo?.nom }}</span>
       </div>
     </div>
-    
-    <!-- Service Summary -->
-    <div class="service-summary" *ngIf="data?.service">
-      <h4>Service sélectionné</h4>
-      <div class="service-card">
-        <div class="service-name">{{ data.service.nom }}</div>
-        <div class="service-details">
-          <div class="price">{{ data.service.prix | currency:'XOF':'' }} CFA</div>
-          <div class="duration">
-            <mat-icon>schedule</mat-icon>
-            <span>{{ data.service.duree || data.service.dureeEnMinutes || data.service.duree_minutes || '30' }} min</span>
+
+    <!-- Infos service -->
+    <div class="left-service-info">
+      <span class="service-label-tag">{{ isFreelanceBooking ? 'Freelance' : 'Salon' }}</span>
+      <h3 class="left-service-name">{{ data.service?.nom || data.service?.name || 'Service' }}</h3>
+
+      <div class="left-meta-row">
+        <span class="meta-item-left">
+          <i class="fas fa-clock"></i>
+          {{ getServiceDurationDisplay() }}
+        </span>
+        <span class="meta-divider"></span>
+        <span class="meta-price-left">
+          <i class="fas fa-tag"></i>
+          {{ getTotalAmount() | number:'1.0-0' }} FCFA
+        </span>
+      </div>
+
+      <p class="left-service-desc">
+        {{ data.service?.description || 'Réservez facilement votre créneau en quelques étapes.' }}
+      </p>
+
+      <div class="left-provider-name" *ngIf="providerInfo">
+        <i class="fas fa-map-marker-alt"></i>
+        <span>{{ providerInfo.nom }}{{ isFreelanceBooking ? (' ' + providerInfo.prenom) : '' }}</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===== PANNEAU DROIT : formulaire de réservation ===== -->
+  <div class="modal-right">
+
+    <!-- En-tête -->
+    <div class="modal-header">
+      <h2>Réserver un créneau</h2>
+      <div class="step-indicators">
+        <span class="step-dot active"></span>
+        <span class="step-dot" [class.active]="selectedPaymentMethod"></span>
+      </div>
+    </div>
+
+    <!-- Bannière erreur -->
+    <div class="error-banner" *ngIf="errorMessage">
+      <i class="fas fa-exclamation-circle"></i>
+      <span>{{ errorMessage }}</span>
+    </div>
+
+    <!-- Chargement -->
+    <div class="loading-overlay" *ngIf="isLoading || isProcessingPayment">
+      <mat-spinner diameter="36"></mat-spinner>
+      <p>{{ isProcessingPayment ? 'Traitement du paiement...' : 'Chargement...' }}</p>
+    </div>
+
+    <!-- Statut paiement (PENDING / FAILED / CANCELLED) -->
+    <div class="payment-status-banner" *ngIf="paymentStatus && paymentStatus.status !== 'COMPLETED' && !isProcessingPayment">
+      <div class="pstatus-card" [ngClass]="paymentStatus.status.toLowerCase()">
+        <i class="fas fa-spinner fa-spin" *ngIf="paymentStatus.status === 'PENDING' || paymentStatus.status === 'PROCESSING'"></i>
+        <i class="fas fa-times-circle" *ngIf="paymentStatus.status === 'FAILED'"></i>
+        <i class="fas fa-ban" *ngIf="paymentStatus.status === 'CANCELLED' || paymentStatus.status === 'EXPIRED'"></i>
+        <div class="pstatus-text">
+          <strong>{{ getPaymentStatusMessage() }}</strong>
+          <span *ngIf="paymentStatus.message">{{ paymentStatus.message }}</span>
+        </div>
+        <button class="pstatus-retry" *ngIf="canRetryPayment()" (click)="retryPayment()">
+          <i class="fas fa-redo"></i> Réessayer
+        </button>
+      </div>
+    </div>
+
+    <!-- Succès -->
+    <div class="payment-success" *ngIf="paymentStatus?.status === 'COMPLETED'">
+      <i class="fas fa-check-circle"></i>
+      <h3>Réservation confirmée !</h3>
+      <p>Votre réservation a été effectuée avec succès.</p>
+    </div>
+
+    <!-- Corps principal -->
+    <div class="modal-body" *ngIf="!isLoading && paymentStatus?.status !== 'COMPLETED'">
+
+      <!-- Date + Heure -->
+      <div class="date-time-row">
+
+        <!-- Date -->
+        <div class="date-col">
+          <h4 class="section-label">
+            <i class="fas fa-calendar-alt"></i> Sélectionner une date
+          </h4>
+          <div class="calendar-wrapper">
+            <mat-calendar
+              [selected]="bookingForm.get('date')?.value"
+              [minDate]="minDate"
+              (selectedChange)="onCalendarDateSelect($event)">
+            </mat-calendar>
           </div>
         </div>
-        <div class="service-description" *ngIf="data.service.description">
-          {{ data.service.description }}
+
+        <!-- Heure -->
+        <div class="time-col">
+          <h4 class="section-label">
+            <i class="fas fa-clock"></i> Sélectionner l'heure
+          </h4>
+          <div class="loading-slots-inline" *ngIf="isLoadingSlots">
+            <mat-spinner diameter="22"></mat-spinner>
+          </div>
+          <div class="time-grid" *ngIf="!isLoadingSlots">
+            <button
+              *ngFor="let time of standardSlots"
+              class="time-btn"
+              [class.selected]="bookingForm.get('timeSlot')?.value === time"
+              [class.unavailable]="!isSlotAvailable(time)"
+              [disabled]="!isSlotAvailable(time) || isProcessingPayment"
+              (click)="selectTimeSlot(time)">
+              {{ getSlotLabel(time) }}
+            </button>
+          </div>
+          <small class="time-note">* Tous les horaires sont en heure locale</small>
+        </div>
+
+      </div>
+
+      <!-- Informations de contact -->
+      <div class="contact-section" [formGroup]="paymentForm">
+        <h4 class="section-label-bar">INFORMATIONS DE CONTACT</h4>
+        <div class="contact-fields">
+          <div class="field-group">
+            <label>Nom complet</label>
+            <input type="text" formControlName="customerName" placeholder="Jane Doe">
+          </div>
+          <div class="field-group">
+            <label>Numéro de téléphone</label>
+            <input type="tel" formControlName="phoneNumber" placeholder="+221 77 000 00 00">
+          </div>
         </div>
       </div>
-    </div>
-    
-    <!-- Error Message -->
-    <div class="error-message" *ngIf="errorMessage">
-      <mat-icon color="warn">error</mat-icon>
-      <p>{{ errorMessage }}</p>
-    </div>
-    
-    <!-- Booking Form -->
-    <form [formGroup]="bookingForm" *ngIf="!isLoading && bookingForm" (click)="onDialogClick($event)">
-      
-      <!-- Date Field -->
-      <div class="form-row">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Date</mat-label>
-          <input 
-            matInput 
-            [matDatepicker]="datePicker" 
-            formControlName="date" 
-            [min]="minDate"
-            readonly
-            (click)="openDatePicker(); $event.stopPropagation()"
-            placeholder="Sélectionnez une date">
-          
-          <mat-datepicker-toggle 
-            matIconSuffix 
-            [for]="datePicker" 
-            (click)="openDatePicker(); $event.stopPropagation()">
-            <mat-icon matDatepickerToggleIcon>calendar_today</mat-icon>
-          </mat-datepicker-toggle>
-          
-          <mat-datepicker 
-            #datePicker 
-            touchUi="false"></mat-datepicker>>          
-          <mat-error *ngIf="bookingForm.get('date')?.hasError('required') && bookingForm.get('date')?.touched">
-            La date est requise
-          </mat-error>
-        </mat-form-field>
-      </div>
-      
-      <!-- Time Slot Field - ✅ CORRIGÉ : Plus d'attribut disabled -->
-      <div class="form-row">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Heure</mat-label>
-          
-          <!-- ✅ SUPPRESSION de [disabled]="isLoadingSlots" -->
-          <mat-select 
-            formControlName="timeSlot"(click)="$event.stopPropagation()"
-            >    
-            <!-- Loading créneaux -->
-            <mat-option *ngIf="isLoadingSlots" disabled>
-              <div class="loading-slots">
-                <mat-icon class="spin">refresh</mat-icon>
-                Chargement des créneaux...
-              </div>
-            </mat-option>
-            
-            <!-- Créneaux disponibles -->
-             
-            <mat-option 
-              *ngFor="let slot of availableTimeSlots" 
-              [value]="slot.value"
-              (click)="$event.stopPropagation()">
-              {{ slot.label }}
-            </mat-option>
-            
-            <!-- Message si aucun créneau -->
-            <mat-option *ngIf="!isLoadingSlots && availableTimeSlots.length === 0" disabled>
-              <div class="no-slots">
-                <mat-icon>event_busy</mat-icon>
-                Aucun créneau disponible
-              </div>
-            </mat-option>
-            
-          </mat-select>
-          
-          <mat-error *ngIf="bookingForm.get('timeSlot')?.hasError('required') && bookingForm.get('timeSlot')?.touched">
-            L'heure est requise
-          </mat-error>
-        </mat-form-field>
-        
-        <!-- Info créneaux -->
-        <div class="slots-info" *ngIf="!isLoadingSlots && availableTimeSlots.length > 0">
-          <mat-icon color="accent">check_circle</mat-icon>
-          <span>{{ availableTimeSlots.length }} créneau{{ availableTimeSlots.length > 1 ? 'x' : '' }} disponible{{ availableTimeSlots.length > 1 ? 's' : '' }}</span>
-        </div>
-        
-        <!-- Info provider fermé -->
-        <div class="closed-info" *ngIf="!isLoadingSlots && availableTimeSlots.length === 0 && !errorMessage">
-          <mat-icon color="warn">info</mat-icon>
-          <span>{{ isFreelanceBooking ? 'Le freelance n\'est pas disponible ce jour' : 'Le salon est fermé ce jour ou tous les créneaux sont réservés' }}</span>
+
+      <!-- Mode de paiement -->
+      <div class="payment-section">
+        <h4 class="section-label-bar">MODE DE PAIEMENT</h4>
+        <div class="payment-cards-row">
+          <div
+            *ngFor="let method of paymentMethods"
+            class="payment-card"
+            [class.selected]="selectedPaymentMethod === method.id"
+            (click)="selectPaymentMethod(method.id)">
+            <img
+              [src]="method.icon"
+              [alt]="method.name"
+              class="payment-img"
+              (error)="$any($event.target).style.display='none'">
+          </div>
         </div>
       </div>
-    </form>
-    
-    <!-- Loading State -->
-    <div class="loading-container" *ngIf="isLoading">
-      <mat-spinner diameter="40"></mat-spinner>
-      <p>Traitement de votre réservation...</p>
+
     </div>
-  </mat-dialog-content>
-  
-  <!-- Dialog Actions -->
-  <mat-dialog-actions align="end" class="dialog-actions">
-    <button 
-      mat-button 
-      (click)="closeDialog()"
-      type="button"
-      class="cancel-btn">
-      Annuler
-    </button>
-    
-    <button 
-      mat-raised-button 
-      color="primary" 
-      [disabled]="!canSubmitBooking()"
-      (click)="submitBooking(); $event.stopPropagation()"
-      type="button"
-      class="confirm-btn">
-      
-      <!-- Texte dynamique -->
-      <span *ngIf="isLoadingSlots">
-        <mat-icon class="spin">refresh</mat-icon>
-        Chargement...
-      </span>
-      <span *ngIf="!isLoadingSlots && availableTimeSlots.length === 0 && !errorMessage">
-        Aucun créneau
-      </span>
-      <span *ngIf="!isLoadingSlots && (availableTimeSlots.length > 0 || errorMessage)">
-        <mat-icon>check</mat-icon>
-        Confirmer la réservation
-      </span>
-    </button>
-  </mat-dialog-actions>
+
+    <!-- Pied de page -->
+    <div class="modal-footer" *ngIf="paymentStatus?.status !== 'COMPLETED'">
+      <div class="total-price">
+        <span class="total-label">Prix Total</span>
+        <strong class="total-amount">{{ getTotalAmount() | number:'1.0-0' }} FCFA</strong>
+      </div>
+      <button
+        class="confirm-btn"
+        [disabled]="!canConfirmAll() || isProcessingPayment"
+        (click)="submitAll(); $event.stopPropagation()">
+        <span *ngIf="!isProcessingPayment">
+          Confirmer le rendez-vous <i class="fas fa-arrow-right"></i>
+        </span>
+        <span *ngIf="isProcessingPayment">
+          <i class="fas fa-spinner fa-spin"></i> En cours...
+        </span>
+      </button>
+    </div>
+
+    <div class="modal-footer justify-end" *ngIf="paymentStatus?.status === 'COMPLETED'">
+      <button class="confirm-btn" (click)="closeDialog({ success: true, reservation: createdReservation, payment: paymentStatus })">
+        Terminer <i class="fas fa-check"></i>
+      </button>
+    </div>
+
+  </div><!-- /modal-right -->
+
 </div>

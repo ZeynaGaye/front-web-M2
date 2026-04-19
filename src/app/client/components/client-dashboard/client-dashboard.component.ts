@@ -1,6 +1,7 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Component, OnInit, OnDestroy, ElementRef, ViewChild, Inject, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { RouterModule, Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -13,15 +14,22 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSelectModule } from '@angular/material/select';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
 
 import { Subscription } from 'rxjs';
 import { forkJoin } from 'rxjs';
 import { ReservationService } from '../../../shared/services/reservation/reservation.service';
+import { RecommendationService } from '../../../shared/services/recommendation.service';
 import { NotificationService, Notification } from '../../../shared/services/notification/notification.service';
 import { NotificationListComponent } from '../../../shared/components/notification-list/notification-list.component';
+import { FreelanceDetailsComponent } from '../../../freelance/components/freelance-details/freelance-details.component';
+import { SalonDetailsComponent } from '../../../shared/components/salon-details/salon-details.component';
+import { ProfileManagementComponent } from '../../../shared/components/profile-management/profile-management.component';
+import { AuthService } from '../../../core/servces/auth.service';
 
 interface CalendarDay {
   date: number;
+  fullDate: Date;
   hasAppointment: boolean;
   isToday: boolean;
   isOtherMonth: boolean;
@@ -60,7 +68,8 @@ interface LoyaltyProgram {
     MatSelectModule,
     MatBadgeModule,
     MatMenuModule,
-    NotificationListComponent,
+    FormsModule,
+    ProfileManagementComponent,
   ],
   templateUrl: './client-dashboard.component.html',
   styleUrl: './client-dashboard.component.scss'
@@ -68,7 +77,7 @@ interface LoyaltyProgram {
 export class ClientDashboardComponent implements OnInit, OnDestroy {
 
   // ==========================================
-  // 📊 DONNÉES DU DASHBOARD
+  //  DONNÉES DU DASHBOARD
   // ==========================================
 
   loading = true;
@@ -96,9 +105,16 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   // Prochain RDV
   nextAppointment: any = null;
 
+  // Popup détails RDV
+  showRdvPopup = false;
+  rdvPopupData: any = null;
+
   // Avis et notation
   reservationsToRate: any[] = [];
   recentAvis: any[] = [];
+
+  // Suggestions "Sélectionné pour vous"
+  suggestions: any[] = [];
 
   // Prestataires favoris
   favoriteProviders: any[] = [];
@@ -106,6 +122,10 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   // Notifications
   unreadNotifications = 0;
   notifications: Notification[] = [];
+
+  // Recherche
+  searchQuery = '';
+  searchFocused = false;
 
   // User information
   currentUser: any = null;
@@ -133,31 +153,60 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   // État du composant
   selectedTab = 0;
 
+  // Annulation
+  showCancelModal = false;
+  cancelReason = '';
+  cancelCustomReason = '';
+  reservationToCancel: any = null;
+  cancellingInProgress = false;
+  readonly cancelReasons = [
+    'Empêchement de dernière minute',
+    'Changement de programme',
+    'Problème de transport',
+    'Raison personnelle',
+    'Autre'
+  ];
+
+  @ViewChild('scrollContainer') scrollContainer!: ElementRef<HTMLElement>;
+  @ViewChild('tabsSection') tabsSection!: ElementRef<HTMLElement>;
+  @ViewChild('favSection') favSection!: ElementRef<HTMLElement>;
+
   private subscriptions = new Subscription();
+
+  // Profil
+  showProfile = false;
+
+  private isBrowser: boolean;
 
   constructor(
     private reservationService: ReservationService,
     private notificationService: NotificationService,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
-  ) {}
+    private snackBar: MatSnackBar,
+    private router: Router,
+    private authService: AuthService,
+    private recommendationService: RecommendationService,
+    @Inject(PLATFORM_ID) platformId: Object
+  ) {
+    this.isBrowser = isPlatformBrowser(platformId);
+  }
 
   // ==========================================
-  // 🔄 CYCLE DE VIE
+  //  CYCLE DE VIE
   // ==========================================
 
   ngOnInit(): void {
     this.initializeData();
-    this.loadUserInfo();
-    this.loadDashboardData();
-    
-    // ✅ Charger les notifications avec un délai pour laisser l'auth se stabiliser
-    setTimeout(() => {
-      this.loadNotifications();
-    }, 1000);
-    
+    this.loadUserData();
+    this.subscribeToUserChanges();
     this.generateCalendar();
     this.generateSpendingData();
+
+    // Appels API uniquement côté browser (SSR n'a pas de token d'auth)
+    if (this.isBrowser) {
+      this.loadDashboardData();
+      this.loadNotifications();
+    }
   }
 
   ngOnDestroy(): void {
@@ -165,7 +214,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   }
 
   // ==========================================
-  // 🔧 INITIALISATION
+  //  INITIALISATION
   // ==========================================
 
   private initializeData(): void {
@@ -173,24 +222,24 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     this.currentYear = this.currentDate.getFullYear();
   }
 
-  /**
-   * Charger les informations utilisateur
-   */
-  private loadUserInfo(): void {
-    // Récupérer les informations de l'utilisateur connecté depuis le localStorage
-    const userData = localStorage.getItem('currentUser');
-    if (userData) {
-      this.currentUser = JSON.parse(userData);
-      console.log('🔍 Utilisateur connecté:', this.currentUser);
-    } else {
-      // Fallback si pas d'utilisateur dans le localStorage
-      this.currentUser = null;
-      console.warn('❌ Aucun utilisateur trouvé dans le localStorage');
-    }
+  loadUserData(): void {
+    this.currentUser = this.authService.getCurrentUser();
+  }
+
+  subscribeToUserChanges(): void {
+    this.subscriptions.add(
+      this.authService.currentUser$.subscribe(user => {
+        this.currentUser = user;
+      })
+    );
+  }
+
+  get isAuthenticated(): boolean {
+    return this.authService.isAuthenticated();
   }
 
   // ==========================================
-  // 📥 CHARGEMENT DES DONNÉES
+  //  CHARGEMENT DES DONNÉES
   // ==========================================
 
   loadDashboardData(): void {
@@ -212,7 +261,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       dataLoad$.subscribe({
         next: (data) => {
-          console.log('📊 Données dashboard chargées:', data);
+
 
           this.allReservations = data.reservations;
           this.upcomingReservations = data.upcoming;
@@ -242,9 +291,10 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
 
           this.loading = false;
           this.generateCalendarWithAppointments();
+          this.loadSuggestions();
         },
         error: (error) => {
-          console.error('❌ Erreur chargement dashboard:', error);
+          console.error(' Erreur chargement dashboard:', error);
           this.error = 'Erreur lors du chargement des données';
           this.loading = false;
           this.showError('Impossible de charger les données du dashboard');
@@ -253,28 +303,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     );
   }
 
-  private loadNotifications(): void {
-    // Vérifier si un utilisateur est connecté
-    if (!this.currentUser || !this.currentUser.id) {
-      console.warn('❌ Aucun utilisateur connecté pour charger les notifications');
-      this.notifications = [];
-      this.unreadNotifications = 0;
-      return;
-    }
-
-    // ✅ Si l'utilisateur est sur le dashboard, c'est qu'il est authentifié
-    // L'intercepteur s'occupera de gérer l'authentification automatiquement
-
-    // Éviter les appels multiples
-    if (this.loadingNotifications) {
-      console.log('⏳ Chargement des notifications déjà en cours...');
-      return;
-    }
-
-    this.loadingNotifications = true;
-    console.log(`📨 Chargement des notifications pour l'utilisateur ${this.currentUser.id} (${this.currentUser.prenom} ${this.currentUser.nom})`);
-
-    // Charger les notifications et le compteur pour l'utilisateur connecté
+  loadNotifications(): void {
     this.subscriptions.add(
       forkJoin({
         notifications: this.notificationService.getNotifications(),
@@ -283,51 +312,15 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
         next: (data) => {
           this.notifications = data.notifications;
           this.unreadNotifications = data.unreadCount.count;
-          this.loadingNotifications = false;
-          this.notificationRetryCount = 0; // ✅ Réinitialiser le compteur en cas de succès
-          console.log('📨 Notifications chargées pour le client:', {
-            utilisateur: `${this.currentUser.prenom} ${this.currentUser.nom}`,
-            totalNotifications: data.notifications.length,
-            nonLues: data.unreadCount.count,
-            notifications: data.notifications
-          });
         },
         error: (error) => {
-          console.error('❌ Erreur chargement notifications:', error);
-          this.unreadNotifications = 0;
+          console.error(' Erreur chargement notifications client:', error);
           this.notifications = [];
-          this.loadingNotifications = false;
-
-          // Gestion spécifique de l'erreur 401 (non authentifié)
-          if (error.status === 401) {
-            console.warn(`🔐 Token expiré (tentative ${this.notificationRetryCount + 1}/${this.maxNotificationRetries})`);
-            
-            // Limiter le nombre de tentatives
-            if (this.notificationRetryCount < this.maxNotificationRetries) {
-              this.notificationRetryCount++;
-              
-              // Retenter après un délai croissant
-              const delay = this.notificationRetryCount * 2000; // 2s, 4s, 6s...
-              setTimeout(() => {
-                if (this.currentUser && this.currentUser.id) {
-                  console.log(`🔄 Nouvelle tentative ${this.notificationRetryCount}/${this.maxNotificationRetries} de chargement des notifications...`);
-                  this.loadNotifications();
-                }
-              }, delay);
-            } else {
-              console.error('❌ Échec authentification après plusieurs tentatives');
-              // Ne pas afficher le message d'erreur immédiatement pour éviter les faux positifs
-              console.warn('🔄 Authentification échouée, mais pas d\'affichage d\'erreur pour l\'instant');
-            }
-          } else {
-            // Autres erreurs : afficher un message informatif
-            this.showError('Impossible de charger les notifications');
-          }
+          this.unreadNotifications = 0;
         }
       })
     );
 
-    // S'abonner aux changements du compteur
     this.subscriptions.add(
       this.notificationService.unreadCount$.subscribe(count => {
         this.unreadNotifications = count;
@@ -336,7 +329,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   }
 
   // ==========================================
-  // 🎬 ACTIONS UTILISATEUR
+  //  ACTIONS UTILISATEUR
   // ==========================================
 
 
@@ -346,40 +339,139 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * ✅ Prendre un nouveau RDV
+   *  Prendre un nouveau RDV
    */
+  /** Retourne les services sans doublons (par nom de service + prestataire), max 8 */
+  get uniqueRecommendations(): any[] {
+    return this.suggestions;
+  }
+
+  loadSuggestions(): void {
+    this.recommendationService.getQuickRecommendations('', undefined, undefined, 10).subscribe({
+      next: (response) => {
+        const salons: any[] = response.recommendations || [];
+        const items: any[] = [];
+        for (const salon of salons) {
+          const services: any[] = salon.servicesComplets || [];
+          for (const svc of services) {
+            items.push({
+              serviceId: svc.id,
+              serviceName: svc.nomService || svc.nom,
+              prix: svc.prix,
+              dureeMinutes: svc.dureeEnMinutes,
+              salonId: salon.id,
+              salonName: salon.nom,
+              salonAdresse: salon.adresse,
+              photoProfilUrl: salon.photoProfilUrl,
+              _isSuggestion: true
+            });
+            if (items.length >= 8) break;
+          }
+          if (items.length >= 8) break;
+        }
+        this.suggestions = items;
+      },
+      error: () => {
+        // Fallback : suggestions depuis l'historique
+        const seen = new Set<string>();
+        this.suggestions = this.recentHistory.filter(r => {
+          const key = `${this.getServiceName(r)}__${this.getProviderName(r)}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        }).slice(0, 8);
+      }
+    });
+  }
+
+  scrollLeft(): void {
+    this.scrollContainer?.nativeElement.scrollBy({ left: -220, behavior: 'smooth' });
+  }
+
+  scrollRight(): void {
+    this.scrollContainer?.nativeElement.scrollBy({ left: 220, behavior: 'smooth' });
+  }
+
+  logout(): void {
+    this.authService.logout().subscribe();
+  }
+
+  toggleProfile(): void {
+    this.showProfile = !this.showProfile;
+    if (this.showProfile) {
+      setTimeout(() => {
+        document.getElementById('profile-section')?.scrollIntoView({ behavior: 'smooth' });
+      }, 50);
+    }
+  }
+
+  onSearch(): void {
+    const q = this.searchQuery.trim();
+    if (!q) return;
+    this.router.navigate(['/accueil'], { queryParams: { q } });
+  }
+
+  scrollToSection(ref: 'tabsSection' | 'favSection'): void {
+    const el = this[ref]?.nativeElement;
+    if (!el) return;
+    const container = el.closest('.db-scroll') as HTMLElement;
+    if (container) {
+      const top = el.offsetTop - container.offsetTop;
+      container.scrollTo({ top, behavior: 'smooth' });
+    } else {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
   bookNewAppointment(): void {
-    console.log('📅 Nouveau RDV');
+
     this.showInfo('Redirection vers la prise de rendez-vous...');
   }
 
   /**
-   * ✅ Annuler une réservation
+   *  Annuler une réservation
    */
   cancelReservation(reservation: any): void {
     if (!this.canCancelReservation(reservation)) {
-      this.showError('Cette réservation ne peut plus être annulée');
+      this.showError('Cette réservation ne peut plus être annulée (moins de 2h avant)');
       return;
     }
+    this.reservationToCancel = reservation;
+    this.cancelReason = '';
+    this.cancelCustomReason = '';
+    this.showCancelModal = true;
+  }
 
-    if (confirm('Êtes-vous sûr de vouloir annuler cette réservation ?')) {
-      this.subscriptions.add(
-        this.reservationService.cancelReservation(reservation.id).subscribe({
-          next: () => {
-            this.showSuccess('Réservation annulée avec succès');
-            this.loadDashboardData();
-          },
-          error: (error: any) => {
-            console.error('❌ Erreur annulation:', error);
-            this.showError('Impossible d\'annuler la réservation');
-          }
-        })
-      );
-    }
+  closeCancelModal(): void {
+    this.showCancelModal = false;
+    this.reservationToCancel = null;
+    this.cancelReason = '';
+    this.cancelCustomReason = '';
+  }
+
+  confirmCancellation(): void {
+    if (!this.cancelReason) return;
+    const finalReason = this.cancelReason === 'Autre' ? this.cancelCustomReason : this.cancelReason;
+    this.cancellingInProgress = true;
+    this.subscriptions.add(
+      this.reservationService.cancelReservation(this.reservationToCancel.id, finalReason).subscribe({
+        next: () => {
+          this.cancellingInProgress = false;
+          this.closeCancelModal();
+          this.showSuccess('Réservation annulée avec succès');
+          this.loadDashboardData();
+        },
+        error: (error: any) => {
+          this.cancellingInProgress = false;
+          console.error('Erreur annulation:', error);
+          this.showError('Impossible d\'annuler la réservation');
+        }
+      })
+    );
   }
 
   /**
-   * ✅ Terminer une réservation
+   *  Terminer une réservation
    */
   completeReservation(reservation: any): void {
     if (!this.canCompleteReservation(reservation)) {
@@ -403,7 +495,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
           }, 1000);
         },
         error: (error: any) => {
-          console.error('❌ Erreur finalisation:', error);
+          console.error(' Erreur finalisation:', error);
           this.showError('Impossible de terminer la réservation');
         }
       })
@@ -411,34 +503,27 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * ✅ Voir détails d'une réservation
+   *  Voir détails d'une réservation
 
    */
   viewReservationDetails(reservation: any): void {
-    console.log('👁️ Voir détails:', reservation);
-    const serviceName = this.getServiceName(reservation);
-    const providerName = this.getProviderName(reservation);
-    const price = this.getFormattedServicePrice(reservation);
-    const date = this.formatDate(reservation.datePrestation);
-    const time = this.formatTime(reservation.datePrestation);
-    const address = this.getProviderAddress(reservation);
+    this.rdvPopupData = {
+      appointments: [reservation],
+      title: 'Détails du rendez-vous'
+    };
+    this.showRdvPopup = true;
+  }
 
-    const details = `
-📋 Service: ${serviceName}
-👤 Prestataire: ${providerName}
-💰 Prix: ${price}
-📅 Date: ${date} à ${time}
-📍 Adresse: ${address}
-🔖 Statut: ${this.formatStatus(reservation.status)}`;
-
-    this.showInfo(details);
+  closeRdvPopup(): void {
+    this.showRdvPopup = false;
+    this.rdvPopupData = null;
   }
 
   /**
-   * ✅ Réserver à nouveau un service
+   *  Réserver à nouveau un service
    */
   rebookService(reservation: any): void {
-    console.log('🔄 Réserver à nouveau:', reservation);
+
 
     // Importer le dialog de booking dynamiquement
     import('../../../shared/components/booking-dialog/booking-dialog.component').then(module => {
@@ -452,13 +537,14 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
           service: {
             id: reservation.serviceId,
             nom: reservation.serviceName || reservation.serviceNom,
-            prix: reservation.servicePrix,
+            prix: reservation.servicePrix || reservation.prixTotal || reservation.prix,
             dureeMinutes: reservation.dureeMinutes
           },
           salon: {
             id: reservation.salonId,
             nom: reservation.salonName || reservation.salonNom,
-            adresse: reservation.salonAdresse
+            adresse: reservation.salonAdresse,
+            photoProfilUrl: reservation.photoProfilUrl
           },
           type: 'salon'
         };
@@ -497,7 +583,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
       // Gérer la fermeture du dialog
       dialogRef.afterClosed().subscribe(result => {
         if (result && result.success) {
-          console.log('✅ Nouvelle réservation créée:', result);
+
           this.showSuccess('Votre nouvelle réservation a été confirmée !');
 
           // Vérifier si ce prestataire doit être ajouté aux favoris
@@ -511,17 +597,17 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
       });
 
     }).catch(error => {
-      console.error('❌ Erreur lors du chargement du dialog de réservation:', error);
+      console.error(' Erreur lors du chargement du dialog de réservation:', error);
       this.showError('Impossible d\'ouvrir le formulaire de réservation');
     });
   }
 
   /**
-   * ✅ Ouvrir le formulaire de notation
+   *  Ouvrir le formulaire de notation
    */
   // Dans votre classe ClientDashboardComponent
   openRatingDialog(reservation: any): void {
-    console.log('🌟 Ouvrir notation pour:', reservation);
+
 
     // Importer la modal de notation dynamiquement
     import('../../../shared/components/rating-modal/rating-modal.component').then(module => {
@@ -539,7 +625,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
       }
 
       if (!prestataireId || !prestataireType) {
-        console.error('❌ Impossible de déterminer l\'ID ou le type du prestataire pour la réservation:', reservation);
+        console.error(' Impossible de déterminer l\'ID ou le type du prestataire pour la réservation:', reservation);
         this.showError('Les informations du prestataire sont manquantes.');
         return; // Sortir de la fonction si les données sont invalides
       }
@@ -562,70 +648,136 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
 
       dialogRef.afterClosed().subscribe(result => {
         if (result && result.success) {
-          console.log('✅ Notation terminée:', result);
+
           this.showSuccess('Votre avis a été enregistré avec succès !');
           this.loadDashboardData();
         }
       });
     }).catch(error => {
-      console.error('❌ Erreur lors du chargement de la modal:', error);
+      console.error(' Erreur lors du chargement de la modal:', error);
       this.showError('Impossible d\'ouvrir le formulaire de notation');
     });
   }
 
   /**
-   * ✅ Modifier un avis
+   *  Modifier un avis
    */
   editReview(avis: any): void {
-    console.log('✏️ Modifier avis:', avis);
-    this.showInfo('Modification de l\'avis en cours de développement');
+    import('../../../shared/components/rating-modal/rating-modal.component').then(module => {
+      const type: 'salon' | 'freelance' =
+        (avis.typePrestataire === 'salon' || avis.salonId) ? 'salon' : 'freelance';
+
+      const dialogRef = this.dialog.open(module.RatingModalComponent, {
+        width: '600px',
+        maxWidth: '90vw',
+        disableClose: false,
+        data: {
+          reservation: {
+            id: avis.reservationId,
+            salonId: avis.salonId,
+            freelanceId: avis.freelanceId,
+            avisId: avis.id,
+            serviceId: null
+          },
+          serviceNom: avis.nomService,
+          prestataire: avis.nomPrestataire,
+          type,
+          existingRating: {
+            note: avis.note,
+            commentaire: avis.commentaire
+          }
+        }
+      });
+
+      dialogRef.afterClosed().subscribe(result => {
+        if (result && result.success) {
+          this.showSuccess('Votre avis a été modifié avec succès !');
+          this.loadDashboardData();
+        }
+      });
+    }).catch(error => {
+      console.error('Erreur lors du chargement de la modal:', error);
+      this.showError('Impossible d\'ouvrir le formulaire de modification');
+    });
   }
 
   /**
-   * ✅ Voir profil prestataire
+   *  Voir profil prestataire
    */
   viewProviderProfile(provider: any): void {
-    console.log('👤 Voir profil:', provider);
+
     this.showInfo('Profil de ' + provider.prestataire);
   }
 
   /**
-   * ✅ Réserver avec un prestataire favori
+   *  Ouvrir le détail du salon ou freelance favori
    */
-  bookWithProvider(provider: any): void {
-    console.log('📅 Réserver avec:', provider);
-    this.showInfo('Réservation avec ' + provider.prestataire);
+  viewProviderDetail(provider: any): void {
+    const isSalon = provider.type === 'SALON' || provider.type === 'salon';
+    const id: number = isSalon
+      ? (provider.salonId || provider.id)
+      : (provider.freelanceId || provider.id);
+
+    if (!id) {
+      this.showInfo('Détail non disponible pour ' + provider.prestataire);
+      return;
+    }
+
+    if (isSalon) {
+      this.dialog.open(SalonDetailsComponent, {
+        width: '900px',
+        height: '90vh',
+        maxWidth: '90vw',
+        data: { salonId: id },
+        panelClass: 'salon-detail-dialog-container',
+        autoFocus: false
+      });
+    } else {
+      this.dialog.open(FreelanceDetailsComponent, {
+        data: { freelanceId: id },
+        width: '90vw',
+        maxWidth: '800px',
+        panelClass: ['dialog-responsive', 'freelance-details-dialog']
+      });
+    }
   }
 
   /**
-   * ✅ Voir les offres
+   *  Réserver avec un prestataire favori
+   */
+  bookWithProvider(provider: any): void {
+    this.viewProviderDetail(provider);
+  }
+
+  /**
+   *  Voir les offres
    */
   viewOffers(): void {
-    console.log('🎁 Voir offres');
+
     this.showInfo('Consultez nos offres exclusives !');
   }
 
   /**
-   * ✅ Partager l'application
+   *  Partager l'application
    */
   shareApp(): void {
-    console.log('📤 Partager app');
+
     this.showInfo('Fonctionnalité de partage activée');
   }
 
   /**
-   * ✅ Ouvrir le support
+   *  Ouvrir le support
    */
   openSupport(): void {
-    console.log('❓ Ouvrir support');
+
     this.showInfo('Support client disponible 24h/7j');
   }
 
   /**
-   * ✅ Ouvrir les notifications
+   *  Ouvrir les notifications
    */
   openNotifications(): void {
-    console.log('📨 Ouverture des notifications');
+
 
     // Ouvrir le dialog des notifications
     const dialogRef = this.dialog.open(NotificationListComponent, {
@@ -652,7 +804,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   }
 
   // ==========================================
-  // 📊 GRAPHIQUE DES DÉPENSES
+  //  GRAPHIQUE DES DÉPENSES
   // ==========================================
 
   generateSpendingData(): void {
@@ -668,12 +820,12 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   }
 
   updateSpendingChart(): void {
-    console.log('📊 Mise à jour graphique:', this.selectedPeriod);
+
     this.generateSpendingData(); // Régénérer avec la nouvelle période
   }
 
   // ==========================================
-  // 📅 CALENDRIER
+  //  CALENDRIER
   // ==========================================
 
   generateCalendar(): void {
@@ -702,7 +854,8 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
 
       this.calendarDays.push({
         date: currentDate.getDate(),
-        hasAppointment: false, // Sera mis à jour avec les vrais RDV
+        fullDate: new Date(currentDate),
+        hasAppointment: false,
         isToday,
         isOtherMonth: !isCurrentMonth,
         appointments: []
@@ -716,10 +869,9 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     // Marquer les jours avec des RDV
     this.upcomingReservations.forEach(reservation => {
       const reservationDate = new Date(reservation.datePrestation);
-      const dayIndex = this.calendarDays.findIndex(day => {
-        const dayDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), day.date);
-        return dayDate.toDateString() === reservationDate.toDateString();
-      });
+      const dayIndex = this.calendarDays.findIndex(day =>
+        day.fullDate.toDateString() === reservationDate.toDateString()
+      );
 
       if (dayIndex !== -1) {
         this.calendarDays[dayIndex].hasAppointment = true;
@@ -744,9 +896,12 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   }
 
   selectDate(day: CalendarDay): void {
-    if (day.hasAppointment) {
-      console.log('📅 Jour sélectionné avec RDV:', day);
-      this.showInfo(`${day.appointments?.length || 0} rendez-vous le ${day.date}`);
+    if (day.hasAppointment && day.appointments?.length) {
+      this.rdvPopupData = {
+        appointments: day.appointments,
+        title: `Rendez-vous du ${day.date} ${this.currentMonthName}`
+      };
+      this.showRdvPopup = true;
     }
   }
 
@@ -759,18 +914,18 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   }
 
   // ==========================================
-  // 🔍 MÉTHODES UTILITAIRES
+  //  MÉTHODES UTILITAIRES
   // ==========================================
 
   /**
-   * ✅ Obtenir le label d'un onglet avec compteur
+   *  Obtenir le label d'un onglet avec compteur
    */
   getTabLabel(label: string, count: number): string {
     return count > 0 ? `${label} (${count})` : label;
   }
 
   /**
-   * ✅ Vérifier si une réservation peut être annulée
+   *  Vérifier si une réservation peut être annulée
    * CORRECTION : Plus simple - toute réservation confirmée peut être annulée jusqu'à 2h avant
    */
   canCancelReservation(reservation: any): boolean {
@@ -790,7 +945,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * ✅ Vérifier si une réservation peut être terminée
+   *  Vérifier si une réservation peut être terminée
    * CORRECTION : Plus simple - toute réservation confirmée peut être terminée après l'heure prévue
    */
   canCompleteReservation(reservation: any): boolean {
@@ -810,7 +965,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * ✅ Vérifier si une réservation peut être notée
+   *  Vérifier si une réservation peut être notée
    */
   canRateReservation(reservation: any): boolean {
     const status = reservation.status?.toLowerCase() || reservation.bookstatus?.toLowerCase();
@@ -818,56 +973,56 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * ✅ Formater le statut pour affichage
+   *  Formater le statut pour affichage
    */
   formatStatus(status: string): string {
     return this.reservationService.formatClientReservationStatus(status);
   }
 
   /**
-   * ✅ Obtenir la couleur du statut
+   *  Obtenir la couleur du statut
    */
   getStatusColor(status: string): string {
     return this.reservationService.getClientStatusColor(status);
   }
 
   /**
-   * ✅ Formater prix
+   *  Formater prix
    */
   formatPrice(price: number): string {
     return this.reservationService.formatPrix(price);
   }
 
   /**
-   * ✅ Formater date
+   *  Formater date
    */
   formatDate(date: string | Date): string {
     return this.reservationService.formatDateFrancaise(date);
   }
 
   /**
-   * ✅ Formater heure
+   *  Formater heure
    */
   formatTime(date: string | Date): string {
     return this.reservationService.formatHeureComplete(date);
   }
 
   /**
-   * ✅ Formater note en étoiles
+   *  Formater note en étoiles
    */
   formatStars(rating: number): string {
     return this.reservationService.formatRatingStars(rating);
   }
 
   /**
-   * ✅ Obtenir le temps relatif
+   *  Obtenir le temps relatif
    */
   getRelativeTime(date: string | Date): string {
     return this.reservationService.getTempsDepuisCreation(date);
   }
 
   /**
-   * ✅ Calculer le temps jusqu'au prochain RDV
+   *  Calculer le temps jusqu'au prochain RDV
    */
   getTimeUntilNext(date: string | Date): string {
     try {
@@ -894,11 +1049,11 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   }
 
   // ==========================================
-  // 🎨 MÉTHODES D'AFFICHAGE
+  //  MÉTHODES D'AFFICHAGE
   // ==========================================
 
   /**
-   * ✅ Obtenir l'icône du statut
+   *  Obtenir l'icône du statut
    */
   getStatusIcon(status: string): string {
     const statusMap: { [key: string]: string } = {
@@ -915,14 +1070,14 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * ✅ Obtenir l'icône du type de prestataire
+   *  Obtenir l'icône du type de prestataire
    */
   getProviderIcon(reservation: any): string {
     return reservation.salonId ? 'store' : 'person';
   }
 
   /**
-   * ✅ Obtenir le nom du prestataire
+   *  Obtenir le nom du prestataire
    * MISE À JOUR : Utilise les nouvelles propriétés du DTO
    */
   getProviderName(reservation: any): string {
@@ -949,7 +1104,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   }
 
   // ==========================================
-  // 📱 NOTIFICATIONS
+  //  NOTIFICATIONS
   // ==========================================
 
   private showSuccess(message: string): void {
@@ -974,7 +1129,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * ✅ NOUVEAU : Obtenir l'adresse du prestataire
+   *  NOUVEAU : Obtenir l'adresse du prestataire
    */
   getProviderAddress(reservation: any): string {
     if (reservation.getProviderAddress) {
@@ -994,7 +1149,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * ✅ NOUVEAU : Obtenir le téléphone du prestataire
+   *  NOUVEAU : Obtenir le téléphone du prestataire
    */
   getProviderPhone(reservation: any): string | null {
     if (reservation.getProviderPhone) {
@@ -1006,7 +1161,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * ✅ NOUVEAU : Obtenir le nom du service avec fallback
+   *  NOUVEAU : Obtenir le nom du service avec fallback
    */
   getServiceName(reservation: any): string {
     if (!reservation) return 'Service inconnu';
@@ -1019,7 +1174,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * ✅ NOUVEAU : Obtenir le prix du service (nombre)
+   *  NOUVEAU : Obtenir le prix du service (nombre)
    */
   getServicePrice(reservation: any): number {
     if (!reservation) return 0;
@@ -1032,7 +1187,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * ✅ NOUVEAU : Obtenir le prix formaté (fourchette ou prix fixe)
+   *  NOUVEAU : Obtenir le prix formaté (fourchette ou prix fixe)
    */
   getFormattedServicePrice(reservation: any): string {
     if (!reservation) return '0 CFA';
@@ -1061,7 +1216,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * ✅ NOUVEAU : Obtenir la durée du service
+   *  NOUVEAU : Obtenir la durée du service
    */
   getServiceDuration(reservation: any): string {
     const minutes = reservation.dureeMinutes;
@@ -1077,7 +1232,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * ✅ NOUVEAU : Vérifier si toutes les infos sont complètes
+   *  NOUVEAU : Vérifier si toutes les infos sont complètes
    */
   hasCompleteInfo(reservation: any): boolean {
     const hasProvider = !!(reservation.salonName || reservation.freelanceNom || reservation.freelancePrenom);
@@ -1089,7 +1244,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * ✅ Rafraîchir les données
+   *  Rafraîchir les données
    */
   refresh(): void {
     this.loadDashboardData();
@@ -1097,7 +1252,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * ✅ Obtenir la classe CSS pour le statut du rendez-vous
+   *  Obtenir la classe CSS pour le statut du rendez-vous
    */
   getAppointmentStatusClass(appointment: any): string {
     const status = appointment.status?.toLowerCase() || appointment.bookstatus?.toLowerCase();
@@ -1119,7 +1274,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * ✅ Obtenir le texte du tooltip pour un jour du calendrier
+   *  Obtenir le texte du tooltip pour un jour du calendrier
    */
   getTooltipText(day: any): string {
     if (!day.appointments || day.appointments.length === 0) {
@@ -1129,17 +1284,17 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * ✅ Vérifier et ajouter automatiquement aux favoris après 2+ réservations
+   *  Vérifier et ajouter automatiquement aux favoris après 2+ réservations
    */
   private checkAndAddToFavorites(baseReservation: any): void {
-    console.log('🔍 Vérification pour ajout automatique aux favoris:', baseReservation);
+
 
     // Identifier le prestataire de la réservation de base
     const prestataireId = baseReservation.salonId || baseReservation.freelanceId;
     const prestataireType = baseReservation.salonId ? 'salon' : 'freelance';
 
     if (!prestataireId) {
-      console.warn('❌ Impossible d\'identifier le prestataire pour l\'ajout aux favoris');
+      console.warn(' Impossible d\'identifier le prestataire pour l\'ajout aux favoris');
       return;
     }
 
@@ -1149,7 +1304,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
       return currentPrestataireId === prestataireId;
     });
 
-    console.log(`📊 Nombre de réservations avec ce prestataire: ${reservationsWithSameProvider.length}`);
+
 
     // Si 2+ réservations, vérifier s'il n'est pas déjà dans les favoris
     if (reservationsWithSameProvider.length >= 2) {
@@ -1161,15 +1316,15 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
       if (!isAlreadyFavorite) {
         this.addToFavorites(baseReservation, prestataireType);
       } else {
-        console.log('✨ Ce prestataire est déjà dans les favoris');
+
       }
     } else {
-      console.log('📝 Pas encore assez de réservations pour ajouter aux favoris');
+
     }
   }
 
   /**
-   * ✅ Ajouter un prestataire aux favoris
+   *  Ajouter un prestataire aux favoris
    */
   private addToFavorites(reservation: any, type: 'salon' | 'freelance'): void {
     const prestataireId = type === 'salon' ? reservation.salonId : reservation.freelanceId;
@@ -1177,7 +1332,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
       ? (reservation.salonName || reservation.salonNom)
       : `${reservation.freelancePrenom} ${reservation.freelanceNom}`;
 
-    console.log(`⭐ Ajout automatique aux favoris: ${prestataireName} (${type})`);
+
 
     // Appeler l'API pour ajouter aux favoris
     const favoriteData = {
@@ -1206,15 +1361,15 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
       // Appel API pour ajouter aux favoris
       (this.reservationService as any).addToFavorites(favoriteData).subscribe({
         next: (response: any) => {
-          console.log('✅ Prestataire ajouté aux favoris via API:', response);
+
         },
         error: (error: any) => {
-          console.error('❌ Erreur lors de l\'ajout aux favoris:', error);
+          console.error(' Erreur lors de l\'ajout aux favoris:', error);
         }
       });
     } else {
       // Fallback : ajout local uniquement (pour développement)
-      console.log('📝 Service addToFavorites non disponible, ajout local seulement');
+
     }
 
     // Ajouter à la liste locale dans tous les cas
@@ -1226,10 +1381,10 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
 
 
   /**
-   * ✅ Vérifier tous les prestataires pour ajout automatique aux favoris
+   *  Vérifier tous les prestataires pour ajout automatique aux favoris
    */
   private checkAutomaticFavorites(): void {
-    console.log('🔍 Vérification automatique des favoris pour toutes les réservations');
+
 
     // Grouper les réservations par prestataire
     const prestataireStats = new Map();
@@ -1270,7 +1425,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
         });
 
         if (!isAlreadyFavorite) {
-          console.log(`⭐ Candidat pour ajout automatique: ${stats.name} (${stats.reservations.length} réservations)`);
+
           this.addToFavoritesQuietly(stats.sampleReservation, stats.type, stats.id, stats.name);
         }
       }
@@ -1278,7 +1433,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * ✅ Ajouter aux favoris silencieusement (sans notification)
+   *  Ajouter aux favoris silencieusement (sans notification)
    */
   private addToFavoritesQuietly(reservation: any, type: 'salon' | 'freelance', prestataireId: number, prestataireName: string): void {
     // Créer un objet favori local
@@ -1298,7 +1453,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
       autoAdded: true
     };
 
-    console.log(`✅ Ajout automatique silencieux: ${prestataireName} (${type})`);
+
 
     // Tentative d'appel API si disponible
     if (typeof (this.reservationService as any).addToFavorites === 'function') {
@@ -1310,10 +1465,10 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
 
       (this.reservationService as any).addToFavorites(favoriteData).subscribe({
         next: (response: any) => {
-          console.log('✅ Favori ajouté via API:', response);
+
         },
         error: (error: any) => {
-          console.error('❌ Erreur API favoris (mode silencieux):', error);
+          console.error(' Erreur API favoris (mode silencieux):', error);
         }
       });
     }
@@ -1323,10 +1478,10 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * ✅ Notification spéciale pour ajout automatique aux favoris
+   *  Notification spéciale pour ajout automatique aux favoris
    */
   private showFavoriteAddedNotification(prestataireName: string, type: string): void {
-    const message = `🌟 ${prestataireName} a été ajouté à vos favoris ! (${type === 'salon' ? 'Salon' : 'Freelance'})`;
+    const message = ` ${prestataireName} a été ajouté à vos favoris ! (${type === 'salon' ? 'Salon' : 'Freelance'})`;
 
     this.snackBar.open(message, 'Voir mes favoris', {
       duration: 8000,
@@ -1334,8 +1489,8 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
       horizontalPosition: 'right',
       verticalPosition: 'top'
     }).onAction().subscribe(() => {
-      // Naviguer vers l'onglet favoris
-      this.selectedTab = 3; // Index de l'onglet Favoris
+      // Naviguer vers la section favoris
+      this.scrollToSection('favSection');
     });
   }
 

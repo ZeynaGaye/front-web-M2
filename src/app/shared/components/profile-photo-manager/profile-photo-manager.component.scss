@@ -1,11 +1,11 @@
-/* ✨ PALETTE DE COULEURS BEAUTÉ MODERNISÉE */
-$beauty-primary: #FF6B9D;
-$beauty-primary-light: #FFB5D1;
-$beauty-primary-dark: #E91E63;
-$beauty-secondary: #9C88FF;
-$beauty-secondary-light: #C8B9FF;
-$beauty-accent: #FFD93D;
-$beauty-accent-light: #FFF4A3;
+/* ✨ PALETTE DE COULEURS */
+$beauty-primary: #A4B1BD;
+$beauty-primary-light: #C1CDD6;
+$beauty-primary-dark: #8A97A3;
+$beauty-secondary: #A4B1BD;
+$beauty-secondary-light: #C1CDD6;
+$beauty-accent: #8A97A3;
+$beauty-accent-light: #D0D8DF;
 
 $white: #FFFFFF;
 $black: #1A1A1A;
@@ -22,11 +22,11 @@ $error-color: #F44336;
 
 /* ✨ VARIABLES GLOBALES */
 :root {
-  --beauty-gradient: linear-gradient(135deg, #{$beauty-primary} 0%, #{$beauty-secondary} 100%);
+  --beauty-gradient: linear-gradient(135deg, #{$beauty-primary} 0%, #{$beauty-primary-dark} 100%);
   --beauty-gradient-soft: linear-gradient(135deg, #{$beauty-primary-light} 0%, #{$beauty-secondary-light} 100%);
-  --shadow-soft: 0 4px 20px rgba(255, 107, 157, 0.15);
-  --shadow-medium: 0 8px 32px rgba(255, 107, 157, 0.2);
-  --shadow-strong: 0 12px 40px rgba(255, 107, 157, 0.25);
+  --shadow-soft: 0 4px 20px rgba(164, 177, 189, 0.15);
+  --shadow-medium: 0 8px 32px rgba(164, 177, 189, 0.2);
+  --shadow-strong: 0 12px 40px rgba(164, 177, 189, 0.25);
   --border-radius: 16px;
   --border-radius-large: 24px;
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -36,8 +36,8 @@ $error-color: #F44336;
 .photo-manager-container {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
-  max-width: 500px;
+  gap: 1rem;
+  max-width: 480px;
   margin: 0 auto;
 }
 
@@ -130,7 +130,7 @@ $error-color: #F44336;
       color: $gray-600;
 
       &:hover {
-        background: rgba(255, 107, 157, 0.05);
+        background: rgba(164, 177, 189, 0.05);
         color: $beauty-primary;
       }
 
@@ -179,16 +179,16 @@ $error-color: #F44336;
 .drop-zone {
   border: 2px dashed $gray-300;
   border-radius: var(--border-radius);
-  padding: 2rem;
+  padding: 1.25rem;
   text-align: center;
   cursor: pointer;
   transition: var(--transition);
-  background: linear-gradient(135deg, rgba(255, 107, 157, 0.02) 0%, rgba(156, 136, 255, 0.02) 100%);
+  background: rgba(164, 177, 189, 0.03);
 
   &:hover,
   &.drag-over {
     border-color: $beauty-primary;
-    background: linear-gradient(135deg, rgba(255, 107, 157, 0.08) 0%, rgba(156, 136, 255, 0.05) 100%);
+    background: rgba(164, 177, 189, 0.08);
     transform: translateY(-2px);
   }
 
@@ -293,22 +293,25 @@ $error-color: #F44336;
 
 /* ✨ CONSEILS */
 .photo-tips {
-  background: var(--beauty-gradient-soft);
-  border: 1px solid rgba(255, 107, 157, 0.1);
-  border-radius: var(--border-radius);
-  padding: 1.5rem;
+  background: rgba(164, 177, 189, 0.06);
+  border: 1px solid rgba(164, 177, 189, 0.15);
+  border-radius: 10px;
+  padding: 0.875rem 1rem;
 
   h4 {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    margin: 0 0 1rem 0;
-    color: $gray-900;
+    gap: 0.5rem;
+    margin: 0 0 0.5rem 0;
+    color: $gray-700;
     font-weight: 600;
-    font-size: 1.1rem;
+    font-size: 0.9rem;
 
     mat-icon {
-      color: $beauty-accent;
+      font-size: 1rem;
+      width: 1rem;
+      height: 1rem;
+      color: $beauty-primary;
     }
   }
 
@@ -316,23 +319,15 @@ $error-color: #F44336;
     list-style: none;
     padding: 0;
     margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1rem;
 
     li {
-      padding: 0.5rem 0;
-      color: $gray-700;
-      font-size: 0.9rem;
+      padding: 0.2rem 0;
+      color: $gray-600;
+      font-size: 0.8rem;
       line-height: 1.4;
-      border-bottom: 1px solid rgba(255, 107, 157, 0.1);
-
-      &:last-child {
-        border-bottom: none;
-      }
-
-      &:hover {
-        color: $beauty-primary;
-        padding-left: 0.5rem;
-        transition: var(--transition);
-      }
     }
   }
 }

@@ -1,1174 +1,846 @@
-/* ========================================
-   CLIENT DASHBOARD - DESIGN MODERNE
-   Thème: #F5A393 (coral) + #A4B1BD (bleu-gris)
-======================================== */
 
-/* ========================================
-   NOTIFICATIONS
-======================================== */
+$sec:     #A4B1BD;   
+$sec-dk:  #7A8C9B;   
+$sec-lt:  #D3E3EE;  
+$warm:    #fb8f71;   
+$dark:    #1A1A2E;
+$dark-2:  #2E2E50;
+$white:   #ffffff;
+$bg:      #F4F4F7;
+$text:    #2C2C2C;
+$text-2:  #7C7C7C;
+$border:  #E0E0E0;
+$success: #4CAF50;
+$error:   #E53935;
 
-::ng-deep .notification-menu {
-  .mat-mdc-menu-panel {
-    max-width: 400px;
-    min-width: 350px;
-    padding: 0;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    border-radius: 12px;
-    overflow: hidden;
-  }
+$r:       14px;      // border-radius
+$sh:      0 2px 10px rgba(0,0,0,.07);
+$sh-md:   0 4px 18px rgba(0,0,0,.11);
+$sidenav: 220px;
+$topbar:  64px;
+
+// ── Host ──────────────────────────────────────────────────
+:host {
+  display: block;
+  width: 100%;
+  height: 100vh;
 }
 
-// Variables de couleurs du projet
-$primary-color: #F5A393;
-$secondary-color: #A4B1BD;
-$text-color: #333;
-$text-light: #666;
-$text-lighter: #999;
-$background: #f8f9fa;
-$white: #ffffff;
-$success: #28a745;
-$warning: #ffc107;
-$error: #dc3545;
-$info: #17a2b8;
-
-// Autres variables
-$border-radius: 12px;
-$border-radius-large: 20px;
-$box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-$box-shadow-light: 0 2px 8px rgba(0,0,0,0.05);
-$transition: all 0.3s ease;
-
-/* ========================================
-   LAYOUT PRINCIPAL
-======================================== */
-
-.dashboard {
-  background: hsl(206, 17%, 92%);
-  min-height: 100vh;
-  padding: 0;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-}
-
-/* ========================================
-   HEADER
-======================================== */
-
-.header {
-  background: linear-gradient(135deg, $primary-color 0%, lighten($primary-color, 10%) 100%);
-  color: white;
-  padding: 24px 32px;
+// ── Layout racine ─────────────────────────────────────────
+.db-layout {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: $box-shadow;
-  border-radius: 0 0 24px 24px;
-  margin-bottom: 32px;
-
-  .header-title {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-
-    mat-icon {
-      font-size: 32px;
-      width: 32px;
-      height: 32px;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: 28px;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-    }
-  }
-
-  .header-actions {
-    display: flex;
-    gap: 16px;
-    align-items: center;
-
-    .btn {
-      padding: 12px 24px;
-      border-radius: $border-radius;
-      font-weight: 600;
-      text-transform: none;
-      letter-spacing: 0.25px;
-      transition: $transition;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-
-      mat-icon {
-        font-size: 18px;
-        width: 18px;
-        height: 18px;
-      }
-
-      &.btn-outline {
-        background: rgba(255,255,255,0.2);
-        border: 1px solid rgba(255,255,255,0.3);
-        color: white;
-        backdrop-filter: blur(10px);
-
-        &:hover {
-          background: rgba(255,255,255,0.3);
-          transform: translateY(-2px);
-        }
-      }
-
-      &.btn-primary {
-        background: white;
-        color: $primary-color;
-        border: none;
-
-        &:hover {
-          background: #f8f9fa;
-          transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-        }
-      }
-    }
-
-    .notification-badge {
-      background: $error;
-      color: white;
-      border-radius: 50%;
-      padding: 2px 6px;
-      font-size: 11px;
-      font-weight: 700;
-      min-width: 18px;
-      height: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-left: 8px;
-    }
-  }
-
-  @media (max-width: 768px) {
-    padding: 20px;
-    flex-direction: column;
-    gap: 20px;
-    text-align: center;
-
-    .header-actions {
-      width: 100%;
-      justify-content: center;
-    }
-  }
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  font-family: 'Inter', Arial, sans-serif;
+  background: $bg;
+  color: $text;
 }
 
-/* ========================================
-   ÉTATS DE CHARGEMENT ET ERREUR
-======================================== */
-
-.loading-container,
-.error-container {
+/* ═══════════════════════════════════════════
+   SIDENAV
+═══════════════════════════════════════════ */
+.sidenav {
+  width: $sidenav;
+  min-width: $sidenav;
+  flex-shrink: 0;
+  background: $white;
+  border-right: 1px solid $border;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 80px 20px;
-  text-align: center;
-
-  mat-spinner {
-    margin-bottom: 24px;
-  }
-
-  .error-icon {
-    font-size: 64px;
-    width: 64px;
-    height: 64px;
-    color: $error;
-    margin-bottom: 24px;
-  }
-
-  h3 {
-    color: $text-color;
-    margin-bottom: 16px;
-    font-size: 24px;
-    font-weight: 600;
-  }
-
-  p {
-    color: $text-light;
-    margin-bottom: 32px;
-    font-size: 16px;
-    max-width: 400px;
-  }
-}
-
-/* ========================================
-   CONTENU PRINCIPAL
-======================================== */
-
-.dashboard-content {
-  padding: 0 32px 32px;
-  max-width: 1400px;
-  margin: 0 auto;
-
-  @media (max-width: 768px) {
-    padding: 0 16px 16px;
-  }
-}
-
-/* ========================================
-   SECTION STATISTIQUES
-======================================== */
-
-.stats-section {
-  margin-bottom: 40px;
-
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 16px;
-    margin-bottom: 32px;
-
-    .stat-card {
-      background: white;
-      border-radius: $border-radius;
-      box-shadow: $box-shadow-light;
-      transition: $transition;
-      border: 1px solid transparent;
-      min-height: 100px;
-
-      &:hover {
-        transform: translateY(-2px);
-        box-shadow: $box-shadow;
-        border-color: rgba($primary-color, 0.2);
-      }
-
-      .stat-content {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        padding: 16px;
-
-        .stat-icon {
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-
-          mat-icon {
-            font-size: 20px;
-            width: 20px;
-            height: 20px;
-          }
-
-          &.primary-icon {
-            background: linear-gradient(135deg, $primary-color, lighten($primary-color, 10%));
-            color: white;
-          }
-
-          &.info-icon {
-            background: linear-gradient(135deg, $info, lighten($info, 10%));
-            color: white;
-          }
-
-          &.success-icon {
-            background: linear-gradient(135deg, $success, lighten($success, 10%));
-            color: white;
-          }
-
-          &.warning-icon {
-            background: linear-gradient(135deg, $warning, lighten($warning, 10%));
-            color: white;
-          }
-        }
-
-        .stat-info {
-          flex: 1;
-
-          h3 {
-            margin: 0 0 4px 0;
-            font-size: 24px;
-            font-weight: 700;
-            color: $text-color;
-            line-height: 1;
-          }
-
-          p {
-            margin: 0;
-            color: $text-light;
-            font-size: 12px;
-            font-weight: 500;
-          }
-        }
-      }
-    }
-  }
-}
-
-/* ========================================
-   PROCHAIN RENDEZ-VOUS
-======================================== */
-
-.next-appointment {
-  background: linear-gradient(135deg, $secondary-color 0%, lighten($secondary-color, 10%) 100%);
-  border-radius: $border-radius-large;
-  padding: 32px;
-  margin-bottom: 40px;
-  color: white;
-  box-shadow: $box-shadow;
-
-  .appointment-content {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    align-items: center;
-    gap: 32px;
-
-    .appointment-time {
-      text-align: center;
-      
-      .appointment-date {
-        font-size: 18px;
-        font-weight: 600;
-        margin-bottom: 8px;
-        opacity: 0.9;
-      }
-
-      .appointment-time-display {
-        font-size: 32px;
-        font-weight: 700;
-        margin-bottom: 8px;
-      }
-
-      .appointment-countdown {
-        font-size: 14px;
-        opacity: 0.8;
-        background: rgba(255,255,255,0.2);
-        padding: 4px 12px;
-        border-radius: 20px;
-        display: inline-block;
-      }
-    }
-
-    .appointment-details {
-      h3 {
-        margin: 0 0 16px 0;
-        font-size: 24px;
-        font-weight: 700;
-      }
-
-      .appointment-provider {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 12px;
-        font-size: 16px;
-        opacity: 0.9;
-
-        mat-icon {
-          font-size: 20px;
-          width: 20px;
-          height: 20px;
-        }
-      }
-    }
-
-    .appointment-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-
-      .btn-outline-white {
-        background: rgba(255,255,255,0.2);
-        border: 1px solid rgba(255,255,255,0.3);
-        color: white;
-        padding: 12px 20px;
-        border-radius: $border-radius;
-        transition: $transition;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        justify-content: center;
-        min-width: 120px;
-
-        &:hover {
-          background: rgba(255,255,255,0.3);
-          transform: translateY(-2px);
-        }
-      }
-    }
-
-    @media (max-width: 768px) {
-      grid-template-columns: 1fr;
-      text-align: center;
-      gap: 24px;
-
-      .appointment-actions {
-        flex-direction: row;
-        justify-content: center;
-      }
-    }
-  }
-}
-
-/* ========================================
-   CONTENEUR ONGLETS
-======================================== */
-
-.tabs-container {
-  background: $white;
-  border-radius: $border-radius;
-  box-shadow: $box-shadow-light;
-  margin-bottom: 40px;
+  padding: 20px 0 18px;
   overflow: hidden;
+  transition: width .25s ease;
+  box-shadow: 2px 0 12px rgba(0,0,0,.06);
 
-  .main-tabs {
-    .mat-mdc-tab-header {
-      border-bottom: 1px solid #e0e0e0;
-      background: #fafafa;
-    }
-
-    .mat-mdc-tab {
-      color: $text-light;
-      font-weight: 600;
-      text-transform: none;
-      letter-spacing: 0.25px;
-
-      &.mdc-tab--active {
-        color: $primary-color;
-      }
-    }
-
-    .mat-mdc-tab-body-wrapper {
-      .tab-content {
-        padding: 32px;
-
-        h3 {
-          margin: 0 0 24px 0;
-          color: $text-color;
-          font-size: 20px;
-          font-weight: 600;
-        }
-      }
-    }
-  }
-}
-
-/* ========================================
-   GRILLE DES RÉSERVATIONS
-======================================== */
-
-.reservations-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-  gap: 24px;
-
-  .reservation-card {
-    background: $white;
-    border-radius: $border-radius;
-    box-shadow: $box-shadow-light;
-    transition: $transition;
-    border: 1px solid transparent;
-    overflow: hidden;
-
-    &:hover {
-      transform: translateY(-4px);
-      box-shadow: $box-shadow;
-      border-color: rgba($primary-color, 0.2);
-    }
-
-    &.history-card {
-      opacity: 0.95;
-    }
-
-    &.avis-card {
-      border-left: 4px solid $warning;
-    }
-
-    &.favorite-card {
-      border-left: 4px solid $error;
-    }
-
-    mat-card-content {
-      padding: 24px !important;
-
-      .reservation-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 20px;
-
-        .service-info {
-          h4 {
-            margin: 0 0 8px 0;
-            color: $text-color;
-            font-size: 18px;
-            font-weight: 600;
-            line-height: 1.3;
-          }
-
-          .provider-info {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            color: $text-light;
-            font-size: 14px;
-
-            mat-icon {
-              font-size: 16px;
-              width: 16px;
-              height: 16px;
-            }
-          }
-        }
-
-        .status-chip {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          padding: 6px 12px;
-          border-radius: 20px;
-          font-size: 12px;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-
-          mat-icon {
-            font-size: 14px;
-            width: 14px;
-            height: 14px;
-          }
-
-          &.status-confirmee,
-          &.status-confirmed {
-            background: rgba($success, 0.1);
-            color: $success;
-            border: 1px solid rgba($success, 0.2);
-          }
-
-          &.status-terminee,
-          &.status-completed {
-            background: rgba($info, 0.1);
-            color: $info;
-            border: 1px solid rgba($info, 0.2);
-          }
-
-          &.status-annulee_client,
-          &.status-cancelled {
-            background: rgba($error, 0.1);
-            color: $error;
-            border: 1px solid rgba($error, 0.2);
-          }
-        }
-
-        .favorite-heart {
-          color: $error;
-          
-          mat-icon {
-            font-size: 24px;
-            width: 24px;
-            height: 24px;
-          }
-        }
-
-        .avis-rating {
-          text-align: right;
-
-          .stars {
-            color: $warning;
-            font-size: 16px;
-            margin-bottom: 4px;
-          }
-
-          small {
-            color: $text-lighter;
-            font-size: 12px;
-          }
-        }
-      }
-
-      .reservation-details {
-        margin-bottom: 20px;
-
-        .detail-item {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          margin-bottom: 8px;
-          color: $text-light;
-          font-size: 14px;
-
-          mat-icon {
-            font-size: 16px;
-            width: 16px;
-            height: 16px;
-            color: $primary-color;
-          }
-
-          &:last-child {
-            margin-bottom: 0;
-          }
-        }
-      }
-
-      .avis-comment {
-        background: #f8f9fa;
-        padding: 16px;
-        border-radius: $border-radius;
-        font-style: italic;
-        color: $text-color;
-        margin: 16px 0;
-        border-left: 3px solid $warning;
-      }
-
-      .reservation-actions {
-        display: flex;
-        gap: 12px;
-        flex-wrap: wrap;
-
-        button {
-          flex: 1;
-          min-width: 120px;
-          padding: 10px 16px;
-          border-radius: $border-radius;
-          font-weight: 600;
-          text-transform: none;
-          transition: $transition;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 6px;
-
-          mat-icon {
-            font-size: 16px;
-            width: 16px;
-            height: 16px;
-          }
-
-          &.mat-mdc-button {
-            border: 1px solid #e0e0e0;
-            color: $text-light;
-
-            &:hover {
-              background: #f5f5f5;
-              border-color: $primary-color;
-              color: $primary-color;
-              transform: translateY(-1px);
-            }
-          }
-
-          &.mat-mdc-raised-button {
-            &[color="primary"] {
-              background: $primary-color;
-              color: white;
-
-              &:hover {
-                background: darken($primary-color, 10%);
-                transform: translateY(-2px);
-                box-shadow: 0 4px 12px rgba($primary-color, 0.3);
-              }
-            }
-
-            &[color="warn"] {
-              background: $error;
-              color: white;
-
-              &:hover {
-                background: darken($error, 10%);
-                transform: translateY(-2px);
-                box-shadow: 0 4px 12px rgba($error, 0.3);
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
-/* ========================================
-   SECTION À NOTER
-======================================== */
-
-.to-rate-section {
-  margin-bottom: 32px;
-
-  .warning-alert {
-    background: linear-gradient(135deg, rgba($warning, 0.1) 0%, rgba($warning, 0.05) 100%);
-    border: 1px solid rgba($warning, 0.2);
-    border-radius: $border-radius;
-
-    .alert-content {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 20px;
-
-      h4 {
-        margin: 0 0 8px 0;
-        color: $text-color;
-        font-size: 18px;
-        font-weight: 600;
-      }
-
-      p {
-        margin: 0;
-        color: $text-light;
-        font-size: 14px;
-      }
-
-      .btn-white {
-        background: white;
-        color: $warning;
-        border: 1px solid $warning;
-        padding: 12px 24px;
-        border-radius: $border-radius;
-        font-weight: 600;
-        transition: $transition;
-
-        &:hover {
-          background: $warning;
-          color: white;
-          transform: translateY(-2px);
-        }
-      }
-    }
-
-    @media (max-width: 768px) {
-      .alert-content {
-        flex-direction: column;
-        text-align: center;
-        gap: 16px;
-      }
-    }
-  }
-}
-
-/* ========================================
-   CALENDRIER
-======================================== */
-
-.calendar-widget {
-  background: white;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.08);
-  border: 1px solid rgba(255,255,255,0.2);
-
-  .calendar-header {
-    background: linear-gradient(135deg, $primary-color 0%, lighten($primary-color, 8%) 100%);
-    color: white;
+  /* ── Logo ───────────────────────────────── */
+  .sidenav-logo {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 20px 24px;
-    margin-bottom: 0;
+    gap: 10px;
+    padding: 0 16px 18px;
+    border-bottom: 1px solid $border;
+    margin-bottom: 14px;
 
-    h3 {
-      margin: 0;
-      color: white;
-      font-size: 22px;
-      font-weight: 700;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    }
-
-    .calendar-nav {
-      color: white;
-      background: rgba(255,255,255,0.15);
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      backdrop-filter: blur(10px);
-
-      &:hover {
-        background: rgba(255,255,255,0.25);
-        transform: scale(1.05);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      }
-
+    .logo-icon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, $warm, #e07058);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 3px 8px rgba($warm, .35);
+      overflow: hidden;
       mat-icon {
-        font-size: 20px;
+        font-size: 18px; width: 18px; height: 18px;
+        color: #fff;
       }
-    }
-  }
-
-  .calendar-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 0;
-    background: #f8f9fa;
-    margin: 0;
-
-    .calendar-day-header {
-      background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
-      color: white;
-      padding: 16px 8px;
-      text-align: center;
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-      
-      &:first-child {
-        border-top-left-radius: 0;
-      }
-      
-      &:last-child {
-        border-top-right-radius: 0;
+      .logo-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
       }
     }
 
-    .calendar-day {
-      background: white;
-      padding: 12px 8px;
-      cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      min-height: 80px;
+    .logo-text {
       display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      font-weight: 500;
-      position: relative;
-      border: 1px solid #f1f3f4;
-      border-top: none;
-      
-      &:not(:last-child) {
-        border-right: none;
+      align-items: baseline;
+      gap: 0;
+      white-space: nowrap;
+
+      .logo-beauty {
+        font-size: 1rem;
+        font-weight: 800;
+        color: $text;
+        letter-spacing: -.01em;
       }
-
-      &:hover {
-        background: linear-gradient(135deg, rgba($primary-color, 0.08) 0%, rgba($primary-color, 0.12) 100%);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba($primary-color, 0.15);
-        z-index: 2;
-      }
-
-      .day-number {
-        font-size: 16px;
-        margin-bottom: 6px;
-        line-height: 1;
-        font-weight: 600;
-        color: $text-color;
-        padding: 4px;
-        border-radius: 50%;
-        transition: all 0.2s ease;
-        min-width: 24px;
-        text-align: center;
-      }
-
-      .appointment-indicators {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 2px;
-        align-items: center;
-        justify-content: center;
-        max-width: 100%;
-
-        .appointment-dot {
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          flex-shrink: 0;
-
-          &.appointment-confirmed {
-            background-color: $success;
-          }
-
-          &.appointment-completed {
-            background-color: $info;
-          }
-
-          &.appointment-cancelled {
-            background-color: $error;
-          }
-
-          &.appointment-pending {
-            background-color: $warning;
-          }
-        }
-
-        .more-appointments {
-          font-size: 8px;
-          color: $text-light;
-          font-weight: 600;
-          margin-left: 2px;
-        }
-      }
-
-      &.today {
-        background: $primary-color;
-        color: white;
-        font-weight: 700;
-
-        .day-number {
-          color: white;
-        }
-
-        .appointment-dot {
-          border: 1px solid white;
-        }
-      }
-
-      &.has-appointment {
-        .day-number {
-          font-weight: 700;
-        }
-      }
-
-      &.other-month {
-        opacity: 0.3;
-
-        .day-number {
-          color: $text-lighter;
-        }
+      .logo-hub {
+        font-size: 1rem;
+        font-weight: 800;
+        color: $warm;
+        letter-spacing: -.01em;
       }
     }
   }
-}
 
-/* ========================================
-   ÉTATS VIDES
-======================================== */
-
-.empty-state {
-  text-align: center;
-  padding: 60px 20px;
-  color: $text-light;
-
-  mat-icon {
-    font-size: 80px;
-    width: 80px;
-    height: 80px;
-    color: $text-lighter;
-    margin-bottom: 24px;
+  /* ── Nav ────────────────────────────────── */
+  .sidenav-nav {
+    flex: 1; display: flex; flex-direction: column;
+    gap: 2px; padding: 0 10px; overflow-y: auto;
+    scrollbar-width: none; &::-webkit-scrollbar { display: none; }
   }
 
-  h3 {
-    margin: 0 0 16px 0;
-    color: $text-color;
-    font-size: 20px;
-    font-weight: 600;
-  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; border-radius: 10px;
+    color: $text-2; font-size: .85rem; font-weight: 500;
+    cursor: pointer; text-decoration: none; position: relative;
+    transition: all .18s;
 
-  p {
-    margin: 0 0 24px 0;
-    font-size: 16px;
-    max-width: 400px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  button {
-    background: $primary-color;
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: $border-radius;
-    font-weight: 600;
-    transition: $transition;
+    mat-icon { font-size: 18px; width: 18px; height: 18px; color: inherit; flex-shrink: 0; }
+    span:not(.nav-badge) { white-space: nowrap; overflow: hidden; }
 
     &:hover {
-      background: darken($primary-color, 10%);
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba($primary-color, 0.3);
+      background: $bg;
+      color: $text;
+      mat-icon { color: $sec-dk; }
+    }
+
+    &.active {
+      background: $sec-lt;
+      color: $sec-dk;
+      font-weight: 700;
+      mat-icon { color: $sec-dk; }
+    }
+
+    .nav-badge {
+      margin-left: auto; background: $warm; color: $white;
+      font-size: .62rem; font-weight: 800;
+      padding: 2px 6px; border-radius: 20px; flex-shrink: 0;
+    }
+  }
+
+  /* ── Promo ──────────────────────────────── */
+  .sidenav-promo {
+    margin: 12px 10px 0;
+    background: linear-gradient(135deg, $sec-lt, #eaf2f8);
+    border: 1px solid $sec;
+    border-radius: 12px; padding: 14px;
+
+    .promo-title {
+      font-size: .84rem; font-weight: 800; color: $text; margin: 0 0 4px;
+    }
+    .promo-sub {
+      font-size: .71rem; color: $text-2; margin: 0 0 10px; line-height: 1.45;
+    }
+    .promo-btn {
+      width: 100%; background: $warm; color: $white;
+      border: none; border-radius: 8px;
+      padding: 7px; font-size: .78rem; font-weight: 700; cursor: pointer;
+      transition: background .2s;
+      &:hover { background: #e07058; }
     }
   }
 }
 
-/* ========================================
-   ACTIONS RAPIDES
-======================================== */
+/* ═══════════════════════════════════════════
+   MAIN
+═══════════════════════════════════════════ */
+.db-main {
+  flex: 1; min-width: 0;
+  display: flex; flex-direction: column; overflow: hidden;
+}
 
-.quick-actions-section {
-  .section-title {
-    color: $text-color;
-    font-size: 24px;
-    font-weight: 600;
-    margin-bottom: 24px;
-    text-align: center;
+/* ── Topbar ──────────────────────────────────────────────── */
+.topbar {
+  height: $topbar; flex-shrink: 0;
+  background: $white; border-bottom: 1px solid $border;
+  display: flex; align-items: center; gap: 14px;
+  padding: 0 24px; box-shadow: 0 1px 4px rgba(0,0,0,.04);
+
+  .topbar-search {
+    flex: 1; max-width: 460px;
+    display: flex; align-items: center; gap: 9px;
+    background: $bg; border-radius: 10px; padding: 0 14px;
+    mat-icon { color: $text-2; font-size: 18px; width: 18px; height: 18px; }
+    input {
+      border: none; background: transparent; outline: none;
+      font-size: .86rem; color: $text; width: 100%; padding: 10px 0;
+      &::placeholder { color: $text-2; }
+    }
   }
 
-  .quick-actions {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 20px;
+  .topbar-right { display: flex; align-items: center; gap: 10px; margin-left: auto; }
 
-    .quick-action {
-      background: #f8cec5;
-      border: 1px solid transparent;
-      border-radius: $border-radius;
-      padding: 24px 16px;
-      text-align: center;
-      cursor: pointer;
-      transition: $transition;
-      box-shadow: $box-shadow-light;
-
-      &:hover {
-        transform: translateY(-4px);
-        box-shadow: $box-shadow;
-        border-color: rgba($primary-color, 0.2);
-      }
-
-      mat-icon {
-        font-size: 40px;
-        width: 40px;
-        height: 40px;
-        color: $primary-color;
-        margin-bottom: 16px;
-      }
-
-      h4 {
-        margin: 0 0 8px 0;
-        color: $text-color;
-        font-size: 16px;
-        font-weight: 600;
-      }
-
-      p {
-        margin: 0;
-        color: $text-light;
-        font-size: 14px;
-      }
+  .topbar-notif {
+    position: relative; width: 38px; height: 38px;
+    border-radius: 50%; border: none; background: none;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: $text-2; transition: background .2s;
+    &:hover { background: $bg; }
+    mat-icon { font-size: 22px; width: 22px; height: 22px; }
+    .notif-dot {
+      position: absolute; top: 7px; right: 7px;
+      width: 8px; height: 8px; border-radius: 50%;
+      background: $warm; border: 2px solid $white;
     }
+  }
+
+  .topbar-user {
+    display: flex; align-items: center; gap: 9px;
+    padding: 5px 10px; border-radius: 10px; cursor: pointer;
+    transition: background .2s;
+    &:hover { background: $bg; }
+  }
+  .user-avatar {
+    width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+    background: linear-gradient(135deg, $sec, $sec-dk);
+    display: flex; align-items: center; justify-content: center;
+    font-size: .8rem; font-weight: 800; color: $white;
+  }
+  .user-meta { display: flex; flex-direction: column; gap: 1px; }
+  .user-name   { font-size: .83rem; font-weight: 700; color: $text; line-height: 1; }
+  .user-status { font-size: .68rem; color: $success; font-weight: 700; line-height: 1; }
+  .user-role   { font-size: .68rem; color: $text-2; font-weight: 500; line-height: 1; }
+  .user-chevron { font-size: 16px !important; width: 16px !important; height: 16px !important; color: $text-2; }
+}
+
+/* ── Scroll area ─────────────────────────────────────────── */
+.db-scroll {
+  flex: 1; overflow-y: auto; overflow-x: hidden;
+  padding: 22px 24px; display: flex; flex-direction: column; gap: 20px;
+  scrollbar-width: thin; scrollbar-color: $border transparent;
+}
+
+/* ── States ──────────────────────────────────────────────── */
+.db-loading {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 14px; padding: 60px 0; color: $text-2;
+}
+.db-error {
+  text-align: center; padding: 40px; color: $text-2;
+  mat-icon { font-size: 2rem; color: $error; }
+  p { margin: 10px 0 14px; }
+  button { background: $sec; color: $white; border: none; border-radius: 8px; padding: 8px 18px; cursor: pointer; }
+}
+
+/* ── Greeting ────────────────────────────────────────────── */
+.greeting {
+  h1 { font-size: 1.4rem; font-weight: 800; margin: 0 0 4px; }
+  p  { font-size: .88rem; color: $text-2; margin: 0; }
+}
+
+/* ── Section helpers ─────────────────────────────────────── */
+.card-section { display: flex; flex-direction: column; gap: 10px; }
+
+.section-hd {
+  display: flex; align-items: center; justify-content: space-between;
+  h2 { font-size: .96rem; font-weight: 800; margin: 0; color: $text; }
+  a {
+    font-size: .78rem; color: $sec; font-weight: 600;
+    cursor: pointer; text-decoration: none;
+    &:hover { text-decoration: underline; }
+  }
+}
+.section-hd-title { font-size: .96rem; font-weight: 800; margin: 0; color: $text; }
+
+/* ── Prochain RDV ────────────────────────────────────────── */
+.rdv-card {
+  background: $dark; border-radius: $r;
+  padding: 18px 22px;
+  display: flex; align-items: center; gap: 18px;
+  box-shadow: $sh-md; color: $white;
+
+  .rdv-card-left {
+    display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0;
+  }
+  .rdv-icon {
+    width: 48px; height: 48px; border-radius: 13px;
+    background: $sec; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    mat-icon { color: $white; font-size: 22px; width: 22px; height: 22px; }
+  }
+  .badge-confirmed {
+    display: inline-block; background: $success; color: $white;
+    font-size: .62rem; font-weight: 800; letter-spacing: .08em;
+    padding: 2px 8px; border-radius: 20px; margin-bottom: 4px;
+  }
+  h3 { font-size: 1.05rem; font-weight: 800; margin: 0 0 3px; white-space: nowrap;
+       overflow: hidden; text-overflow: ellipsis; }
+  .rdv-loc {
+    display: flex; align-items: center; gap: 3px;
+    font-size: .76rem; color: rgba($white,.5); margin: 0;
+    mat-icon { font-size: 12px; width: 12px; height: 12px; flex-shrink: 0; }
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  .rdv-card-center { min-width: 190px; display: flex; flex-direction: column; gap: 5px; }
+  .rdv-label { font-size: .62rem; font-weight: 800; letter-spacing: .08em; color: rgba($white,.4); }
+  .rdv-bar {
+    height: 5px; border-radius: 10px; background: rgba($white,.15); overflow: hidden;
+    .rdv-bar-fill { height: 100%; width: 60%; background: $sec; border-radius: 10px; }
+  }
+  .rdv-bar-labels {
+    display: flex; justify-content: space-between;
+    font-size: .73rem; color: rgba($white,.5);
+    strong { color: $sec; font-weight: 700; }
+  }
+
+  .rdv-card-right { flex-shrink: 0; }
+  .btn-detail {
+    background: $white; color: $dark;
+    border: none; border-radius: 9px;
+    padding: 8px 18px; font-size: .84rem; font-weight: 700;
+    cursor: pointer; transition: background .2s;
+    &:hover { background: #eee; }
   }
 }
 
-/* ========================================
+/* ── Sélectionné pour vous ───────────────────────────────── */
+.arrows {
+  display: flex; gap: 5px;
+  button {
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 1px solid $border; background: $white;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all .18s;
+    mat-icon { font-size: 16px; width: 16px; height: 16px; color: $text-2; }
+    &:hover { background: $sec; border-color: $sec; mat-icon { color: $white; } }
+  }
+}
+
+.svc-track {
+  display: flex; gap: 14px;
+  overflow-x: auto; overflow-y: visible;
+  padding-bottom: 8px;
+  scroll-behavior: smooth;
+  scrollbar-width: none; &::-webkit-scrollbar { display: none; }
+  // empêche débordement sur le parent
+  width: 100%;
+}
+
+.svc-card {
+  min-width: 185px; max-width: 185px; flex-shrink: 0;
+  background: $white; border-radius: $r; box-shadow: $sh; overflow: hidden;
+
+  .svc-card-img {
+    height: 105px; background: linear-gradient(135deg, #2C2C54, #1A1A38);
+    position: relative; display: flex; align-items: center; justify-content: center;
+    mat-icon { font-size: 36px; width: 36px; height: 36px; color: rgba($white,.2); }
+    .svc-fav {
+      position: absolute; top: 5px; right: 5px;
+      background: rgba($white,.12);
+      mat-icon { color: $white; font-size: 15px; width: 15px; height: 15px; }
+    }
+  }
+  .svc-card-body { padding: 10px; }
+  h4 { font-size: .83rem; font-weight: 800; margin: 0 0 2px; color: $text; }
+  p  { font-size: .72rem; color: $text-2; margin: 0 0 9px; }
+  .svc-footer { display: flex; align-items: center; justify-content: space-between; }
+  .svc-chip {
+    font-size: .67rem; color: $text-2;
+    background: $bg; padding: 2px 7px; border-radius: 20px;
+  }
+  button {
+    background: $sec; color: $white;
+    border: none; border-radius: 7px;
+    padding: 5px 11px; font-size: .72rem; font-weight: 700; cursor: pointer;
+    transition: background .18s; &:hover { background: $sec-dk; }
+  }
+}
+
+/* ── Favoris (grille 4 colonnes) ─────────────────────────── */
+.fav-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.fav-card {
+  background: $white; border-radius: $r; box-shadow: $sh;
+  padding: 16px 14px;
+  display: flex; align-items: center; gap: 12px;
+
+  .fav-card-avatar {
+    width: 40px; height: 40px; border-radius: 11px; flex-shrink: 0;
+    background: linear-gradient(135deg, $sec, $sec-dk);
+    display: flex; align-items: center; justify-content: center;
+    mat-icon { color: $white; font-size: 18px; width: 18px; height: 18px; }
+  }
+  .fav-card-info {
+    flex: 1; min-width: 0;
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .fav-name { font-size: .83rem; font-weight: 700; color: $text;
+              white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fav-sub  { font-size: .72rem; color: $text-2;
+              white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .fav-book-btn {
+    width: 28px; height: 28px; flex-shrink: 0; border-radius: 50%;
+    border: 1px solid $border; background: $white;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    transition: all .18s;
+    mat-icon { font-size: 15px; width: 15px; height: 15px; color: $text-2; }
+    &:hover { background: $sec; border-color: $sec; mat-icon { color: $white; } }
+  }
+}
+
+/* ── Onglets ─────────────────────────────────────────────── */
+.tabs-section { gap: 0; }
+
+.db-tabs {
+  background: $white; border-radius: $r; box-shadow: $sh; overflow: hidden;
+  ::ng-deep {
+    .mat-mdc-tab-header { border-bottom: 1px solid $border; padding: 0 18px; }
+    .mat-mdc-tab .mdc-tab__text-label { color: $text-2; font-size: .84rem; font-weight: 500; }
+    .mat-mdc-tab.mdc-tab--active .mdc-tab__text-label { color: $sec-dk; font-weight: 800; }
+    .mdc-tab-indicator__content--underline { border-color: $sec !important; }
+    .mat-mdc-tab-body-content { overflow: hidden; }
+  }
+}
+
+.tab-body {
+  padding: 16px 18px;
+  display: flex; flex-direction: column; gap: 10px;
+  max-height: 360px; overflow-y: auto;
+  scrollbar-width: thin; scrollbar-color: $border transparent;
+}
+
+/* Reservation item */
+.resa-item {
+  background: $bg; border-radius: 11px; padding: 14px;
+
+  .resa-item-top {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+  }
+  .resa-ico {
+    width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+    background: $sec-lt;
+    display: flex; align-items: center; justify-content: center;
+    mat-icon { color: $sec-dk; font-size: 16px; width: 16px; height: 16px; }
+    &.history { background: #EEF2FF; mat-icon { color: $warm; } }
+  }
+  .resa-info { flex: 1; min-width: 0;
+    h4 { font-size: .86rem; font-weight: 800; margin: 0 0 1px; color: $text; }
+    p  { font-size: .74rem; color: $text-2; margin: 0; }
+  }
+  .resa-badge {
+    font-size: .67rem; font-weight: 800; letter-spacing: .04em;
+    padding: 3px 9px; border-radius: 20px; flex-shrink: 0;
+    background: #E8F5E9; color: $success;
+    &.status-en_attente { background: #FFF8E6; color: #F59E0B; }
+    &.status-annulee, &.status-annulé { background: #FFEBEE; color: $error; }
+    &.status-terminee, &.status-terminé { background: #EEF2FF; color: $warm ; }
+  }
+  .resa-meta {
+    display: flex; gap: 14px; margin-bottom: 10px;
+    span { display: flex; align-items: center; gap: 3px;
+      font-size: .74rem; color: $text-2;
+      mat-icon { font-size: 13px; width: 13px; height: 13px; }
+    }
+  }
+  .resa-action-btn {
+    width: 100%; background: $sec; color: $white;
+    border: none; border-radius: 8px;
+    padding: 9px; font-size: .82rem; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+    transition: background .18s; &:hover { background: $sec-dk; }
+    &.outline {
+      background: transparent; color: $sec-dk;
+      border: 1.5px solid $sec;
+      &:hover { background: $sec-lt; }
+    }
+    &.small { width: auto; padding: 5px 12px; font-size: .74rem; }
+  }
+}
+
+/* Bouton action réutilisable hors .resa-item (ex: .avis-item) */
+.resa-action-btn {
+  background: $sec; color: $white;
+  border: none; border-radius: 8px;
+  padding: 9px; font-size: .82rem; font-weight: 700; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  transition: background .18s; &:hover { background: $sec-dk; }
+  &.outline {
+    background: transparent; color: $sec-dk;
+    border: 1.5px solid $sec;
+    &:hover { background: $sec-lt; }
+  }
+  &.small { width: auto; padding: 5px 12px; font-size: .74rem; }
+}
+
+/* Avis item */
+.avis-item {
+  background: $bg; border-radius: 11px; padding: 14px;
+  .avis-item-top {
+    display: flex; justify-content: space-between; margin-bottom: 8px;
+    h4 { font-size: .86rem; font-weight: 800; margin: 0 0 2px; color: $text; }
+    p  { font-size: .73rem; color: $text-2; margin: 0; }
+  }
+  .stars {
+    display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 1px;
+    mat-icon { font-size: 14px; width: 14px; height: 14px; color: #ddd;
+      &.on { color: #FFA726; } }
+    small { width: 100%; text-align: right; font-size: .68rem; color: $text-2; }
+  }
+  .avis-comment { font-size: .78rem; color: $text-2; font-style: italic;
+                  margin: 0 0 10px; line-height: 1.5; }
+}
+
+/* Rate alert */
+.rate-alert {
+  display: flex; align-items: center; gap: 12px;
+  background: $sec-lt; border: 1.5px solid $sec;
+  border-radius: 11px; padding: 12px 15px;
+  mat-icon { color: $sec-dk; font-size: 20px; width: 20px; height: 20px; flex-shrink: 0; }
+  div { flex: 1;
+    strong { font-size: .84rem; color: $text; }
+    p { font-size: .73rem; color: $text-2; margin: 2px 0 0; }
+  }
+  button {
+    background: $sec; color: $white; border: none;
+    border-radius: 8px; padding: 7px 14px; font-size: .78rem; font-weight: 700;
+    cursor: pointer; flex-shrink: 0;
+    &:hover { background: $sec-dk; }
+  }
+}
+
+/* Tab empty */
+.tab-empty {
+  text-align: center; padding: 36px 16px; color: $text-2;
+  mat-icon { font-size: 2.2rem; width: 36px; height: 36px; }
+  p { margin: 8px 0 14px; font-size: .86rem; }
+  button {
+    background: $sec; color: $white; border: none;
+    border-radius: 8px; padding: 9px 20px; font-size: .84rem; font-weight: 700; cursor: pointer;
+  }
+}
+
+/* Empty inline */
+.empty-inline {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  padding: 30px 16px; color: $text-2; width: 100%; text-align: center;
+  mat-icon { font-size: 2rem; width: 32px; height: 32px; }
+  p { font-size: .84rem; margin: 0; }
+  button {
+    background: $sec; color: $white; border: none;
+    border-radius: 8px; padding: 8px 18px; font-size: .82rem; font-weight: 700; cursor: pointer;
+  }
+}
+
+/* ── Calendrier ──────────────────────────────────────────── */
+.cal-hd {
+  display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 12px;
+  h3 { font-size: .94rem; font-weight: 800; margin: 0; }
+  button { color: $text-2; }
+}
+.cal-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px;
+}
+.cal-name { text-align: center; font-size: .7rem; font-weight: 700; color: $text-2; padding: 4px 0; }
+.cal-day {
+  aspect-ratio: 1; border-radius: 8px; font-size: .78rem; color: $text;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  cursor: pointer; transition: background .15s;
+  &:hover { background: $sec-lt; }
+  &.today { background: $sec; border-radius: 50%; color: $white; font-weight: 800; }
+  &.other { color: $border; }
+}
+.dots { display: flex; gap: 2px; margin-top: 2px;
+  .dot { width: 4px; height: 4px; border-radius: 50%; background: $sec;
+    &.status-terminee { background: #5B6AF0; }
+    &.status-annulee  { background: $error; }
+  }
+}
+
+.search-clear-btn {
+  background: none; border: none; cursor: pointer; padding: 0;
+  display: flex; align-items: center;
+  mat-icon { font-size: 16px; width: 16px; height: 16px; color: $text-2; }
+  &:hover mat-icon { color: $text; }
+}
+
+/* ── Favoris extras ──────────────────────────────────────── */
+.fav-avatar-img {
+  width: 100%; height: 100%; object-fit: cover; border-radius: 11px;
+}
+
+.fav-type-badge {
+  font-size: .65rem; font-weight: 700; letter-spacing: .04em;
+  background: $sec-lt; color: $sec-dk;
+  padding: 1px 7px; border-radius: 20px; align-self: flex-start;
+}
+
+.fav-addr {
+  display: flex; align-items: center; gap: 2px;
+  font-size: .7rem; color: $text-2;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  mat-icon { font-size: 11px; width: 11px; height: 11px; flex-shrink: 0; }
+}
+
+.fav-detail-btn {
+  width: 30px; height: 30px; flex-shrink: 0; border-radius: 50%;
+  border: 1px solid $border; background: $white;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  transition: all .18s;
+  mat-icon { font-size: 16px; width: 16px; height: 16px; color: $text-2; }
+  &:hover { background: $sec; border-color: $sec; mat-icon { color: $white; } }
+}
+
+/* ── Réservation extras ──────────────────────────────────── */
+.resa-top-right {
+  display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0;
+}
+
+.cancel-mini-btn {
+  display: flex; align-items: center; gap: 3px;
+  font-size: .72rem; color: $error; font-weight: 600;
+  background: none; border: 1px solid rgba($error, .25); border-radius: 7px;
+  padding: 4px 9px; cursor: pointer; transition: all .18s;
+  mat-icon { font-size: 13px; width: 13px; height: 13px; }
+  &:hover { background: rgba($error, .08); border-color: $error; }
+}
+
+/* ── Calendrier extras ───────────────────────────────────── */
+.cal-tab-body {
+  display: flex; justify-content: center; padding: 20px 0;
+}
+
+.cal-card {
+  background: $white; border-radius: $r; box-shadow: $sh;
+  padding: 18px; display: flex; flex-direction: column; gap: 10px;
+}
+
+.cal-title { font-size: .92rem; font-weight: 800; color: $text; }
+
+.cal-legend {
+  display: flex; gap: 14px; justify-content: center;
+  padding-top: 10px; border-top: 1px solid $border;
+}
+
+.legend-item {
+  display: flex; align-items: center; gap: 5px;
+  font-size: .72rem; color: $text-2;
+  .dot {
+    width: 8px; height: 8px; border-radius: 50%; background: $sec; flex-shrink: 0;
+    &.status-terminee { background: #5B6AF0; }
+    &.status-annulee  { background: $error; }
+  }
+}
+
+/* ── Profil extras ───────────────────────────────────────── */
+.close-profile-btn {
+  width: 32px; height: 32px; border-radius: 50%;
+  border: 1px solid $border; background: $white;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  transition: all .18s;
+  mat-icon { font-size: 16px; width: 16px; height: 16px; color: $text-2; }
+  &:hover { background: #fee; border-color: $error; mat-icon { color: $error; } }
+}
+
+/* ── Popup détails RDV ───────────────────────────────────── */
+.rdv-popup-overlay {
+  position: fixed; inset: 0; z-index: 900;
+  background: rgba(0,0,0,.45); backdrop-filter: blur(3px);
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+
+.rdv-popup {
+  background: $white; border-radius: 18px;
+  box-shadow: 0 12px 48px rgba(0,0,0,.18);
+  width: 100%; max-width: 480px; max-height: 80vh;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+
+.rdv-popup-hd {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 20px; border-bottom: 1px solid $border;
+  h3 { font-size: 1rem; font-weight: 800; margin: 0; color: $text; }
+}
+
+.rdv-popup-close {
+  width: 30px; height: 30px; border-radius: 50%;
+  border: 1px solid $border; background: $white;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  mat-icon { font-size: 15px; width: 15px; height: 15px; color: $text-2; }
+  &:hover { background: $bg; }
+}
+
+.rdv-popup-list {
+  overflow-y: auto; padding: 16px 20px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+
+.rdv-popup-item {
+  background: $bg; border-radius: 12px; padding: 14px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+
+.rdv-popup-status {
+  font-size: .68rem; font-weight: 800; letter-spacing: .06em;
+  padding: 2px 9px; border-radius: 20px; align-self: flex-start;
+  background: #E8F5E9; color: $success;
+  &.s-en_attente  { background: #FFF8E6; color: #F59E0B; }
+  &.s-annulee, &.s-annulé { background: #FFEBEE; color: $error; }
+  &.s-terminee, &.s-terminé { background: #EEF2FF; color: $warm; }
+}
+
+.rdv-popup-row {
+  display: flex; align-items: center; gap: 8px;
+  font-size: .83rem; color: $text;
+  mat-icon { font-size: 15px; width: 15px; height: 15px; color: $text-2; flex-shrink: 0; }
+}
+
+/* ── Modal annulation ────────────────────────────────────── */
+.cancel-overlay {
+  position: fixed; inset: 0; z-index: 900;
+  background: rgba(0,0,0,.45); backdrop-filter: blur(3px);
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+
+.cancel-modal {
+  background: $white; border-radius: 18px;
+  box-shadow: 0 12px 48px rgba(0,0,0,.18);
+  width: 100%; max-width: 460px; overflow: hidden;
+}
+
+.cancel-modal-hd {
+  display: flex; align-items: center; gap: 12px;
+  padding: 18px 20px; border-bottom: 1px solid $border;
+
+  h3 { font-size: .96rem; font-weight: 800; margin: 0 0 2px; color: $text; }
+  p  { font-size: .76rem; color: $text-2; margin: 0; }
+  > div:nth-child(2) { flex: 1; }
+}
+
+.cancel-modal-icon {
+  width: 40px; height: 40px; border-radius: 12px;
+  background: rgba($error, .1); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  mat-icon { color: $error; font-size: 20px; width: 20px; height: 20px; }
+}
+
+.cancel-modal-close {
+  width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+  border: 1px solid $border; background: $white;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  mat-icon { font-size: 14px; width: 14px; height: 14px; color: $text-2; }
+  &:hover { background: $bg; }
+}
+
+.cancel-modal-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; }
+
+.cancel-modal-label { font-size: .84rem; font-weight: 700; color: $text; margin: 0; }
+
+.cancel-reasons {
+  display: flex; flex-direction: column; gap: 8px;
+}
+
+.cancel-reason-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-radius: 10px;
+  background: $bg; cursor: pointer; transition: background .15s;
+  font-size: .84rem; color: $text;
+  input[type="radio"] { accent-color: $sec; cursor: pointer; }
+  &:hover { background: $sec-lt; }
+}
+
+.cancel-custom {
+  display: flex; flex-direction: column; gap: 4px;
+  textarea {
+    width: 100%; border: 1.5px solid $border; border-radius: 9px;
+    padding: 10px 12px; font-size: .83rem; color: $text;
+    resize: none; outline: none; font-family: inherit; box-sizing: border-box;
+    &:focus { border-color: $sec; }
+  }
+  small { font-size: .7rem; color: $text-2; text-align: right; }
+}
+
+.cancel-modal-ft {
+  display: flex; gap: 10px; padding: 14px 20px;
+  border-top: 1px solid $border;
+}
+
+.cancel-modal-back {
+  flex: 1; padding: 10px; border-radius: 9px;
+  border: 1.5px solid $border; background: $white;
+  font-size: .85rem; font-weight: 600; color: $text;
+  cursor: pointer; transition: background .18s;
+  &:hover { background: $bg; }
+}
+
+.cancel-modal-confirm {
+  flex: 2; padding: 10px; border-radius: 9px;
+  border: none; background: $error; color: $white;
+  font-size: .85rem; font-weight: 700; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: background .18s;
+  &:hover:not(:disabled) { background: darken(#E53935, 8%); }
+  &:disabled { opacity: .5; cursor: not-allowed; }
+}
+
+/* ═══════════════════════════════════════════
    RESPONSIVE
-======================================== */
+═══════════════════════════════════════════ */
+
+// Tablette : sidenav icônes seulement
+@media (max-width: 1100px) {
+  .fav-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 960px) {
+  .sidenav {
+    width: 62px;
+    .logo-text { display: none; }
+    .nav-item span:not(.nav-badge) { display: none; }
+    .nav-item { justify-content: center; padding: 10px; }
+    .nav-badge { position: absolute; top: 5px; right: 5px; font-size: .58rem; padding: 1px 5px; }
+    .sidenav-promo { display: none; }
+  }
+}
 
 @media (max-width: 768px) {
-  .dashboard-content {
-    padding: 0 16px 16px;
+  .db-layout { flex-direction: column; height: 100%; overflow-y: auto; }
+  .sidenav { display: none; }
+  .topbar { height: 54px; padding: 0 14px;
+    .topbar-search { display: none; }
+    .user-meta { display: none; }
   }
-
-  .stats-section .stats-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
+  .db-scroll { padding: 14px; gap: 14px; max-height: unset; overflow-y: visible; }
+  .db-main { overflow: visible; }
+  .greeting h1 { font-size: 1.15rem; }
+  .rdv-card {
+    flex-wrap: wrap; padding: 14px;
+    .rdv-card-center { min-width: 100%; order: 3; }
+    .rdv-card-right  { width: 100%; order: 4; .btn-detail { width: 100%; } }
   }
-
-  .reservations-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-
-    .reservation-card mat-card-content {
-      padding: 20px !important;
-
-      .reservation-actions {
-        flex-direction: column;
-
-        button {
-          min-width: auto;
-        }
-      }
-    }
-  }
-
-  .quick-actions-section .quick-actions {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-
-    .quick-action {
-      padding: 20px 12px;
-
-      mat-icon {
-        font-size: 32px;
-        width: 32px;
-        height: 32px;
-        margin-bottom: 12px;
-      }
-
-      h4 {
-        font-size: 14px;
-      }
-
-      p {
-        font-size: 12px;
-      }
-    }
-  }
+  .fav-grid { grid-template-columns: repeat(2, 1fr); }
+  .tab-body { max-height: unset; }
 }
 
 @media (max-width: 480px) {
-  .header {
-    padding: 16px;
-    border-radius: 0 0 16px 16px;
-
-    .header-title h1 {
-      font-size: 20px;
-    }
-
-    .header-actions .btn {
-      padding: 10px 16px;
-      font-size: 14px;
-    }
-  }
-
-  .next-appointment {
-    padding: 20px;
-    margin-bottom: 24px;
-
-    .appointment-content {
-      gap: 20px;
-
-      .appointment-time .appointment-time-display {
-        font-size: 24px;
-      }
-
-      .appointment-details h3 {
-        font-size: 18px;
-      }
-    }
-  }
-
-  .tabs-container .main-tabs .mat-mdc-tab-body-wrapper .tab-content {
-    padding: 20px;
-
-    h3 {
-      font-size: 18px;
-      margin-bottom: 20px;
-    }
-  }
-}
-
-/* ========================================
-   ANIMATIONS
-======================================== */
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.dashboard-content > * {
-  animation: slideIn 0.6s ease-out;
-}
-
-.reservation-card {
-  animation: fadeIn 0.4s ease-out;
-}
-
-/* ========================================
-   DARK MODE SUPPORT (OPTIONNEL)
-======================================== */
-
-@media (prefers-color-scheme: dark) {
-  // Styles dark mode peuvent être ajoutés ici si nécessaire
+  .fav-grid { grid-template-columns: 1fr; }
+  .svc-card { min-width: 160px; max-width: 160px; }
+  .db-scroll { padding: 12px; }
 }

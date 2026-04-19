@@ -83,7 +83,7 @@ export class PortfolioComponent implements OnInit, OnDestroy, AfterViewInit {
   autoplayStatus: { [key: number]: boolean } = {};
   freelanceInfo: Freelance | null = null;
   
-  // ✅ NOUVEAU : État de chargement séparé pour les infos freelance
+  //  NOUVEAU : État de chargement séparé pour les infos freelance
   freelanceInfoLoading: boolean = false;
   imagesInitialized: { [itemId: number]: boolean } = {};
   imagesErrors: { [itemId: number]: string } = {};
@@ -161,12 +161,12 @@ export class PortfolioComponent implements OnInit, OnDestroy, AfterViewInit {
       this.freelanceId = idParam && idParam !== '0' ? +idParam : null;
     }
     
-    console.log('🚀 Portfolio ngOnInit - Mode client:', this.clientMode, 'Freelance ID:', this.freelanceId);
+
     
     this.loadUserLikes();
     this.loadStats();
     
-    // ✅ NOUVEAU : Chargement simultané du portfolio ET des infos freelance
+    //  NOUVEAU : Chargement simultané du portfolio ET des infos freelance
     this.loadPortfolioAndFreelanceInfo();
   }
 
@@ -179,18 +179,18 @@ export class PortfolioComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   // ==========================================
-  // 🔧 NOUVELLE MÉTHODE DE CHARGEMENT OPTIMISÉE
+  //  NOUVELLE MÉTHODE DE CHARGEMENT OPTIMISÉE
   // ==========================================
 
   /**
-   * ✅ NOUVELLE : Charge le portfolio ET les infos freelance simultanément
+   *  NOUVELLE : Charge le portfolio ET les infos freelance simultanément
    */
   loadPortfolioAndFreelanceInfo(): void {
     this.loading = true;
     this.freelanceInfoLoading = true;
     this.error = false;
     
-    console.log('🔄 Début du chargement portfolio + freelance info');
+
     
     // Déterminer l'observable du portfolio selon le mode
     const portfolioObservable = this.freelanceId !== null 
@@ -200,7 +200,7 @@ export class PortfolioComponent implements OnInit, OnDestroy, AfterViewInit {
     // Charger le portfolio en premier
     portfolioObservable.subscribe({
       next: (items) => {
-        console.log('✅ Portfolio chargé:', items.length, 'éléments');
+
         
         // Traiter les éléments du portfolio
         this.portfolioItems = items.map(item => ({
@@ -215,24 +215,24 @@ export class PortfolioComponent implements OnInit, OnDestroy, AfterViewInit {
         
         this.loading = false;
         
-        // ✅ CRUCIAL : Déterminer l'ID du freelance à charger
+        //  CRUCIAL : Déterminer l'ID du freelance à charger
         let freelanceIdToLoad: number | null = null;
         
         if (this.freelanceId) {
           // Cas 1: ID fourni en paramètre (mode client avec URL)
           freelanceIdToLoad = this.freelanceId;
-          console.log('📋 ID freelance depuis paramètre:', freelanceIdToLoad);
+
         } else if (this.portfolioItems.length > 0 && this.portfolioItems[0].freelanceId) {
           // Cas 2: ID depuis le premier élément du portfolio (mode propriétaire)
           freelanceIdToLoad = this.portfolioItems[0].freelanceId;
-          console.log('📋 ID freelance depuis premier élément portfolio:', freelanceIdToLoad);
+
         }
         
         // Charger les infos du freelance si on a un ID
         if (freelanceIdToLoad) {
           this.loadFreelanceInfoById(freelanceIdToLoad);
         } else {
-          console.warn('⚠️ Aucun ID freelance trouvé');
+          console.warn(' Aucun ID freelance trouvé');
           this.freelanceInfoLoading = false;
         }
         
@@ -240,7 +240,7 @@ export class PortfolioComponent implements OnInit, OnDestroy, AfterViewInit {
         setTimeout(() => this.initSwipers(), 100);
       },
       error: (error) => {
-        console.error('❌ Erreur chargement portfolio:', error);
+        console.error(' Erreur chargement portfolio:', error);
         this.loading = false;
         this.freelanceInfoLoading = false;
         this.error = true;
@@ -249,18 +249,14 @@ export class PortfolioComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   /**
-   * ✅ AMÉLIORÉE : Charge les infos du freelance par ID
+   *  AMÉLIORÉE : Charge les infos du freelance par ID
    */
   loadFreelanceInfoById(freelanceId: number): void {
-    console.log('🔄 Chargement infos freelance ID:', freelanceId);
+
     
     this.freelanceService.getFreelanceById(freelanceId).subscribe({
       next: (freelance) => {
-        console.log('✅ Infos freelance chargées:', {
-          id: freelance.id,
-          nom: `${freelance.prenom} ${freelance.nom}`,
-          profession: freelance.profession
-        });
+
         
         this.freelanceInfo = freelance;
         this.freelanceInfoLoading = false;
@@ -271,15 +267,15 @@ export class PortfolioComponent implements OnInit, OnDestroy, AfterViewInit {
           freelance: freelance
         }));
         
-        console.log('🔄 Portfolio items mis à jour avec infos freelance');
+
       },
       error: (error) => {
-        console.error('❌ Erreur chargement infos freelance:', error);
+        console.error(' Erreur chargement infos freelance:', error);
         this.freelanceInfoLoading = false;
         
         // Fallback: essayer d'utiliser les infos depuis le portfolio
         if (this.portfolioItems.length > 0 && this.portfolioItems[0].freelance) {
-          console.log('📋 Utilisation fallback depuis premier élément portfolio');
+
           this.freelanceInfo = this.portfolioItems[0].freelance;
         }
       }
@@ -287,11 +283,11 @@ export class PortfolioComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   // ==========================================
-  // 🔧 MÉTHODES POUR RÉCUPÉRER LES INFOS DU PROPRIÉTAIRE
+  //  MÉTHODES POUR RÉCUPÉRER LES INFOS DU PROPRIÉTAIRE
   // ==========================================
 
   /**
-   * ✅ AMÉLIORÉE : Récupère le nom d'affichage avec fallback intelligent
+   *  AMÉLIORÉE : Récupère le nom d'affichage avec fallback intelligent
    */
   getOwnerDisplayName(): string | null {
     // 1. Source principale : freelanceInfo chargé séparément
@@ -322,7 +318,7 @@ export class PortfolioComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   /**
-   * ✅ AMÉLIORÉE : Récupère l'objet freelance complet
+   *  AMÉLIORÉE : Récupère l'objet freelance complet
    */
   getOwnerInfo(): Freelance | null {
     // 1. Source principale
@@ -339,7 +335,7 @@ export class PortfolioComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   /**
-   * ✅ NOUVELLE : Vérifie si on est en cours de chargement
+   *  NOUVELLE : Vérifie si on est en cours de chargement
    */
   isLoadingOwnerInfo(): boolean {
     return this.freelanceInfoLoading || this.loading;
@@ -351,14 +347,14 @@ export class PortfolioComponent implements OnInit, OnDestroy, AfterViewInit {
 
   contactFreelance(freelance: Freelance, event: Event): void {
     if (!freelance) {
-      console.warn('⚠️ Tentative de contact avec freelance null');
+      console.warn(' Tentative de contact avec freelance null');
       return;
     }
     
     event.stopPropagation();
     event.preventDefault();
     
-    console.log('🎯 Ouverture contact modal depuis Portfolio pour:', freelance.prenom, freelance.nom);
+
     
     this.selectedFreelanceForContact = freelance;
     
@@ -398,7 +394,7 @@ Cordialement.`;
   }
 
   closeContactModal(): void {
-    console.log('❌ Fermeture contact modal depuis Portfolio');
+
     
     this.showContactModal = false;
     this.selectedFreelanceForContact = null;
@@ -411,7 +407,7 @@ Cordialement.`;
 
   onSubmitContact(): void {
     if (this.contactForm.invalid) {
-      console.log('❌ Formulaire invalide depuis Portfolio');
+
       
       Object.keys(this.contactForm.controls).forEach(key => {
         this.contactForm.get(key)?.markAsTouched();
@@ -422,11 +418,7 @@ Cordialement.`;
     this.isSubmittingContact = true;
     const formData = this.contactForm.value;
 
-    console.log('📤 Envoi du message de contact depuis Portfolio:', {
-      freelance: this.selectedFreelanceForContact?.prenom,
-      data: formData,
-      context: 'portfolio'
-    });
+
 
     // Simulation d'envoi
     setTimeout(() => {
@@ -506,7 +498,7 @@ Cordialement.`;
   }
 
   loadPortfolio(): void {
-    // ✅ Cette méthode est maintenant remplacée par loadPortfolioAndFreelanceInfo()
+    //  Cette méthode est maintenant remplacée par loadPortfolioAndFreelanceInfo()
     // Gardée pour compatibilité avec les boutons "Réessayer"
     this.loadPortfolioAndFreelanceInfo();
   }
@@ -627,49 +619,49 @@ Cordialement.`;
   }
 
 isLikedByUser(itemId: number): boolean {
-  // ✅ Mode dashboard freelance : ne peut pas aimer son propre travail
+  //  Mode dashboard freelance : ne peut pas aimer son propre travail
   if (!this.clientMode) {
     return false;
   }
   
-  // ✅ Mode client non connecté : ne peut pas avoir aimé
+  //  Mode client non connecté : ne peut pas avoir aimé
   if (!this.authManager.isAuthenticated()) {
     return false;
   }
   
-  // ✅ Mode client connecté : vérifier s'il a déjà aimé cet élément
+  //  Mode client connecté : vérifier s'il a déjà aimé cet élément
   return this.userLikes.has(itemId);
 }
  loadUserLikes(): void {
-  // ✅ Charger les likes utilisateur SEULEMENT si :
+  //  Charger les likes utilisateur SEULEMENT si :
   // 1. On est en mode CLIENT (on consulte les portfolios depuis la page d'accueil)
   // 2. ET l'utilisateur est connecté (pour savoir ce qu'il a déjà aimé)
   
   if (!this.clientMode) {
-    console.log('🏠 Mode dashboard freelance - pas de chargement des likes utilisateur');
+
     this.userLikes.clear();
     return;
   }
   
   if (!this.authManager.isAuthenticated()) {
-    console.log('👤 Client non connecté - peut voir mais pas aimer');
+
     this.userLikes.clear();
     return;
   }
   
-  console.log('🔄 Client connecté - chargement des likes pour savoir ce qu\'il a déjà aimé...');
+
   
   this.portfolioService.getUserLikes().subscribe({
     next: (likedItemsIds) => {
-      console.log('✅ Likes utilisateur chargés:', likedItemsIds.length, 'éléments');
+
       this.userLikes.clear();
       likedItemsIds.forEach(id => this.userLikes.add(id));
     },
     error: (error) => {
-      console.error('❌ Erreur chargement user likes:', error);
+      console.error(' Erreur chargement user likes:', error);
       
       if (error.status === 401) {
-        console.log('🔒 Erreur 401 - nettoyage des likes locaux');
+
         this.userLikes.clear();
       }
     }
@@ -743,13 +735,13 @@ isLikedByUser(itemId: number): boolean {
 
         this.portfolioService.deletePortfolioItem(item.id).subscribe({
           next: () => {
-            console.log('✅ Élément supprimé côté serveur, mise à jour de l\'état local');
-            console.log('📊 Portfolio avant suppression:', this.portfolioItems.length, 'items');
+
+
             
             // Supprimer immédiatement de la liste locale
             const portfolioAvant = this.portfolioItems.length;
             this.portfolioItems = this.portfolioItems.filter(i => i.id !== item.id);
-            console.log('📊 Portfolio après suppression locale:', this.portfolioItems.length, 'items (supprimé:', portfolioAvant - this.portfolioItems.length, ')');
+
             
             // Mettre à jour les statistiques
             this.stats.totalItems = (this.stats.totalItems || 0) - 1;
@@ -758,7 +750,7 @@ isLikedByUser(itemId: number): boolean {
             
             // Recharger le portfolio depuis le serveur pour s'assurer de la cohérence
             setTimeout(() => {
-              console.log('🔄 Rechargement du portfolio pour validation depuis le serveur...');
+
               this.loadPortfolioAndFreelanceInfo();
             }, 1000);
             
@@ -768,7 +760,7 @@ isLikedByUser(itemId: number): boolean {
             });
           },
           error: (err) => {
-            console.error('❌ Erreur lors de la suppression:', err);
+            console.error(' Erreur lors de la suppression:', err);
             if (itemIndex !== -1) {
               this.portfolioItems[itemIndex] = { ...this.portfolioItems[itemIndex], isDeleting: false };
             }

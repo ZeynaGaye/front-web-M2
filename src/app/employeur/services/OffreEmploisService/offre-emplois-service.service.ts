@@ -4,7 +4,8 @@ import { catchError, Observable, of } from 'rxjs';
 import { Candidature } from '../../../freelance/interfaces/candidatures.interface';
 
 export interface OffreEmploi {
-  datePublication: Date;
+  datePublication?: Date;
+  dateCreation?: Date;
   candidatures: any;
   status: string;
   experienceRequise: string;
@@ -22,6 +23,7 @@ export interface OffreEmploi {
   salonNom?: string;
   salonAdresse?: string;
   salonDescription?: string;
+  salonPhotoProfil?: string;
   // Informations employeur
   employeurId?: number;
   employeurNom?: string;
@@ -140,7 +142,7 @@ export class OffreEmploisService {
     );
   }
 
-  // 🆕 NOUVELLE MÉTHODE : Récupérer les candidatures d'une offre
+  //  NOUVELLE MÉTHODE : Récupérer les candidatures d'une offre
   getCandidaturesByOffreId(offreId: number): Observable<Candidature[]> {
     return this.http.get<Candidature[]>(`${this.apiUrl}/${offreId}/candidatures`).pipe(
       catchError(error => {
@@ -150,7 +152,7 @@ export class OffreEmploisService {
     );
   }
 
-  // 🆕 NOUVELLE MÉTHODE : Récupérer une candidature spécifique
+  //  NOUVELLE MÉTHODE : Récupérer une candidature spécifique
   getCandidatureById(offreId: number, candidatureId: number): Observable<Candidature> {
     return this.http.get<Candidature>(`${this.apiUrl}/${offreId}/candidatures/${candidatureId}`).pipe(
       catchError(error => {
@@ -160,7 +162,7 @@ export class OffreEmploisService {
     );
   }
 
-  // 🆕 NOUVELLE MÉTHODE : Mettre à jour le statut d'une candidature
+  //  NOUVELLE MÉTHODE : Mettre à jour le statut d'une candidature
   updateCandidatureStatus(offreId: number, candidatureId: number, status: string): Observable<Candidature> {
     return this.http.put<Candidature>(
       `${this.apiUrl}/${offreId}/candidatures/${candidatureId}/status`, 

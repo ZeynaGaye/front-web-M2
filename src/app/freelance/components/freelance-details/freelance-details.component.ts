@@ -16,7 +16,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 import { AuthService } from '../../../core/servces/auth.service';
-// ✅ Assurez-vous que l'interface Freelance est correctement mise à jour pour correspondre au DTO Java
+//  Assurez-vous que l'interface Freelance est correctement mise à jour pour correspondre au DTO Java
 import { FreelanceService } from '../../services/freelance.service';
 import { BookingDialogComponent } from '../../../shared/components/booking-dialog/booking-dialog.component';
 import { PortfolioComponent } from '../portfolio/portfolio.component';
@@ -118,14 +118,14 @@ export class FreelanceDetailsComponent implements OnInit {
   }
 
   loadFreelanceDetails(): void {
-    console.log('👤 Chargement des détails du freelance avec ID:', this.freelanceId);
+
 
     this.freelanceService.getFreelanceById(this.freelanceId).subscribe({
       next: (freelance: Freelance) => {
-        console.log('✅ Freelance récupéré:', freelance);
+
         this.freelance = freelance;
         if (freelance) {
-          console.log('✅ Freelance loaded successfully');
+
           // Mettre à jour les noms de propriétés pour correspondre au DTO Java si nécessaire
           // Ex: this.freelance.note = freelance.rating;
           // Ex: this.freelance.nombreAvis = freelance.reviews;
@@ -134,7 +134,7 @@ export class FreelanceDetailsComponent implements OnInit {
         }
       },
       error: (error: { message: any; }) => {
-        console.error('❌ Erreur lors du chargement du freelance:', error);
+        console.error(' Erreur lors du chargement du freelance:', error);
         this.errorMessage = `Impossible de charger les détails du freelance: ${error.message || 'Erreur inconnue'}`;
       }
     });
@@ -147,17 +147,17 @@ export class FreelanceDetailsComponent implements OnInit {
     }
 
     this.isLoadingServices = true;
-    console.log('📦 Chargement des services pour le freelance ID:', this.freelanceId);
+
 
     this.serviceFreelanceService.getServicesByFreelance(this.freelanceId)
       .subscribe({
         next: (services: ServiceFreelanceResponseDto[]) => {
-          console.log('✅ Services récupérés:', services);
+
           this.services = services;
           this.isLoadingServices = false;
         },
         error: (error) => {
-          console.error('❌ Erreur lors du chargement des services:', error);
+          console.error(' Erreur lors du chargement des services:', error);
           this.isLoadingServices = false;
           this.snackBar.open('Erreur lors du chargement des services.', 'Fermer', { duration: 3000 });
         }
@@ -165,18 +165,18 @@ export class FreelanceDetailsComponent implements OnInit {
   }
 
   loadFreelanceAvis(): void {
-    console.log('⭐ Chargement des avis pour le freelance ID:', this.freelanceId);
+
     this.isLoadingAvis = true;
 
     this.reservationService.getAvisByFreelance(this.freelanceId).subscribe({
       next: (avis) => {
-        console.log('✅ Avis récupérés:', avis);
+
         
         if (!avis) {
-          console.warn('⚠️ La réponse avis est undefined ou null');
+          console.warn(' La réponse avis est undefined ou null');
           this.recentAvis = [];
         } else if (!Array.isArray(avis)) {
-          console.warn('⚠️ La réponse avis n\'est pas un tableau:', avis);
+          console.warn(' La réponse avis n\'est pas un tableau:', avis);
           this.recentAvis = [];
         } else {
           // Trier les avis par date de création (plus récents en premier)
@@ -188,10 +188,10 @@ export class FreelanceDetailsComponent implements OnInit {
         }
 
         this.isLoadingAvis = false;
-        console.log(`📊 Nombre d'avis chargés: ${this.recentAvis.length}`);
+
       },
       error: (error) => {
-        console.error('❌ Erreur lors du chargement des avis:', error);
+        console.error(' Erreur lors du chargement des avis:', error);
         this.recentAvis = [];
         this.isLoadingAvis = false;
       }
@@ -205,7 +205,7 @@ export class FreelanceDetailsComponent implements OnInit {
   // onImageError(event: any): void { /* ... */ }
   // onImageLoad(event: any): void { /* ... */ }
 
-  // ✅ Nouveau : gestionnaire d'erreur pour l'image de profil
+  //  Nouveau : gestionnaire d'erreur pour l'image de profil
   onProfileImageError(event: Event): void {
     (event.target as HTMLImageElement).src = 'assets/images/freelance-avatar.jpg';
   }
@@ -216,24 +216,24 @@ export class FreelanceDetailsComponent implements OnInit {
     }
   }
 
-  // ✅ Mettre à jour pour utiliser freelance.rating et freelance.reviews du DTO Java
+  //  Mettre à jour pour utiliser freelance.rating et freelance.reviews du DTO Java
   getStarArray(rating: number | undefined | null): any[] {
     const fullStars = Math.floor(rating || 0);
     return new Array(fullStars);
   }
 
-  // ✅ Mettre à jour pour utiliser freelance.rating du DTO Java
+  //  Mettre à jour pour utiliser freelance.rating du DTO Java
   hasHalfStar(rating: number | undefined | null): boolean {
     return ((rating || 0) % 1) >= 0.5;
   }
 
   setActiveTab(tab: string): void {
-    console.log(`🔄 Changement d'onglet: ${this.activeTab} → ${tab}`);
+
     this.activeTab = tab;
     
     // Charger les avis si nécessaire
     if (tab === 'reviews' && this.recentAvis.length === 0 && !this.isLoadingAvis) {
-      console.log('⭐ Rechargement des avis pour l\'onglet');
+
       this.loadFreelanceAvis();
     }
   }
@@ -356,21 +356,21 @@ export class FreelanceDetailsComponent implements OnInit {
   }
 
   /**
-   * ✅ Formater note en étoiles
+   *  Formater note en étoiles
    */
   formatStars(rating: number): string {
     return this.reservationService.formatRatingStars(rating);
   }
 
   /**
-   * ✅ Obtenir le temps relatif
+   *  Obtenir le temps relatif
    */
   getRelativeTime(date: string | Date): string {
     return this.reservationService.getTempsDepuisCreation(date);
   }
 
   /**
-   * ✅ Calculer la note moyenne du freelance
+   *  Calculer la note moyenne du freelance
    */
   getAverageRating(): number {
     if (!this.recentAvis || this.recentAvis.length === 0) {
@@ -382,7 +382,7 @@ export class FreelanceDetailsComponent implements OnInit {
   }
 
   /**
-   * ✅ Obtenir le nombre total d'avis
+   *  Obtenir le nombre total d'avis
    */
   getTotalReviews(): number {
     return this.recentAvis ? this.recentAvis.length : 0;

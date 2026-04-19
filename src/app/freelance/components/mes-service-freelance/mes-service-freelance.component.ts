@@ -35,7 +35,7 @@ export class MesServicesFreelanceComponent implements OnInit, OnDestroy {
   freelanceId: number | null = null;
   showAddServiceDialog = false;
 
-  // ✅ Gestion des subscriptions pour éviter les fuites mémoire
+  //  Gestion des subscriptions pour éviter les fuites mémoire
   private subscriptions: Subscription = new Subscription();
 
   constructor(
@@ -49,7 +49,7 @@ export class MesServicesFreelanceComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // ✅ Nettoyer toutes les subscriptions
+    //  Nettoyer toutes les subscriptions
     this.subscriptions.unsubscribe();
   }
 
@@ -60,22 +60,22 @@ export class MesServicesFreelanceComponent implements OnInit, OnDestroy {
       this.freelanceId = currentUser.id;
       this.loadServices();
       this.loadStats();
-      console.log('Freelance ID récupéré:', this.freelanceId);
+
     } else {
       this.error = "Aucun utilisateur connecté. Veuillez vous connecter.";
       this.services = [];
       
-      // ✅ Si pas d'utilisateur connecté, déclencher le modal de connexion
+      //  Si pas d'utilisateur connecté, déclencher le modal de connexion
       this.authService.triggerLoginModal();
       
-      // ✅ Écouter les changements d'authentification avec gestion des subscriptions
+      //  Écouter les changements d'authentification avec gestion des subscriptions
       const userSub = this.authService.currentUser$.subscribe(user => {
         if (user && user.id) {
           this.freelanceId = user.id;
           this.error = null;
           this.loadServices();
           this.loadStats();
-          console.log('Utilisateur connecté détecté:', user.id);
+
         }
       });
       
@@ -83,7 +83,7 @@ export class MesServicesFreelanceComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ✅ Méthode helper pour vérifier si l'utilisateur est connecté
+  //  Méthode helper pour vérifier si l'utilisateur est connecté
   private isUserAuthenticated(): boolean {
     return this.authService.isAuthenticated() && this.freelanceId !== null;
   }
@@ -102,7 +102,7 @@ export class MesServicesFreelanceComponent implements OnInit, OnDestroy {
         next: (data: ServiceFreelanceResponseDto[]) => {
           this.services = data ?? [];
           this.loading = false;
-          console.log('Services chargés:', data);
+
         },
         error: (error: any) => {
           const errorMessage = error?.message ?? 'Erreur lors du chargement des services';
@@ -126,7 +126,7 @@ export class MesServicesFreelanceComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (stats: FreelanceServicesStatsDto) => {
           this.stats = stats;
-          console.log('Statistiques chargées:', stats);
+
         },
         error: (error: any) => {
           console.error('Erreur lors du chargement des statistiques:', error);
@@ -143,34 +143,34 @@ export class MesServicesFreelanceComponent implements OnInit, OnDestroy {
       return;
     }
 
-    console.log('🎯 Ouverture du modal de création de service...');
 
-    // ✅ Configuration des données du modal (mode création)
+
+    //  Configuration des données du modal (mode création)
     this.modalData = {
       freelanceId: this.freelanceId,
       service: null // null = mode création
     };
 
-    // ✅ Afficher le modal
+    //  Afficher le modal
     this.showAddServiceDialog = true;
   }
 
-  // ✅ Fermer le modal
+  //  Fermer le modal
   closeAddServiceDialog(): void {
-    console.log('🔒 Fermeture du modal de service');
+
     this.showAddServiceDialog = false;
     this.modalData = null;
   }
 
-  // ✅ CORRIGÉ: Méthodes qui reçoivent les événements du composant enfant
+  //  CORRIGÉ: Méthodes qui reçoivent les événements du composant enfant
   onServiceCreated(serviceData: ServiceFreelanceRequestDto): void {
-    console.log('✅ Service créé reçu:', serviceData);
+
     this.createService(serviceData);
     this.closeAddServiceDialog();
   }
 
   onServiceUpdated(data: { serviceId: number, serviceData: ServiceFreelanceRequestDto }): void {
-    console.log('✅ Service mis à jour reçu:', data);
+
     this.updateService(data.serviceId, data.serviceData);
     this.closeAddServiceDialog();
   }
@@ -201,7 +201,7 @@ export class MesServicesFreelanceComponent implements OnInit, OnDestroy {
       });
   }
 
-  // ✅ Ouvrir en mode édition
+  //  Ouvrir en mode édition
   editService(service: ServiceFreelanceResponseDto): void {
     if (!this.isUserAuthenticated()) {
       this.showErrorMessage('Vous devez être connecté pour modifier un service');
@@ -209,15 +209,15 @@ export class MesServicesFreelanceComponent implements OnInit, OnDestroy {
       return;
     }
 
-    console.log('✏️ Ouverture du modal d\'édition de service...');
 
-    // ✅ Configuration des données du modal (mode édition)
+
+    //  Configuration des données du modal (mode édition)
     this.modalData = {
       freelanceId: this.freelanceId,
       service: service // service existant = mode édition
     };
 
-    // ✅ Afficher le modal
+    //  Afficher le modal
     this.showAddServiceDialog = true;
   }
 
@@ -280,7 +280,7 @@ export class MesServicesFreelanceComponent implements OnInit, OnDestroy {
     this.closeModalEvent.emit();
   }
 
-  // ✅ CORRIGÉ: Implémentation de shareServices
+  //  CORRIGÉ: Implémentation de shareServices
   shareServices(): void {
     if (!this.isUserAuthenticated()) {
       this.showErrorMessage('Vous devez être connecté pour partager');
@@ -294,7 +294,7 @@ export class MesServicesFreelanceComponent implements OnInit, OnDestroy {
     }
 
     // TODO: Implémenter le partage des services
-    console.log('Partage des services:', this.services);
+
     this.showSuccessMessage('Fonctionnalité de partage à implémenter');
   }
 
@@ -304,7 +304,7 @@ export class MesServicesFreelanceComponent implements OnInit, OnDestroy {
     return this.serviceFreelanceService.getServiceTags(service);
   }
 
-  // ✅ Formatage des prix en CFA
+  //  Formatage des prix en CFA
   formatPrice(price: number): string {
     if (!price || price === 0) {
       return '0 CFA';
@@ -315,7 +315,7 @@ export class MesServicesFreelanceComponent implements OnInit, OnDestroy {
     return `${formattedNumber} CFA`;
   }
 
-  // ✅ Formatage de la durée
+  //  Formatage de la durée
   formatDuration(minutes: number): string {
     if (!minutes || minutes === 0) {
       return '0 min';
@@ -361,7 +361,7 @@ export class MesServicesFreelanceComponent implements OnInit, OnDestroy {
     return icons[categorie] || 'spa';
   }
 
-  // ✅ Message des stats en CFA
+  //  Message des stats en CFA
   getStatsMessage(): string {
     if (!this.stats || (this.stats.nombreServices ?? 0) === 0) {
       return '';
@@ -421,7 +421,7 @@ export class MesServicesFreelanceComponent implements OnInit, OnDestroy {
     }
 
     // TODO: Implémenter l'export en CSV ou PDF
-    console.log('Export des services:', this.services);
+
     this.showSuccessMessage('Export à implémenter');
   }
 
@@ -457,17 +457,17 @@ export class MesServicesFreelanceComponent implements OnInit, OnDestroy {
     return service.id;
   }
 
-  // ✅ Méthode pour forcer la reconnexion
+  //  Méthode pour forcer la reconnexion
   forceLogin(): void {
     this.authService.triggerLoginModal();
   }
 
-  // ✅ Getter pour l'état d'authentification (utile dans le template)
+  //  Getter pour l'état d'authentification (utile dans le template)
   get isAuthenticated(): boolean {
     return this.isUserAuthenticated();
   }
 
-  // ✅ Getter pour l'utilisateur actuel (utile dans le template)
+  //  Getter pour l'utilisateur actuel (utile dans le template)
   get currentUser(): any {
     return this.authService.getCurrentUser();
   }

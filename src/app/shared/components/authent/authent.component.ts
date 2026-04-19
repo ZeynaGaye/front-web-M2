@@ -51,7 +51,8 @@ export class AuthentComponent implements OnInit {
 
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      motDePasse: ['', [Validators.required, Validators.minLength(6)]]
+      motDePasse: ['', [Validators.required, Validators.minLength(6)]],
+      rememberMe: [false]
     });
   }
 
@@ -69,12 +70,12 @@ export class AuthentComponent implements OnInit {
       password: this.loginForm.value.motDePasse
     };
 
-    console.log('Tentative de connexion avec:', credentials);
+
 
     this.authService.login(credentials).subscribe({
       next: (response) => {
         this.isLoading = false;
-        console.log('Connexion réussie:', response);
+
         
         this.snackBar.open('Connexion réussie !', 'Fermer', {
           duration: 3000,
@@ -107,7 +108,7 @@ export class AuthentComponent implements OnInit {
   // Méthode pour basculer vers le modal d'inscription
   switchToRegister(): void {
     this.switchToRegisterEvent.emit();
-    console.log('Demande de basculement vers le formulaire d\'inscription émise');
+
   }
   
   // Fermer le modal

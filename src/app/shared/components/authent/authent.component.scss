@@ -1,106 +1,351 @@
-.auth-container {
-  max-width: 400px;
-  margin: 0 auto;
-  padding: 20px;
+$primary: #F5A393;
+$secondary: #A4B1BD;
+$dark: #1a1a2e;
+$text-muted: #888;
+$border: #e5e7eb;
+$bg: #ffffff;
+$input-bg: #f8f9fa;
+
+.auth-page {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  &.modal-context { height: 100%; overflow: visible; }
+}
+
+.modal-auth-content {
+  background: $bg;
+  border-radius: 20px;
+  padding: 32px 28px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+  animation: slideUpFadeIn 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideUpFadeIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+// ── HEADER BRAND ──────────────────────────────────
+.logo-header {
+  text-align: center;
+  margin-bottom: 24px;
+  align-self: center;
+  padding-bottom: 20px;
+  border-bottom: 1px solid $border;
+  width: 100%;
+
+  .brand-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+
+    .logo-circle {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: 2px solid $primary;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(245, 163, 147, 0.3);
+
+      .logo-image {
+        width: 38px;
+        height: 38px;
+        object-fit: contain;
+      }
+    }
+
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+
+      .brand-name {
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: $primary;
+        line-height: 1;
+        letter-spacing: -0.01em;
+      }
+
+      .brand-tagline {
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: $secondary;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin-top: 4px;
+      }
+    }
+  }
+}
+
+// ── TITRE ─────────────────────────────────────────
+.login-title {
+  text-align: center;
+  margin-bottom: 24px;
+  width: 100%;
 
   h2 {
-    text-align: center;
-    color: #333;
-    margin-bottom: 25px;
-  }
+    color: $dark;
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 0;
 
-  form {
-    margin-bottom: 20px;
-  }
-}
-
-.input-group {
-  position: relative;
-  margin-bottom: 1.5rem;
-
-  i, mat-icon {
-    position: absolute;
-    left: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #9ca3af;
-  }
-
-  .password-toggle {
-    left: auto;
-    right: 1rem;
-    cursor: pointer;
-  }
-
-  input,
-  select {
-    width: 100%;
-    padding: 0.75rem 1rem 0.75rem 2.5rem;
-    border: 1px solid #e5e7eb;
-    border-radius: 0.5rem;
-    font-size: 1rem;
-    outline: none;
-    transition: all 0.3s;
-
-    &:focus {
-      border-color: #fb8f71;
-      box-shadow: 0 0 0 4px rgba(251, 143, 113, 0.1);
+    &::after {
+      content: '';
+      display: block;
+      width: 36px;
+      height: 3px;
+      background: $primary;
+      border-radius: 2px;
+      margin: 8px auto 0;
     }
   }
-
-  small {
-    color: #ef4444;
-    font-size: 12px;
-    display: block;
-    margin-top: 5px;
-  }
 }
 
-.login-btn {
+// ── FORM ──────────────────────────────────────────
+.login-form-container {
   width: 100%;
-  padding: 12px;
-  background-color: #f5a393;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: all 0.3s ease;
+  flex-direction: column;
+  align-items: stretch;
+}
 
-  &:disabled {
-    background-color: #a4b1bd;
-    cursor: not-allowed;
+.auth-form {
+  width: 100%;
+  box-sizing: border-box;
+
+  .input-group {
+    margin-bottom: 16px;
+    width: 100%;
+
+    .input-wrapper {
+      position: relative;
+      width: 100%;
+
+      .input-icon {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: $primary;
+        font-size: 0.9rem;
+        pointer-events: none;
+      }
+
+      input {
+        width: 100%;
+        box-sizing: border-box;
+        background: $input-bg;
+        border: 1.5px solid $border;
+        border-radius: 10px;
+        padding: 13px 42px 13px 40px;
+        color: $dark;
+        font-size: 0.95rem;
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+
+        &::placeholder { color: $text-muted; }
+
+        &:focus {
+          border-color: $primary;
+          box-shadow: 0 0 0 3px rgba(245, 163, 147, 0.15);
+          background: #fff;
+        }
+      }
+
+      .password-toggle {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: $text-muted;
+        cursor: pointer;
+        padding: 4px;
+        font-size: 0.9rem;
+        transition: color 0.2s;
+        &:hover { color: $primary; }
+      }
+    }
+
+    &.error .input-wrapper input { border-color: #ef4444; }
+
+    .error-message {
+      color: #ef4444;
+      font-size: 0.72rem;
+      margin-top: 4px;
+      display: block;
+      padding-left: 4px;
+    }
   }
 
-  &:hover:not(:disabled) {
-    background-color: #f08c79;
-    transform: translateY(-2px);
+  .form-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    width: 100%;
+
+    .remember-me {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      color: $text-muted;
+
+      input[type="checkbox"] {
+        accent-color: $primary;
+        width: 14px;
+        height: 14px;
+        cursor: pointer;
+      }
+    }
+
+    .forgot-link {
+      color: $text-muted;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: color 0.2s;
+      &:hover { color: $primary; }
+    }
   }
 
-  mat-spinner {
-    margin-right: 10px;
-    color:#fb8f71;
+  .login-btn {
+    width: 100%;
+    background: $primary;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 14px;
+    font-size: 0.9rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 14px rgba(245, 163, 147, 0.35);
+
+    &:hover:not(:disabled) {
+      background: darken(#F5A393, 8%);
+      transform: translateY(-1px);
+    }
+
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-content {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+
+      .spinner {
+        width: 15px;
+        height: 15px;
+        border: 2px solid transparent;
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+    }
+  }
+
+  .divider {
+    position: relative;
+    text-align: center;
+    margin-bottom: 16px;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: $border;
+    }
+
+    span {
+      background: $bg;
+      color: $text-muted;
+      padding: 0 10px;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      position: relative;
+    }
+  }
+
+  .social-login {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    margin-bottom: 8px;
+
+    .social-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 1.5px solid $border;
+      background: $bg;
+      color: $dark;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.2s, box-shadow 0.2s;
+
+      &:hover {
+        border-color: $primary;
+        box-shadow: 0 2px 8px rgba(245, 163, 147, 0.25);
+      }
+
+      &.google  { color: #db4437; }
+      &.facebook { color: #4267B2; }
+      &.instagram { color: #E1306C; }
+    }
   }
 }
 
-.forgot-password,
-.no-account {
-  margin-top: 15px;
+// ── INSCRIPTION ───────────────────────────────────
+.register-section {
   text-align: center;
-  color: #6b7280;
+  padding-top: 18px;
+  border-top: 1px solid $border;
+  width: 100%;
+  margin-top: 10px;
 
-  a {
-    color: #f5a393;
-    cursor: pointer;
-    text-decoration: none;
-    font-weight: 500;
+  .no-account {
+    color: $text-muted;
+    font-size: 0.85rem;
+    margin: 0;
 
-    &:hover {
-      text-decoration: underline;
+    .register-link {
+      color: $primary;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      &:hover { text-decoration: underline; }
     }
   }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+  .modal-auth-content { max-height: 85vh; padding: 24px 20px 20px; }
+  .auth-form .input-group .input-wrapper input { font-size: 16px; }
 }

@@ -64,7 +64,7 @@ export class ProfileManagementService {
 
   constructor() {}
 
-  // ✅ Récupérer le profil utilisateur actuel
+  //  Récupérer le profil utilisateur actuel
   getCurrentUserProfile(): Observable<UserProfile> {
     const currentUser = this.authService.getCurrentUser();
     if (!currentUser?.id || !currentUser?.role) {
@@ -75,14 +75,13 @@ export class ProfileManagementService {
     
     return this.http.get<UserProfile>(`${this.apiUrl}${endpoint}`).pipe(
       tap(profile => {
-        console.log('✅ Profil utilisateur récupéré:', profile);
         this.profileUpdated$.next(profile);
       }),
       catchError(this.handleError)
     );
   }
 
-  // ✅ Mettre à jour le profil utilisateur
+  //  Mettre à jour le profil utilisateur
   updateProfile(profileData: Partial<UserProfile>): Observable<UserProfile> {
     const currentUser = this.authService.getCurrentUser();
     if (!currentUser?.id || !currentUser?.role) {
@@ -93,7 +92,6 @@ export class ProfileManagementService {
     
     return this.http.put<UserProfile>(`${this.apiUrl}${endpoint}`, profileData).pipe(
       tap(updatedProfile => {
-        console.log('✅ Profil mis à jour:', updatedProfile);
         this.profileUpdated$.next(updatedProfile);
         // Mettre à jour les données dans AuthService
         this.authService.setCurrentUser(updatedProfile);
@@ -107,7 +105,7 @@ export class ProfileManagementService {
     );
   }
 
-  // ✅ Changer le mot de passe (via Keycloak)
+  //  Changer le mot de passe (via Keycloak)
   updatePassword(passwordData: PasswordUpdate): Observable<void> {
     // Pour Keycloak, le changement de mot de passe se fait via l'API Keycloak
     // ou via une redirection vers la page de gestion de compte Keycloak
@@ -124,20 +122,19 @@ export class ProfileManagementService {
       newPassword: passwordData.newPassword
     }).pipe(
       tap(() => {
-        console.log('✅ Mot de passe mis à jour avec succès via Keycloak');
       }),
       catchError(this.handleError)
     );
   }
 
-  // ✅ Rediriger vers la page de gestion de compte Keycloak
+  //  Rediriger vers la page de gestion de compte Keycloak
   redirectToKeycloakAccountManagement(): void {
     // URL de la console de gestion de compte Keycloak
     const keycloakAccountUrl = 'http://localhost:8081/realms/memoireM2/account';
     window.open(keycloakAccountUrl, '_blank');
   }
 
-  // ✅ Upload photo de profil (universel pour tous les rôles)
+  //  Upload photo de profil (universel pour tous les rôles)
   uploadProfilePhoto(file: File): Observable<string> {
     const currentUser = this.authService.getCurrentUser();
     if (!currentUser?.id || !currentUser?.role) {
@@ -169,7 +166,6 @@ export class ProfileManagementService {
     return this.http.post<UploadPhotoResponse>(`${this.apiUrl}${uploadEndpoint}`, formData).pipe(
       tap(response => {
         const photoUrl = response.photoUrl; 
-        console.log('✅ Photo de profil uploadée:', photoUrl);
         this.updateCurrentUserPhoto(photoUrl);
       }),
       // Ajout de map pour retourner uniquement photoUrl
@@ -180,7 +176,7 @@ export class ProfileManagementService {
     );
   }
 
-  // ✅ Supprimer photo de profil
+  //  Supprimer photo de profil
   deleteProfilePhoto(): Observable<void> {
     const currentUser = this.authService.getCurrentUser();
     if (!currentUser?.id || !currentUser?.role) {
@@ -204,14 +200,13 @@ export class ProfileManagementService {
 
     return this.http.delete<void>(`${this.apiUrl}${deleteEndpoint}`).pipe(
       tap(() => {
-        console.log('✅ Photo de profil supprimée');
         this.updateCurrentUserPhoto(null);
       }),
       catchError(this.handleError)
     );
   }
 
-  // ✅ Valider un champ (email, téléphone, etc.)
+  //  Valider un champ (email, téléphone, etc.)
   validateField(field: string, value: any): Observable<ValidationResult> {
     const currentUser = this.authService.getCurrentUser();
     
@@ -224,7 +219,7 @@ export class ProfileManagementService {
     );
   }
 
-  // ✅ Synchroniser les données avec Keycloak après mise à jour
+  //  Synchroniser les données avec Keycloak après mise à jour
   private syncWithKeycloak(profileData: Partial<UserProfile>): Observable<void> {
     const currentUser = this.authService.getCurrentUser();
     if (!currentUser?.kcId) {
@@ -241,17 +236,16 @@ export class ProfileManagementService {
 
     return this.http.put<void>(`${this.apiUrl}/auth/sync-keycloak-user`, keycloakUpdateData).pipe(
       tap(() => {
-        console.log('✅ Données synchronisées avec Keycloak');
       }),
       catchError((error) => {
-        console.warn('⚠️ Erreur synchronisation Keycloak (non bloquante):', error);
+        console.warn(' Erreur synchronisation Keycloak (non bloquante):', error);
         // Ne pas bloquer la mise à jour si la sync Keycloak échoue
         return EMPTY;
       })
     );
   }
 
-  // ✅ Récupérer les informations de photo de profil
+  //  Récupérer les informations de photo de profil
   getProfilePhotoInfo(): Observable<any> {
     const currentUser = this.authService.getCurrentUser();
     if (!currentUser?.id || !currentUser?.role) {
@@ -278,7 +272,7 @@ export class ProfileManagementService {
     );
   }
 
-  // ✅ Méthodes utilitaires
+  //  Méthodes utilitaires
 
   private getEndpointByRole(role: string, id: number): string {
     switch (role.toLowerCase()) {
@@ -303,7 +297,7 @@ export class ProfileManagementService {
   }
 
   private handleError = (error: any): Observable<never> => {
-    console.error('❌ Erreur ProfileManagementService:', error);
+    console.error(' Erreur ProfileManagementService:', error);
     let errorMessage = 'Une erreur est survenue';
     
     if (error.error?.message) {
@@ -333,7 +327,7 @@ export class ProfileManagementService {
     return throwError(() => new Error(errorMessage));
   };
 
-  // ✅ Méthodes de validation côté client
+  //  Méthodes de validation côté client
   isValidEmail(email: string): boolean {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);

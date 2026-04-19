@@ -13,7 +13,7 @@ import { AuthentComponent } from '../../../shared/components/authent/authent.com
 import { RegisterComponent } from '../../../shared/components/register/register.component';
 import { AuthUIService } from '../../services/authUI/auth-ui.service';
 import { AuthService } from '../../../core/servces/auth.service';
-import { forkJoin, Subject } from 'rxjs';
+import { forkJoin, Subject, of, catchError } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { FreelanceDetailsComponent } from '../../../freelance/components/freelance-details/freelance-details.component';
 import { ReservationService } from '../../services/reservation/reservation.service';
@@ -50,19 +50,19 @@ interface SearchResponse {
 interface EnhancedProviderData {
   id: number;
   nom: string;
-  prenom?: string;  // ✅ Prénom pour les freelances
+  prenom?: string;  //  Prénom pour les freelances
   imageUrl?: string;
   adresse: string;
-  ville?: string;  // ✅ Ville
+  ville?: string;  //  Ville
   rating: number;
   reviewCount: number;
   services: string[];
-  specialite?: string;  // ✅ Spécialité principale
-  competences?: string;  // ✅ Compétences
+  specialite?: string;  //  Spécialité principale
+  competences?: string;  //  Compétences
   priceRange?: string;
   type?: 'salon' | 'freelance';
   experience?: number;
-  anneesExperience?: number;  // ✅ Années d'expérience
+  anneesExperience?: number;  //  Années d'expérience
   availability?: string;
   description?: string;
   telephone?: string;
@@ -164,7 +164,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   Math = Math;
   public user: any;
  searchResponse: SearchResponse | undefined;
-  // ✅ Métadonnées de recherche intelligente
+  //  Métadonnées de recherche intelligente
   searchMetadata: {
     matchReason?: string;
     searchLevel?: string;
@@ -195,14 +195,14 @@ export class HeaderComponent implements OnInit, OnDestroy {
   clientName = '';
   nextAppointment: any = null;
   upcomingReservations: any[] = [];
-  allClientReservations: any[] = []; 
+  allClientReservations: any[] = [];
   clientSuggestions: any[] = [];
-  
-  // ✅ Propriétés pour le carrousel de suggestions
+
+  //  Propriétés pour le carrousel de suggestions
   currentSuggestionIndex = 0;
   suggestionCardsVisible = 3; // Nombre de cartes visibles à la fois
   suggestionCardWidth = 320; // Largeur d'une carte en px
-  searchFromSuggestion = false; // ✅ Pour éviter que les suggestions disparaissent lors d'un clic
+  searchFromSuggestion = false; //  Pour éviter que les suggestions disparaissent lors d'un clic
 
   // Compteurs pour badges
   upcomingCount = 0;
@@ -220,9 +220,20 @@ export class HeaderComponent implements OnInit, OnDestroy {
   selectedProviderType: 'salon' | 'freelance' | 'both' = 'salon';
   searchMode: 'location' | 'photo' | 'text' = 'location';
   viewMode: 'grid' | 'list' = 'grid';
-  
-  // ✅ Propriété unifiée pour les résultats de recherche
+
+  //  Propriété unifiée pour les résultats de recherche
   allProviders: any[] = [];
+
+  //  Propriétés pour l'infinite scroll
+  displayedProviders: any[] = [];
+  allResultsCache: any[] = []; // Cache de tous les résultats
+  currentPage: number = 0;
+  itemsPerPage: number = 8; // Initial load
+  itemsPerLoad: number = 6; // Subsequent loads
+  isLoadingMore: boolean = false;
+  hasMoreResults: boolean = true;
+  totalResultsCount: number = 0;
+
   serviceStats: ServiceStats = {};
   public isLoggedIn: boolean = false;
   public isClient: boolean = false;
@@ -253,13 +264,12 @@ export class HeaderComponent implements OnInit, OnDestroy {
     private freelanceService: FreelanceService,
     @Inject(PLATFORM_ID) private platformId: Object,
     private hairstyleService: HairstyleGeneratorService,
-   
+
     authUIService: AuthUIService
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
     this.authUIService = authUIService;
 
-    console.log('🎯 HeaderComponent constructor - Support Salon + Freelance activé avec nouveaux endpoints');
   }
 
 
@@ -269,11 +279,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
 
  ngOnInit(): void {
-  console.log('🚀 HeaderComponent ngOnInit started - Mode unifié Salon + Freelance avec nouveaux endpoints');
-  
-  // ✅ Adapter le nombre de cartes selon la taille d'écran
+
+  //  Adapter le nombre de cartes selon la taille d'écran
   this.updateCarouselConfig();
-  
+
   this.authService.currentUser$
     .pipe(takeUntil(this.destroy$))
     .subscribe(user => {
@@ -285,12 +294,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
        this.checkAuthAndLoadClientData();
        this.loadWelcomeBannerState();
 
-      // console.log('HeaderComponent (Auth Status): User updated:', this.user ? this.user.email : 'null');
-      // console.log('HeaderComponent (Auth Status): isLoggedIn:', this.isLoggedIn);
-      // console.log('HeaderComponent (Auth Status): isClient:', this.isClient);
-      // console.log('HeaderComponent (Auth Status): isFreelance:', this.isFreelance);
-      // console.log('HeaderComponent (Auth Status): isEmployeur:', this.isEmployeur);
-
+      //      //      //      //      //
       this.updateBodyClasses();
       this.cdr.detectChanges();
     });
@@ -309,10 +313,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
   const nextHour = minutes === '00' ? (hours + 1) % 24 : hours;
   this.selectedTime = `${nextHour.toString().padStart(2, '0')}:${minutes}`;
 
-  // Restaurer les paramètres de recherche et charger les statistiques
+  // Restaurer les paramètres de recherche
   if (this.isBrowser) {
     this.tryRestoreSearchParams();
-    this.loadServiceStats();
+    // this.loadServiceStats(); // Désactivé - statistiques non utilisées
   }
 
   // Suivre la navigation
@@ -334,7 +338,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
   setTimeout(() => {
     this.isPageLoading = false;
     this.cdr.detectChanges();
-    console.log('✅ HeaderComponent page loading completed');
   }, 500);
 
   // Initialiser la recherche flexible après un délai
@@ -351,33 +354,21 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.authUIService.showLoginModal$
       .pipe(takeUntil(this.destroy$))
       .subscribe(shouldShow => {
-        console.log('Login modal subscription triggered:', shouldShow, 'isPageLoading:', this.isPageLoading);
 
         // Protection contre l'ouverture automatique pendant le chargement
         if (this.isPageLoading) {
-          console.log('Ignoring modal trigger during page loading');
           return;
         }
 
-        console.log('Login modal state change:', {
-          shouldShow,
-          currentShowLoginModal: this.showLoginModal,
-          isPageLoading: this.isPageLoading
-        });
-        
+
         if (shouldShow === true && !this.showLoginModal) {
-          console.log('Opening login modal');
           this.showLoginModal = true;
           this.showRegisterModal = false;
           this.cdr.detectChanges();
-          console.log('Login modal opened, showLoginModal =', this.showLoginModal);
         } else if (shouldShow === false && this.showLoginModal) {
-          console.log('Closing login modal');
           this.showLoginModal = false;
           this.cdr.detectChanges();
-          console.log('Login modal closed, showLoginModal =', this.showLoginModal);
         } else {
-          console.log('No modal state change needed');
         }
       });
 
@@ -385,21 +376,17 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.authUIService.showRegisterModal$
       .pipe(takeUntil(this.destroy$))
       .subscribe(shouldShow => {
-        console.log('Register modal subscription triggered:', shouldShow, 'isPageLoading:', this.isPageLoading);
 
         // Protection contre l'ouverture automatique pendant le chargement
         if (this.isPageLoading) {
-          console.log('Ignoring modal trigger during page loading');
           return;
         }
 
         if (shouldShow === true && !this.showRegisterModal) {
-          console.log('Opening register modal');
           this.showRegisterModal = true;
           this.showLoginModal = false;
           this.cdr.detectChanges();
         } else if (shouldShow === false && this.showRegisterModal) {
-          console.log('Closing register modal');
           this.showRegisterModal = false;
           this.cdr.detectChanges();
         }
@@ -408,20 +395,18 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   // Nettoyage des souscriptions
   ngOnDestroy(): void {
-    console.log('HeaderComponent ngOnDestroy');
     this.destroy$.next();
     this.destroy$.complete();
   }
 
   // ===============================================
-  // ✅ MÉTHODES CORRIGÉES - ROUTAGE INTELLIGENT
+  //  MÉTHODES CORRIGÉES - ROUTAGE INTELLIGENT
   // ===============================================
 
   /**
-   * ✅ NOUVELLE MÉTHODE : Routage intelligent selon le type
+   *  NOUVELLE MÉTHODE : Routage intelligent selon le type
    */
   openDetailDialog(provider: EnhancedProviderData): void {
-    console.log('🎯 openDetailDialog appelée avec provider:', provider);
 
     if (!this.isBrowser) return;
 
@@ -430,7 +415,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // ✅ ROUTAGE INTELLIGENT SELON LE TYPE
+    //  ROUTAGE INTELLIGENT SELON LE TYPE
     if (provider.type === 'freelance') {
       this.openFreelanceDetailDialog(provider.id);
     } else {
@@ -439,10 +424,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * ✅ MÉTHODE CORRIGÉE : Modal freelance
+   *  MÉTHODE CORRIGÉE : Modal freelance
    */
   openFreelanceDetailDialog(freelanceId: number): void {
-    console.log('👤 openFreelanceDetailDialog appelée avec ID:', freelanceId);
 
     if (!this.isBrowser) return;
 
@@ -452,7 +436,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
     }
 
     try {
-      console.log('Ouverture dialogue freelance ID:', freelanceId);
 
       const dialogRef = this.dialog.open(FreelanceDetailsComponent, {
         width: '900px',
@@ -467,7 +450,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
       });
 
       dialogRef.afterClosed().subscribe(result => {
-        console.log('Dialogue freelance fermé:', result);
       });
     } catch (error) {
       console.error('Erreur ouverture dialogue freelance:', error);
@@ -478,13 +460,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * ✅ MÉTHODE CORRIGÉE : Modal salon
+   * MÉTHODE CORRIGÉE : Modal salon
    */
   openSalonDetailDialog(salonId: number): void {
-    console.log('🏪 openSalonDetailDialog appelée avec ID:', salonId);
 
     if (!this.isBrowser) {
-      console.log('Non-browser environment, returning');
       return;
     }
 
@@ -494,7 +474,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
     }
 
     try {
-      console.log('Tentative d\'ouverture du dialogue pour le salon ID:', salonId);
 
       const dialogRef = this.dialog.open(SalonDetailsComponent, {
         width: '900px',
@@ -506,14 +485,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
         disableClose: true, // Empêche la fermeture par clic sur le backdrop ou ESC
       });
 
-      console.log('Dialogue salon ouvert avec succès');
 
       dialogRef.afterOpened().subscribe(() => {
-        console.log('Événement afterOpened déclenché');
       });
 
       dialogRef.afterClosed().subscribe(result => {
-        console.log('Dialogue salon fermé avec résultat:', result);
       });
     } catch (error) {
       console.error('Erreur lors de l\'ouverture du dialogue salon:', error);
@@ -526,25 +502,25 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   // ===============================================
-  // ✅ MÉTHODES FREELANCES AMÉLIORÉES
+  //  MÉTHODES FREELANCES AMÉLIORÉES
   // ===============================================
 
   /**
-   * ✅ NOUVELLE MÉTHODE : Vérifier si on affiche les critères freelances
+   *  NOUVELLE MÉTHODE : Vérifier si on affiche les critères freelances
    */
   showFreelanceCriteria(): boolean {
     return this.selectedProviderType === 'freelance' || this.selectedProviderType === 'both';
   }
 
   /**
-   * ✅ NOUVELLE MÉTHODE : Vérifier si on a des critères freelances actifs
+   *  NOUVELLE MÉTHODE : Vérifier si on a des critères freelances actifs
    */
   hasFreelanceCriteria(): boolean {
     return !!(this.disponibleWeekend || this.disponibleSoir || this.experienceMin || this.deplacementInclus);
   }
 
   /**
-   * ✅ NOUVELLE MÉTHODE : Obtenir la liste des critères freelances actifs
+   *  NOUVELLE MÉTHODE : Obtenir la liste des critères freelances actifs
    */
   getActiveFreelanceCriteria(): string[] {
     const criteria: string[] = [];
@@ -558,7 +534,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * ✅ NOUVELLE MÉTHODE : Effacer spécifiquement les critères freelances
+   *  NOUVELLE MÉTHODE : Effacer spécifiquement les critères freelances
    */
   clearOnlyFreelanceCriteria(): void {
     this.disponibleWeekend = undefined;
@@ -578,7 +554,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * ✅ NOUVELLE MÉTHODE : Message contextuel selon le type
+   *  NOUVELLE MÉTHODE : Message contextuel selon le type
    */
   getContextualMessage(count: number, type: string): string {
     const typeLabel = type === 'salon' ? 'salon(s)' :
@@ -625,7 +601,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
     // Mettre à jour les statistiques affichées
     this.updateServiceCounters();
 
-    console.log(`🎯 Type de professionnel sélectionné: ${type}`);
   }
 
   /**
@@ -639,28 +614,25 @@ export class HeaderComponent implements OnInit, OnDestroy {
       this.removePhoto();
     }
 
-    console.log(`Mode de recherche changé: ${mode}`);
   }
 
   /**
-   * ✅ MÉTHODE MISE À JOUR: Charger les statistiques unifiées
+   *  MÉTHODE MISE À JOUR: Charger les statistiques unifiées
    */
   private loadServiceStats(): void {
-    console.log('📊 Chargement statistiques unifiées salon + freelance');
 
     this.salonService.getFreelanceStatistics().subscribe({
 
       next: (stats: ServiceStats) => {
-        console.log('📊 Statistiques unifiées reçues:', stats);
         this.serviceStats = stats;
         this.cdr.detectChanges();
       },
       error: (error: any) => {
-        console.error('❌ Erreur statistiques unifiées:', error);
+        console.error(' Erreur statistiques unifiées:', error);
         // Utiliser des données par défaut en cas d'erreur
         this.serviceStats = {
           'Coiffure': { salon: 15, freelance: 8, total: 23 },
-          'Pedicure,Manucure': { salon: 8, freelance: 12, total: 20 },
+          'Pedicure, Manucure': { salon: 8, freelance: 12, total: 20 },
           'Barber': { salon: 12, freelance: 5, total: 17 },
           'Maquillage': { salon: 5, freelance: 14, total: 19 },
           'Soins de la peau': { salon: 7, freelance: 3, total: 10 }
@@ -794,14 +766,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   // ===============================================
-  // ✅ MÉTHODES DE ROUTAGE INTELLIGENT AMÉLIORÉES
+  //  MÉTHODES DE ROUTAGE INTELLIGENT AMÉLIORÉES
   // ===============================================
 
   /**
-   * ✅ MÉTHODE MISE À JOUR: Filtrer par service avec routage automatique
+   *  MÉTHODE MISE À JOUR: Filtrer par service avec routage automatique
    */
   filterSalonsByService(service: string): void {
-    console.log(`🎯 filterSalonsByService - Service: ${service}, Type: ${this.selectedProviderType}`);
 
     if (this.isMobileMenuOpen) {
       this.toggleMobileMenu();
@@ -815,42 +786,42 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
     this.isLoading = true;
     this.selectedService = service;
+    this.resetPagination();
 
-    // ✅ ROUTAGE AUTOMATIQUE SELON LE TYPE avec ville
+    //  RECHERCHE RAPIDE: toujours combinée (salons + freelances)
     const ville = this.locationInput || null;
-    this.salonService.getSalonsByService(service, this.selectedProviderType, ville).subscribe({
+    this.salonService.getSalonsByService(service, 'both', ville, 'both').subscribe({
       next: (results) => {
-        console.log(`✅ ${results.length} résultats pour ${service} (${this.selectedProviderType})`);
         this.filteredSalons = this.processSalonData(results);
-        // ✅ Mettre à jour allProviders pour le template unifié
+
+        //  Initialiser la pagination avec infinite scroll
         this.allProviders = this.filteredSalons;
+        this.initializePaginatedResults(this.filteredSalons);
         this.isLoading = false;
 
-        // Message contextuel selon le type
-        const message = this.getContextualMessage(results.length, this.selectedProviderType);
+        // Message contextuel pour recherche combinée
+        const message = this.getContextualMessage(results.length, 'both');
         this.snackBar.open(message, '', { duration: 3000 });
       },
       error: (error) => {
-        console.error(`❌ Erreur recherche ${service} (${this.selectedProviderType}):`, error);
+        console.error(` Erreur recherche ${service} (RECHERCHE COMBINÉE):`, error);
         this.handleSearchError(error);
       }
     });
   }
 
   /**
-   * ✅ MÉTHODE MISE À JOUR: Recherche avancée avec support freelances
+   *  MÉTHODE MISE À JOUR: Recherche avancée avec support freelances
    */
   /**
-   * ✅ Méthode pour recherche manuelle (réinitialise le flag suggestion)
+   * Méthode pour recherche manuelle (réinitialise le flag suggestion)
    */
   performManualSearch(): void {
-    console.log('🔍 Recherche manuelle - réinitialisation du flag suggestion');
-    this.searchFromSuggestion = false; // ✅ Réinitialiser le flag
+    this.searchFromSuggestion = false; //  Réinitialiser le flag
     this.searchSalonsAdvanced();
   }
 
   searchSalonsAdvanced(): void {
-    console.log('🔍 Recherche avancée avec support freelances et nouveaux endpoints');
 
     if (!this.isBrowser) return;
 
@@ -862,14 +833,14 @@ export class HeaderComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // ✅ VALIDATION STRICTE - Empêcher le mélange géolocalisation/ville
+    //  VALIDATION STRICTE - Empêcher le mélange géolocalisation/ville
     if (!this.validateLocationLogic()) {
       return;
     }
 
     this.isLoading = true;
 
-    // ✅ ROUTAGE SELON LE TYPE ET LES CRITÈRES
+    //  ROUTAGE SELON LE TYPE ET LES CRITÈRES
     if (this.selectedProviderType === 'salon') {
       this.performSalonSearch();
     } else if (this.selectedProviderType === 'freelance') {
@@ -881,45 +852,45 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 🔍 NORMALISATION RECHERCHE FLOUE
+   *  NORMALISATION RECHERCHE FLOUE
    */
   private normalizeSearchTerm(term: string): string {
     if (!term) return '';
-    
+
     // 1. Nettoyer et normaliser
     let normalized = term.toLowerCase().trim();
-    
+
     // 2. Supprimer les accents
     normalized = normalized.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    
+
     // 3. Synonymes courants pour les services de beauté
     const synonyms: {[key: string]: string} = {
       'coiff': 'coiffure',
-      'coiffeur': 'coiffure', 
+      'coiffeur': 'coiffure',
       'coiffeuse': 'coiffure',
       'cheveux': 'coiffure',
       'coupe': 'coiffure',
-      
+
       'maquillage': 'maquillage',
       'makeup': 'maquillage',
       'make-up': 'maquillage',
       'maquilage': 'maquillage', // faute courante
-      
+
       'pedicure': 'pedicure',
       'pédicure': 'pedicure',
       'manucure': 'manucure',
       'ongles': 'manucure',
-      
+
       'barber': 'barber',
       'barbier': 'barber',
       'rasage': 'barber',
-      
+
       'massage': 'massage',
       'soin': 'soins',
       'soins': 'soins',
       'spa': 'soins'
     };
-    
+
     // 4. Appliquer les synonymes
     for (const [key, value] of Object.entries(synonyms)) {
       if (normalized.includes(key)) {
@@ -927,18 +898,16 @@ export class HeaderComponent implements OnInit, OnDestroy {
         break;
       }
     }
-    
-    console.log(`🔍 Terme normalisé: "${term}" → "${normalized}"`);
+
     return normalized;
   }
 
   /**
-   * ✅ RECHERCHE SALON (votre logique existante)
+   *  RECHERCHE SALON (votre logique existante)
    */
   private performSalonSearch(): void {
-    console.log('🏪 Recherche salon avec logique métier corrigée');
 
-    // ✅ LOGIQUE MÉTIER CORRIGÉE - Séparer géolocalisation et ville
+    //  LOGIQUE MÉTIER CORRIGÉE - Séparer géolocalisation et ville
     const searchData: any = {
       term: this.searchTerm,
       budget: this.budgetRange > 2000 ? this.budgetRange : undefined,
@@ -947,33 +916,27 @@ export class HeaderComponent implements OnInit, OnDestroy {
       providerType: 'salon'
     };
 
-    // 🏙️ VILLE STRICTE : Si une ville est spécifiée, recherche stricte
+    //  VILLE STRICTE : Si une ville est spécifiée, recherche stricte
     if (this.locationInput?.trim() && !this.locationInput.includes(',')) {
       searchData.ville = this.locationInput.trim();
       searchData.searchType = 'CITY_STRICT';
-      console.log('🏙️ Salon - Recherche STRICTE par ville:', searchData.ville);
     }
-    // 📍 GÉOLOCALISATION : Si coordonnées GPS ET pas de ville
+    //  GÉOLOCALISATION : Si coordonnées GPS ET pas de ville
     else if (this.userLocation && !this.locationInput?.trim()) {
       searchData.location = this.userLocation;
       searchData.searchType = 'GEOLOCATION';
-      console.log('📍 Salon - Recherche par géolocalisation:', this.userLocation);
     }
 
     // Utiliser votre méthode existante
     this.salonService.searchSalons(searchData).subscribe({
       next: (response: any) => {
-        console.log('🏪 Réponse complète salon:', response);
-        console.log('🏪 Type de response:', typeof response);
-        console.log('🏪 Response.results:', response?.results);
-        
+
         // Stocker les infos de match
         this.searchResponse = response;
-        
+
         // Vérifier le format de la réponse
         const rawResults = Array.isArray(response) ? response : (response?.results || []);
-        console.log('🏪 Raw results:', rawResults);
-        
+
         // Transformer les résultats salon pour avoir la bonne structure
         const results = rawResults.map((item: any) => {
           if (item.salon) {
@@ -988,20 +951,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
               // Transformer les services pour l'affichage
               services: item.salon.serviceNoms || item.salon.services || []
             };
-            
-            console.log('🏪 Salon transformé:', {
-              nom: transformed.nom,
-              distance: item.distance,
-              distanceKm: transformed.distanceKm,
-              formattedDistance: transformed.formattedDistance
-            });
-            
+
+
             return transformed;
           }
           return item;
         });
-        
-        console.log('🏪 Transformed results:', results);
+
         this.handleSearchSuccess(results, 'salon');
       },
       error: (error) => this.handleSearchError(error)
@@ -1009,13 +965,12 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * ✅ RECHERCHE FREELANCE avec critères spécialisés - NOUVEAUX ENDPOINTS
+   *  RECHERCHE FREELANCE avec critères spécialisés - NOUVEAUX ENDPOINTS
    */
   /**
- * 🎯 RECHERCHE FREELANCE UNIFIÉE - TOUS CRITÈRES ENSEMBLE
+ *  RECHERCHE FREELANCE UNIFIÉE - TOUS CRITÈRES ENSEMBLE
  */
 private performFreelanceSearch(): void {
-  console.log('🎯 Recherche freelance unifiée avec scoring intelligent');
 
   if (!this.searchTerm || !this.searchTerm.trim()) {
     this.snackBar.open('Veuillez entrer un terme de recherche', 'OK', { duration: 3000 });
@@ -1023,29 +978,24 @@ private performFreelanceSearch(): void {
     return;
   }
 
-  // ✅ CONSTRUIRE TOUS LES CRITÈRES ENSEMBLE
+  //  CONSTRUIRE TOUS LES CRITÈRES ENSEMBLE
   const criteres = this.construireTousLesCriteres();
 
-  console.log('📊 Critères envoyés au backend:', criteres);
-  console.log('🎯 Nombre de critères actifs:', this.compterCriteresActifs(criteres));
 
-  // ✅ ROUTAGE INTELLIGENT : /nearby si géolocalisé, sinon /search
-  const observable = (criteres.searchType === 'GEOLOCATION' && criteres.lat && criteres.lng) 
+  //  ROUTAGE INTELLIGENT : /nearby si géolocalisé, sinon /search
+  const observable = (criteres.searchType === 'GEOLOCATION' && criteres.lat && criteres.lng)
     ? this.salonService.searchFreelancesNearby(criteres.service, criteres.lat, criteres.lng)
     : this.salonService.searchFreelances(criteres);
-    
-  console.log(criteres.searchType === 'GEOLOCATION' ? '📍 Utilisant /nearby' : '🔍 Utilisant /search');
-  
+
+
   observable.subscribe({
     next: (response) => {
-      console.log('✅ Réponse backend:', response);
 
       const freelances = response.freelances || response.data || response || [];
       const total = response.total || freelances.length;
 
-      console.log(`🏆 ${total} freelances trouvés avec scoring intelligent`);
 
-      // ✅ Stocker les métadonnées de recherche intelligente
+      //  Stocker les métadonnées de recherche intelligente
       this.searchMetadata = {
         matchReason: response.matchReason,
         searchLevel: response.searchLevel,
@@ -1064,21 +1014,21 @@ private performFreelanceSearch(): void {
 
       this.handleSearchSuccess(freelancesWithType, 'freelance');
 
-      // ✅ Le message sera maintenant affiché au-dessus des résultats
+      //  Le message sera maintenant affiché au-dessus des résultats
       // Plus besoin de SnackBar, utilisé dans le template
 
       // Afficher le résumé intelligent
       this.afficherResumePertinence(criteres, total, response);
     },
     error: (error) => {
-      console.error('❌ Erreur recherche:', error);
+      console.error(' Erreur recherche:', error);
       this.handleSearchError(error);
     }
   });
 }
 
 /**
- * 🏗️ CONSTRUIRE TOUS LES CRITÈRES (sans séparation de modes)
+ *  CONSTRUIRE TOUS LES CRITÈRES (sans séparation de modes)
  */
 private construireTousLesCriteres(): any {
   const coords = this.extractCoordinates();
@@ -1088,24 +1038,22 @@ private construireTousLesCriteres(): any {
     service: this.searchTerm.trim()
   };
 
-  // ✅ LOGIQUE MÉTIER CORRIGÉE : SÉPARER GÉOLOCALISATION ET VILLE
-  
-  // 1️⃣ VILLE STRICTE : Si l'utilisateur a tapé une ville, on recherche UNIQUEMENT dans cette ville
+  //  LOGIQUE MÉTIER CORRIGÉE : SÉPARER GÉOLOCALISATION ET VILLE
+
+  // 1⃣ VILLE STRICTE : Si l'utilisateur a tapé une ville, on recherche UNIQUEMENT dans cette ville
   if (this.locationInput?.trim() && !this.locationInput.includes(',')) {
     criteres.ville = this.locationInput.trim();
     criteres.searchType = 'CITY_STRICT'; // Marquer pour recherche stricte par ville
-    console.log('🏙️ Recherche STRICTE par ville:', criteres.ville);
   }
-  
-  // 2️⃣ GÉOLOCALISATION : Si coordonnées GPS disponibles ET pas de ville spécifiée
+
+  // 2⃣ GÉOLOCALISATION : Si coordonnées GPS disponibles ET pas de ville spécifiée
   else if (coords?.lat && coords?.lng && !this.locationInput?.trim()) {
     criteres.lat = coords.lat;
     criteres.lng = coords.lng;
     criteres.searchType = 'GEOLOCATION'; // Marquer pour recherche par proximité
-    console.log('📍 Recherche par géolocalisation:', { lat: coords.lat, lng: coords.lng });
   }
 
-  // 3️⃣ CRITÈRES FLEXIBLES (peuvent être élargis si pas de résultats)
+  // 3⃣ CRITÈRES FLEXIBLES (peuvent être élargis si pas de résultats)
   if (this.budgetRange > 2000) {
     criteres.maxPrice = this.budgetRange;
   }
@@ -1138,18 +1086,18 @@ private construireTousLesCriteres(): any {
 }
 
 /**
- * 📊 COMPTER LES CRITÈRES ACTIFS - LOGIQUE CORRIGÉE
+ *  COMPTER LES CRITÈRES ACTIFS - LOGIQUE CORRIGÉE
  */
 private compterCriteresActifs(criteres: any): number {
   let count = 0;
 
   if (criteres.service) count++; // Service obligatoire
-  
-  // ✅ LOCALISATION : Soit ville stricte, soit géolocalisation (mutuellement exclusifs)
+
+  //  LOCALISATION : Soit ville stricte, soit géolocalisation (mutuellement exclusifs)
   if (criteres.ville && criteres.searchType === 'CITY_STRICT') count++; // Ville stricte
   if (criteres.lat && criteres.lng && criteres.searchType === 'GEOLOCATION') count++; // Géolocalisation
-  
-  // ✅ CRITÈRES FLEXIBLES
+
+  //  CRITÈRES FLEXIBLES
   if (criteres.maxPrice) count++;
   if (criteres.date) count++;
   if (criteres.weekend) count++;
@@ -1161,7 +1109,7 @@ private compterCriteresActifs(criteres: any): number {
 }
 
 /**
- * 🎯 AFFICHER RÉSUMÉ DE PERTINENCE
+ *  AFFICHER RÉSUMÉ DE PERTINENCE
  */
 private afficherResumePertinence(criteres: any, total: number, response: any): void {
   const nombreCriteres = this.compterCriteresActifs(criteres);
@@ -1182,8 +1130,6 @@ private afficherResumePertinence(criteres: any, total: number, response: any): v
     triInfo = ' • Triés par pertinence + note';
   }
 
-  console.log('📊 Résumé recherche:', message + triInfo);
-  console.log('🎯 Critères:', criteresTexte);
 
   // Notification utilisateur
   const snackBarMessage = message + triInfo;
@@ -1194,31 +1140,30 @@ private afficherResumePertinence(criteres: any, total: number, response: any): v
 }
 
 /**
- * 📝 CONSTRUIRE TEXTE DES CRITÈRES POUR AFFICHAGE - LOGIQUE CORRIGÉE
+ *  CONSTRUIRE TEXTE DES CRITÈRES POUR AFFICHAGE - LOGIQUE CORRIGÉE
  */
 private construireCriteresTexte(criteres: any): string[] {
   const textes: string[] = [];
 
-  // ✅ LOCALISATION : Affichage selon le type de recherche
+  //  LOCALISATION : Affichage selon le type de recherche
   if (criteres.ville && criteres.searchType === 'CITY_STRICT') {
-    textes.push(`🏙️ ${criteres.ville} (strict)`);
+    textes.push(` ${criteres.ville} (strict)`);
   } else if (criteres.lat && criteres.lng && criteres.searchType === 'GEOLOCATION') {
-    textes.push('📍 Géolocalisé (proximité)');
+    textes.push(' Géolocalisé (proximité)');
   }
-  if (criteres.maxPrice) textes.push(`💰 ≤${criteres.maxPrice} CFA`);
-  if (criteres.weekend) textes.push('📅 Weekend');
-  if (criteres.soir) textes.push('🌙 Soirée');
-  if (criteres.domicile) textes.push('🏠 Domicile');
-  if (criteres.deplacementInclus) textes.push('🚗 Déplacement');
-  if (criteres.date) textes.push(`📅 ${criteres.date}`);
+  if (criteres.maxPrice) textes.push(` ≤${criteres.maxPrice} CFA`);
+  if (criteres.weekend) textes.push(' Weekend');
+  if (criteres.soir) textes.push(' Soirée');
+  if (criteres.domicile) textes.push(' Domicile');
+  if (criteres.deplacementInclus) textes.push(' Déplacement');
+  if (criteres.date) textes.push(` ${criteres.date}`);
 
   return textes;
 }
   /**
-   * ✅ RECHERCHE COMBINÉE (salon + freelance)
+   *  RECHERCHE COMBINÉE (salon + freelance)
    */
   private performCombinedSearch(): void {
-    console.log('🔄 Recherche combinée salon + freelance avec tous les critères');
 
     if (!this.searchTerm || !this.searchTerm.trim()) {
       this.snackBar.open('Veuillez entrer un terme de recherche', 'OK', { duration: 3000 });
@@ -1226,13 +1171,12 @@ private construireCriteresTexte(criteres: any): string[] {
       return;
     }
 
-    // ✅ CORRECTION: Faire les deux recherches séparément avec ville
+    //  CORRECTION: Faire les deux recherches séparément avec ville
     const serviceTerm = this.searchTerm.trim();
     const ville = this.locationInput || null;
-    
-    console.log('🔧 Recherche combinée pour:', serviceTerm, 'ville:', ville);
-    
-    // ✅ CORRECTION: Utiliser les vraies méthodes de recherche avec critères
+
+
+    //  CORRECTION: Utiliser les vraies méthodes de recherche avec critères
     const salonParams = {
       term: serviceTerm,
       ville: ville ?? undefined,
@@ -1241,7 +1185,7 @@ private construireCriteresTexte(criteres: any): string[] {
       heure: this.selectedTime || undefined,
       providerType: 'salon'
     };
-    
+
     const freelanceParams = {
       service: serviceTerm,
       ville: ville ?? undefined,
@@ -1252,40 +1196,35 @@ private construireCriteresTexte(criteres: any): string[] {
       soir: this.disponibleSoir || false,
       searchType: ville ? 'CITY_STRICT' : undefined
     };
-    
+
     // Rechercher les salons avec les critères complets
     this.salonService.searchSalons(salonParams).subscribe({
       next: (salonResults) => {
-        console.log('🏢 Résultats salons avec critères:', salonResults);
-        
+
         // Ensuite rechercher les freelances avec le bon endpoint
         const coords = this.extractCoordinates();
-        const freelanceObservable = (coords?.lat && coords?.lng && !this.locationInput?.trim()) 
+        const freelanceObservable = (coords?.lat && coords?.lng && !this.locationInput?.trim())
           ? this.salonService.searchFreelancesNearby(serviceTerm, coords.lat, coords.lng)
           : this.salonService.searchFreelances(freelanceParams);
-          
-        console.log('📍 Freelances via', coords?.lat && coords?.lng && !this.locationInput?.trim() ? '/nearby' : '/search');
-        
+
+
         freelanceObservable.subscribe({
           next: (freelanceResponse) => {
-            console.log('👤 Réponse freelances complète:', freelanceResponse);
-            
+
             // Extraire les freelances de la réponse
-            const freelanceResults = Array.isArray(freelanceResponse) ? freelanceResponse : 
+            const freelanceResults = Array.isArray(freelanceResponse) ? freelanceResponse :
                                    (freelanceResponse?.freelances || []);
-            
-            console.log('👤 Freelances extraits:', freelanceResults);
-            
+
+
             // Combiner les résultats avec types corrects
             const salonArray = Array.isArray(salonResults) ? salonResults.map((s: any) => ({...s, type: 'salon'})) : [];
             const freelanceArray = Array.isArray(freelanceResults) ? freelanceResults.map((f: any) => ({...f, type: 'freelance'})) : [];
             const combinedResults = [...salonArray, ...freelanceArray];
-            
-            console.log('🔄 Résultats combinés:', combinedResults.length);
+
             this.handleSearchSuccess(combinedResults, 'both');
           },
           error: (error) => {
-            console.error('❌ Erreur recherche freelances:', error);
+            console.error(' Erreur recherche freelances:', error);
             // Si freelances échouent, utiliser seulement les salons
             const salonArray = Array.isArray(salonResults) ? salonResults : [];
             this.handleSearchSuccess(salonArray, 'both');
@@ -1293,14 +1232,14 @@ private construireCriteresTexte(criteres: any): string[] {
         });
       },
       error: (error) => {
-        console.error('❌ Erreur recherche salons:', error);
+        console.error(' Erreur recherche salons:', error);
         this.handleSearchError(error);
       }
     });
   }
 
   /**
-   * ✅ AFFICHER RÉSUMÉ DE RECHERCHE FREELANCE
+   *  AFFICHER RÉSUMÉ DE RECHERCHE FREELANCE
    */
   private showFreelanceSearchSummary(response: any, searchCriteria: any): void {
     if (!response.criteria) return;
@@ -1332,7 +1271,6 @@ private construireCriteresTexte(criteres: any): string[] {
 
     if (appliedCriteria.length > 0) {
       const message = `Recherche: ${appliedCriteria.join(' • ')}`;
-      console.log('📊 Résumé recherche:', message);
 
       // Afficher un résumé discret après les résultats
       setTimeout(() => {
@@ -1345,28 +1283,28 @@ private construireCriteresTexte(criteres: any): string[] {
   }
 
   /**
-   * ✅ GESTION SUCCÈS RECHERCHE
+   *  GESTION SUCCÈS RECHERCHE
    */
   private handleSearchSuccess(results: any[], searchType: string): void {
-    console.log(`✅ Succès recherche ${searchType}:`, results);
 
-    // ✅ DÉDUPLICATION IMMÉDIATE par ID
+    //  DÉDUPLICATION IMMÉDIATE par ID
     const originalCount = results.length;
     const uniqueResults = results.filter((item, index, self) =>
       index === self.findIndex(t => t.id === item.id)
     );
 
     if (originalCount !== uniqueResults.length) {
-      console.warn(`🚨 DOUBLONS SUPPRIMÉS: ${originalCount - uniqueResults.length} doublons détectés`);
+      console.warn(` DOUBLONS SUPPRIMÉS: ${originalCount - uniqueResults.length} doublons détectés`);
       const duplicateIds = results.map(r => r.id).filter((id, i, arr) => arr.indexOf(id) !== i);
-      console.warn(`🔍 IDs dupliqués supprimés:`, [...new Set(duplicateIds)]);
+      console.warn(` IDs dupliqués supprimés:`, [...new Set(duplicateIds)]);
     }
 
     this.filteredSalons = this.processSalonData(uniqueResults);
-    // ✅ Mise à jour allProviders pour le template unifié - utiliser les données traitées
+
+    //  Initialiser la pagination avec infinite scroll
     this.allProviders = this.filteredSalons;
+    this.initializePaginatedResults(this.filteredSalons);
     this.isLoading = false;
-    console.log('🔄 isLoading défini à false, résultats:', this.filteredSalons.length, 'allProviders:', this.allProviders.length);
 
     // Générer un titre contextuel
     const typeLabel = searchType === 'salon' ? 'Salons' :
@@ -1385,15 +1323,15 @@ private construireCriteresTexte(criteres: any): string[] {
   }
 
   /**
-   * ✅ VALIDATION LOGIQUE MÉTIER - Géolocalisation vs Ville
+   *  VALIDATION LOGIQUE MÉTIER - Géolocalisation vs Ville
    */
   private validateLocationLogic(): boolean {
     // Cas problématique : Les deux sont présents
     if (this.userLocation && this.locationInput?.trim()) {
       this.snackBar.open(
-        '🏙️ Recherche par ville = résultats UNIQUEMENT dans cette ville. 📍 Géolocalisation = résultats par proximité partout. Choisissez un seul mode.',
+        ' Recherche par ville = résultats UNIQUEMENT dans cette ville.  Géolocalisation = résultats par proximité partout. Choisissez un seul mode.',
         'OK',
-        { 
+        {
           duration: 6000,
           panelClass: ['warning-snackbar']
         }
@@ -1404,15 +1342,15 @@ private construireCriteresTexte(criteres: any): string[] {
     // Validation du format ville (pas de coordonnées)
     if (this.locationInput?.trim() && this.locationInput.includes(',')) {
       const parts = this.locationInput.split(',');
-      const hasCoords = parts.length === 2 && 
-                       !isNaN(parseFloat(parts[0])) && 
+      const hasCoords = parts.length === 2 &&
+                       !isNaN(parseFloat(parts[0])) &&
                        !isNaN(parseFloat(parts[1]));
-      
+
       if (hasCoords) {
         this.snackBar.open(
           'Pour une recherche par coordonnées, utilisez la géolocalisation.',
           'OK',
-          { 
+          {
             duration: 4000,
             panelClass: ['info-snackbar']
           }
@@ -1425,10 +1363,10 @@ private construireCriteresTexte(criteres: any): string[] {
   }
 
   /**
-   * ✅ GESTION ERREUR RECHERCHE
+   *  GESTION ERREUR RECHERCHE
    */
   private handleSearchError(error: any): void {
-    console.error('❌ Erreur recherche:', error);
+    console.error(' Erreur recherche:', error);
 
     this.isLoading = false;
     this.filteredSalons = [];
@@ -1441,7 +1379,7 @@ private construireCriteresTexte(criteres: any): string[] {
   }
 
   /**
-   * ✅ VÉRIFIER CRITÈRES DE RECHERCHE VALIDES
+   *  VÉRIFIER CRITÈRES DE RECHERCHE VALIDES
    */
   private hasValidSearchCriteria(): boolean {
     return !!(
@@ -1457,7 +1395,7 @@ private construireCriteresTexte(criteres: any): string[] {
   }
 
   /**
-   * ✅ EXTRAIRE COORDONNÉES
+   *  EXTRAIRE COORDONNÉES
    */
   private extractCoordinates(): { lat: number; lng: number } | null {
     // Priorité 1: userLocation (format "lat,lng")
@@ -1465,7 +1403,6 @@ private construireCriteresTexte(criteres: any): string[] {
       try {
         const [lat, lng] = this.userLocation.split(',').map(s => parseFloat(s.trim()));
         if (!isNaN(lat) && !isNaN(lng)) {
-          console.log('✅ Coordonnées extraites de userLocation:', { lat, lng });
           return { lat, lng };
         }
       } catch (e) {
@@ -1478,7 +1415,6 @@ private construireCriteresTexte(criteres: any): string[] {
       try {
         const [lat, lng] = this.locationInput.split(',').map(s => parseFloat(s.trim()));
         if (!isNaN(lat) && !isNaN(lng)) {
-          console.log('✅ Coordonnées extraites de locationInput:', { lat, lng });
           return { lat, lng };
         }
       } catch (e) {
@@ -1486,12 +1422,11 @@ private construireCriteresTexte(criteres: any): string[] {
       }
     }
 
-    console.log('❌ Aucune coordonnée valide trouvée');
     return null;
   }
 
   /**
-   * ✅ GÉNÉRER MESSAGE DE SUCCÈS
+   *  GÉNÉRER MESSAGE DE SUCCÈS
    */
   private generateSuccessMessage(count: number, searchType: string): string {
     const critères = [];
@@ -1511,11 +1446,11 @@ private construireCriteresTexte(criteres: any): string[] {
   }
 
   // ===============================================
-  // ✅ MÉTHODES SPÉCIALISÉES FREELANCES MISES À JOUR
+  //  MÉTHODES SPÉCIALISÉES FREELANCES MISES À JOUR
   // ===============================================
 
   /**
-   * ✅ RECHERCHE FREELANCES AVEC CRITÈRES - MISE À JOUR
+   *  RECHERCHE FREELANCES AVEC CRITÈRES - MISE À JOUR
    */
   searchFreelancesWithCriteria(params: {
     query: string;
@@ -1524,7 +1459,6 @@ private construireCriteresTexte(criteres: any): string[] {
     disponibleWeekend?: boolean;
     disponibleSoir?: boolean;
   }): void {
-    console.log('🔄 searchFreelancesWithCriteria - Utilisation nouveaux endpoints');
 
     if (!params.query?.trim()) {
       this.snackBar.open('Veuillez entrer un terme de recherche', 'OK', { duration: 3000 });
@@ -1541,20 +1475,18 @@ private construireCriteresTexte(criteres: any): string[] {
 
     this.isLoading = true;
 
-    // ✅ UTILISER LA NOUVELLE MÉTHODE UNIFIÉE
+    //  UTILISER LA NOUVELLE MÉTHODE UNIFIÉE
     this.salonService.searchFreelances(searchCriteria).subscribe({
       next: (response) => {
-        console.log('👤 Réponse searchFreelancesWithCriteria:', response);
 
         const freelances = response.freelances || [];
         const total = response.total || 0;
 
-        console.log(`✅ ${total} freelances trouvés`);
 
         // Adapter le traitement selon le format attendu par handleSearchSuccess
         this.handleSearchSuccess(freelances, 'freelance');
 
-        // ✅ Afficher le message explicatif du backend
+        //  Afficher le message explicatif du backend
         if (response.matchReason) {
           this.snackBar.open(response.matchReason, 'OK', {
             duration: 5000,
@@ -1568,17 +1500,16 @@ private construireCriteresTexte(criteres: any): string[] {
         }
       },
       error: (error) => {
-        console.error('❌ Erreur searchFreelancesWithCriteria:', error);
+        console.error(' Erreur searchFreelancesWithCriteria:', error);
         this.handleSearchError(error);
       }
     });
   }
 
   /**
-   * 👤 RECHERCHE FREELANCES WEEKEND - MISE À JOUR
+   *  RECHERCHE FREELANCES WEEKEND - MISE À JOUR
    */
   searchFreelancesWithWeekendAvailability(): void {
-    console.log('👤 Recherche freelances disponibles weekend - nouveaux endpoints');
 
     if (!this.searchTerm?.trim()) {
       this.snackBar.open('Veuillez entrer un service recherché', 'OK', { duration: 3000 });
@@ -1595,10 +1526,9 @@ private construireCriteresTexte(criteres: any): string[] {
   }
 
   /**
-   * 👤 RECHERCHE FREELANCES EXPÉRIMENTÉS - MISE À JOUR
+   *  RECHERCHE FREELANCES EXPÉRIMENTÉS - MISE À JOUR
    */
   searchExperiencedFreelances(minYears: number = 3): void {
-    console.log(`👤 Recherche freelances ${minYears}+ ans expérience - nouveaux endpoints`);
 
     if (!this.searchTerm?.trim()) {
       this.snackBar.open('Veuillez entrer un service recherché', 'OK', { duration: 3000 });
@@ -1622,7 +1552,7 @@ private construireCriteresTexte(criteres: any): string[] {
   }
 
   /**
-   * 👤 TOGGLE RAPIDE WEEKEND - MISE À JOUR
+   *  TOGGLE RAPIDE WEEKEND - MISE À JOUR
    */
   toggleWeekendAvailability(): void {
     this.disponibleWeekend = !this.disponibleWeekend;
@@ -1640,7 +1570,7 @@ private construireCriteresTexte(criteres: any): string[] {
   }
 
   /**
-   * 👤 TOGGLE RAPIDE SOIRÉE - MISE À JOUR
+   *  TOGGLE RAPIDE SOIRÉE - MISE À JOUR
    */
   toggleEveningAvailability(): void {
     this.disponibleSoir = !this.disponibleSoir;
@@ -1658,17 +1588,16 @@ private construireCriteresTexte(criteres: any): string[] {
   }
 
   /**
-   * 👤 EFFACER CRITÈRES FREELANCES (ALIAS pour compatibilité)
+   *  EFFACER CRITÈRES FREELANCES (ALIAS pour compatibilité)
    */
   clearFreelanceCriteria(): void {
     this.clearOnlyFreelanceCriteria();
   }
 
   /**
-   * ✅ NOUVELLE MÉTHODE - Recherche freelance par ville rapide
+   *  NOUVELLE MÉTHODE - Recherche freelance par ville rapide
    */
   searchFreelancesByCity(ville: string): void {
-    console.log(`🏙️ Recherche freelance par ville: ${ville}`);
 
     if (!this.searchTerm?.trim()) {
       this.snackBar.open('Veuillez entrer un service recherché', 'OK', { duration: 3000 });
@@ -1677,23 +1606,21 @@ private construireCriteresTexte(criteres: any): string[] {
 
     this.isLoading = true;
 
-    // ✅ UTILISER LE NOUVEAU ENDPOINT CITY
+    //  UTILISER LE NOUVEAU ENDPOINT CITY
     this.salonService.searchFreelancesByCity(
       this.searchTerm.trim(),
       ville,
       this.budgetRange > 2000 ? this.budgetRange : undefined
     ).subscribe({
       next: (response) => {
-        console.log('🏙️ Réponse recherche par ville:', response);
 
         const freelances = response.freelances || [];
         const total = response.total || 0;
 
-        console.log(`✅ ${total} freelances trouvés à ${ville}`);
 
         this.handleSearchSuccess(freelances, 'freelance');
 
-        // ✅ Afficher le message explicatif du backend
+        //  Afficher le message explicatif du backend
         if (response.matchReason) {
           this.snackBar.open(response.matchReason, 'OK', {
             duration: 5000,
@@ -1708,17 +1635,16 @@ private construireCriteresTexte(criteres: any): string[] {
         });
       },
       error: (error) => {
-        console.error('❌ Erreur recherche par ville:', error);
+        console.error(' Erreur recherche par ville:', error);
         this.handleSearchError(error);
       }
     });
   }
 
   /**
-   * ✅ NOUVELLE MÉTHODE - Recherche freelance à proximité
+   *  NOUVELLE MÉTHODE - Recherche freelance à proximité
    */
   searchNearbyFreelances(): void {
-    console.log('📍 Recherche freelances à proximité');
 
     if (!this.searchTerm?.trim()) {
       this.snackBar.open('Veuillez entrer un service recherché', 'OK', { duration: 3000 });
@@ -1733,19 +1659,17 @@ private construireCriteresTexte(criteres: any): string[] {
 
     this.isLoading = true;
 
-    // ✅ UTILISER LE NOUVEAU ENDPOINT NEARBY
+    //  UTILISER LE NOUVEAU ENDPOINT NEARBY
     this.salonService.searchFreelancesNearby(this.searchTerm.trim(), coords.lat, coords.lng).subscribe({
       next: (response) => {
-        console.log('📍 Réponse recherche proximité:', response);
 
         const freelances = response.freelances || [];
         const total = response.total || 0;
 
-        console.log(`✅ ${total} freelances trouvés à proximité`);
 
         this.handleSearchSuccess(freelances, 'freelance');
 
-        // ✅ Afficher le message explicatif du backend
+        //  Afficher le message explicatif du backend
         if (response.matchReason) {
           this.snackBar.open(response.matchReason, 'OK', {
             duration: 5000,
@@ -1760,22 +1684,21 @@ private construireCriteresTexte(criteres: any): string[] {
         });
       },
       error: (error) => {
-        console.error('❌ Erreur recherche proximité:', error);
+        console.error(' Erreur recherche proximité:', error);
         this.handleSearchError(error);
       }
     });
   }
 
   // // ===============================================
-  // // ✅ MÉTHODES DE TEST RAPIDE
+  // //  MÉTHODES DE TEST RAPIDE
   // // ===============================================
 
   // /**
-  //  * 🧪 TEST RECHERCHE FREELANCE
+  //  *  TEST RECHERCHE FREELANCE
   //  */
   // testFreelanceSearch(): void {
-  //   console.log('🧪 Test recherche freelance');
-
+  //
   //   // Test rapide avec critères freelance
   //   this.searchTerm = 'Coiffure';
   //   this.selectedProviderType = 'freelance';
@@ -1785,11 +1708,10 @@ private construireCriteresTexte(criteres: any): string[] {
   // }
 
   // /**
-  //  * 🧪 TEST RECHERCHE COMBINÉE
+  //  *  TEST RECHERCHE COMBINÉE
   //  */
   // testCombinedSearch(): void {
-  //   console.log('🧪 Test recherche combinée');
-
+  //
   //   // Test rapide recherche combinée
   //   this.searchTerm = 'Maquillage';
   //   this.selectedProviderType = 'both';
@@ -1798,11 +1720,10 @@ private construireCriteresTexte(criteres: any): string[] {
   // }
 
   // /**
-  //  * 🧪 TEST NOUVEAUX ENDPOINTS
+  //  *  TEST NOUVEAUX ENDPOINTS
   //  */
   // testNewFreelanceEndpoints(): void {
-  //   console.log('🧪 Test nouveaux endpoints freelance');
-
+  //
   //   // Test 1: Recherche simple
   //   this.searchTerm = 'Coiffure';
   //   this.selectedProviderType = 'freelance';
@@ -1811,8 +1732,7 @@ private construireCriteresTexte(criteres: any): string[] {
 
   //   // Test 2: Recherche avec critères (après 3 secondes)
   //   setTimeout(() => {
-  //     console.log('🧪 Test avec critères avancés');
-  //     this.disponibleWeekend = true;
+  //  //     this.disponibleWeekend = true;
   //     this.disponibleSoir = true;
   //     this.budgetRange = 25000;
   //     this.performFreelanceSearch();
@@ -1820,8 +1740,7 @@ private construireCriteresTexte(criteres: any): string[] {
 
   //   // Test 3: Recherche géolocalisée (après 6 secondes)
   //   setTimeout(() => {
-  //     console.log('🧪 Test géolocalisé');
-  //     this.userLocation = '14.7167, -17.4677'; // Dakar
+  //  //     this.userLocation = '14.7167, -17.4677'; // Dakar
   //     this.searchNearbyFreelances();
   //   }, 6000);
   // }
@@ -1831,7 +1750,7 @@ private construireCriteresTexte(criteres: any): string[] {
   // ===============================================
 
   /**
-   * ✅ MÉTHODE AMÉLIORÉE - Recherche flexible avec interface existante
+   *  MÉTHODE AMÉLIORÉE - Recherche flexible avec interface existante
    */
   private buildFlexibleCriteriaFromUI(): FlexibleSearchCriteria {
     const criteria: FlexibleSearchCriteria = {
@@ -1889,7 +1808,7 @@ private construireCriteresTexte(criteres: any): string[] {
       criteria.activeCriteria.push('providerType');
     }
 
-    // ✅ CRITÈRES FREELANCES
+    //  CRITÈRES FREELANCES
     if (this.disponibleWeekend) {
       criteria.activeCriteria.push('disponibleWeekend');
     }
@@ -1989,7 +1908,6 @@ private construireCriteresTexte(criteres: any): string[] {
       }
     }
 
-    console.log('📋 Payload de recherche flexible:', searchPayload);
 
     this.salonService.searchSalons(searchPayload).subscribe({
       next: (data) => this.handleFlexibleSearchSuccess(data, criteria),
@@ -1998,7 +1916,6 @@ private construireCriteresTexte(criteres: any): string[] {
   }
 
   private handleFlexibleSearchSuccess(data: any[], criteria: FlexibleSearchCriteria): void {
-    console.log('✅ Résultats de recherche flexible:', data);
 
     this.filteredSalons = this.processSalonData(data);
     this.isLoading = false;
@@ -2019,7 +1936,7 @@ private construireCriteresTexte(criteres: any): string[] {
   }
 
   private handleFlexibleSearchError(error: any, criteria: FlexibleSearchCriteria): void {
-    console.error('❌ Erreur recherche flexible:', error);
+    console.error(' Erreur recherche flexible:', error);
     this.isLoading = false;
     this.filteredSalons = [];
 
@@ -2155,23 +2072,20 @@ private construireCriteresTexte(criteres: any): string[] {
   }
 
   private retryWithFewerCriteria(criteria: FlexibleSearchCriteria): void {
-    // ✅ LOGIQUE MÉTIER CORRIGÉE - Élargissement selon les priorités
-    
-    // 1️⃣ D'abord essayer d'élargir les critères temporels (date/heure)
+    //  LOGIQUE MÉTIER CORRIGÉE - Élargissement selon les priorités
+
+    // 1⃣ D'abord essayer d'élargir les critères temporels (date/heure)
     if (criteria.schedule?.hasSchedule) {
-      console.log('🕒 Élargissement: suppression des contraintes de planning');
       this.selectedDate = '';
       this.selectedTime = '';
-    } 
-    // 2️⃣ Ensuite le budget
+    }
+    // 2⃣ Ensuite le budget
     else if (criteria.budget?.hasBudget) {
-      console.log('💰 Élargissement: suppression des contraintes de budget');
       this.budgetRange = 2000; // Remettre par défaut
-    } 
-    // 3️⃣ JAMAIS SUPPRIMER LA VILLE - Elle reste toujours active si spécifiée
+    }
+    // 3⃣ JAMAIS SUPPRIMER LA VILLE - Elle reste toujours active si spécifiée
     // On pourrait élargir d'autres critères freelances si nécessaire
     else {
-      console.log('⚠️ Aucun critère supplémentaire à élargir - la ville reste stricte');
       this.snackBar.open(
         'Aucun résultat même après élargissement. La ville spécifiée est maintenue.',
         'OK',
@@ -2277,7 +2191,7 @@ private construireCriteresTexte(criteres: any): string[] {
     this.uploadedPhotoPreview = null;
     this.searchTerm = '';
 
-    // ✅ EFFACER CRITÈRES FREELANCES
+    //  EFFACER CRITÈRES FREELANCES
     this.clearFreelanceCriteria();
 
     // Réinitialiser les compteurs internes
@@ -2418,19 +2332,18 @@ private construireCriteresTexte(criteres: any): string[] {
   }
 
   // ===============================================
-  // ✅ MÉTHODES DE TRAITEMENT DES DONNÉES AMÉLIORÉES
+  //  MÉTHODES DE TRAITEMENT DES DONNÉES AMÉLIORÉES
   // ===============================================
 
   private processSalonData(data: any[]): EnhancedProviderData[] {
-    console.log('🔄 processSalonData - données reçues:', data);
 
-    // ✅ PROTECTION: S'assurer que data est un tableau
+    //  PROTECTION: S'assurer que data est un tableau
     if (!Array.isArray(data)) {
-      console.warn('⚠️ processSalonData: data n\'est pas un tableau:', data);
+      console.warn(' processSalonData: data n\'est pas un tableau:', data);
       return [];
     }
 
-    // ✅ CORRECTION: Extraire les salons/freelances de la structure wrapper
+    //  CORRECTION: Extraire les salons/freelances de la structure wrapper
     const extractedData = data.map(item => {
       // Si l'item a une propriété salon/freelance, l'extraire
       if (item.salon) {
@@ -2443,67 +2356,60 @@ private construireCriteresTexte(criteres: any): string[] {
       return item;
     });
 
-    console.log('🔄 Données extraites:', extractedData);
 
-    // ✅ Déduplication par ID pour éviter les doublons
+    //  Déduplication par ID pour éviter les doublons
     const uniqueData = extractedData.filter((item, index, self) =>
       index === self.findIndex(t => t.id === item.id)
     );
 
     if (uniqueData.length !== data.length) {
-      console.log(`🚫 Doublons supprimés: ${data.length - uniqueData.length} éléments`);
-      console.log('🔄 IDs dupliqués détectés:', data.map(item => item.id).filter((id, index, self) => self.indexOf(id) !== index));
     }
 
     return uniqueData.map((item, index) => {
-      console.log(`📊 Traitement provider ${index + 1}:`, item);
 
       // Gestion améliorée des images avec toutes les variantes possibles
       let imageUrl = this.getValidImageUrl(item);
-      console.log(`🖼️ Image URL finale pour ${item.nom || item.name}: ${imageUrl}`);
 
       // Traitement complet des services
       const services = this.parseServices(item);
-      console.log(`🛎️ Services pour ${item.nom || item.name}:`, services);
 
       const processedProvider: EnhancedProviderData = {
         id: item.id,
         nom: item.nom || item.name || `Provider ${item.id}`,
-        prenom: item.prenom || item.firstName || item.first_name,  // ✅ Prénom
+        prenom: item.prenom || item.firstName || item.first_name,  //  Prénom
         imageUrl: imageUrl,
         adresse: item.adresse || item.address || 'Adresse non disponible',
-        ville: item.ville || item.city || item.location,  // ✅ Ville
+        ville: item.ville || item.city || item.location,  //  Ville
         rating: this.parseRating(item.rating || item.note || item.noteMoyenne || item.evaluation),
-        reviewCount: this.parseReviewCount(item.reviewCount || item.nombreAvis || item.nbAvis),
+        reviewCount: this.parseReviewCount(item.reviewCount || item.nombreAvis || item.nbAvis || item.reviews || item.totalAvis),
         services: services,
-        specialite: item.specialite || item.specialty || item.profession || services[0],  // ✅ Spécialité
-        competences: item.competences || item.skills || item.competencies,  // ✅ Compétences
+        specialite: item.specialite || item.specialty || item.profession || services[0],  //  Spécialité
+        competences: item.competences || item.skills || item.competencies,  //  Compétences
         priceRange: item.priceRange || item.gammeDePrice || item.prixMoyens || 'Prix non défini',
         type: item.type || this.determineProviderType(item),
         experience: item.experience || item.anneesExperience,
-        anneesExperience: item.anneesExperience || item.experience || item.yearsOfExperience,  // ✅ Années d'expérience
+        anneesExperience: item.anneesExperience || item.experience || item.yearsOfExperience,  //  Années d'expérience
         availability: item.availability || item.disponibilite || this.formatAvailability(item),
         description: item.description || item.bio || item.presentation,
         telephone: item.telephone || item.phone,
         email: item.email,
         website: item.website || item.siteWeb,
         horaires: item.horaires || item.openingHours,
-        profession: item.profession || item.job || item.metier,  // ✅ Profession
-        // ✅ PROPRIÉTÉS SPÉCIFIQUES FREELANCES
+        profession: item.profession || item.job || item.metier,  //  Profession
+        //  PROPRIÉTÉS SPÉCIFIQUES FREELANCES
         disponibleWeekend: item.disponibleWeekend || item.aUnServiceDisponibleWeekend,
         disponibleSoir: item.disponibleSoir || item.aUnServiceDisponibleSoir,
         deplacementInclus: item.deplacementInclus || item.proposeDeplacementInclus,
-        // ✅ DISTANCE GÉOLOCALISÉE
+        //  DISTANCE GÉOLOCALISÉE
         distanceKm: item.distanceKm || item.distance || item.calculatedDistance
       };
 
-      console.log(`✅ Provider traité:`, processedProvider);
       return processedProvider;
     });
   }
 
   /**
-   * ✅ NOUVELLE MÉTHODE : Déterminer automatiquement le type de provider
+   *  NOUVELLE MÉTHODE : Déterminer automatiquement le type de provider
    */
   private determineProviderType(item: any): 'salon' | 'freelance' {
     // Indicateurs salon
@@ -2521,7 +2427,7 @@ private construireCriteresTexte(criteres: any): string[] {
   }
 
   /**
-   * ✅ NOUVELLE MÉTHODE : Formatage de la disponibilité
+   *  NOUVELLE MÉTHODE : Formatage de la disponibilité
    */
   private formatAvailability(item: any): string {
     const parts: string[] = [];
@@ -2537,22 +2443,9 @@ private construireCriteresTexte(criteres: any): string[] {
   }
 
   /**
-   * ✅ MÉTHODE AMÉLIORÉE : Récupération d'URL d'image selon le type
+   *  MÉTHODE AMÉLIORÉE : Récupération d'URL d'image selon le type
    */
   private getValidImageUrl(item: any): string {
-    console.log('🔍 getValidImageUrl pour item:', {
-      id: item.id,
-      nom: item.nom || item.name,
-      type: item.type,
-      imageUrl: item.imageUrl,
-      photo: item.photo,
-      photoProfil: item.photoProfil,
-      photoProfilUrl: item.photoProfilUrl,
-      image: item.image,
-      avatar: item.avatar,
-      picture: item.picture,
-      url: item.url
-    });
 
     // Ordre de priorité pour les champs d'image
     const imageFields = [
@@ -2570,7 +2463,6 @@ private construireCriteresTexte(criteres: any): string[] {
       const imageValue = item[field];
       if (imageValue && typeof imageValue === 'string' && imageValue.trim()) {
         let processedUrl = this.processImageUrl(imageValue.trim());
-        console.log(`✅ Image trouvée dans champ '${field}': ${processedUrl}`);
         return processedUrl;
       }
     }
@@ -2580,23 +2472,21 @@ private construireCriteresTexte(criteres: any): string[] {
       const firstPhoto = item.photos[0];
       if (firstPhoto && firstPhoto.url) {
         const processedUrl = this.processImageUrl(firstPhoto.url);
-        console.log(`✅ Image trouvée dans photos[0]: ${processedUrl}`);
         return processedUrl;
       }
     }
 
-    // ✅ IMAGE PAR DÉFAUT SELON LE TYPE
+    //  IMAGE PAR DÉFAUT SELON LE TYPE
     const providerType = item.type || this.determineProviderType(item);
     const defaultImage = providerType === 'freelance'
       ? 'assets/images/freelance-default.jpg'
       : 'assets/images/salon-default.jpg';
 
-    console.log(`⚠️ Aucune image trouvée, utilisation par défaut: ${defaultImage}`);
     return defaultImage;
   }
 
   /**
-   * ✅ Méthode publique pour l'accès depuis le template
+   *  Méthode publique pour l'accès depuis le template
    */
   public getImageUrl = (imageUrl: string | undefined): string => {
     if (!imageUrl) {
@@ -2606,54 +2496,41 @@ private construireCriteresTexte(criteres: any): string[] {
   }
 
   private processImageUrl(imageUrl: string): string {
-    console.log('🔧 processImageUrl input:', imageUrl);
 
     // Si c'est déjà une URL complète, la retourner
     if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-      console.log('✅ URL complète détectée');
       return imageUrl;
     }
 
     // Si c'est un chemin relatif commençant par /uploads
     if (imageUrl.startsWith('/uploads/')) {
       const fullUrl = `http://localhost:8081${imageUrl}`;
-      console.log('✅ Chemin /uploads/ détecté, construction:', fullUrl);
       return fullUrl;
     }
 
     // Si c'est juste un nom de fichier, construire l'URL complète
     if (!imageUrl.startsWith('/') && !imageUrl.includes('/')) {
       const fullUrl = `http://localhost:8081/uploads/${imageUrl}`;
-      console.log('✅ Nom de fichier détecté, construction:', fullUrl);
       return fullUrl;
     }
 
     // Si c'est un chemin assets, le retourner tel quel
     if (imageUrl.startsWith('/assets/') || imageUrl.startsWith('assets/')) {
-      console.log('✅ Chemin assets détecté');
       return imageUrl;
     }
 
     // Si c'est un chemin qui commence par /api, construire l'URL complète
     if (imageUrl.startsWith('/api/')) {
       const fullUrl = `http://localhost:8081${imageUrl}`;
-      console.log('✅ Chemin /api/ détecté, construction:', fullUrl);
       return fullUrl;
     }
 
     // Par défaut, essayer de construire l'URL
     const fallbackUrl = `http://localhost:8081/uploads/${imageUrl}`;
-    console.log('⚠️ Format non reconnu, tentative fallback:', fallbackUrl);
     return fallbackUrl;
   }
 
   private parseServices(item: any): string[] {
-    console.log('🛎️ parseServices pour item:', {
-      services: item.services,
-      serviceOfferts: item.serviceOfferts,
-      servicesOfferts: item.servicesOfferts,
-      serviceNoms: item.serviceNoms
-    });
 
     let services: string[] = [];
 
@@ -2678,7 +2555,6 @@ private construireCriteresTexte(criteres: any): string[] {
       .map(service => service.trim())
       .slice(0, 5); // Limiter à 5 services max pour l'affichage
 
-    console.log('✅ Services nettoyés:', cleanedServices);
     return cleanedServices;
   }
 
@@ -2702,17 +2578,16 @@ private construireCriteresTexte(criteres: any): string[] {
   }
 
   /**
-   * ✅ MÉTHODE AMÉLIORÉE : Gestionnaires d'erreur d'image pour les deux types
+   *  MÉTHODE AMÉLIORÉE : Gestionnaires d'erreur d'image pour les deux types
    */
   onImageError(event: any, provider: EnhancedProviderData): void {
-    console.warn(`❌ Erreur chargement image pour ${provider.type} ${provider.nom}:`, event.target.src);
+    console.warn(` Erreur chargement image pour ${provider.type} ${provider.nom}:`, event.target.src);
 
     // Éviter les boucles infinies
     if (event.target.dataset.retryCount) {
       const retryCount = parseInt(event.target.dataset.retryCount);
       if (retryCount >= 3) {
-        // console.log('🛑 Nombre max de tentatives atteint, création placeholder');
-        // this.createImagePlaceholder(event.target, provider);
+        //        // this.createImagePlaceholder(event.target, provider);
         return;
       }
       event.target.dataset.retryCount = (retryCount + 1).toString();
@@ -2720,7 +2595,7 @@ private construireCriteresTexte(criteres: any): string[] {
       event.target.dataset.retryCount = '1';
     }
 
-    // ✅ IMAGES DE FALLBACK SELON LE TYPE
+    //  IMAGES DE FALLBACK SELON LE TYPE
     const fallbackImages = provider.type === 'freelance'
       ? [
           'assets/images/freelance-default.jpg',
@@ -2735,7 +2610,6 @@ private construireCriteresTexte(criteres: any): string[] {
 
     const currentRetry = parseInt(event.target.dataset.retryCount) - 1;
     if (currentRetry < fallbackImages.length) {
-      console.log(`🔄 Tentative ${currentRetry + 1} avec: ${fallbackImages[currentRetry]}`);
       event.target.src = fallbackImages[currentRetry];
     } else {
       this.createImagePlaceholder(event.target, provider);
@@ -2743,7 +2617,6 @@ private construireCriteresTexte(criteres: any): string[] {
   }
 
   onImageLoad(event: any, provider: EnhancedProviderData): void {
-    console.log(`✅ Image chargée avec succès pour ${provider.nom}`);
     event.target.style.opacity = '1';
     event.target.classList.add('loaded');
 
@@ -2765,7 +2638,7 @@ private construireCriteresTexte(criteres: any): string[] {
     const placeholder = document.createElement('div');
     placeholder.className = 'image-placeholder';
 
-    // ✅ COULEURS SELON LE TYPE
+    //  COULEURS SELON LE TYPE
     const gradients = {
       salon: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
       freelance: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
@@ -2838,7 +2711,7 @@ private construireCriteresTexte(criteres: any): string[] {
     };
     reader.readAsDataURL(file);
 
-    // ✅ NOUVEAU : Lancer l'analyse automatique de la coiffure
+    //  NOUVEAU : Lancer l'analyse automatique de la coiffure
     this.analyzeHairstyleFromPhoto(file);
   } else {
     this.snackBar.open('Veuillez sélectionner une image valide (max 5MB)', 'Fermer', {
@@ -2847,16 +2720,15 @@ private construireCriteresTexte(criteres: any): string[] {
   }
 }
 /**
- * ✅ NOUVELLE MÉTHODE : Analyser la coiffure depuis une photo
+ *  NOUVELLE MÉTHODE : Analyser la coiffure depuis une photo
  */
 private analyzeHairstyleFromPhoto(photoFile: File): void {
-  console.log('🎯 Analyse de coiffure démarrée pour:', photoFile.name);
-  
+
   // Réinitialiser l'état
   this.isAnalyzingPhoto = true;
   this.detectedHairstyles = [];
   this.photoAnalysisError = null;
-  
+
   // Notification à l'utilisateur
   this.snackBar.open('Analyse IA en cours...', '', {
     duration: 2000,
@@ -2866,14 +2738,13 @@ private analyzeHairstyleFromPhoto(photoFile: File): void {
   // Appel du service
   this.hairstyleService.generateHairstyles(photoFile).subscribe({
     next: (response: HairstyleResponse) => {
-      console.log('✅ Réponse analyse coiffure:', response);
-      
+
       if (response.success && response.hairstyleNames.length > 0) {
         this.detectedHairstyles = response.hairstyleNames;
-        
-        // ✅ RECHERCHE AUTOMATIQUE - Pas de bouton intermédiaire
+
+        //  RECHERCHE AUTOMATIQUE - Pas de bouton intermédiaire
         this.searchProfessionalsFromDetectedHairstyles();
-        
+
       } else {
         // Aucune coiffure détectée
         this.isAnalyzingPhoto = false;
@@ -2884,16 +2755,16 @@ private analyzeHairstyleFromPhoto(photoFile: File): void {
         });
       }
     },
-    
+
     error: (error: Error) => {
-      console.error('❌ Erreur analyse coiffure:', error);
-      
+      console.error(' Erreur analyse coiffure:', error);
+
       this.isAnalyzingPhoto = false;
       this.photoAnalysisError = error.message;
-      
+
       this.snackBar.open(
-        'Erreur lors de l\'analyse. Réessayez ou utilisez la recherche textuelle.', 
-        'OK', 
+        'Erreur lors de l\'analyse. Réessayez ou utilisez la recherche textuelle.',
+        'OK',
         {
           duration: 5000,
           panelClass: ['error-snackbar']
@@ -2903,34 +2774,32 @@ private analyzeHairstyleFromPhoto(photoFile: File): void {
   });
 }
 /**
- * ✅ NOUVELLE MÉTHODE : Rechercher des professionnels basé sur les coiffures détectées
+ *  NOUVELLE MÉTHODE : Rechercher des professionnels basé sur les coiffures détectées
  */
 private searchProfessionalsFromDetectedHairstyles(): void {
   if (this.detectedHairstyles.length === 0) return;
-  
-  console.log('🔍 Recherche automatique pour coiffures détectées:', this.detectedHairstyles);
-  
-  // ✅ NOUVEAU: Extraire tous les noms de coiffures propres
+
+
+  //  NOUVEAU: Extraire tous les noms de coiffures propres
   const cleanHairstyleNames = this.detectedHairstyles.map(raw => this.extractHairstyleName(raw));
-  console.log('🧹 Noms extraits:', cleanHairstyleNames);
-  
+
   // Mettre à jour l'interface avec le premier nom
   this.searchTerm = cleanHairstyleNames[0];
   this.searchMode = 'photo';
-  
-  // ✅ NOUVELLE LOGIQUE: Recherche multi-services selon le type sélectionné
+
+  //  NOUVELLE LOGIQUE: Recherche multi-services selon le type sélectionné
   this.performMultiServiceSearch(cleanHairstyleNames);
-  
-  // ✅ Arrêter l'indicateur de chargement maintenant
+
+  //  Arrêter l'indicateur de chargement maintenant
   this.isAnalyzingPhoto = false;
-  
+
   // Message informatif avec tous les noms
   const servicesList = cleanHairstyleNames.slice(0, 3).join(', ');
   const moreText = cleanHairstyleNames.length > 3 ? ` +${cleanHairstyleNames.length - 3} autres` : '';
-  
+
   this.snackBar.open(
-    `Recherche pour: ${servicesList}${moreText}`, 
-    '', 
+    `Recherche pour: ${servicesList}${moreText}`,
+    '',
     {
       duration: 4000,
       panelClass: ['info-snackbar']
@@ -2938,13 +2807,12 @@ private searchProfessionalsFromDetectedHairstyles(): void {
   );
 }
 /**
- * ✅ NOUVELLE MÉTHODE: Recherche multi-services selon le type sélectionné
+ *  NOUVELLE MÉTHODE: Recherche multi-services selon le type sélectionné
  */
 private performMultiServiceSearch(hairstyleNames: string[]): void {
-  console.log(`🎯 Recherche multi-services (${this.selectedProviderType}):`, hairstyleNames);
-  
+
   this.isLoading = true;
-  
+
   if (this.selectedProviderType === 'salon') {
     this.searchSalonsForMultipleServices(hairstyleNames);
   } else if (this.selectedProviderType === 'freelance') {
@@ -2956,83 +2824,171 @@ private performMultiServiceSearch(hairstyleNames: string[]): void {
 }
 
 /**
- * ✅ Recherche salons pour plusieurs services
+ * Recherche salons pour plusieurs services - 5 recherches parallèles
  */
 private searchSalonsForMultipleServices(services: string[]): void {
-  console.log('🏪 Recherche salons multi-services:', services);
-  
-  // Utiliser le premier service comme terme principal et les autres comme critères
-  const mainService = services[0];
-  const searchParams = {
-    term: mainService,
-    ville: this.locationInput || undefined,
-    budget: this.budgetRange > 2000 ? this.budgetRange : undefined,
-    datetime: this.selectedDate && this.selectedTime ? `${this.selectedDate}T${this.selectedTime}:00` : undefined,
-    providerType: 'salon',
-    additionalServices: services.slice(1) // Services supplémentaires
-  };
-  
-  this.salonService.searchSalons(searchParams).subscribe({
-    next: (response) => {
-      console.log('🏪 Réponse salons multi-services brute:', response);
-      
-      // Extraire les résultats selon le format de réponse
-      const results = Array.isArray(response) ? response : ((response as any)?.salons || (response as any)?.results || []);
-      console.log(`✅ ${results.length} salons trouvés pour services multiples`);
-      
-      this.filteredSalons = this.processSalonData(results);
+
+  // Créer 5 observables pour les 5 services
+  const searchObservables = services.map((service, index) => {
+
+    const searchParams = {
+      term: service,
+      ville: this.locationInput || undefined,
+      budget: this.budgetRange > 2000 ? this.budgetRange : undefined,
+      datetime: this.selectedDate && this.selectedTime ? `${this.selectedDate}T${this.selectedTime}:00` : undefined,
+      providerType: 'salon'
+      // Pas d'additionalServices car chaque recherche est indépendante
+    };
+
+    return this.salonService.searchSalons(searchParams).pipe(
+      catchError((error: any) => {
+        console.error(`Erreur recherche salon "${service}":`, error);
+        return of({ salons: [], total: 0, error: true });
+      })
+    );
+  });
+
+  // Exécuter toutes les recherches en parallèle
+
+  forkJoin(searchObservables).subscribe({
+    next: (responses) => {
+
+      // Fusionner tous les résultats
+      let allSalons: any[] = [];
+      let totalResults = 0;
+
+      responses.forEach((response: any, index) => {
+        const serviceName = services[index];
+        const salons = response.salons || response.results || response.data || response || [];
+
+        if (Array.isArray(salons) && salons.length > 0) {
+
+          // Ajouter une indication de quel service a trouvé ce salon
+          const salonsWithMetadata = salons.map((salon: any) => ({
+            ...salon,
+            type: 'salon',
+            foundByService: serviceName,
+            searchIndex: index
+          }));
+
+          allSalons = allSalons.concat(salonsWithMetadata);
+          totalResults += salons.length;
+        } else {
+        }
+      });
+
+      // Supprimer les doublons basés sur l'ID
+      const uniqueSalons = allSalons.filter((salon, index, array) => {
+        return array.findIndex(s => s.id === salon.id) === index;
+      });
+
+
+      // Trier par score/pertinence si disponible
+      uniqueSalons.sort((a, b) => {
+        const scoreA = a.score || a.averageRating || 0;
+        const scoreB = b.score || b.averageRating || 0;
+        return scoreB - scoreA;
+      });
+
+      this.filteredSalons = this.processSalonData(uniqueSalons);
+
+      //  Initialiser la pagination avec infinite scroll
       this.allProviders = this.filteredSalons;
+      this.initializePaginatedResults(this.filteredSalons);
       this.isLoading = false;
-      this.selectedService = `Salons - ${services.slice(0, 2).join(', ')}${services.length > 2 ? '...' : ''}`;
+      this.selectedService = `Salons - ${services.slice(0, 2).join(', ')}${services.length > 2 ? '...' : ''} (${uniqueSalons.length} trouvés)`;
     },
     error: (error) => {
-      console.error('❌ Erreur recherche salons multi-services:', error);
+      console.error('Erreur lors des recherches parallèles salons:', error);
       this.handleSearchError(error);
     }
   });
 }
 
 /**
- * ✅ Recherche freelances pour plusieurs services
+ * Recherche freelances pour plusieurs services - 5 recherches parallèles
  */
 private searchFreelancesForMultipleServices(services: string[]): void {
-  console.log('👤 Recherche freelances multi-services:', services);
-  
-  // Construire les critères avec le premier service
-  const criteres = this.construireTousLesCriteres();
-  criteres.service = services[0];
-  criteres.additionalServices = services.slice(1);
-  
-  // Utiliser la logique géolocalisée existante
-  const observable = (criteres.searchType === 'GEOLOCATION' && criteres.lat && criteres.lng) 
-    ? this.salonService.searchFreelancesNearby(criteres.service, criteres.lat, criteres.lng)
-    : this.salonService.searchFreelances(criteres);
-    
-  observable.subscribe({
-    next: (response) => {
-      console.log('✅ Réponse freelances multi-services:', response);
-      const freelances = response.freelances || response.data || response || [];
-      const freelancesWithType = freelances.map((item: any) => ({...item, type: 'freelance'}));
-      
-      this.handleSearchSuccess(freelancesWithType, 'freelance');
-      this.selectedService = `Freelances - ${services.slice(0, 2).join(', ')}${services.length > 2 ? '...' : ''}`;
+
+  // Créer 5 observables pour les 5 services
+  const searchObservables = services.map((service, index) => {
+
+    const criteres = this.construireTousLesCriteres();
+    criteres.service = service;
+    // Pas d'additionalServices car chaque recherche est indépendante
+
+    const observable = (criteres.searchType === 'GEOLOCATION' && criteres.lat && criteres.lng)
+      ? this.salonService.searchFreelancesNearby(criteres.service, criteres.lat, criteres.lng)
+      : this.salonService.searchFreelances(criteres);
+
+    return observable.pipe(
+      catchError((error: any) => {
+        console.error(`Erreur recherche "${service}":`, error);
+        return of({ freelances: [], total: 0, error: true });
+      })
+    );
+  });
+
+  // Exécuter toutes les recherches en parallèle
+
+  forkJoin(searchObservables).subscribe({
+    next: (responses) => {
+
+      // Fusionner tous les résultats
+      let allFreelances: any[] = [];
+      let totalResults = 0;
+
+      responses.forEach((response: any, index) => {
+        const serviceName = services[index];
+        const freelances = response.freelances || response.data || response || [];
+
+        if (Array.isArray(freelances) && freelances.length > 0) {
+
+          // Ajouter une indication de quel service a trouvé ce freelance
+          const freelancesWithMetadata = freelances.map((freelance: any) => ({
+            ...freelance,
+            type: 'freelance',
+            foundByService: serviceName,
+            searchIndex: index
+          }));
+
+          allFreelances = allFreelances.concat(freelancesWithMetadata);
+          totalResults += freelances.length;
+        } else {
+        }
+      });
+
+      // Supprimer les doublons basés sur l'ID
+      const uniqueFreelances = allFreelances.filter((freelance, index, array) => {
+        return array.findIndex(f => f.id === freelance.id) === index;
+      });
+
+
+      // Trier par score/pertinence si disponible
+      uniqueFreelances.sort((a, b) => {
+        const scoreA = a.score || a.averageRating || 0;
+        const scoreB = b.score || b.averageRating || 0;
+        return scoreB - scoreA;
+      });
+
+      this.handleSearchSuccess(uniqueFreelances, 'freelance');
+      this.selectedService = `Freelances - ${services.slice(0, 2).join(', ')}${services.length > 2 ? '...' : ''} (${uniqueFreelances.length} trouvés)`;
     },
     error: (error) => {
-      console.error('❌ Erreur recherche freelances multi-services:', error);
+      console.error('Erreur lors des recherches parallèles:', error);
       this.handleSearchError(error);
     }
   });
 }
 
 /**
- * ✅ Recherche combinée pour plusieurs services
+ *  Recherche combinée pour plusieurs services
  */
 private searchBothForMultipleServices(services: string[]): void {
-  console.log('🔄 Recherche combinée multi-services:', services);
-  
+
   // Faire les deux recherches en parallèle
   const mainService = services[0];
-  
+
   // Paramètres salons
   const salonParams = {
     term: mainService,
@@ -3042,80 +2998,79 @@ private searchBothForMultipleServices(services: string[]): void {
     providerType: 'salon',
     additionalServices: services.slice(1)
   };
-  
+
   // Paramètres freelances
   const criteres = this.construireTousLesCriteres();
   criteres.service = mainService;
   criteres.additionalServices = services.slice(1);
-  
+
   this.salonService.searchSalons(salonParams).subscribe({
     next: (salonResponse) => {
-      console.log('🏢 Réponse salons multi-services brute:', salonResponse);
-      
+
       // Extraire les salons selon le format de réponse
       const salonResults = Array.isArray(salonResponse) ? salonResponse : ((salonResponse as any)?.salons || (salonResponse as any)?.results || []);
-      
+
       // Recherche freelances
       const coords = this.extractCoordinates();
-      const freelanceObservable = (coords?.lat && coords?.lng && !this.locationInput?.trim()) 
+      const freelanceObservable = (coords?.lat && coords?.lng && !this.locationInput?.trim())
         ? this.salonService.searchFreelancesNearby(mainService, coords.lat, coords.lng)
         : this.salonService.searchFreelances(criteres);
-        
+
       freelanceObservable.subscribe({
         next: (freelanceResponse) => {
           const freelanceResults = Array.isArray(freelanceResponse) ? freelanceResponse : (freelanceResponse?.freelances || []);
-          
+
           // Combiner avec types corrects
           const salonArray = Array.isArray(salonResults) ? salonResults.map((s: any) => ({...s, type: 'salon'})) : [];
           const freelanceArray = Array.isArray(freelanceResults) ? freelanceResults.map((f: any) => ({...f, type: 'freelance'})) : [];
           const combinedResults = [...salonArray, ...freelanceArray];
-          
-          console.log(`🔄 Résultats combinés multi-services: ${combinedResults.length}`);
+
           this.handleSearchSuccess(combinedResults, 'both');
           this.selectedService = `Tous - ${services.slice(0, 2).join(', ')}${services.length > 2 ? '...' : ''}`;
         },
         error: (error) => {
-          console.error('❌ Erreur freelances multi-services:', error);
+          console.error(' Erreur freelances multi-services:', error);
           const salonArray = Array.isArray(salonResults) ? salonResults.map((s: any) => ({...s, type: 'salon'})) : [];
           this.handleSearchSuccess(salonArray, 'both');
         }
       });
     },
     error: (error) => {
-      console.error('❌ Erreur salons multi-services:', error);
+      console.error(' Erreur salons multi-services:', error);
       this.handleSearchError(error);
     }
   });
 }
 
 /**
- * ✅ Extraire le nom propre de la coiffure depuis la description IA
+ *
+ *  Extraire le nom propre de la coiffure depuis la description IA
  */
 private extractHairstyleName(fullDescription: string): string {
   if (!fullDescription) return '';
-  
+
   // Pattern pour extraire le nom entre ** ou au début
   const patterns = [
     /\*\*(.*?)\*\*/,  // Entre **nom**
     /^([^(]+)/,       // Jusqu'à la première parenthèse
     /^([^/]+)/        // Jusqu'au premier slash
   ];
-  
+
   for (const pattern of patterns) {
     const match = fullDescription.match(pattern);
     if (match && match[1]) {
       return match[1].trim();
     }
   }
-  
+
   // Fallback: prendre les premiers mots
   const words = fullDescription.split(' ');
   return words.slice(0, 3).join(' ').replace(/[*()]/g, '').trim();
 }
 
 /**
- * ✅ Réessayer l'analyse photo
- */ 
+ *  Réessayer l'analyse photo
+ */
 retryPhotoAnalysis(): void {
   if (this.uploadedPhoto) {
     this.photoAnalysisError = null;
@@ -3127,7 +3082,7 @@ retryPhotoAnalysis(): void {
     event.preventDefault();
     event.stopPropagation();
   }
-  
+
   // Nettoyer tout
   this.uploadedPhoto = null;
   this.uploadedPhotoPreview = null;
@@ -3153,7 +3108,7 @@ retryPhotoAnalysis(): void {
         location: this.userLocation || this.locationInput,
         providerType: this.selectedProviderType,
         searchMode: this.searchMode,
-        // ✅ SAUVEGARDER CRITÈRES FREELANCES
+        //  SAUVEGARDER CRITÈRES FREELANCES
         disponibleWeekend: this.disponibleWeekend,
         disponibleSoir: this.disponibleSoir,
         experienceMin: this.experienceMin,
@@ -3177,7 +3132,7 @@ retryPhotoAnalysis(): void {
         this.selectedProviderType = params.providerType || 'salon';
         this.searchMode = params.searchMode || 'location';
 
-        // ✅ RESTAURER CRITÈRES FREELANCES
+        //  RESTAURER CRITÈRES FREELANCES
         this.disponibleWeekend = params.disponibleWeekend;
         this.disponibleSoir = params.disponibleSoir;
         this.experienceMin = params.experienceMin;
@@ -3240,13 +3195,7 @@ retryPhotoAnalysis(): void {
   openLoginModal() {
     if (!this.isBrowser) return;
 
-    // console.log('openLoginModal called - using AuthUIService');
-    // console.log('Before triggering - current state:', {
-    //   showLoginModal: this.showLoginModal,
-    //   isPageLoading: this.isPageLoading,
-    //   authUIService: this.authUIService.getDebugInfo()
-    // });
-
+    //    //
     if (this.isMobileMenuOpen) {
       this.toggleMobileMenu();
     }
@@ -3256,14 +3205,12 @@ retryPhotoAnalysis(): void {
   }
 
   closeLoginModal() {
-    console.log('closeLoginModal called - using AuthUIService');
     this.authUIService.closeModals();
   }
 
   openRegisterModal() {
     if (!this.isBrowser) return;
 
-    console.log('openRegisterModal called - using AuthUIService');
 
     if (this.isMobileMenuOpen) {
       this.toggleMobileMenu();
@@ -3274,14 +3221,12 @@ retryPhotoAnalysis(): void {
   }
 
   closeRegisterModal() {
-    console.log('closeRegisterModal called - using AuthUIService');
     this.authUIService.closeModals();
   }
 
   login(): void {
     if (!this.isBrowser) return;
 
-    console.log('login method called');
 
     if (this.isMobileMenuOpen) {
       this.toggleMobileMenu();
@@ -3291,14 +3236,25 @@ retryPhotoAnalysis(): void {
   }
 
   switchToRegister(): void {
-    console.log('switchToRegister called');
     this.authUIService.switchToRegister();
   }
 
   switchToLogin(): void {
-    console.log('switchToLogin called');
     this.authUIService.switchToLogin();
   }
+
+  readonly scrollToOffres = (): void => {
+    if (!this.isBrowser) return;
+    const scrollToSection = () => {
+      const section = document.getElementById('offres-section');
+      if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+    if (this.router.url === '/' || this.router.url === '/accueil') {
+      scrollToSection();
+    } else {
+      this.router.navigate(['/']).then(() => setTimeout(scrollToSection, 300));
+    }
+  };
 
   navigateToFreelancePage(): void {
     if (!this.isBrowser) return;
@@ -3307,51 +3263,34 @@ retryPhotoAnalysis(): void {
       this.toggleMobileMenu();
     }
 
-    this.snackBar.open('', '', {
-      duration: 2000,
-      horizontalPosition: 'center',
-      verticalPosition: 'bottom',
-      panelClass: ['subtle-snackbar']
-    });
+    const scrollToSection = () => {
+      const section = document.getElementById('pro-section');
+      if (section) {
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    };
 
-    document.body.classList.add('page-transition');
-
-    setTimeout(() => {
-      this.router.navigate(['/freelance-dashboard']).then(() => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-
-        setTimeout(() => {
-          document.body.classList.remove('page-transition');
-        }, 500);
+    if (this.router.url === '/' || this.router.url === '/accueil') {
+      scrollToSection();
+    } else {
+      this.router.navigate(['/']).then(() => {
+        setTimeout(scrollToSection, 300);
       });
-    }, 100);
+    }
   }
 
   navigateToHiring(): void {
     if (!this.isBrowser) return;
-
-    if (this.isMobileMenuOpen) {
-      this.toggleMobileMenu();
+    if (this.isMobileMenuOpen) this.toggleMobileMenu();
+    const scrollToSection = () => {
+      const section = document.getElementById('hiring-section');
+      if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+    if (this.router.url === '/' || this.router.url === '/accueil') {
+      scrollToSection();
+    } else {
+      this.router.navigate(['/']).then(() => setTimeout(scrollToSection, 300));
     }
-
-    this.snackBar.open('', '', {
-      duration: 2000,
-      horizontalPosition: 'center',
-      verticalPosition: 'bottom',
-      panelClass: ['subtle-snackbar']
-    });
-
-    document.body.classList.add('page-transition');
-
-    setTimeout(() => {
-      this.router.navigate(['/job-offer']).then(() => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-
-        setTimeout(() => {
-          document.body.classList.remove('page-transition');
-        }, 500);
-      });
-    }, 100);
   }
 
   navigateToSalonRegistration(): void {
@@ -3482,7 +3421,7 @@ retryPhotoAnalysis(): void {
   }
 
   /**
-   * ✅ MÉTHODE MISE À JOUR - getUserLocation avec recherche automatique
+   *  MÉTHODE MISE À JOUR - getUserLocation avec recherche automatique
    */
   getUserLocation(): void {
     if (this.isBrowser && navigator.geolocation) {
@@ -3502,7 +3441,7 @@ retryPhotoAnalysis(): void {
             panelClass: ['success-snackbar']
           });
 
-          // ✅ LANCER RECHERCHE AUTOMATIQUE FREELANCE SI APPLICABLE
+          //  LANCER RECHERCHE AUTOMATIQUE FREELANCE SI APPLICABLE
           if (this.selectedProviderType === 'freelance' && this.searchTerm?.trim()) {
             setTimeout(() => {
               this.searchNearbyFreelances();
@@ -3548,14 +3487,13 @@ retryPhotoAnalysis(): void {
   }
 
   // ===============================================
-  // ✅ MÉTHODES ADDITIONNELLES POUR LES NOUVEAUX ENDPOINTS
+  //  MÉTHODES ADDITIONNELLES POUR LES NOUVEAUX ENDPOINTS
   // ===============================================
 
   /**
-   * ✅ BOUTON RECHERCHE RAPIDE PAR VILLE
+   *  BOUTON RECHERCHE RAPIDE PAR VILLE
    */
   quickCitySearch(ville: string): void {
-    console.log(`🏙️ Recherche rapide par ville: ${ville}`);
 
     if (!this.searchTerm?.trim()) {
       this.snackBar.open('Veuillez d\'abord entrer un service', 'OK', { duration: 3000 });
@@ -3572,10 +3510,9 @@ retryPhotoAnalysis(): void {
   }
 
   /**
-   * ✅ BOUTON RECHERCHE GÉOLOCALISÉE RAPIDE
+   *  BOUTON RECHERCHE GÉOLOCALISÉE RAPIDE
    */
   quickLocationSearch(): void {
-    console.log('📍 Recherche géolocalisée rapide');
 
     if (!this.searchTerm?.trim()) {
       this.snackBar.open('Veuillez d\'abord entrer un service', 'OK', { duration: 3000 });
@@ -3595,10 +3532,9 @@ retryPhotoAnalysis(): void {
   }
 
   /**
-   * ✅ RECHERCHE AVEC CRITÈRES PRÉDÉFINIS
+   *  RECHERCHE AVEC CRITÈRES PRÉDÉFINIS
    */
   searchWithPresets(preset: 'weekend' | 'evening' | 'nearby' | 'budget'): void {
-    console.log(`🎯 Recherche avec preset: ${preset}`);
 
     if (!this.searchTerm?.trim()) {
       this.snackBar.open('Veuillez d\'abord entrer un service', 'OK', { duration: 3000 });
@@ -3636,7 +3572,7 @@ retryPhotoAnalysis(): void {
   }
 
   /**
-   * ✅ SUGGESTIONS INTELLIGENTES
+   *  SUGGESTIONS INTELLIGENTES
    */
   getSuggestions(): string[] {
     const suggestions: string[] = [];
@@ -3653,10 +3589,9 @@ retryPhotoAnalysis(): void {
   }
 
   /**
-   * ✅ APPLIQUER SUGGESTION
+   *  APPLIQUER SUGGESTION
    */
   applySuggestion(suggestion: string): void {
-    console.log(`💡 Application suggestion: ${suggestion}`);
 
     switch (suggestion) {
       case 'Disponible weekend':
@@ -3689,7 +3624,7 @@ retryPhotoAnalysis(): void {
   }
 
   /**
-   * ✅ HISTORIQUE DES RECHERCHES
+   *  HISTORIQUE DES RECHERCHES
    */
   getSearchHistory(): string[] {
     if (!this.isBrowser) return [];
@@ -3699,7 +3634,7 @@ retryPhotoAnalysis(): void {
   }
 
   /**
-   * ✅ AJOUTER À L'HISTORIQUE
+   *  AJOUTER À L'HISTORIQUE
    */
   addToSearchHistory(term: string): void {
     if (!this.isBrowser || !term?.trim()) return;
@@ -3720,7 +3655,7 @@ retryPhotoAnalysis(): void {
   }
 
   /**
-   * ✅ EFFACER L'HISTORIQUE
+   *  EFFACER L'HISTORIQUE
    */
   clearSearchHistory(): void {
     if (this.isBrowser) {
@@ -3730,17 +3665,16 @@ retryPhotoAnalysis(): void {
   }
 
   /**
-   * ✅ RECHERCHE DEPUIS L'HISTORIQUE
+   *  RECHERCHE DEPUIS L'HISTORIQUE
    */
   searchFromHistory(term: string): void {
-    console.log(`📜 Recherche depuis historique: ${term}`);
 
     this.searchTerm = term;
     this.searchSalonsAdvanced();
   }
 
   /**
-   * ✅ STATISTIQUES DE RECHERCHE
+   *  STATISTIQUES DE RECHERCHE
    */
   getSearchStats(): any {
     const stats = {
@@ -3756,38 +3690,24 @@ retryPhotoAnalysis(): void {
   }
 
   /**
-   * ✅ MÉTHODE HELPER POUR DÉVELOPPEMENT
+   *  MÉTHODE HELPER POUR DÉVELOPPEMENT
    */
   private isInDevelopmentMode(): boolean {
     return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   }
 
   /**
-   * ✅ DEBUG ENDPOINT CALLS
+   *  DEBUG ENDPOINT CALLS
    */
   debugEndpointCalls(): void {
     if (!this.isInDevelopmentMode()) return;
 
-    console.log('🔍 Debug des appels d\'endpoints');
-    console.log('État actuel:', {
-      searchTerm: this.searchTerm,
-      providerType: this.selectedProviderType,
-      location: this.userLocation,
-      ville: this.locationInput,
-      criteres: {
-        weekend: this.disponibleWeekend,
-        soir: this.disponibleSoir,
-        budget: this.budgetRange,
-        deplacement: this.deplacementInclus
-      }
-    });
   }
 
   /**
-   * ✅ RESET COMPLET
+   *  RESET COMPLET
    */
   resetAll(): void {
-    console.log('🔄 Reset complet du composant');
 
     // Réinitialiser toutes les propriétés
     this.searchTerm = '';
@@ -3839,16 +3759,15 @@ retryPhotoAnalysis(): void {
   }
 
   // ===============================================
-  // ✅ MÉTHODES FINALES POUR LA COMPATIBILITÉ
+  //  MÉTHODES FINALES POUR LA COMPATIBILITÉ
   // ===============================================
 
   /**
-   * ✅ MÉTHODE WRAPPER POUR COMPATIBILITÉ TOTALE
+   *  MÉTHODE WRAPPER POUR COMPATIBILITÉ TOTALE
    */
   performSearch(): void {
-    console.log('🔍 performSearch - Méthode wrapper générale');
 
-    
+
     // Ajouter à l'historique si c'est une recherche textuelle
     if (this.searchTerm?.trim()) {
       this.addToSearchHistory(this.searchTerm.trim());
@@ -3859,7 +3778,7 @@ retryPhotoAnalysis(): void {
   }
 
   /**
-   * ✅ MÉTHODE POUR NAVIGATION EXTERNE
+   *  MÉTHODE POUR NAVIGATION EXTERNE
    */
   navigateToExternalService(url: string): void {
     if (this.isBrowser) {
@@ -3868,7 +3787,7 @@ retryPhotoAnalysis(): void {
   }
 
   /**
-   * ✅ PARTAGER LES RÉSULTATS
+   *  PARTAGER LES RÉSULTATS
    */
   shareResults(): void {
     if (!this.isBrowser) return;
@@ -3902,7 +3821,7 @@ retryPhotoAnalysis(): void {
   }
 
   /**
-   * ✅ Charger enrichissements client
+   *  Charger enrichissements client
    */
   loadClientEnrichments(): void {
     this.loadingClientData = true;
@@ -3910,21 +3829,20 @@ retryPhotoAnalysis(): void {
     // Charger TOUTES les données pour des suggestions réelles
     const clientData$ = forkJoin({
       upcoming: this.reservationService.getClientUpcomingReservations(),
-      history: this.reservationService.getClientReservationHistory(), // ✅ Historique complet
-      allReservations: this.reservationService.getClientReservations(), // ✅ Toutes les réservations
+      history: this.reservationService.getClientReservationHistory(), //  Historique complet
+      allReservations: this.reservationService.getClientReservations(), //  Toutes les réservations
       toRate: this.reservationService.getReservationsToRate(),
       favorites: this.reservationService.getClientFavoriteProviders()
     });
 
     clientData$.subscribe({
-      next: (data: { 
-        upcoming: any[]; 
+      next: (data: {
+        upcoming: any[];
         history: any[];
         allReservations: any[];
-        toRate: { total: number; }; 
+        toRate: { total: number; };
         favorites: any[];
       }) => {
-        console.log('📊 Données client complètes chargées:', data);
 
         // RDV à venir
         this.upcomingReservations = data.upcoming.slice(0, 5);
@@ -3934,18 +3852,17 @@ retryPhotoAnalysis(): void {
         // Avis à donner
         this.toRateCount = data.toRate.total || 0;
 
-        // ✅ Stocker TOUTES les réservations pour l'analyse des préférences
+        //  Stocker TOUTES les réservations pour l'analyse des préférences
         this.allClientReservations = [...(data.allReservations || []), ...(data.history || [])];
-        
-        console.log('🔍 Total réservations pour analyse:', this.allClientReservations.length);
 
-        // ✅ Générer suggestions RÉELLES basées sur l'historique complet
+
+        //  Générer suggestions RÉELLES basées sur l'historique complet
         this.generateClientSuggestions(data.favorites);
-        
-        // ✅ Enrichir les suggestions avec les vrais avis
+
+        //  Enrichir les suggestions avec les vrais avis
         this.enrichSuggestionsWithRealReviews();
-        
-        // ✅ Trouver de vrais prestataires pour les suggestions génériques
+
+        //  Trouver de vrais prestataires pour les suggestions génériques
         this.findRealProvidersForGenericSuggestions();
 
         this.loadingClientData = false;
@@ -3954,9 +3871,9 @@ retryPhotoAnalysis(): void {
         this.checkUpcomingReminder();
       },
       error: (error: any) => {
-        console.error('❌ Erreur chargement données client:', error);
+        console.error(' Erreur chargement données client:', error);
         this.loadingClientData = false;
-        
+
         // En cas d'erreur, générer suggestions minimales
         this.generateClientSuggestions([]);
       }
@@ -3964,21 +3881,20 @@ retryPhotoAnalysis(): void {
   }
 
 /**
-   * ✅ Générer suggestions basées sur favoris/historique
+   *  Générer suggestions basées sur favoris/historique
    */
   generateClientSuggestions(favorites: any[]): void {
     this.clientSuggestions = [];
 
     // 1. Analyser l'historique pour identifier les préférences
     const preferences = this.analyzeClientPreferences();
-    console.log('🎯 Préférences client analysées:', preferences);
 
     // 2. Suggestions basées sur les favoris avec données RÉELLES
     const favoriteSuggestions = favorites.slice(0, 2).map(fav => {
       // Calculer le nombre RÉEL de visites chez ce prestataire
       const prestataireId = fav.salonId || fav.freelanceId;
-      const visitsCount = this.allClientReservations.filter(r => 
-        (r.salonId === prestataireId && fav.salonId) || 
+      const visitsCount = this.allClientReservations.filter(r =>
+        (r.salonId === prestataireId && fav.salonId) ||
         (r.freelanceId === prestataireId && fav.freelanceId)
       ).length;
 
@@ -3987,9 +3903,9 @@ retryPhotoAnalysis(): void {
         .filter(r => (r.salonId === prestataireId && fav.salonId) || (r.freelanceId === prestataireId && fav.freelanceId))
         .map(r => r.serviceName || r.serviceNom)
         .filter(s => s);
-      
-      const preferredServiceWithProvider = servicesWithProvider.length > 0 ? 
-        servicesWithProvider[0] : 
+
+      const preferredServiceWithProvider = servicesWithProvider.length > 0 ?
+        servicesWithProvider[0] :
         preferences.preferredServices[0] || 'Vos services habituels';
 
       return {
@@ -4003,7 +3919,7 @@ retryPhotoAnalysis(): void {
         reason: visitsCount > 0 ? `${visitsCount} visite${visitsCount > 1 ? 's' : ''} chez eux` : 'Dans vos favoris',
         providerId: prestataireId,
         providerType: fav.type?.toLowerCase() || 'salon',
-        // ✅ CORRECTION: Ajouter la localisation du favori
+        //  CORRECTION: Ajouter la localisation du favori
         searchLocation: fav.ville || fav.adresse || preferences.preferredLocation
       };
     });
@@ -4019,12 +3935,12 @@ retryPhotoAnalysis(): void {
             name: `Nouveau ${preferences.preferredProviderType === 'salon' ? 'salon' : 'freelance'}`,
             service: service,
             type: preferences.preferredProviderType?.toUpperCase() || 'SALON',
-            rating: 0, // ✅ Sera mis à jour avec de vrais avis
-            reviewCount: 0, // ✅ Sera mis à jour avec de vrais avis
+            rating: 0, //  Sera mis à jour avec de vrais avis
+            reviewCount: 0, //  Sera mis à jour avec de vrais avis
             image: null,
             reason: `Service que vous aimez (${preferences.serviceStats[service] || 1}x réservé)`,
-            needsRealProvider: true, // ✅ Marquer pour recherche de vrais prestataires
-            // ✅ CORRECTION: Ajouter la localisation préférée aux suggestions de service
+            needsRealProvider: true, //  Marquer pour recherche de vrais prestataires
+            //  CORRECTION: Ajouter la localisation préférée aux suggestions de service
             searchLocation: preferences.preferredLocation
           });
         }
@@ -4038,11 +3954,11 @@ retryPhotoAnalysis(): void {
         name: `Prestataires près de ${preferences.preferredLocation}`,
         service: preferences.preferredServices[0] || 'Tous services',
         type: 'MIXED',
-        rating: 0, // ✅ Sera mis à jour avec de vrais prestataires
-        reviewCount: 0, // ✅ Sera mis à jour avec de vrais prestataires
+        rating: 0, //  Sera mis à jour avec de vrais prestataires
+        reviewCount: 0, //  Sera mis à jour avec de vrais prestataires
         image: null,
         reason: 'Proche de vos lieux habituels',
-        needsLocationSearch: true, // ✅ Marquer pour recherche géolocalisée
+        needsLocationSearch: true, //  Marquer pour recherche géolocalisée
         searchLocation: preferences.preferredLocation
       });
     }
@@ -4059,7 +3975,7 @@ retryPhotoAnalysis(): void {
         reviewCount: 18,
         image: null,
         reason: `Adapté à vos créneaux préférés (${timeLabel})`,
-        // ✅ CORRECTION: Ajouter la localisation aux suggestions temporelles
+        //  CORRECTION: Ajouter la localisation aux suggestions temporelles
         searchLocation: preferences.preferredLocation
       });
     }
@@ -4085,7 +4001,7 @@ retryPhotoAnalysis(): void {
       ];
 
       const suggestion = genericSuggestions[this.clientSuggestions.length - favorites.length] || genericSuggestions[0];
-      
+
       this.clientSuggestions.push({
         id: `generic-${this.clientSuggestions.length}`,
         name: suggestion.name,
@@ -4098,11 +4014,10 @@ retryPhotoAnalysis(): void {
       });
     }
 
-    console.log('✨ Suggestions générées:', this.clientSuggestions);
   }
 
   /**
-   * ✅ Analyser les préférences du client basées sur l'historique
+   *  Analyser les préférences du client basées sur l'historique
    */
   private analyzeClientPreferences(): any {
     const preferences = {
@@ -4115,16 +4030,14 @@ retryPhotoAnalysis(): void {
       reservationCount: 0
     };
 
-    // ✅ Utiliser TOUTES les réservations pour l'analyse (historique complet)
+    //  Utiliser TOUTES les réservations pour l'analyse (historique complet)
     if (!this.allClientReservations || this.allClientReservations.length === 0) {
-      console.log('⚠️ Aucune réservation trouvée pour l\'analyse des préférences');
       return preferences;
     }
 
     // Analyser l'historique COMPLET des réservations
     const allReservations = [...this.allClientReservations];
-    
-    console.log(`🎯 Analyse de ${allReservations.length} réservations pour les préférences`);
+
 
     preferences.reservationCount = allReservations.length;
 
@@ -4143,7 +4056,7 @@ retryPhotoAnalysis(): void {
     // 2. Type de prestataire préféré
     const salonCount = allReservations.filter(r => r.salonId).length;
     const freelanceCount = allReservations.filter(r => r.freelanceId).length;
-    
+
     if (salonCount > freelanceCount) {
       preferences.preferredProviderType = 'salon';
     } else if (freelanceCount > salonCount) {
@@ -4159,21 +4072,21 @@ retryPhotoAnalysis(): void {
       .map(addr => {
         // Améliorer l'extraction de ville/quartier
         const parts = addr.split(',').map((p: string) => p.trim());
-        
+
         // Priorité : chercher les villes principales du Sénégal
         const mainCities = ['Dakar', 'Thiès', 'Mbour', 'Saint-Louis', 'Kaolack', 'Ziguinchor', 'Diourbel', 'Louga', 'Fatick'];
-        const foundCity = parts.find((part: string) => 
+        const foundCity = parts.find((part: string) =>
           mainCities.some(city => part.toLowerCase().includes(city.toLowerCase()))
         );
-        
+
         if (foundCity) {
           // Nettoyer pour garder juste le nom de la ville
-          const cityMatch = mainCities.find(city => 
+          const cityMatch = mainCities.find(city =>
             foundCity.toLowerCase().includes(city.toLowerCase())
           );
           return cityMatch || foundCity;
         }
-        
+
         // Fallback : dernière partie ou première partie
         return parts[parts.length - 1] || parts[0] || addr;
       });
@@ -4184,12 +4097,10 @@ retryPhotoAnalysis(): void {
         return acc;
       }, {} as { [key: string]: number });
 
-      console.log('🗺️ Analyse des localisations:', locationCounts);
 
-      // ✅ NOUVELLE LOGIQUE - Prioriser localisation actuelle/récente
+      //  NOUVELLE LOGIQUE - Prioriser localisation actuelle/récente
       preferences.preferredLocation = this.getBestLocationForSuggestions(allReservations, locationCounts);
-        
-      console.log('📍 Localisation optimale détectée:', preferences.preferredLocation);
+
     }
 
     // 4. Préférences temporelles (weekend/soirée)
@@ -4215,7 +4126,7 @@ retryPhotoAnalysis(): void {
     const budgets = allReservations
       .map(r => r.prixTotal || r.servicePrix || 0)
       .filter(price => price > 0);
-    
+
     if (budgets.length > 0) {
       preferences.avgBudget = budgets.reduce((sum, price) => sum + price, 0) / budgets.length;
     }
@@ -4224,16 +4135,15 @@ retryPhotoAnalysis(): void {
   }
 
   /**
-   * ✅ Enrichir les suggestions avec les vrais avis des prestataires
+   *  Enrichir les suggestions avec les vrais avis des prestataires
    */
   private enrichSuggestionsWithRealReviews(): void {
-    console.log('🌟 Enrichissement des suggestions avec les vrais avis...');
 
     // Pour chaque suggestion avec un prestataire spécifique
     this.clientSuggestions.forEach((suggestion, index) => {
       if (suggestion.providerId && suggestion.providerType) {
         // Charger les vrais avis selon le type de prestataire
-        const reviewsObservable = suggestion.providerType === 'salon' 
+        const reviewsObservable = suggestion.providerType === 'salon'
           ? this.reservationService.getAvisBySalon(suggestion.providerId)
           : this.reservationService.getAvisByFreelance(suggestion.providerId);
 
@@ -4248,11 +4158,10 @@ retryPhotoAnalysis(): void {
               // Mettre à jour la suggestion avec les vrais avis
               this.clientSuggestions[index] = {
                 ...suggestion,
-                rating: Math.round(moyenneNote * 10) / 10, // ✅ Vraie note arrondie à 1 décimale
-                reviewCount: avis.length // ✅ Vrai nombre d'avis
+                rating: Math.round(moyenneNote * 10) / 10, //  Vraie note arrondie à 1 décimale
+                reviewCount: avis.length //  Vrai nombre d'avis
               };
 
-              console.log(`✅ Avis mis à jour pour ${suggestion.name}: ${moyenneNote.toFixed(1)}/5 (${avis.length} avis)`);
             } else {
               // Pas d'avis trouvés
               this.clientSuggestions[index] = {
@@ -4260,14 +4169,13 @@ retryPhotoAnalysis(): void {
                 rating: 0,
                 reviewCount: 0
               };
-              console.log(`ℹ️ Aucun avis trouvé pour ${suggestion.name}`);
             }
 
-            // ✅ Récupérer aussi la photo de profil du prestataire
+            //  Récupérer aussi la photo de profil du prestataire
             this.loadProviderProfileImage(suggestion, index);
           },
           error: (error: any) => {
-            console.warn(`⚠️ Erreur lors de la récupération des avis pour ${suggestion.name}:`, error);
+            console.warn(` Erreur lors de la récupération des avis pour ${suggestion.name}:`, error);
             // Garder les valeurs par défaut en cas d'erreur
           }
         });
@@ -4276,11 +4184,11 @@ retryPhotoAnalysis(): void {
   }
 
   /**
-   * ✅ Charger la photo de profil d'un prestataire
+   *  Charger la photo de profil d'un prestataire
    */
   private loadProviderProfileImage(suggestion: any, index: number): void {
     if (suggestion.providerId && suggestion.providerType) {
-      const imageObservable = suggestion.providerType === 'salon' 
+      const imageObservable = suggestion.providerType === 'salon'
         ? this.salonService.getSalonById(suggestion.providerId)
         : this.freelanceService.getFreelanceById(suggestion.providerId);
 
@@ -4288,44 +4196,41 @@ retryPhotoAnalysis(): void {
         next: (provider: any) => {
           if (provider) {
             const profileImage = provider.photoProfil || provider.profileImage || null;
-            
+
             this.clientSuggestions[index] = {
               ...this.clientSuggestions[index],
               image: profileImage
             };
 
-            console.log(`📸 Photo chargée pour ${suggestion.name}: ${profileImage ? 'trouvée' : 'non trouvée'}`);
           }
         },
         error: (error: any) => {
-          console.warn(`⚠️ Erreur lors du chargement de la photo pour ${suggestion.name}:`, error);
+          console.warn(` Erreur lors du chargement de la photo pour ${suggestion.name}:`, error);
         }
       });
     }
   }
 
   /**
-   * ✅ Trouver de vrais prestataires pour les suggestions génériques
+   *  Trouver de vrais prestataires pour les suggestions génériques
    */
   private findRealProvidersForGenericSuggestions(): void {
-    console.log('🔍 Recherche de vrais prestataires pour les suggestions génériques...');
 
     this.clientSuggestions.forEach((suggestion, index) => {
       if (suggestion.needsRealProvider || suggestion.needsLocationSearch) {
-        // ✅ NOUVELLE LOGIQUE - Recherche intelligente avec fallback
+        //  NOUVELLE LOGIQUE - Recherche intelligente avec fallback
         this.findBestProviderForSuggestion(suggestion, index);
       }
     });
   }
 
   /**
-   * ✅ Nouvelle méthode - Trouver le meilleur prestataire avec logique de fallback
+   *  Nouvelle méthode - Trouver le meilleur prestataire avec logique de fallback
    */
   private findBestProviderForSuggestion(suggestion: any, index: number): void {
     const service = suggestion.service;
     const preferredType = suggestion.type?.toLowerCase();
-    
-    console.log(`🎯 Recherche du meilleur prestataire pour "${service}" (type: ${preferredType})`);
+
 
     // Étape 1: Recherche avec localisation spécifique (si applicable)
     let searchParams: any = {
@@ -4338,16 +4243,14 @@ retryPhotoAnalysis(): void {
     if (suggestion.needsLocationSearch && suggestion.searchLocation) {
       searchParams.ville = suggestion.searchLocation;
       searchParams.searchType = 'CITY_STRICT';
-      console.log(`📍 Recherche géolocalisée pour ville "${suggestion.searchLocation}"`);
     }
 
     this.salonService.searchSalons(searchParams).subscribe({
       next: (response: any) => {
-        console.log('🔍 Réponse brute de searchSalons:', response);
-        
+
         // Adapter à la structure de réponse réelle
         let providers: any[] = [];
-        
+
         // Traiter les salons s'ils existent
         if (response.salons && Array.isArray(response.salons)) {
           const salons = response.salons.map((salon: any) => ({
@@ -4357,7 +4260,7 @@ retryPhotoAnalysis(): void {
           }));
           providers = providers.concat(salons);
         }
-        
+
         // Traiter les freelances s'ils existent
         if (response.freelances && Array.isArray(response.freelances)) {
           const freelances = response.freelances.map((freelance: any) => ({
@@ -4367,16 +4270,14 @@ retryPhotoAnalysis(): void {
           }));
           providers = providers.concat(freelances);
         }
-        
-        console.log(`📊 ${providers.length} prestataires trouvés (${response.salons?.length || 0} salons, ${response.freelances?.length || 0} freelances)`);
-        
+
+
         const bestProvider = this.selectBestProvider(providers, service, preferredType, suggestion.searchLocation);
-        
+
         if (bestProvider) {
           this.updateSuggestionWithProvider(suggestion, index, bestProvider);
         } else if (suggestion.needsLocationSearch) {
           // Étape 2: Fallback - Élargir la zone de recherche
-          console.log(`🔄 Aucun résultat pour ${suggestion.searchLocation}, élargissement de la recherche...`);
           this.fallbackSearchForLocationSuggestion(suggestion, index, service, preferredType);
         } else {
           // Garder la suggestion générique
@@ -4384,54 +4285,50 @@ retryPhotoAnalysis(): void {
         }
       },
       error: (error: any) => {
-        console.warn(`⚠️ Erreur recherche pour ${service}:`, error);
+        console.warn(` Erreur recherche pour ${service}:`, error);
         this.keepGenericSuggestion(suggestion, index);
       }
     });
   }
 
   /**
-   * ✅ Sélectionner le meilleur prestataire selon des critères intelligents
+   *  Sélectionner le meilleur prestataire selon des critères intelligents
    */
   private selectBestProvider(providers: any[], service: string, preferredType: string, targetLocation?: string): any {
     if (!providers || providers.length === 0) return null;
 
-    console.log(`📋 Analyse de ${providers.length} prestataires pour sélection intelligente`);
 
     // Filtres par priorité
     let candidates = providers;
 
     // 1. Filtre par service (priorité absolue)
-    const providersWithService = candidates.filter(p => 
+    const providersWithService = candidates.filter(p =>
       this.providerOffersService(p, service)
     );
 
     if (providersWithService.length > 0) {
       candidates = providersWithService;
-      console.log(`✅ ${candidates.length} prestataires proposent "${service}"`);
     } else {
-      console.warn(`⚠️ Aucun prestataire ne propose "${service}" spécifiquement`);
+      console.warn(` Aucun prestataire ne propose "${service}" spécifiquement`);
     }
 
     // 2. Filtre par type préféré (salon prioritaire généralement)
     if (preferredType && preferredType !== 'mixed') {
-      const preferredTypeProviders = candidates.filter(p => 
+      const preferredTypeProviders = candidates.filter(p =>
         p.type?.toLowerCase() === preferredType
       );
       if (preferredTypeProviders.length > 0) {
         candidates = preferredTypeProviders;
-        console.log(`✅ ${candidates.length} ${preferredType}s disponibles`);
       }
     }
 
     // 3. Si on a une localisation cible, privilégier la proximité
     if (targetLocation) {
-      const nearbyProviders = candidates.filter(p => 
+      const nearbyProviders = candidates.filter(p =>
         this.isProviderNearLocation(p, targetLocation)
       );
       if (nearbyProviders.length > 0) {
         candidates = nearbyProviders;
-        console.log(`📍 ${candidates.length} prestataires près de ${targetLocation}`);
       }
     }
 
@@ -4443,32 +4340,31 @@ retryPhotoAnalysis(): void {
     })[0];
 
     if (bestProvider) {
-      console.log(`🏆 Meilleur prestataire sélectionné: ${bestProvider.nom} (score: ${this.calculateProviderScore(bestProvider).toFixed(2)})`);
     }
 
     return bestProvider;
   }
 
   /**
-   * ✅ Vérifier si un prestataire propose un service spécifique
+   *  Vérifier si un prestataire propose un service spécifique
    */
   private providerOffersService(provider: any, service: string): boolean {
     if (!provider || !service) return false;
 
     const serviceToCheck = service.toLowerCase().trim();
-    
+
     // Récupérer les services selon la structure (salon ou freelance)
     const rawServices = provider.serviceNoms || provider.services || [];
     const providerServices = rawServices.map((s: string) => s.toLowerCase().trim());
-    
+
     // Recherche exacte ou partielle
-    return providerServices.some((s: string) => 
+    return providerServices.some((s: string) =>
       s.includes(serviceToCheck) || serviceToCheck.includes(s)
     );
   }
 
   /**
-   * ✅ Vérifier si un prestataire est proche d'une localisation
+   *  Vérifier si un prestataire est proche d'une localisation
    */
   private isProviderNearLocation(provider: any, targetLocation: string): boolean {
     if (!provider || !targetLocation) return true; // Si pas d'info, ne pas filtrer
@@ -4476,32 +4372,28 @@ retryPhotoAnalysis(): void {
     const providerLocation = (provider.adresse || provider.ville || '').toLowerCase().trim();
     const target = targetLocation.toLowerCase().trim();
 
-    console.log(`📍 Vérification proximité: "${providerLocation}" vs "${target}"`);
 
     // Correspondance exacte ou inclusion
     if (providerLocation.includes(target) || target.includes(providerLocation)) {
-      console.log(`✅ Proximité ACCEPTÉE: ${providerLocation} ↔ ${target}`);
       return true;
     }
 
     // Vérifier les zones géographiquement proches
     const nearbyZones = this.getNearbyZones(target);
-    const isNearby = nearbyZones.some(zone => 
-      providerLocation.includes(zone.toLowerCase()) || 
+    const isNearby = nearbyZones.some(zone =>
+      providerLocation.includes(zone.toLowerCase()) ||
       zone.toLowerCase().includes(providerLocation)
     );
 
     if (isNearby) {
-      console.log(`✅ Proximité ACCEPTÉE (zone proche): ${providerLocation} ↔ ${nearbyZones.join(', ')}`);
       return true;
     }
 
-    console.log(`❌ Proximité REFUSÉE: ${providerLocation} trop éloigné de ${target}`);
     return false;
   }
 
   /**
-   * ✅ Obtenir les zones géographiquement proches d'une localisation
+   *  Obtenir les zones géographiquement proches d'une localisation
    */
   private getNearbyZones(location: string): string[] {
     const proximityMap: { [key: string]: string[] } = {
@@ -4520,24 +4412,23 @@ retryPhotoAnalysis(): void {
   }
 
   /**
-   * ✅ Calculer un score de qualité pour un prestataire
+   *  Calculer un score de qualité pour un prestataire
    */
   private calculateProviderScore(provider: any): number {
     const rating = provider.rating || provider.note || 0;
     const reviewCount = provider.reviewCount || provider.nombreAvis || 0;
-    
+
     // Score pondéré : note * log(nombre d'avis + 1)
     return rating * Math.log(reviewCount + 1);
   }
 
   /**
-   * ✅ Fallback pour suggestions géolocalisées sans résultats
+   *  Fallback pour suggestions géolocalisées sans résultats
    */
   private fallbackSearchForLocationSuggestion(suggestion: any, index: number, service: string, preferredType: string): void {
     // Rechercher dans les zones historiques du client
     const fallbackLocations = this.getFallbackLocations(suggestion.searchLocation);
-    
-    console.log(`🔄 Recherche de fallback dans: ${fallbackLocations.join(', ')}`);
+
 
     const fallbackParams = {
       term: service,
@@ -4551,7 +4442,7 @@ retryPhotoAnalysis(): void {
       next: (response: any) => {
         // Même traitement que pour la recherche principale
         let providers: any[] = [];
-        
+
         if (response.salons && Array.isArray(response.salons)) {
           const salons = response.salons.map((salon: any) => ({
             ...salon,
@@ -4560,7 +4451,7 @@ retryPhotoAnalysis(): void {
           }));
           providers = providers.concat(salons);
         }
-        
+
         if (response.freelances && Array.isArray(response.freelances)) {
           const freelances = response.freelances.map((freelance: any) => ({
             ...freelance,
@@ -4569,9 +4460,9 @@ retryPhotoAnalysis(): void {
           }));
           providers = providers.concat(freelances);
         }
-        
+
         const bestProvider = this.selectBestProvider(providers, service, preferredType);
-        
+
         if (bestProvider) {
           this.updateSuggestionWithProvider(suggestion, index, bestProvider, true);
         } else {
@@ -4583,7 +4474,7 @@ retryPhotoAnalysis(): void {
   }
 
   /**
-   * ✅ Obtenir les localisations de fallback basées sur l'historique du client
+   *  Obtenir les localisations de fallback basées sur l'historique du client
    */
   private getFallbackLocations(originalLocation: string): string[] {
     // Logique de fallback géographique intelligent
@@ -4600,11 +4491,11 @@ retryPhotoAnalysis(): void {
   }
 
   /**
-   * ✅ Mettre à jour la suggestion avec le prestataire trouvé
+   *  Mettre à jour la suggestion avec le prestataire trouvé
    */
   private updateSuggestionWithProvider(suggestion: any, index: number, provider: any, isFallback: boolean = false): void {
-    const locationText = isFallback ? 
-      `Zone élargie (${provider.ville || provider.adresse || ''})` : 
+    const locationText = isFallback ?
+      `Zone élargie (${provider.ville || provider.adresse || ''})` :
       suggestion.searchLocation || '';
 
     this.clientSuggestions[index] = {
@@ -4615,18 +4506,17 @@ retryPhotoAnalysis(): void {
       rating: Math.round((provider.rating || provider.note || 0) * 10) / 10,
       reviewCount: provider.reviewCount || provider.nombreAvis || 0,
       image: provider.imageUrl || provider.image,
-      reason: suggestion.needsLocationSearch ? 
-        `${locationText}${provider.distanceKm ? ` (${provider.distanceKm}km)` : ''}` : 
+      reason: suggestion.needsLocationSearch ?
+        `${locationText}${provider.distanceKm ? ` (${provider.distanceKm}km)` : ''}` :
         suggestion.reason,
       needsRealProvider: false,
       needsLocationSearch: false
     };
 
-    console.log(`✅ Suggestion mise à jour avec ${provider.nom} (${this.clientSuggestions[index].rating}/5)`);
   }
 
   /**
-   * ✅ Garder la suggestion générique si aucun prestataire trouvé
+   *  Garder la suggestion générique si aucun prestataire trouvé
    */
   private keepGenericSuggestion(suggestion: any, index: number): void {
     this.clientSuggestions[index] = {
@@ -4636,16 +4526,14 @@ retryPhotoAnalysis(): void {
       needsRealProvider: false,
       needsLocationSearch: false
     };
-    console.log(`ℹ️ Suggestion générique conservée pour "${suggestion.service}"`);
   }
 
  /**
-   * ✅ Réservation rapide depuis suggestion
+   *  Réservation rapide depuis suggestion
    */
   quickBookSuggestion(suggestion: any): void {
-    console.log('🚀 Réservation rapide:', suggestion);
 
-    // ✅ Marquer que la recherche provient d'une suggestion
+    //  Marquer que la recherche provient d'une suggestion
     this.searchFromSuggestion = true;
 
     // Si c'est un prestataire favori spécifique
@@ -4658,14 +4546,13 @@ retryPhotoAnalysis(): void {
     if (suggestion.type !== 'MIXED') {
       this.selectedProviderType = suggestion.type.toLowerCase();
       this.searchTerm = suggestion.service;
-      
-      // ✅ CORRECTION: Appliquer la localisation MÊME pour les suggestions spécifiques
+
+      //  CORRECTION: Appliquer la localisation MÊME pour les suggestions spécifiques
       if (suggestion.searchLocation) {
-        console.log(`🗺️ Application localisation suggestion spécifique: ${suggestion.searchLocation}`);
         this.locationInput = suggestion.searchLocation;
         this.userLocation = null; // Forcer l'utilisation du texte de localisation
       }
-      
+
       // Faire défiler vers la section de recherche
       setTimeout(() => {
         const searchElement = document.querySelector('.enhanced-search-bar');
@@ -4673,36 +4560,27 @@ retryPhotoAnalysis(): void {
           searchElement.scrollIntoView({ behavior: 'smooth' });
         }
       }, 100);
-      
+
       this.searchSalonsAdvanced();
     } else {
       // Suggestion mixte - ouvrir recherche géolocalisée
       this.selectedProviderType = 'both';
-      
+
       if (suggestion.service && suggestion.service !== 'Tous services') {
         this.searchTerm = suggestion.service;
       }
 
-      // ✅ CORRECTION: Utiliser la localisation de la suggestion pour la recherche
+      //  CORRECTION: Utiliser la localisation de la suggestion pour la recherche
       if (suggestion.searchLocation) {
-        console.log(`🗺️ Application de la localisation de suggestion: ${suggestion.searchLocation}`);
-        console.log(`🔧 État AVANT modification:`);
-        console.log(`   - locationInput: "${this.locationInput}"`);
-        console.log(`   - userLocation: "${this.userLocation}"`);
-        console.log(`   - selectedProviderType: "${this.selectedProviderType}"`);
-        
+
         // Définir la localisation pour la recherche
         this.locationInput = suggestion.searchLocation;
-        
+
         // Effacer la géolocalisation pour forcer l'utilisation du texte de localisation
         this.userLocation = null;
-        
-        console.log(`🔧 État APRÈS modification:`);
-        console.log(`   - locationInput: "${this.locationInput}"`);
-        console.log(`   - userLocation: "${this.userLocation}"`);
-        console.log(`📍 Recherche textuelle configurée pour "${suggestion.searchLocation}"`);
+
       }
-      
+
       // Faire défiler vers la recherche
       setTimeout(() => {
         const searchElement = document.querySelector('.enhanced-search-bar');
@@ -4710,20 +4588,18 @@ retryPhotoAnalysis(): void {
           searchElement.scrollIntoView({ behavior: 'smooth' });
         }
       }, 100);
-      
+
       this.searchSalonsAdvanced();
     }
   }
 
   /**
-   * ✅ Ouvrir réservation avec un prestataire spécifique
+   *  Ouvrir réservation avec un prestataire spécifique
    */
   private openSpecificProviderBooking(suggestion: any): void {
-    console.log('📅 Ouverture réservation directe avec:', suggestion.name);
 
-    // ✅ CORRECTION: Appliquer la localisation du favori si disponible
+    //  CORRECTION: Appliquer la localisation du favori si disponible
     if (suggestion.searchLocation) {
-      console.log(`🗺️ Application localisation du favori: ${suggestion.searchLocation}`);
       this.locationInput = suggestion.searchLocation;
       this.userLocation = null; // Forcer l'utilisation du texte de localisation
     }
@@ -4744,10 +4620,9 @@ retryPhotoAnalysis(): void {
   }
 
     /**
-   * ✅ Voir détails réservation
+   *  Voir détails réservation
    */
   viewReservationDetails(reservation: any): void {
-    console.log('👁️ Voir détails:', reservation);
 
     // Option 1: Navigation vers détail
     // this.router.navigate(['/reservation', reservation.id]);
@@ -4757,7 +4632,7 @@ retryPhotoAnalysis(): void {
   }
 
   /**
-   * ✅ Nouvelle réservation rapide
+   *  Nouvelle réservation rapide
    */
   quickNewReservation(): void {
     // Faire défiler vers la recherche ou ouvrir modal
@@ -4768,11 +4643,11 @@ retryPhotoAnalysis(): void {
   }
 
   // ==========================================
-  // 🎨 GESTION UI
+  //  GESTION UI
   // ==========================================
 
   /**
-   * ✅ Fermer bandeau bienvenue
+   *  Fermer bandeau bienvenue
    */
   dismissWelcomeBanner(): void {
     this.welcomeBannerDismissed = true;
@@ -4783,7 +4658,7 @@ retryPhotoAnalysis(): void {
   }
 
   /**
-   * ✅ Charger état bandeau
+   *  Charger état bandeau
    */
   loadWelcomeBannerState(): void {
     // Vérifier si localStorage est disponible (éviter erreur SSR)
@@ -4796,14 +4671,14 @@ retryPhotoAnalysis(): void {
   }
 
   /**
-   * ✅ Toggle widget RDV
+   *  Toggle widget RDV
    */
   toggleWidget(): void {
     this.widgetMinimized = !this.widgetMinimized;
   }
 
   /**
-   * ✅ Vérifier rappel RDV proche
+   *  Vérifier rappel RDV proche
    */
   checkUpcomingReminder(): void {
     if (this.nextAppointment) {
@@ -4821,24 +4696,23 @@ retryPhotoAnalysis(): void {
   }
 
   /**
-   * ✅ Afficher rappel RDV
+   *  Afficher rappel RDV
    */
   showUpcomingReminder(): void {
     if (!this.nextAppointment) return;
 
     // Utiliser votre système de notification existant ou console.log
-    console.log('🔔 Rappel: Vous avez un RDV bientôt !');
 
     // Si vous avez un service de notification :
     // this.notificationService.show(`RDV ${this.nextAppointment.serviceNom} bientôt !`, 'Voir détails');
   }
 
   // ==========================================
-  // 🔧 UTILITAIRES
+  //  UTILITAIRES
   // ==========================================
 
   /**
-   * ✅ Formater date (ajout simple)
+   *  Formater date (ajout simple)
    */
   formatDate(date: string | Date): string {
     try {
@@ -4854,7 +4728,7 @@ retryPhotoAnalysis(): void {
   }
 
   /**
-   * ✅ Formater heure (ajout simple)
+   *  Formater heure (ajout simple)
    */
   formatTime(date: string | Date): string {
     try {
@@ -4869,11 +4743,11 @@ retryPhotoAnalysis(): void {
   }
 
   // ===============================================
-  // 🎠 MÉTHODES CARROUSEL SUGGESTIONS
+  //  MÉTHODES CARROUSEL SUGGESTIONS
   // ===============================================
 
   /**
-   * ✅ Calculer la transformation du carrousel
+   *  Calculer la transformation du carrousel
    */
   getCarouselTransform(): number {
     const cardWidth = 320; // 300px + 20px gap
@@ -4881,21 +4755,21 @@ retryPhotoAnalysis(): void {
   }
 
   /**
-   * ✅ Obtenir l'index maximum pour la navigation
+   *  Obtenir l'index maximum pour la navigation
    */
   getMaxIndex(): number {
     return Math.max(0, this.clientSuggestions.length - this.suggestionCardsVisible);
   }
 
   /**
-   * ✅ Obtenir l'index de la slide courante
+   *  Obtenir l'index de la slide courante
    */
   getCurrentSlideIndex(): number {
     return Math.floor(this.currentSuggestionIndex / this.suggestionCardsVisible);
   }
 
   /**
-   * ✅ Faire défiler les suggestions
+   *  Faire défiler les suggestions
    */
   scrollSuggestions(direction: 'prev' | 'next'): void {
     if (!this.clientSuggestions || this.clientSuggestions.length <= this.suggestionCardsVisible) {
@@ -4914,27 +4788,27 @@ retryPhotoAnalysis(): void {
   }
 
   /**
-   * ✅ Obtenir les points indicateurs du carrousel
+   *  Obtenir les points indicateurs du carrousel
    */
   getCarouselDots(): any[] {
     if (!this.clientSuggestions || this.clientSuggestions.length <= this.suggestionCardsVisible) {
       return [];
     }
-    
+
     const dotsCount = Math.ceil(this.clientSuggestions.length / this.suggestionCardsVisible);
     return new Array(dotsCount);
   }
 
   /**
-   * ✅ Aller à une slide spécifique
+   *  Aller à une slide spécifique
    */
   goToSuggestionSlide(slideIndex: number): void {
     if (!this.clientSuggestions || this.clientSuggestions.length <= this.suggestionCardsVisible) {
       return;
     }
-    
+
     this.currentSuggestionIndex = slideIndex * this.suggestionCardsVisible;
-    
+
     // S'assurer qu'on ne dépasse pas les limites
     const maxIndex = this.clientSuggestions.length - this.suggestionCardsVisible;
     if (this.currentSuggestionIndex > maxIndex) {
@@ -4943,13 +4817,13 @@ retryPhotoAnalysis(): void {
   }
 
   /**
-   * ✅ Adapter la configuration du carrousel selon la taille d'écran
+   *  Adapter la configuration du carrousel selon la taille d'écran
    */
   updateCarouselConfig(): void {
     if (!this.isBrowser) return;
-    
+
     const screenWidth = window.innerWidth;
-    
+
     if (screenWidth <= 480) {
       this.suggestionCardsVisible = 1;
       this.suggestionCardWidth = 260; // 240px + 20px gap
@@ -4963,7 +4837,7 @@ retryPhotoAnalysis(): void {
       this.suggestionCardsVisible = 3;
       this.suggestionCardWidth = 320; // 300px + 20px gap
     }
-    
+
     // Réajuster l'index si nécessaire
     if (this.currentSuggestionIndex > this.getMaxIndex()) {
       this.currentSuggestionIndex = this.getMaxIndex();
@@ -4971,31 +4845,127 @@ retryPhotoAnalysis(): void {
   }
 
   /**
-   * ✅ Listener pour les changements de taille d'écran
+   *  Listener pour les changements de taille d'écran
    */
   @HostListener('window:resize', ['$event'])
   onResize(event: any): void {
     this.updateCarouselConfig();
   }
 
+  //  HostListener pour l'infinite scroll
+  @HostListener('window:scroll', ['$event'])
+  onScrollForInfinite(event: any) {
+    if (this.hasMoreResults && !this.isLoadingMore && this.selectedService) {
+      const scrollPosition = window.pageYOffset + window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+
+      // Déclencher le chargement à 200px avant la fin
+      if (scrollPosition >= documentHeight - 200) {
+        this.loadMoreResults();
+      }
+    }
+  }
+
   // ===============================================
-  // 📍 MÉTHODES GÉOLOCALISATION INTELLIGENTE
+  //  MÉTHODES INFINITE SCROLL OPTIMISÉ
   // ===============================================
 
   /**
-   * ✅ Déterminer la meilleure localisation pour les suggestions
+   *  Méthode principale pour charger plus de résultats
+   */
+  loadMoreResults(): void {
+    if (this.isLoadingMore || !this.hasMoreResults) return;
+
+    this.isLoadingMore = true;
+
+    // Simuler un délai de chargement pour l'UX
+    setTimeout(() => {
+      const startIndex = this.currentPage * this.itemsPerLoad + this.itemsPerPage;
+      const endIndex = startIndex + this.itemsPerLoad;
+
+      const nextBatch = this.allResultsCache.slice(startIndex, endIndex);
+
+      if (nextBatch.length > 0) {
+        this.displayedProviders = [...this.displayedProviders, ...nextBatch];
+        this.currentPage++;
+      }
+
+      // Vérifier s'il reste des résultats
+      this.hasMoreResults = endIndex < this.allResultsCache.length;
+      this.isLoadingMore = false;
+
+    }, 300); // Délai UX pour montrer le loading
+  }
+
+  /**
+   *  Initialiser les résultats avec pagination
+   */
+  initializePaginatedResults(allResults: any[]): void {
+    this.allResultsCache = [...allResults];
+    this.totalResultsCount = allResults.length;
+    this.currentPage = 0;
+    this.hasMoreResults = allResults.length > this.itemsPerPage;
+
+    // Afficher les premiers résultats
+    this.displayedProviders = allResults.slice(0, this.itemsPerPage);
+
+  }
+
+  /**
+   *  Obtenir le texte de progression
+   */
+  getProgressText(): string {
+    if (this.totalResultsCount === 0) return '';
+
+    const displayed = this.displayedProviders.length;
+    const total = this.totalResultsCount;
+
+    if (displayed >= total) {
+      return `Tous les ${total} résultats affichés`;
+    }
+
+    return `${displayed} sur ${total}+ résultats`;
+  }
+
+  /**
+   *  Réinitialiser la pagination
+   */
+  resetPagination(): void {
+    this.displayedProviders = [];
+    this.allResultsCache = [];
+    this.currentPage = 0;
+    this.hasMoreResults = true;
+    this.totalResultsCount = 0;
+    this.isLoadingMore = false;
+  }
+
+  /**
+   *  Retourner en haut de page
+   */
+  scrollToTop(): void {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  }
+
+  // ===============================================
+  //  MÉTHODES GÉOLOCALISATION INTELLIGENTE
+  // ===============================================
+
+  /**
+   *  Déterminer la meilleure localisation pour les suggestions
    */
   private getBestLocationForSuggestions(allReservations: any[], locationCounts: { [key: string]: number }): string | null {
     // 1. Priorité 1: Géolocalisation actuelle (si disponible et récente)
     if (this.userLocation && this.isLocationRecent()) {
-      console.log('📍 Utilisation géolocalisation actuelle:', this.userLocation);
       return this.extractLocationFromGeolocation(this.userLocation);
     }
 
     // 2. Priorité 2: Localisation des 3 dernières réservations
     if (allReservations && allReservations.length > 0) {
       const recentReservations = allReservations
-        .sort((a, b) => new Date(b.datePrestation || b.dateReservation).getTime() - 
+        .sort((a, b) => new Date(b.datePrestation || b.dateReservation).getTime() -
                        new Date(a.datePrestation || a.dateReservation).getTime())
         .slice(0, 3);
 
@@ -5011,8 +4981,7 @@ retryPhotoAnalysis(): void {
       if (Object.keys(recentLocationCounts).length > 0) {
         const mostRecentLocation = Object.entries(recentLocationCounts)
           .sort(([,a], [,b]) => (b as number) - (a as number))[0]?.[0];
-        
-        console.log('📍 Utilisation localisation récente:', mostRecentLocation, recentLocationCounts);
+
         return mostRecentLocation;
       }
     }
@@ -5021,8 +4990,7 @@ retryPhotoAnalysis(): void {
     if (locationCounts && Object.keys(locationCounts).length > 0) {
       const historicalLocation = Object.entries(locationCounts)
         .sort(([,a], [,b]) => (b as number) - (a as number))[0]?.[0];
-      
-      console.log('📍 Utilisation localisation historique:', historicalLocation);
+
       return historicalLocation;
     }
 
@@ -5030,7 +4998,7 @@ retryPhotoAnalysis(): void {
   }
 
   /**
-   * ✅ Vérifier si la géolocalisation est récente (moins de 1h)
+   *  Vérifier si la géolocalisation est récente (moins de 1h)
    */
   private isLocationRecent(): boolean {
     // Cette logique peut être étendue pour vérifier l'âge de la géolocalisation
@@ -5038,21 +5006,21 @@ retryPhotoAnalysis(): void {
   }
 
   /**
-   * ✅ Extraire la localisation lisible depuis la géolocalisation
+   *  Extraire la localisation lisible depuis la géolocalisation
    */
   private extractLocationFromGeolocation(geoLocation: string): string {
     // Si c'est déjà une ville lisible, la retourner
     if (geoLocation && !geoLocation.includes(',') && !geoLocation.includes('°')) {
       return geoLocation;
     }
-    
+
     // Pour l'instant, retourner une valeur par défaut
     // Cette méthode peut être enrichie pour utiliser une API de géocodage inverse
     return 'Dakar'; // Valeur par défaut
   }
 
   /**
-   * ✅ Extraire la localisation depuis une réservation
+   *  Extraire la localisation depuis une réservation
    */
   private extractLocationFromReservation(reservation: any): string | null {
     // Essayer différents champs de localisation
@@ -5078,7 +5046,7 @@ retryPhotoAnalysis(): void {
   }
 
   /**
-   * ✅ Nettoyer et extraire le nom de localisation pertinent
+   *  Nettoyer et extraire le nom de localisation pertinent
    */
   private cleanLocationString(location: string): string | null {
     if (!location) return null;
@@ -5086,7 +5054,7 @@ retryPhotoAnalysis(): void {
     // Normaliser la casse
     location = location.trim();
 
-    // ✅ Localisations courantes au Sénégal - reconnaissance directe
+    //  Localisations courantes au Sénégal - reconnaissance directe
     const senegalLocations = [
       'Zac mbao', 'zac mbao', 'sipres Zac mbao',
       'rufisque centre', 'Rufisque centre', 'rufisque',

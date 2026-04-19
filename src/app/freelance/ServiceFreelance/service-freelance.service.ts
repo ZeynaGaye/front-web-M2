@@ -29,7 +29,7 @@ export interface ServiceFreelanceResponseDto {
   freelanceId: number;
   freelanceNom?: string;
   freelancePrenom?: string;
-  // ✅ AJOUT : Champ potentiellement manquant pour le service prédéfini
+  //  AJOUT : Champ potentiellement manquant pour le service prédéfini
   servicePredefiniId?: number;
 }
 
@@ -47,7 +47,7 @@ export interface ServiceFreelanceRequestDto {
   horairesFlexibles: boolean;
   disponibleWeekend: boolean;
   disponibleSoir: boolean;
-  // ✅ AJOUT : Champ pour le service prédéfini
+  //  AJOUT : Champ pour le service prédéfini
   servicePredefiniId?: number;
 }
 
@@ -64,15 +64,15 @@ export interface ErrorResponse {
   timestamp: number;
 }
 
-// ✅ CORRIGÉ : Enum correspondant au backend Java
+//  CORRIGÉ : Enum correspondant au backend Java
 export enum TypeIntervention {
   DOMICILE = 'DOMICILE',
-  SALON = 'SALON',  // ✅ Changé de STUDIO_PRIVE à SALON
+  SALON = 'SALON',  //  Changé de STUDIO_PRIVE à SALON
   MIXTE = 'MIXTE'
-  // ✅ Supprimé SALON_PARTENAIRE car pas dans le backend
+  //  Supprimé SALON_PARTENAIRE car pas dans le backend
 }
 
-// ✅ AJOUT : Interface pour la création intelligente
+//  AJOUT : Interface pour la création intelligente
 export interface CreateServiceFreelanceRequest {
   servicePredefiniId?: number;
   nomService?: string;
@@ -89,7 +89,7 @@ export interface CreateServiceFreelanceRequest {
   disponibleSoir?: boolean;
 }
 
-// ✅ AJOUT : Interface pour la réponse de création intelligente
+//  AJOUT : Interface pour la réponse de création intelligente
 export interface ServiceCreationResponse {
   service?: ServiceFreelanceResponseDto;
   needsConfirmation?: boolean;
@@ -119,7 +119,7 @@ export class ServiceFreelanceService {
   private readonly API_URL = `${environment.apiUrl}/service-freelance`;
 
   constructor(private http: HttpClient) {
-    console.log('🔧 ServiceFreelanceService API_URL:', this.API_URL);
+
   }
 
   // ===== GESTION DES SERVICES D'UN FREELANCE =====
@@ -129,7 +129,7 @@ export class ServiceFreelanceService {
    */
   getServicesByFreelance(freelanceId: number): Observable<ServiceFreelanceResponseDto[]> {
     const url = `${this.API_URL}/freelance/${freelanceId}`;
-    console.log('📡 Chargement services pour freelance:', url);
+
     
     return this.http.get<ServiceFreelanceResponseDto[]>(url)
       .pipe(
@@ -142,7 +142,7 @@ export class ServiceFreelanceService {
    */
   createService(freelanceId: number, serviceData: ServiceFreelanceRequestDto): Observable<ServiceFreelanceResponseDto> {
     const url = `${this.API_URL}/freelance/${freelanceId}`;
-    console.log('🆕 Création service:', url, serviceData);
+
     
     return this.http.post<ServiceFreelanceResponseDto>(url, serviceData)
       .pipe(
@@ -151,11 +151,11 @@ export class ServiceFreelanceService {
   }
 
   /**
-   * ✅ NOUVEAU : Création intelligente de service
+   *  NOUVEAU : Création intelligente de service
    */
   createServiceIntelligent(freelanceId: number, serviceData: CreateServiceFreelanceRequest): Observable<ServiceCreationResponse> {
     const url = `${this.API_URL}/freelance/${freelanceId}/intelligent`;
-    console.log('🧠 Création service intelligent:', url, serviceData);
+
     
     return this.http.post<ServiceCreationResponse>(url, serviceData)
       .pipe(
@@ -164,11 +164,11 @@ export class ServiceFreelanceService {
   }
 
   /**
-   * ✅ NOUVEAU : Confirmation après suggestion
+   *  NOUVEAU : Confirmation après suggestion
    */
   confirmServiceCreation(freelanceId: number, confirmationData: any): Observable<ServiceCreationResponse> {
     const url = `${this.API_URL}/freelance/${freelanceId}/confirm-creation`;
-    console.log('✅ Confirmation création service:', url, confirmationData);
+
     
     return this.http.post<ServiceCreationResponse>(url, confirmationData)
       .pipe(
@@ -181,7 +181,7 @@ export class ServiceFreelanceService {
    */
   updateService(serviceId: number, serviceData: ServiceFreelanceRequestDto): Observable<ServiceFreelanceResponseDto> {
     const url = `${this.API_URL}/${serviceId}`;
-    console.log('✏️ Mise à jour service:', url, serviceData);
+
     
     return this.http.put<ServiceFreelanceResponseDto>(url, serviceData)
       .pipe(
@@ -194,7 +194,7 @@ export class ServiceFreelanceService {
    */
   getServiceById(serviceId: number): Observable<ServiceFreelanceResponseDto> {
     const url = `${this.API_URL}/${serviceId}`;
-    console.log('🔍 Récupération service:', url);
+
     
     return this.http.get<ServiceFreelanceResponseDto>(url)
       .pipe(
@@ -207,7 +207,7 @@ export class ServiceFreelanceService {
    */
   deleteService(serviceId: number): Observable<void> {
     const url = `${this.API_URL}/${serviceId}`;
-    console.log('🗑️ Suppression service:', url);
+
     
     return this.http.delete<void>(url)
       .pipe(
@@ -223,7 +223,7 @@ export class ServiceFreelanceService {
   searchServices(criteria: ServiceSearchCriteria): Observable<ServiceFreelanceResponseDto[]> {
     let params = new HttpParams();
     
-    // ✅ Gestion sécurisée des valeurs nulles
+    //  Gestion sécurisée des valeurs nulles
     if (criteria.nom && criteria.nom.trim()) {
       params = params.set('nom', criteria.nom.trim());
     }
@@ -235,7 +235,7 @@ export class ServiceFreelanceService {
     }
 
     const url = `${this.API_URL}/search`;
-    console.log('🔎 Recherche services:', url, criteria);
+
 
     return this.http.get<ServiceFreelanceResponseDto[]>(url, { params })
       .pipe(
@@ -248,7 +248,7 @@ export class ServiceFreelanceService {
    */
   getAllServices(): Observable<ServiceFreelanceResponseDto[]> {
     const url = `${this.API_URL}/all`;
-    console.log('📋 Récupération tous les services:', url);
+
     
     return this.http.get<ServiceFreelanceResponseDto[]>(url)
       .pipe(
@@ -287,7 +287,7 @@ export class ServiceFreelanceService {
    */
   getFreelanceStats(freelanceId: number): Observable<FreelanceServicesStatsDto> {
     const url = `${this.API_URL}/freelance/${freelanceId}/stats`;
-    console.log('📊 Chargement statistiques:', url);
+
     
     return this.http.get<FreelanceServicesStatsDto>(url)
       .pipe(
@@ -306,7 +306,7 @@ export class ServiceFreelanceService {
   }
 
   /**
-   * ✅ CORRIGÉ : Types d'intervention correspondant au backend
+   *  CORRIGÉ : Types d'intervention correspondant au backend
    */
   getTypesIntervention(): { value: TypeIntervention; label: string }[] {
     return [
@@ -335,7 +335,7 @@ export class ServiceFreelanceService {
   }
 
   /**
-   * ✅ CORRIGÉ : Formate un prix en CFA (pas en euros)
+   *  CORRIGÉ : Formate un prix en CFA (pas en euros)
    */
   formatPrice(price: number): string {
     if (!price || price === 0) {
@@ -370,7 +370,7 @@ export class ServiceFreelanceService {
   }
 
   /**
-   * ✅ CORRIGÉ : Types d'intervention correspondant au backend
+   *  CORRIGÉ : Types d'intervention correspondant au backend
    */
   getTypeInterventionLabel(type: TypeIntervention): string {
     const labels = {
@@ -439,7 +439,7 @@ export class ServiceFreelanceService {
   private handleError = (error: HttpErrorResponse): Observable<never> => {
     let errorMessage = 'Une erreur est survenue';
     
-    console.error('🚨 ServiceFreelanceService Error Details:', {
+    console.error(' ServiceFreelanceService Error Details:', {
       status: error.status,
       statusText: error.statusText,
       url: error.url,

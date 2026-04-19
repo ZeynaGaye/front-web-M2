@@ -109,7 +109,7 @@ import { DragDropDirective } from '../../directives/drag-drop/drag-drop.directiv
       }
     }
 
-    onFileDropped(files: FileList): void {  // ✅ Type FileList
+    onFileDropped(files: FileList): void {  //  Type FileList
   this.handleFiles(files);  // Traitement direct des fichiers
 }
 
@@ -210,7 +210,7 @@ import { DragDropDirective } from '../../directives/drag-drop/drag-drop.directiv
         formData.append('captions[]', caption);
         
         // Pour le debugging
-        console.log(`Image ${index}: ${file.name}, Légende: "${caption}"`);
+
       });
 
       // Envoi au service

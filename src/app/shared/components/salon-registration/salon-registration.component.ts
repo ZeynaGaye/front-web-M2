@@ -68,7 +68,7 @@ export class SalonRegistrationComponent implements OnInit {
     this.showLoginModal = false;
     this.showRegisterModal = false;
     
-    console.log('Construction salon-registration component - Modals initialisés à false');
+
   }
 
   ngOnInit() {
@@ -81,10 +81,7 @@ export class SalonRegistrationComponent implements OnInit {
     this.showLoginModal = false;
     this.showRegisterModal = false;
     
-    console.log('Initialisation salon-registration - Modals fermés:', {
-      showLoginModal: this.showLoginModal,
-      showRegisterModal: this.showRegisterModal
-    });
+
     
     // Vérifier si l'utilisateur vient de se connecter
     setTimeout(() => {
@@ -94,15 +91,15 @@ export class SalonRegistrationComponent implements OnInit {
 
   // Vérifier si l'utilisateur vient de se connecter avec succès
   private checkForSuccessfulLogin() {
-    console.log('🔍 Vérification de la connexion réussie...');
+
     
     if (this.isBrowser && this.isLoggedIn) {
-      console.log('✅ Utilisateur connecté détecté');
+
       const redirectAfterLogin = sessionStorage.getItem('redirectAfterLogin');
       const selectedPlan = sessionStorage.getItem('selectedPlan');
       
       if (redirectAfterLogin) {
-        console.log('📍 Redirection prévue vers:', redirectAfterLogin);
+
         
         // Afficher un message de succès avec le plan sélectionné
         if (selectedPlan) {
@@ -122,7 +119,7 @@ export class SalonRegistrationComponent implements OnInit {
         }, 2000);
       }
     } else {
-      console.log('ℹ️ Aucune connexion active ou pas côté navigateur');
+
     }
   }
   clearSessionData() {

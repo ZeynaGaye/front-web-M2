@@ -1,29 +1,33 @@
-import { Component, OnInit, OnDestroy, Input, Output, EventEmitter } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, PLATFORM_ID, inject } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { OffreEmploi, OffreEmploisService } from '../../../employeur/services/OffreEmploisService/offre-emplois-service.service';
 import { OffreDetailsComponent } from '../offre-details/offre-details.component';
 import { MatIconModule } from '@angular/material/icon';
 import { Subject } from 'rxjs';
 import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
+
 import { CandidatureService } from '../../services/candidatures.service';
 
 @Component({
   selector: 'app-opportunites-emploi',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, OffreDetailsComponent, MatIconModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, OffreDetailsComponent, MatIconModule, RouterLink],
   templateUrl: './opportunites-emploi.component.html',
   styleUrls: ['./opportunites-emploi.component.scss']
 })
 export class OpportunitesEmploiComponent implements OnInit, OnDestroy {
   
   // ==========================================
-  // 🔧 INPUTS POUR LA RÉUTILISABILITÉ
+  //  INPUTS POUR LA RÉUTILISABILITÉ
   // ==========================================
   
   @Input() maxOffersToShow?: number;
   @Input() showHeader: boolean = true;
   @Input() compactMode: boolean = false;
+  @Input() hideNav: boolean = false;
   @Input() autoLoad: boolean = true;
   @Input() initialFilter?: { searchTerm?: string, status?: string };
   @Input() customTitle?: string;
@@ -31,7 +35,7 @@ export class OpportunitesEmploiComponent implements OnInit, OnDestroy {
   @Input() freelanceId?: number; // Pour vérifier les candidatures postulées
 
   // ==========================================
-  // 📤 OUTPUTS POUR LA COMMUNICATION
+  //  OUTPUTS POUR LA COMMUNICATION
   // ==========================================
   
   @Output() filtersChanged = new EventEmitter<{ search: string, status: string }>();
@@ -42,12 +46,19 @@ export class OpportunitesEmploiComponent implements OnInit, OnDestroy {
   @Output() error = new EventEmitter<any>();
 
   // ==========================================
-  // 📊 PROPRIÉTÉS PRINCIPALES
+  //  PROPRIÉTÉS PRINCIPALES
   // ==========================================
   offres: OffreEmploi[] = [];
   filteredOffres: OffreEmploi[] = [];
   displayedOffres: OffreEmploi[] = [];
   isLoading: boolean = true;
+
+  // Rotation compacte (homepage)
+  compactOpenOffers: OffreEmploi[] = [];  // toutes les offres OUVERT triées par date
+  compactIndex = 0;                        // index de départ du groupe de 3 affiché
+  compactAnimating = false;                // pour déclencher l'animation CSS
+  compactDisplayedOffers: OffreEmploi[] = []; // tableau stable pour le ngFor
+  private rotationInterval: any = null;
   searchForm: FormGroup;
   selectedOffre: OffreEmploi | null = null;
   showDetails: boolean = false;
@@ -57,16 +68,24 @@ export class OpportunitesEmploiComponent implements OnInit, OnDestroy {
   isExpanded: boolean = false;
   searchText: string = '';
 
+  // New filter properties
+  readonly categories = ['Coiffure', 'Maquillage', 'Onglerie', 'Soin de la peau'];
+  readonly contractTypes = ['CDI', 'CDD', 'Temps partiel', 'Stage', 'Intérim', 'Freelance', 'Formation'];
+  selectedCategories: string[] = [];
+  sortBy: string = 'recent';
+  currentPage: number = 1;
+  readonly pageSize: number = 5;
+
   // ==========================================
-  // 🆕 PROPRIÉTÉS POUR LE FILTRE "DÉJÀ POSTULÉ"
+  //  PROPRIÉTÉS POUR LE FILTRE "DÉJÀ POSTULÉ"
   // ==========================================
   showOnlyApplied: boolean = false; // Pour le filtre "Déjà postulé"
   appliedOffers: number[] = []; // IDs des offres où l'utilisateur a postulé
-  candidatureStatuses = new Map<number, {status: string, date: Date, isNew?: boolean}>(); // Statuts des candidatures
+  candidatureStatuses = new Map<number, {status: string, date: Date, isNew?: boolean, offreTitre?: string}>(); // Statuts des candidatures
   isLoadingAppliedOffers: boolean = false;
   
   // ==========================================
-  // 🆕 PROPRIÉTÉS POUR LES NOTIFICATIONS DE STATUT
+  //  PROPRIÉTÉS POUR LES NOTIFICATIONS DE STATUT
   // ==========================================
   recentStatusChanges: Array<{
     offreId: number,
@@ -83,13 +102,15 @@ export class OpportunitesEmploiComponent implements OnInit, OnDestroy {
   
   // Mapping des statuts pour l'affichage
   private statusDisplayMap: { [key: string]: string } = {
-    'OUVERT': '✅ Ouvert',
-    'FERMÉ': '❌ Fermé', 
-    'EN_ATTENTE': '⏳ En attente',
-    'URGENT': '🚨 Urgent',
-    'FEATURED': '⭐ À la une'
+    'OUVERT': ' Ouvert',
+    'FERMÉ': ' Fermé', 
+    'EN_ATTENTE': ' En attente',
+    'URGENT': ' Urgent',
+    'FEATURED': ' À la une'
   };
   
+  private platformId = inject(PLATFORM_ID);
+
   constructor(
     private offreEmploisService: OffreEmploisService,
     private candidatureService: CandidatureService,
@@ -97,7 +118,12 @@ export class OpportunitesEmploiComponent implements OnInit, OnDestroy {
   ) {
     this.searchForm = this.fb.group({
       searchTerm: [''],
-      status: ['']
+      status: [''],
+      ville: [''],
+      specialisation: [''],
+      typeContrat: [''],
+      experience: [''],
+      salaire: ['']
     });
   }
 
@@ -108,36 +134,25 @@ export class OpportunitesEmploiComponent implements OnInit, OnDestroy {
     });
   }
   
-  // ==========================================
-  // 🔄 CYCLE DE VIE
-  // ==========================================
+ 
   ngOnInit(): void {
-    console.log('🔧 OpportunitesEmploiComponent ngOnInit', {
-      maxOffersToShow: this.maxOffersToShow,
-      compactMode: this.compactMode,
-      showHeader: this.showHeader,
-      freelanceId: this.freelanceId
-    });
-    
     this.initializeComponent();
     if (!this.maxOffersToShow && this.compactMode) {
-      this.maxOffersToShow = 4;
+      this.maxOffersToShow = 3;
     }
-    
-    // 🆕 Charger les candidatures si freelanceId fourni
     if (this.freelanceId) {
       this.loadAppliedOffers();
     }
   }
 
   ngOnDestroy(): void {
+    this.stopRotation();
     this.destroy$.next();
     this.destroy$.complete();
   }
 
-  // ==========================================
-  // 🚀 INITIALISATION
-  // ==========================================
+ 
+  
   private initializeComponent(): void {
     if (this.initialFilter) {
       this.searchForm.patchValue(this.initialFilter);
@@ -178,24 +193,22 @@ export class OpportunitesEmploiComponent implements OnInit, OnDestroy {
   }
 
   // ==========================================
-  // 📡 CHARGEMENT DES DONNÉES
+  //  CHARGEMENT DES DONNÉES
   // ==========================================
   loadOffres(): void {
-    console.log('📡 Chargement des offres...');
     this.isLoading = true;
     
     this.offreEmploisService.getAllOffresEmplois()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (data) => {
-          console.log('✅ Données reçues:', data);
           this.offres = data || [];
           this.applyFilters();
           this.isLoading = false;
           this.dataLoaded.emit(this.offres);
         },
         error: (err) => {
-          console.error('❌ Erreur lors du chargement:', err);
+          console.error(' Erreur lors du chargement:', err);
           this.offres = [];
           this.filteredOffres = [];
           this.displayedOffres = [];
@@ -206,27 +219,24 @@ export class OpportunitesEmploiComponent implements OnInit, OnDestroy {
   }
 
   // ==========================================
-  // 🆕 CHARGEMENT DES CANDIDATURES
+  //  CHARGEMENT DES CANDIDATURES
   // ==========================================
   
   /**
-   * 📋 Charger les candidatures du freelance
+   *  Charger les candidatures du freelance
    */
   loadAppliedOffers(): void {
-    console.log('🔍 loadAppliedOffers called with freelanceId:', this.freelanceId);
     if (!this.freelanceId) {
-      console.warn('⚠️ ID du freelance non fourni - freelanceId:', this.freelanceId);
+      console.warn(' ID du freelance non fourni - freelanceId:', this.freelanceId);
       return;
     }
 
-    console.log('📋 Chargement des candidatures pour freelanceId:', this.freelanceId);
     this.isLoadingAppliedOffers = true;
     
     this.candidatureService.getCandidaturesByFreelance(this.freelanceId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (candidatures) => {
-          console.log('✅ Candidatures reçues:', candidatures);
           
           // Extraire les IDs et statuts
           this.appliedOffers = [];
@@ -240,10 +250,14 @@ export class OpportunitesEmploiComponent implements OnInit, OnDestroy {
               const status = candidature.status || 'EN_ATTENTE';
               const isRecentChange = this.isRecentStatusChange(candidatureDate, status);
               
+              const offreTitre = candidature['offreTitre']
+                || this.offres.find(o => o.id === candidature.offreEmploiId)?.titre
+                || 'ce poste';
               this.candidatureStatuses.set(candidature.offreEmploiId, {
                 status: status,
                 date: candidatureDate,
-                isNew: isRecentChange
+                isNew: isRecentChange,
+                offreTitre
               });
               
               // Ajouter aux changements récents si c'est un statut important et récent
@@ -259,7 +273,6 @@ export class OpportunitesEmploiComponent implements OnInit, OnDestroy {
           });
           
           this.isLoadingAppliedOffers = false;
-          console.log(`📊 ${this.appliedOffers.length} candidatures chargées`);
           
           // Réappliquer les filtres si on est en mode "Déjà postulé"
           if (this.showOnlyApplied) {
@@ -267,7 +280,7 @@ export class OpportunitesEmploiComponent implements OnInit, OnDestroy {
           }
         },
         error: (err) => {
-          console.error('❌ Erreur lors du chargement des candidatures:', err);
+          console.error(' Erreur lors du chargement des candidatures:', err);
           this.appliedOffers = [];
           this.candidatureStatuses.clear();
           this.isLoadingAppliedOffers = false;
@@ -276,12 +289,12 @@ export class OpportunitesEmploiComponent implements OnInit, OnDestroy {
   }
 
   // ==========================================
-  // 🔍 FILTRAGE ET AFFICHAGE MODIFIÉ
+  //  FILTRAGE ET AFFICHAGE MODIFIÉ
   // ==========================================
   applyFilters(): void {
     let filtered = [...this.offres];
     
-    // 🆕 Filtre "Déjà postulé"
+    //  Filtre "Déjà postulé"
     if (this.showOnlyApplied) {
       filtered = filtered.filter(offre => 
         offre.id && this.appliedOffers.includes(offre.id)
@@ -310,17 +323,100 @@ export class OpportunitesEmploiComponent implements OnInit, OnDestroy {
         offre.status === this.selectedStatus
       );
     }
-    
+
+    // Filtre par ville
+    const ville = this.searchForm.get('ville')?.value?.trim().toLowerCase();
+    if (ville) {
+      filtered = filtered.filter(offre =>
+        offre.lieu && offre.lieu.toLowerCase().includes(ville)
+      );
+    }
+
+    // Filtre par spécialisation
+    const specialisation = this.searchForm.get('specialisation')?.value;
+    if (specialisation) {
+      const specLower = specialisation.toLowerCase();
+      filtered = filtered.filter(offre =>
+        (offre.competences && offre.competences.toLowerCase().includes(specLower)) ||
+        (offre.titre && offre.titre.toLowerCase().includes(specLower))
+      );
+    }
+
+    // Filtre par catégories sélectionnées (checkboxes)
+    if (this.selectedCategories.length > 0) {
+      filtered = filtered.filter(offre =>
+        this.selectedCategories.some(cat => {
+          const catLower = cat.toLowerCase();
+          return (offre.competences && offre.competences.toLowerCase().includes(catLower)) ||
+                 (offre.titre && offre.titre.toLowerCase().includes(catLower));
+        })
+      );
+    }
+
+    // Filtre par type de contrat — matching insensible à la casse dans les deux sens
+    const typeContrat = this.searchForm.get('typeContrat')?.value;
+    if (typeContrat) {
+      const contractLower = typeContrat.toLowerCase().replace(/_/g, ' ');
+      filtered = filtered.filter(offre => {
+        if (!offre.typeContrat) return false;
+        const offreLower = offre.typeContrat.toLowerCase().replace(/_/g, ' ');
+        return offreLower === contractLower || offreLower.includes(contractLower) || contractLower.includes(offreLower);
+      });
+    }
+
+    // Filtre par expérience — matching sur le mot clé principal
+    const experience = this.searchForm.get('experience')?.value;
+    if (experience) {
+      const expLower = experience.toLowerCase();
+      filtered = filtered.filter(offre => {
+        if (!offre.experienceRequise) return false;
+        return offre.experienceRequise.toLowerCase().includes(expLower);
+      });
+    }
+
+    // Filtre par salaire — recherche textuelle dans le champ salaire
+    const salaire = this.searchForm.get('salaire')?.value?.trim().toLowerCase();
+    if (salaire) {
+      filtered = filtered.filter(offre =>
+        offre.salaire && offre.salaire.toLowerCase().includes(salaire)
+      );
+    }
+
+    // Tri
+    if (this.sortBy === 'recent') {
+      filtered.sort((a, b) => {
+        const dateA = (a.dateCreation || a.datePublication) ? new Date(a.dateCreation || a.datePublication!).getTime() : 0;
+        const dateB = (b.dateCreation || b.datePublication) ? new Date(b.dateCreation || b.datePublication!).getTime() : 0;
+        return dateB - dateA;
+      });
+    } else if (this.sortBy === 'titre') {
+      filtered.sort((a, b) => (a.titre || '').localeCompare(b.titre || ''));
+    }
+
     this.filteredOffres = filtered;
-    
+    this.currentPage = 1;
+
     // Appliquer la limitation d'affichage si définie
     if (this.maxOffersToShow && this.maxOffersToShow > 0) {
       this.displayedOffres = this.filteredOffres.slice(0, this.maxOffersToShow);
     } else {
       this.displayedOffres = [...this.filteredOffres];
     }
+
+    // En mode compact : construire la liste des offres OUVERT pour la rotation
+    if (this.compactMode) {
+      this.compactOpenOffers = this.offres
+        .filter(o => o.status === 'OUVERT')
+        .sort((a, b) => {
+          const da = a.datePublication ? new Date(a.datePublication).getTime() : 0;
+          const db = b.datePublication ? new Date(b.datePublication).getTime() : 0;
+          return db - da;
+        });
+      this.compactIndex = 0;
+      this.updateCompactDisplayedOffers();
+      this.startRotation();
+    }
     
-    console.log(`🔍 Filtrage: ${this.displayedOffres.length}/${this.filteredOffres.length}/${this.offres.length} (Déjà postulé: ${this.showOnlyApplied})`);
   }
 
   private matchesSearchTerm(offre: OffreEmploi, searchTerm: string): boolean {
@@ -339,20 +435,22 @@ export class OpportunitesEmploiComponent implements OnInit, OnDestroy {
   }
 
   // ==========================================
-  // 🔄 MÉTHODES MODIFIÉES
+  //  MÉTHODES MODIFIÉES
   // ==========================================
   
   resetFilters(): void {
-    console.log('🔄 Réinitialisation des filtres');
     this.searchForm.reset();
     this.searchTerm = '';
     this.selectedStatus = '';
-    this.showOnlyApplied = false; // 🆕 Reset du filtre "Déjà postulé"
+    this.showOnlyApplied = false; //  Reset du filtre "Déjà postulé"
+    this.selectedCategories = [];
+    this.sortBy = 'recent';
+    this.currentPage = 1;
     this.applyFilters();
   }
 
   setStatusFilter(status: string): void {
-    // 🆕 Désactiver le filtre "Déjà postulé" si on sélectionne un statut
+    //  Désactiver le filtre "Déjà postulé" si on sélectionne un statut
     if (this.showOnlyApplied) {
       this.showOnlyApplied = false;
     }
@@ -361,15 +459,14 @@ export class OpportunitesEmploiComponent implements OnInit, OnDestroy {
   }
 
   // ==========================================
-  // 🆕 GESTION DU FILTRE "DÉJÀ POSTULÉ"
+  //  GESTION DU FILTRE "DÉJÀ POSTULÉ"
   // ==========================================
 
   /**
-   * 🔄 Basculer le filtre "Déjà postulé"
+   *  Basculer le filtre "Déjà postulé"
    */
   toggleAppliedFilter(): void {
     this.showOnlyApplied = !this.showOnlyApplied;
-    console.log('🔄 Filtre "Déjà postulé":', this.showOnlyApplied);
     
     // Charger les candidatures si pas encore fait
     if (this.showOnlyApplied && this.appliedOffers.length === 0) {
@@ -390,7 +487,7 @@ export class OpportunitesEmploiComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 📋 Vérifier si l'utilisateur a postulé à une offre
+   *  Vérifier si l'utilisateur a postulé à une offre
    */
   hasAppliedToOffer(offreId: number | undefined): boolean {
     if (!offreId || !this.freelanceId) return false;
@@ -398,7 +495,7 @@ export class OpportunitesEmploiComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 📊 Obtenir le statut de candidature pour une offre
+   *  Obtenir le statut de candidature pour une offre
    */
   getCandidatureStatus(offreId: number | undefined): string | null {
     if (!offreId) return null;
@@ -406,21 +503,13 @@ export class OpportunitesEmploiComponent implements OnInit, OnDestroy {
     
     // Debug logs
     if (this.candidatureStatuses.size > 0) {
-      console.log(`🔍 getCandidatureStatus pour offre ${offreId}:`, status);
-      console.log('🗃️ Toutes les candidatures en mémoire:', 
-        Array.from(this.candidatureStatuses.entries()).map(([id, data]) => ({
-          offreId: id,
-          status: data.status,
-          date: data.date
-        }))
-      );
     }
     
     return status;
   }
 
   /**
-   * 🎨 Obtenir la classe CSS pour le statut de candidature
+   *  Obtenir la classe CSS pour le statut de candidature
    */
   getCandidatureStatusClass(offreId: number | undefined): string {
     const status = this.getCandidatureStatus(offreId);
@@ -434,7 +523,7 @@ export class OpportunitesEmploiComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 📝 Obtenir le texte d'affichage du statut
+   *  Obtenir le texte d'affichage du statut
    */
   getCandidatureStatusText(offreId: number | undefined): string {
     const status = this.getCandidatureStatus(offreId);
@@ -448,7 +537,7 @@ export class OpportunitesEmploiComponent implements OnInit, OnDestroy {
   }
 
   // ==========================================
-  // 🎯 GESTION DES ÉVÉNEMENTS
+  //  GESTION DES ÉVÉNEMENTS
   // ==========================================
   
   viewOffreDetails(offre: OffreEmploi): void {
@@ -462,12 +551,10 @@ export class OpportunitesEmploiComponent implements OnInit, OnDestroy {
   }
 
   onViewAllOffers(): void {
-    console.log('📋 Voir toutes les offres');
     this.viewAllClick.emit();
   }
 
   onCollapseSection(): void {
-    console.log('📋 Réduction de la section');
     this.isExpanded = false;
     this.maxOffersToShow = 4;
     this.applyFilters();
@@ -487,7 +574,7 @@ export class OpportunitesEmploiComponent implements OnInit, OnDestroy {
   }
 
   // ==========================================
-  // 🎨 MÉTHODES D'AFFICHAGE
+  //  MÉTHODES D'AFFICHAGE
   // ==========================================
   
   getStatusClass(status: string): string {
@@ -530,35 +617,84 @@ export class OpportunitesEmploiComponent implements OnInit, OnDestroy {
     }
   }
 
+  // New pagination and category methods
+  toggleCategory(cat: string): void {
+    const idx = this.selectedCategories.indexOf(cat);
+    if (idx >= 0) this.selectedCategories.splice(idx, 1);
+    else this.selectedCategories.push(cat);
+    this.currentPage = 1;
+    this.applyFilters();
+  }
+
+  isCategorySelected(cat: string): boolean {
+    return this.selectedCategories.includes(cat);
+  }
+
+  get paginatedOffres(): OffreEmploi[] {
+    const source = (this.maxOffersToShow && this.maxOffersToShow > 0)
+      ? this.displayedOffres
+      : this.filteredOffres;
+    const start = (this.currentPage - 1) * this.pageSize;
+    return source.slice(start, start + this.pageSize);
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.filteredOffres.length / this.pageSize);
+  }
+
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) this.currentPage = page;
+  }
+
+  getPageNumbers(): (number | string)[] {
+    const total = this.totalPages;
+    const current = this.currentPage;
+    if (total <= 7) {
+      return Array.from({ length: total }, (_, i) => i + 1);
+    }
+    const pages: (number | string)[] = [1];
+    if (current > 3) pages.push('...');
+    for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) {
+      pages.push(i);
+    }
+    if (current < total - 2) pages.push('...');
+    pages.push(total);
+    return pages;
+  }
+
+  getSalonImage(offre: OffreEmploi): string {
+    return offre.salonPhotoProfil || '';
+  }
+
   trackByOffreId(index: number, offre: OffreEmploi): any {
     return offre.id || index;
   }
 
   // ==========================================
-  // 📊 GETTERS POUR LE TEMPLATE
+  //  GETTERS POUR LE TEMPLATE
   // ==========================================
   
   /**
-   * 📊 Nombre d'offres auxquelles l'utilisateur a postulé
+   *  Nombre d'offres auxquelles l'utilisateur a postulé
    */
   get appliedOffersCount(): number {
     return this.appliedOffers.length;
   }
 
   /**
-   * 📋 Titre adapté selon le mode
+   *  Titre adapté selon le mode
    */
   get displayTitle(): string {
     if (this.customTitle) return this.customTitle;
     if (this.showOnlyApplied) {
-      return this.compactMode ? '📋 Mes Candidatures' : '📋 Mes candidatures envoyées';
+      return this.compactMode ? ' Mes Candidatures' : ' Mes candidatures envoyées';
     }
-    if (this.compactMode) return '💼 Opportunités d\'Emploi';
-    return '💼 Opportunités d\'Emplois en Beauté';
+    if (this.compactMode) return ' Opportunités d\'Emploi';
+    return ' Opportunités d\'Emplois en Beauté';
   }
 
   /**
-   * 📝 Sous-titre adapté selon le mode
+   *  Sous-titre adapté selon le mode
    */
   get displaySubtitle(): string {
     if (this.customSubtitle) return this.customSubtitle;
@@ -583,7 +719,7 @@ export class OpportunitesEmploiComponent implements OnInit, OnDestroy {
   }
 
   // ==========================================
-  // 🛠️ MÉTHODES PUBLIQUES POUR L'API
+  //  MÉTHODES PUBLIQUES POUR L'API
   // ==========================================
   
   public refreshData(): void {
@@ -617,12 +753,24 @@ export class OpportunitesEmploiComponent implements OnInit, OnDestroy {
   }
 
   // ==========================================
-  // 🆕 MÉTHODES SUPPLÉMENTAIRES
+  //  MÉTHODES SUPPLÉMENTAIRES
   // ==========================================
 
   getCompetencesList(competencesString: string): string[] {
     if (!competencesString) return [];
     return competencesString.split(',').map(c => c.trim()).filter(c => c.length > 0);
+  }
+
+  getCompactDate(date: string | Date | undefined): string {
+    if (!date) return 'Nouveau';
+    const now = new Date();
+    const targetDate = new Date(date);
+    const diffMs = now.getTime() - targetDate.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    if (diffDays === 0) return 'Aujourd\'hui';
+    if (diffDays < 30) return `il y a ${diffDays}j`;
+    const diffMonths = Math.floor(diffDays / 30);
+    return `il y a ${diffMonths}m`;
   }
 
   getRelativeDate(date: string | Date): string {
@@ -641,11 +789,9 @@ export class OpportunitesEmploiComponent implements OnInit, OnDestroy {
   }
 
   applyToOffer(offre: OffreEmploi): void {
-    console.log('✈️ Candidature pour:', offre.titre);
   }
 
   onPublishOffer(): void {
-    console.log('📝 Publier une offre');
   }
 
   getJobStatusLabel(status: string): string {
@@ -660,7 +806,6 @@ export class OpportunitesEmploiComponent implements OnInit, OnDestroy {
   }
 
   onJobFilterChange(filter: string): void {
-    console.log('🔍 Changement de filtre:', filter);
     this.selectedJobFilter = filter;
     
     if (filter === 'all') {
@@ -687,15 +832,62 @@ export class OpportunitesEmploiComponent implements OnInit, OnDestroy {
   }
 
   onViewAllJobs(): void {
-    console.log('📋 Extension de la section pour voir toutes les offres');
-    this.isExpanded = true;
-    this.maxOffersToShow = undefined;
-    this.applyFilters();
-    this.viewAllClick.emit();
+    if (this.compactMode) {
+      this.viewAllClick.emit();
+    } else {
+      this.isExpanded = true;
+      this.maxOffersToShow = undefined;
+      this.applyFilters();
+    }
   }
 
   // ==========================================
-  // 🆕 MÉTHODES POUR LES NOTIFICATIONS DE STATUT
+  //  ROTATION COMPACTE (homepage)
+  // ==========================================
+
+  private updateCompactDisplayedOffers(): void {
+    if (this.compactOpenOffers.length === 0) {
+      this.compactDisplayedOffers = [];
+      return;
+    }
+    const total = this.compactOpenOffers.length;
+    const result: OffreEmploi[] = [];
+    for (let i = 0; i < 3; i++) {
+      result.push(this.compactOpenOffers[(this.compactIndex + i) % total]);
+    }
+    this.compactDisplayedOffers = result;
+  }
+
+  private startRotation(): void {
+    this.stopRotation();
+    if (!isPlatformBrowser(this.platformId)) return; // pas de setInterval côté SSR
+    if (this.compactOpenOffers.length <= 3) return; // pas assez d'offres pour tourner
+    this.rotationInterval = setInterval(() => {
+      this.rotateOffers();
+    }, 8000); // toutes les 8 secondes
+  }
+
+  private stopRotation(): void {
+    if (this.rotationInterval) {
+      clearInterval(this.rotationInterval);
+      this.rotationInterval = null;
+    }
+  }
+
+  private rotateOffers(): void {
+    this.compactAnimating = false;
+    // Courte pause pour reset l'animation
+    setTimeout(() => {
+      this.compactIndex = (this.compactIndex + 3) % this.compactOpenOffers.length;
+      this.updateCompactDisplayedOffers();
+      this.compactAnimating = true;
+      // Reset après animation
+      setTimeout(() => { this.compactAnimating = false; }, 600);
+    }, 50);
+  }
+
+  // ==========================================
+  //  MÉTHODES POUR LES NOTIFICATIONS DE STATUT
   // ==========================================
 
   /**
@@ -718,69 +910,81 @@ export class OpportunitesEmploiComponent implements OnInit, OnDestroy {
    * Obtient la classe CSS pour la notification globale
    */
   getGlobalNotificationClass(): string {
-    const acceptedCount = this.recentStatusChanges.filter(c => c.status === 'ACCEPTEE').length;
-    const rejectedCount = this.recentStatusChanges.filter(c => c.status === 'REFUSEE').length;
-    
-    if (acceptedCount > 0) {
-      return 'notification-success';
-    } else if (rejectedCount > 0) {
-      return 'notification-warning';
-    }
+    const acceptedCount = this.getStatusCount('ACCEPTEE');
+    const rejectedCount = this.getStatusCount('REFUSEE');
+    if (acceptedCount > 0 && rejectedCount === 0) return 'notification-success';
+    if (rejectedCount > 0 && acceptedCount === 0) return 'notification-warning';
+    if (acceptedCount > 0 && rejectedCount > 0) return 'notification-warning';
     return 'notification-info';
   }
 
-  /**
-   * Obtient le titre de la notification globale
-   */
   getGlobalNotificationTitle(): string {
-    const acceptedCount = this.recentStatusChanges.filter(c => c.status === 'ACCEPTEE').length;
-    const rejectedCount = this.recentStatusChanges.filter(c => c.status === 'REFUSEE').length;
-    
-    if (acceptedCount > 0 && rejectedCount === 0) {
-      return acceptedCount === 1 ? 
-        '🎉 Candidature acceptée !' : 
-        `🎉 ${acceptedCount} candidatures acceptées !`;
-    } else if (rejectedCount > 0 && acceptedCount === 0) {
-      return rejectedCount === 1 ? 
-        'Mise à jour de candidature' : 
-        `${rejectedCount} mises à jour de candidatures`;
-    } else if (acceptedCount > 0 && rejectedCount > 0) {
-      return `${acceptedCount + rejectedCount} mises à jour de candidatures`;
-    }
-    return 'Nouvelles mises à jour';
+    return `Mes candidatures (${this.appliedOffersCount})`;
   }
 
-  /**
-   * Obtient le message de la notification globale
-   */
   getGlobalNotificationMessage(): string {
-    const acceptedCount = this.recentStatusChanges.filter(c => c.status === 'ACCEPTEE').length;
-    const rejectedCount = this.recentStatusChanges.filter(c => c.status === 'REFUSEE').length;
-    
-    if (acceptedCount > 0 && rejectedCount === 0) {
-      return acceptedCount === 1 ? 
-        'Félicitations ! Un employeur a accepté votre candidature.' : 
-        `Félicitations ! ${acceptedCount} employeurs ont accepté vos candidatures.`;
-    } else if (rejectedCount > 0 && acceptedCount === 0) {
-      return rejectedCount === 1 ? 
-        'Une candidature a été mise à jour par l\'employeur.' : 
-        `${rejectedCount} candidatures ont été mises à jour.`;
-    } else if (acceptedCount > 0 && rejectedCount > 0) {
-      return `${acceptedCount} candidature(s) acceptée(s) et ${rejectedCount} mise(s) à jour.`;
-    }
-    return 'Consultez vos candidatures pour voir les détails.';
+    const acceptedCount = this.getStatusCount('ACCEPTEE');
+    const rejectedCount = this.getStatusCount('REFUSEE');
+    const pendingCount  = this.getStatusCount('EN_ATTENTE');
+    const inProgressCount = this.getStatusCount('EN_COURS');
+    const parts: string[] = [];
+    if (acceptedCount > 0)    parts.push(`${acceptedCount} acceptée${acceptedCount > 1 ? 's' : ''}`);
+    if (rejectedCount > 0)    parts.push(`${rejectedCount} non retenue${rejectedCount > 1 ? 's' : ''}`);
+    if (inProgressCount > 0)  parts.push(`${inProgressCount} en cours`);
+    if (pendingCount > 0)     parts.push(`${pendingCount} en attente`);
+    return parts.join(' · ');
+  }
+
+  private getStatusCount(status: string): number {
+    let count = 0;
+    this.candidatureStatuses.forEach(c => { if (c.status === status) count++; });
+    return count;
+  }
+
+  getAcceptedMessages(): string[] {
+    const msgs: string[] = [];
+    this.candidatureStatuses.forEach(c => {
+      if (c.status === 'ACCEPTEE') {
+        msgs.push(`Félicitations ! Votre candidature pour le poste "${c.offreTitre}" a été retenue !`);
+      }
+    });
+    return msgs;
+  }
+
+  getRefusedMessages(): string[] {
+    const msgs: string[] = [];
+    this.candidatureStatuses.forEach(c => {
+      if (c.status === 'REFUSEE') {
+        msgs.push(`Votre candidature pour le poste "${c.offreTitre}" n'a pas été retenue cette fois.`);
+      }
+    });
+    return msgs;
+  }
+
+  getPendingSummary(): string {
+    const pendingCount = this.getStatusCount('EN_ATTENTE');
+    const inProgressCount = this.getStatusCount('EN_COURS');
+    const parts: string[] = [];
+    if (inProgressCount > 0) parts.push(`${inProgressCount} en cours d'examen`);
+    if (pendingCount > 0)    parts.push(`${pendingCount} en attente de réponse`);
+    return parts.join(' · ');
+  }
+
+  hasCandidatureMessages(): boolean {
+    return this.getAcceptedMessages().length > 0 || this.getRefusedMessages().length > 0;
   }
 
   /**
    * Fait défiler vers les offres avec changements de statut
    */
   scrollToStatusChanges(): void {
-    const firstStatusChangeElement = document.querySelector('.status-alert');
-    if (firstStatusChangeElement) {
-      firstStatusChangeElement.scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'center' 
-      });
-    }
+    this.showOnlyApplied = true;
+    this.applyFilters();
+    setTimeout(() => {
+      const target = document.querySelector('.badge-candidature') || document.querySelector('.offers-list');
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
   }
 }

@@ -1,30 +1,75 @@
+
+// Couleur secondaire freelance (#A4B1BD gris bleuté)
+$secondary-color: #A4B1BD;
+$secondary-light: #C5CFD6;
+$secondary-dark: #8FA7B5;
+
+// Palette principale = secondaire pour ce formulaire freelance
+$primary-color: #A4B1BD;
+$primary-light: #C5CFD6;
+$primary-dark: #8FA7B5;
+$primary-darker: #6b8899;
+
+// Tons neutres modernes
+$white: #ffffff;
+$background: #fafbfc;
+$surface: #f8fafc;
+$gray-50: #f9fafb;
+$gray-100: #f3f4f6;
+$gray-200: #e5e7eb;
+$gray-300: #d1d5db;
+$gray-400: #9ca3af;
+$gray-500: #6b7280;
+$gray-600: #4b5563;
+$gray-700: #374151;
+$gray-800: #1f2937;
+$gray-900: #111827;
+
+// Couleurs sémantiques modernes
+$success-color: #10b981;
+$success-light: #34d399;
+$warning-color: #f59e0b;
+$warning-light: #fbbf24;
+$error-color: #ef4444;
+$error-light: #f87171;
+$info-color: #3b82f6;
+$info-light: #60a5fa;
+
+// Ombres modernisées
+$shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+$shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+$shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+$shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+$shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+$shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+// Gradients modernes
+$gradient-primary: linear-gradient(135deg, $primary-color 0%, $primary-dark 100%);
+$gradient-surface: linear-gradient(145deg, $white 0%, $gray-50 100%);
+$gradient-card: linear-gradient(145deg, $surface 0%, $white 100%);
+
 /* ===============================================
-   🎨 VOS COULEURS UNIQUEMENT - SANS FIORITURES
+   🔧 CORRECTION DES ICÔNES MATERIAL
    =============================================== */
 
-// VOS couleurs principales
-$primary: #fb8f71;
-$primary-light: #ffd7cc;
-$primary-dark: #f36a4a;
-
-// VOS couleurs grises
-$gray-light: #f8fafc;
-$gray-medium: #e5e7eb;
-$gray-dark: #6b7280;
-$gray-darker: #1f2937;
-
-// Couleurs de base
-$white: #ffffff;
-$black: #000000;
-$error: #ef4444;
-$success: #10b981;
-
-// Rayons et ombres simples
-$border-radius: 8px;
-$simple-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+.mat-icon {
+  font-family: 'Material Icons' !important;
+  font-weight: normal !important;
+  font-style: normal !important;
+  font-size: 20px !important;
+  line-height: 1 !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+  display: inline-block !important;
+  white-space: nowrap !important;
+  word-wrap: normal !important;
+  direction: ltr !important;
+  -webkit-font-feature-settings: 'liga' !important;
+  -webkit-font-smoothing: antialiased !important;
+}
 
 /* ===============================================
-   📋 STRUCTURE SIMPLE DU DIALOG
+   🎭 MODAL OVERLAY MODERNISÉ
    =============================================== */
 
 .modal-overlay {
@@ -33,635 +78,926 @@ $simple-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10000;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-out;
+}
 
-  .modal-container {
-    background: $white;
-    border-radius: $border-radius;
-    width: 95%;
-    max-width: 700px;
-    max-height: 90vh;
-    box-shadow: $simple-shadow;
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ===============================================
+   🏢 CONTAINER MODAL MODERNISÉ
+   =============================================== */
+
+.modal-container {
+  max-width: 620px;
+  max-height: 90vh;
+  width: 95%;
+  background: $gradient-surface;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: $shadow-2xl;
+  border: 1px solid rgba($primary-color, 0.2);
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: $gradient-primary;
+    z-index: 1;
+  }
+
+  /* ===============================================
+     🎨 HEADER MODERNISÉ
+     =============================================== */
+
+  .modal-header {
+    background: $gradient-primary;
+    color: white;
+    padding: 28px 32px;
     display: flex;
-    flex-direction: column;
-    overflow: hidden;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    }
 
-    /* ===============================================
-       🔝 HEADER SIMPLE
-       =============================================== */
-    .modal-header {
+    .header-content {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      padding: 20px 24px;
-      background: $primary;
-      color: $white;
+      gap: 16px;
       
-      .header-content {
+      .mat-icon {
+        color: white !important;
+        font-size: 26px !important;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 10px;
+        padding: 8px;
+        backdrop-filter: blur(10px);
+      }
+      
+      h2 {
+        margin: 0;
+        font-size: 1.6rem;
+        font-weight: 700;
+        letter-spacing: -0.025em;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
+    }
+    
+    .close-button {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+      padding: 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(10px);
+      
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+      
+      &:active {
+        transform: scale(0.95);
+      }
+      
+      .mat-icon {
+        color: white !important;
+        font-size: 20px !important;
+      }
+    }
+  }
+  
+  /* ===============================================
+     ⏳ ÉTATS DE CHARGEMENT ET D'ERREUR
+     =============================================== */
+  
+  .loading-section, .error-section {
+    padding: 60px 32px;
+    text-align: center;
+    background: $gradient-card;
+    
+    .mat-spinner {
+      margin: 0 auto 24px;
+    }
+    
+    .mat-icon {
+      color: $primary-color !important;
+      font-size: 56px !important;
+      margin-bottom: 20px;
+      background: rgba($primary-color, 0.1);
+      border-radius: 16px;
+      padding: 16px;
+    }
+    
+    h4 {
+      margin: 0 0 12px 0;
+      color: $gray-700;
+      font-size: 1.3rem;
+      font-weight: 700;
+    }
+    
+    p {
+      margin: 0 0 20px 0;
+      color: $gray-500;
+      font-size: 1rem;
+    }
+  }
+  
+  /* ===============================================
+     ✅ SECTION CONFIRMATION MODERNISÉE
+     =============================================== */
+  
+  .confirmation-section {
+    padding: 32px;
+    background: $gradient-card;
+    
+    .mat-card {
+      box-shadow: $shadow-lg;
+      border: 1px solid rgba($primary-color, 0.2);
+      border-radius: 16px;
+      background: $white;
+      overflow: hidden;
+      
+      .mat-card-header {
+        background: rgba($primary-color, 0.05);
+        padding: 20px 24px;
+        
+        .mat-icon {
+          color: $primary-color !important;
+          font-size: 28px !important;
+          background: rgba($primary-color, 0.1);
+          border-radius: 12px;
+          padding: 8px;
+        }
+        
+        .mat-card-title {
+          color: $gray-700;
+          font-weight: 700;
+          font-size: 1.2rem;
+        }
+      }
+      
+      .mat-card-content {
+        padding: 24px !important;
+        
+        .suggestion-content {
+          p {
+            margin-bottom: 12px;
+            line-height: 1.6;
+            
+            strong {
+              color: $primary-color;
+            }
+          }
+        }
+      }
+      
+      .mat-card-actions {
+        padding: 20px 24px !important;
+        background: $gray-50;
+        border-top: 1px solid $gray-100;
+        gap: 12px;
+      }
+    }
+  }
+
+  /* ===============================================
+     📋 CONTENU PRINCIPAL DU FORMULAIRE
+     =============================================== */
+  
+  .dialog-content {
+    padding: 32px;
+    flex: 1;
+    overflow-y: auto;
+    background: $gradient-card;
+    
+    // Scroll bar personnalisée moderne
+    scrollbar-width: thin;
+    scrollbar-color: rgba($primary-color, 0.3) transparent;
+    
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, rgba($primary-color, 0.3), rgba($primary-color, 0.1));
+      border-radius: 3px;
+      
+      &:hover {
+        background: linear-gradient(180deg, rgba($primary-color, 0.5), rgba($primary-color, 0.3));
+      }
+    }
+    
+    /* ===============================================
+       📝 SECTIONS DU FORMULAIRE
+       =============================================== */
+    
+    .form-section {
+      background: $white;
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 28px;
+      box-shadow: $shadow-md;
+      border: 1px solid $gray-100;
+      transition: all 0.3s ease;
+      position: relative;
+      
+      &:hover {
+        box-shadow: $shadow-lg;
+        transform: translateY(-2px);
+      }
+      
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: $gradient-primary;
+        border-radius: 16px 16px 0 0;
+      }
+      
+      .section-title {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 2px solid $gray-100;
+        color: $gray-700;
+        font-size: 1.2rem;
+        font-weight: 700;
+        position: relative;
+        
+        &::after {
+          content: '';
+          position: absolute;
+          bottom: -2px;
+          left: 0;
+          width: 80px;
+          height: 2px;
+          background: $gradient-primary;
+          border-radius: 1px;
+        }
+        
+        .mat-icon {
+          color: $white !important;
+          font-size: 20px !important;
+          background: $gradient-primary;
+          border-radius: 10px;
+          padding: 10px;
+          box-shadow: $shadow-sm;
+        }
+      }
+      
+      /* ===============================================
+         📊 LAYOUTS DE FORMULAIRE
+         =============================================== */
+      
+      .form-row-single {
+        .mat-mdc-form-field {
+          width: 100%;
+        }
+      }
+      
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        
+        @media (max-width: 768px) {
+          grid-template-columns: 1fr;
+          gap: 20px;
+        }
+      }
+      
+      .service-actions {
+        margin-top: 20px;
+        gap: 16px;
+        
+        @media (max-width: 768px) {
+          grid-template-columns: 1fr;
+        }
+      }
+      
+      // Info du service sélectionné
+      .service-info {
+        margin-top: 20px;
+        
+        .mat-card {
+          border: 1px solid rgba($primary-color, 0.2);
+          border-radius: 12px;
+          background: rgba($primary-color, 0.02);
+          
+          .mat-card-content {
+            padding: 16px !important;
+            
+            .info-content {
+              display: flex;
+              flex-direction: column;
+              gap: 8px;
+              
+              strong {
+                color: $primary-color;
+                font-size: 1.1rem;
+              }
+              
+              span {
+                color: $gray-600;
+                font-size: 0.9rem;
+              }
+            }
+          }
+        }
+      }
+      
+      // Previews de prix et durée
+      .price-preview,
+      .duration-preview {
+        margin-top: 20px;
+        padding: 16px 20px;
+        background: $gradient-primary;
+        color: white;
+        border-radius: 12px;
         display: flex;
         align-items: center;
         gap: 12px;
-
-        mat-icon {
-          font-size: 24px;
-          width: 24px;
-          height: 24px;
+        box-shadow: $shadow-md;
+        
+        .mat-icon {
+          color: white !important;
+          font-size: 22px !important;
+          background: rgba(255, 255, 255, 0.2);
+          border-radius: 8px;
+          padding: 6px;
         }
+        
+        span {
+          font-size: 1rem;
+          
+          strong {
+            font-weight: 700;
+            font-size: 1.1rem;
+          }
+        }
+      }
+      
+      /* ===============================================
+         ☑️ GROUPES DE CHECKBOXES MODERNES
+         =============================================== */
+      
+      .checkbox-group {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        
+        @media (max-width: 768px) {
+          grid-template-columns: 1fr;
+        }
+        
+        .mat-mdc-checkbox {
+          background: $gray-50;
+          border-radius: 12px;
+          padding: 20px;
+          transition: all 0.3s ease;
+          border: 2px solid $gray-200;
+          
+          &:hover {
+            background: $white;
+            border-color: $primary-color;
+            box-shadow: $shadow-sm;
+          }
+          
+          &.mat-mdc-checkbox-checked {
+            background: rgba($primary-color, 0.05);
+            border-color: $primary-color;
+            box-shadow: $shadow-sm;
+          }
+          
+          .mdc-checkbox {
+            padding: 0;
+            margin-right: 16px;
+          }
+          
+          .checkbox-content {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            
+            strong {
+              color: $gray-700;
+              font-weight: 600;
+              font-size: 1rem;
+            }
+            
+            span {
+              color: $gray-500;
+              font-size: 0.9rem;
+              line-height: 1.4;
+            }
+          }
+        }
+      }
+      
+      // Actions de formulaire
+      .form-actions {
+        margin-top: 24px;
+        display: flex;
+        gap: 12px;
+        justify-content: flex-start;
+      }
+    }
+  }
 
+  /* ===============================================
+     🔘 ACTIONS DU DIALOG (FOOTER)
+     =============================================== */
+  
+  .dialog-actions {
+    padding: 24px 32px;
+    background: $white;
+    border-top: 2px solid $gray-100;
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+    
+    .cancel-btn {
+      background: transparent;
+      border: 2px solid $gray-300;
+      color: $gray-600;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      
+      &:hover {
+        background: $gray-50;
+        border-color: $gray-400;
+        color: $gray-700;
+      }
+    }
+    
+    .submit-btn {
+      background: $gradient-primary;
+      border: none;
+      color: white;
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: $shadow-md;
+      
+      .mat-icon {
+        color: white !important;
+        font-size: 18px !important;
+      }
+      
+      &:hover:not(:disabled) {
+        background: linear-gradient(135deg, $primary-dark 0%, $primary-darker 100%);
+        transform: translateY(-2px);
+        box-shadow: $shadow-lg;
+      }
+      
+      &:active:not(:disabled) {
+        transform: translateY(-1px);
+      }
+      
+      &:disabled {
+        background: $gray-200;
+        color: $gray-500;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+    }
+  }
+}
+
+/* ===============================================
+   📱 RESPONSIVE DESIGN AMÉLIORÉ
+   =============================================== */
+
+@media (max-width: 768px) {
+  .modal-container {
+    width: 95%;
+    max-height: 95vh;
+    border-radius: 16px;
+    margin: 20px 10px;
+
+    .modal-header {
+      padding: 24px 28px;
+
+      .header-content {
+        gap: 12px;
+        
         h2 {
-          margin: 0;
-          font-size: 20px;
-          font-weight: 600;
+          font-size: 1.4rem;
+        }
+        
+        .mat-icon {
+          font-size: 22px !important;
+          padding: 6px;
         }
       }
       
       .close-button {
-        background: rgba($white, 0.2);
-        border: 1px solid rgba($white, 0.3);
-        border-radius: 50%;
-        width: 36px;
-        height: 36px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: $white;
-        cursor: pointer;
+        padding: 10px;
         
-        &:hover {
-          background: rgba($white, 0.3);
-        }
-
-        mat-icon {
-          font-size: 20px;
-          width: 20px;
-          height: 20px;
+        .mat-icon {
+          font-size: 18px !important;
         }
       }
     }
-
-    /* ===============================================
-       📄 CONTENU SIMPLE
-       =============================================== */
+    
     .dialog-content {
-      flex: 1;
-      overflow-y: auto;
-      background: $white; /* ✅ FOND BLANC au lieu de gris */
-
-      /* Scrollbar simple */
-      &::-webkit-scrollbar {
-        width: 6px;
-      }
-      &::-webkit-scrollbar-track {
-        background: $gray-medium;
-      }
-      &::-webkit-scrollbar-thumb {
-        background: $gray-dark;
-        border-radius: 3px;
-      }
-
-      form {
-        padding: 20px;
-        background: $white; /* ✅ Formulaire sur fond blanc */
-      }
-
-      /* ===============================================
-         📦 SECTIONS DU FORMULAIRE SIMPLES
-         =============================================== */
+      padding: 24px 28px;
+      
       .form-section {
-        background: $white;
-        border: 1px solid $gray-medium;
-        border-radius: $border-radius;
         padding: 20px;
         margin-bottom: 20px;
-
+        
         .section-title {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          font-size: 16px;
-          font-weight: 600;
-          color: $gray-darker;
-          margin-bottom: 20px;
-          padding-bottom: 10px;
-          border-bottom: 1px solid $gray-medium;
-
-          mat-icon {
-            color: $primary;
-            font-size: 20px;
-            width: 20px;
-            height: 20px;
-          }
-        }
-      }
-
-      /* ===============================================
-         📝 CHAMPS DE FORMULAIRE EN GRILLE 2x2
-         =============================================== */
-      .form-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr; /* ✅ 2 colonnes par défaut */
-        gap: 16px;
-        margin-bottom: 16px;
-
-        /* Sur mobile : 1 colonne */
-        @media (max-width: 600px) {
-          grid-template-columns: 1fr;
-        }
-
-        .full-width {
-          grid-column: 1 / -1; /* ✅ Prend toute la largeur */
-        }
-
-        .half-width {
-          /* ✅ Prend 1 colonne automatiquement */
-        }
-      }
-
-      /* ✅ Ligne spéciale pour 1 seul champ large */
-      .form-row-single {
-        display: flex;
-        margin-bottom: 16px;
-
-        .full-width {
-          flex: 1;
-        }
-      }
-
-      /* Material Design - Focus simple */
-      ::ng-deep .mat-mdc-form-field {
-        width: 100%;
-
-        .mat-mdc-form-field-outline {
-          color: $gray-medium;
-        }
-
-        &.mat-focused .mat-mdc-form-field-outline-thick {
-          color: $primary;
-        }
-
-        .mat-mdc-form-field-label {
-          color: $gray-dark;
-        }
-
-        &.mat-focused .mat-mdc-form-field-label {
-          color: $primary;
-        }
-
-        .mat-mdc-form-field-icon-suffix {
-          color: $gray-dark;
-        }
-
-        input, textarea {
-          color: $gray-darker;
-        }
-      }
-
-      /* ===============================================
-         🔽 SELECT TRÈS VISIBLE
-         =============================================== */
-      ::ng-deep .mat-mdc-select-panel {
-        background: $white !important;
-        border-radius: $border-radius !important;
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2) !important; /* ✅ Ombre plus forte */
-        border: 2px solid $primary !important; /* ✅ Bordure orange */
-        max-height: 300px !important;
-
-        .mat-mdc-option {
-          padding: 12px 16px !important;
-          font-size: 14px !important;
-          border-bottom: 1px solid $gray-medium !important;
-          
-          &:last-child {
-            border-bottom: none !important;
-          }
-
-          &.mdc-list-item--selected {
-            background: $primary !important; /* ✅ Orange pour sélectionné */
-            color: $white !important;
-            font-weight: 600 !important;
-          }
-
-          &:hover:not(.mdc-list-item--selected) {
-            background: $primary-light !important; /* ✅ Orange clair au hover */
-            color: $primary-dark !important;
-          }
-
-          .service-nom {
-            font-weight: 600 !important;
-            color: inherit !important;
-          }
-
-          .service-categorie {
-            color: inherit !important;
-            font-size: 12px !important;
-            opacity: 0.8 !important;
-          }
-        }
-
-        .mat-mdc-optgroup-label {
-          background: $gray-medium !important;
-          color: $primary-dark !important;
-          font-weight: 700 !important;
-          padding: 8px 16px !important;
-          font-size: 12px !important;
-          text-transform: uppercase !important;
-        }
-      }
-
-      /* ✅ Select trigger plus visible */
-      ::ng-deep .mat-mdc-select-trigger {
-        padding: 12px 16px !important;
-      }
-
-      ::ng-deep .mat-mdc-select-arrow {
-        color: $primary !important;
-      }
-
-      /* ===============================================
-         ☑️ CHECKBOXES SUR FOND BLANC
-         =============================================== */
-      .checkbox-group {
-        display: grid;
-        grid-template-columns: 1fr 1fr; /* ✅ 2 colonnes par défaut */
-        gap: 12px;
-
-        /* Sur mobile : 1 colonne */
-        @media (max-width: 600px) {
-          grid-template-columns: 1fr;
-        }
-
-        mat-checkbox {
-          background: $white !important; /* ✅ Fond blanc */
-          border: 1px solid $gray-medium;
-          border-radius: $border-radius;
-          padding: 12px;
-
-          &:hover {
-            border-color: $primary;
-          }
-
-          ::ng-deep .mdc-checkbox__native-control:enabled:checked ~ .mdc-checkbox__background {
-            background: $primary !important;
-            border-color: $primary !important;
-          }
-
-          .checkbox-content {
-            margin-left: 12px;
-
-            strong {
-              color: $gray-darker;
-              font-weight: 600;
-              display: block;
-              margin-bottom: 4px;
-            }
-
-            span {
-              color: $gray-dark;
-              font-size: 14px;
-            }
-          }
-        }
-      }
-
-      /* ===============================================
-         👁️ APERÇUS SIMPLES
-         =============================================== */
-      .price-preview,
-      .duration-preview {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-top: 12px;
-        padding: 12px;
-        background: rgba($success, 0.1);
-        border: 1px solid rgba($success, 0.3);
-        border-radius: $border-radius;
-        color: $success;
-        font-weight: 500;
-
-        mat-icon {
-          font-size: 18px;
-          width: 18px;
-          height: 18px;
-        }
-      }
-
-      /* ===============================================
-         🚨 ERREURS SIMPLES
-         =============================================== */
-      .form-error {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-top: 12px;
-        padding: 12px;
-        background: rgba($error, 0.1);
-        border: 1px solid rgba($error, 0.3);
-        border-radius: $border-radius;
-        color: $error;
-        font-weight: 500;
-
-        mat-icon {
-          font-size: 18px;
-          width: 18px;
-          height: 18px;
-        }
-      }
-
-      /* ===============================================
-         🗂️ CARDS SIMPLES
-         =============================================== */
-      .service-info mat-card {
-        background: $primary-light;
-        border: 1px solid rgba($primary, 0.3);
-        border-radius: $border-radius;
-
-        mat-card-content {
-          padding: 16px;
-
-          .info-content {
-            strong {
-              color: $primary-dark;
-              font-weight: 600;
-              font-size: 16px;
-              display: block;
-              margin-bottom: 4px;
-            }
-
-            span {
-              color: $gray-dark;
-              font-size: 14px;
-            }
-          }
-        }
-      }
-
-      /* ===============================================
-         🔧 ACTIONS SIMPLES
-         =============================================== */
-      .service-actions {
-        display: flex;
-        gap: 12px;
-        justify-content: space-between;
-        margin-top: 16px;
-
-        button {
-          border-radius: $border-radius;
-          font-weight: 500;
-          padding: 8px 16px;
-        }
-      }
-    }
-
-    /* ===============================================
-       🦶 FOOTER SUR FOND BLANC
-       =============================================== */
-    .dialog-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 12px;
-      padding: 20px 24px;
-      background: $white; /* ✅ Fond blanc au lieu de gris */
-      border-top: 2px solid $primary; /* ✅ Bordure orange pour séparer */
-
-      .cancel-btn {
-        color: $gray-dark;
-        border: 2px solid $gray-medium; /* ✅ Bordure plus visible */
-        padding: 12px 24px; /* ✅ Plus de padding */
-        border-radius: $border-radius;
-        font-weight: 600; /* ✅ Plus gras */
-        background: $white;
-        
-        &:hover {
-          background: $gray-light;
-          border-color: $gray-dark;
-        }
-      }
-
-      .submit-btn {
-        background: $primary;
-        color: $white;
-        border: 2px solid $primary; /* ✅ Bordure pour cohérence */
-        padding: 12px 24px; /* ✅ Plus de padding */
-        border-radius: $border-radius;
-        font-weight: 600; /* ✅ Plus gras */
-        
-        &:hover:not(:disabled) {
-          background: $primary-dark;
-          border-color: $primary-dark;
-        }
-
-        &:disabled {
-          background: $gray-medium;
-          color: $gray-dark;
-          border-color: $gray-medium;
-        }
-      }
-    }
-  }
-}
-
-/* ===============================================
-   📱 RESPONSIVE SIMPLE
-   =============================================== */
-
-@media (max-width: 768px) {
-  .modal-overlay {
-    .modal-container {
-      width: calc(100% - 20px);
-      margin: 10px;
-
-      .modal-header {
-        padding: 16px 20px;
-
-        .header-content h2 {
-          font-size: 18px;
-        }
-      }
-
-      .dialog-content {
-        form {
-          padding: 16px;
-        }
-
-        .form-section {
-          padding: 16px;
-          margin-bottom: 16px;
-        }
-
-        .form-row {
-          flex-direction: column;
           gap: 12px;
+          font-size: 1.1rem;
+          
+          .mat-icon {
+            padding: 8px;
+            font-size: 18px !important;
+          }
         }
-      }
-
-      .dialog-actions {
-        padding: 16px 20px;
-        flex-direction: column;
-
-        button {
-          width: 100%;
+        
+        .checkbox-group {
+          .mat-mdc-checkbox {
+            padding: 16px;
+          }
         }
       }
     }
-  }
-}
-
-/* ===============================================
-   🎯 ÉTATS SPÉCIAUX SIMPLES
-   =============================================== */
-
-.loading-section,
-.error-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 20px;
-  text-align: center;
-  background: $white;
-
-  mat-spinner {
-    margin-bottom: 16px;
     
-    ::ng-deep circle {
-      stroke: $primary;
-    }
-  }
-
-  mat-icon {
-    font-size: 48px;
-    height: 48px;
-    width: 48px;
-    color: $error;
-    margin-bottom: 16px;
-  }
-
-  h4 {
-    color: $gray-darker;
-    font-weight: 600;
-    font-size: 18px;
-    margin: 0 0 8px 0;
-  }
-
-  p {
-    color: $gray-dark;
-    margin: 0 0 16px 0;
-  }
-
-  button {
-    background: $primary-light;
-    color: $primary-dark;
-    border: 1px solid $primary;
-    padding: 10px 20px;
-    border-radius: $border-radius;
-  }
-}
-
-/* ===============================================
-   💡 CONFIRMATION SIMPLE
-   =============================================== */
-
-.confirmation-section {
-  padding: 20px;
-  background: $white;
-
-  mat-card {
-    background: $white;
-    border: 1px solid $primary;
-    border-radius: $border-radius;
-    box-shadow: $simple-shadow;
-
-    mat-card-header {
-      background: $primary-light;
-      padding: 16px;
-
-      mat-icon[mat-card-avatar] {
-        background: $primary;
-        color: $white;
-        border-radius: 50%;
-        padding: 8px;
-        font-size: 24px;
-        width: auto;
-        height: auto;
-      }
-
-      mat-card-title {
-        color: $gray-darker;
-        font-weight: 600;
-        margin: 0;
-      }
-    }
-
-    mat-card-content {
-      padding: 16px;
-
-      .suggestion-content p {
-        margin: 0 0 12px 0;
-        line-height: 1.5;
-
-        strong {
-          color: $primary-dark;
-        }
-      }
-    }
-
-    mat-card-actions {
-      padding: 16px;
-      background: $gray-light;
-      gap: 12px;
-      display: flex;
-
-      button {
-        border-radius: $border-radius;
-        font-weight: 500;
-
-        &:first-child {
-          background: $primary;
-          color: $white;
-
-          &:hover {
-            background: $primary-dark;
-          }
-        }
-
-        &:not(:first-child) {
-          border: 1px solid $gray-medium;
-          color: $gray-darker;
-          background: $white;
-
-          &:hover {
-            background: $gray-light;
-          }
-        }
+    .dialog-actions {
+      padding: 20px 28px;
+      
+      .cancel-btn,
+      .submit-btn {
+        padding: 12px 20px;
+        font-size: 0.9rem;
       }
     }
   }
 }
 
 /* ===============================================
-   🔧 OVERRIDES MATERIAL SIMPLES
+   🎨 STYLES MATERIAL DESIGN MODERNISÉS
    =============================================== */
 
-// Suppression des animations Material
-* {
-  animation-duration: 0s !important;
-  animation-delay: 0s !important;
-  transition-duration: 0.2s !important;
+.modal-container {
+  // Suppression des couleurs bleues par défaut
+  .mat-primary {
+    --mdc-theme-primary: #{$primary-color} !important;
+  }
+  
+  // Form fields modernes
+  .mat-mdc-form-field {
+    width: 100%;
+    margin-bottom: 20px;
+    
+    .mat-mdc-text-field-wrapper {
+      border-radius: 12px !important;
+      background: $gray-50;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    &:hover .mat-mdc-text-field-wrapper {
+      background: $white;
+      box-shadow: $shadow-sm;
+    }
+    
+    &.mat-focused .mat-mdc-text-field-wrapper {
+      background: $white;
+      box-shadow: $shadow-md;
+    }
+    
+    // Labels modernisés
+    .mat-mdc-floating-label {
+      color: $gray-500 !important;
+      font-weight: 500 !important;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      
+      &.mdc-floating-label--float-above {
+        color: $primary-color !important;
+        font-weight: 600 !important;
+        font-size: 12px !important;
+        background: linear-gradient(180deg, transparent 40%, $white 40%, $white 60%, transparent 60%) !important;
+        padding: 0 6px !important;
+      }
+    }
+    
+    // Bordures modernisées
+    .mat-mdc-form-field-outline {
+      .mat-mdc-form-field-outline-start,
+      .mat-mdc-form-field-outline-notch,
+      .mat-mdc-form-field-outline-end {
+        border-color: $gray-200 !important;
+        border-width: 1.5px !important;
+        transition: all 0.3s ease !important;
+      }
+    }
+    
+    // États de focus
+    &.mat-focused {
+      .mat-mdc-form-field-outline {
+        .mat-mdc-form-field-outline-start,
+        .mat-mdc-form-field-outline-notch,
+        .mat-mdc-form-field-outline-end {
+          border-color: $primary-color !important;
+          border-width: 2px !important;
+          box-shadow: 0 0 0 1px rgba($primary-color, 0.1);
+        }
+      }
+    }
+    
+    // Inputs modernisés
+    .mat-mdc-input-element {
+      color: $gray-700 !important;
+      font-size: 15px !important;
+      font-weight: 400 !important;
+      padding: 18px 16px !important;
+      line-height: 1.5 !important;
+      
+      &::placeholder {
+        color: $gray-400 !important;
+        opacity: 0.8 !important;
+      }
+      
+      &:focus {
+        color: $gray-800 !important;
+      }
+    }
+    
+    // Textarea spécialisée
+    textarea.mat-mdc-input-element {
+      min-height: 90px !important;
+      resize: vertical !important;
+      font-family: inherit !important;
+      line-height: 1.6 !important;
+    }
+    
+    // Icônes modernisées
+    .mat-mdc-form-field-icon-suffix,
+    .mat-mdc-form-field-icon-prefix {
+      .mat-icon {
+        color: $primary-color !important;
+        font-size: 20px !important;
+      }
+    }
+    
+    // Messages d'erreur
+    .mat-mdc-form-field-error {
+      color: $error-color !important;
+      font-weight: 500 !important;
+    }
+    
+    // Hints modernisés
+    .mat-mdc-form-field-hint {
+      color: $gray-500 !important;
+      font-weight: 400 !important;
+    }
+  }
+  
+  // Select dropdown modernisé
+  .mat-mdc-select {
+    .mat-mdc-select-value {
+      color: $gray-700 !important;
+      font-weight: 400 !important;
+    }
+    
+    .mat-mdc-select-arrow-wrapper {
+      .mat-mdc-select-arrow {
+        color: $primary-color !important;
+      }
+    }
+    
+    &.mat-focused {
+      .mat-mdc-select-arrow {
+        color: $primary-color !important;
+      }
+    }
+  }
+  
+  // Options dans le dropdown
+  .mat-mdc-option {
+    color: $gray-700 !important;
+    padding: 12px 16px !important;
+    
+    &:hover:not(.mat-mdc-option-disabled) {
+      background-color: rgba($primary-color, 0.08) !important;
+    }
+    
+    &.mat-mdc-option-active {
+      background-color: rgba($primary-color, 0.12) !important;
+      color: $primary-color !important;
+    }
+    
+    &.mat-mdc-option-selected {
+      background-color: rgba($primary-color, 0.15) !important;
+      color: $primary-color !important;
+      font-weight: 600 !important;
+    }
+  }
+  
+  // Groupes d'options
+  .mat-mdc-optgroup {
+    .mat-mdc-optgroup-label {
+      color: $gray-600 !important;
+      font-weight: 700 !important;
+      font-size: 0.9rem !important;
+      padding: 12px 16px 8px !important;
+      background: $gray-50 !important;
+    }
+  }
+  
+  // Checkbox modernisée
+  .mat-mdc-checkbox {
+    .mdc-checkbox__native-control:enabled:checked ~ .mdc-checkbox__background {
+      background-color: $primary-color !important;
+      border-color: $primary-color !important;
+    }
+    
+    .mdc-checkbox__native-control:enabled ~ .mdc-checkbox__background {
+      border-color: $gray-400 !important;
+    }
+    
+    .mdc-checkbox__ripple {
+      background-color: $primary-color !important;
+    }
+    
+    &:hover .mdc-checkbox__native-control:enabled ~ .mdc-checkbox__background {
+      border-color: $primary-color !important;
+    }
+  }
+  
+  // Boutons modernisés
+  .mat-mdc-raised-button {
+    --mdc-protected-button-container-color: #{$primary-color} !important;
+    --mdc-protected-button-label-text-color: white !important;
+    border-radius: 12px !important;
+    font-weight: 600 !important;
+    padding: 12px 24px !important;
+    box-shadow: #{$shadow-sm} !important;
+    transition: all 0.3s ease !important;
+    
+    .mat-icon {
+      color: white !important;
+      margin-right: 8px !important;
+    }
+    
+    &:hover {
+      --mdc-protected-button-container-color: #{$primary-dark} !important;
+      box-shadow: #{$shadow-md} !important;
+      transform: translateY(-1px) !important;
+    }
+  }
+  
+  .mat-mdc-outlined-button {
+    --mdc-outlined-button-outline-color: #{$primary-color} !important;
+    --mdc-outlined-button-label-text-color: #{$primary-color} !important;
+    border-radius: 12px !important;
+    font-weight: 600 !important;
+    padding: 12px 24px !important;
+    border-width: 2px !important;
+    
+    .mat-icon {
+      color: $primary-color !important;
+      margin-right: 8px !important;
+    }
+    
+    &:hover {
+      background-color: rgba($primary-color, 0.08) !important;
+      transform: translateY(-1px) !important;
+    }
+  }
+  
+  .mat-mdc-button {
+    border-radius: 12px !important;
+    font-weight: 600 !important;
+    padding: 12px 24px !important;
+
+    .mat-icon {
+      margin-right: 8px !important;
+    }
+  }
 }
 
-// Panel du dialog
-.service-dialog-panel .cdk-overlay-backdrop {
-  background: rgba(0, 0, 0, 0.5) !important;
-}
+/* ===============================================
+   🎨 OVERRIDE VARIABLES MDC — SUPPRIME BLEU & ROSE DU THÈME GLOBAL
+   =============================================== */
 
-// Boutons Material
-.mat-mdc-button,
-.mat-mdc-raised-button,
-.mat-mdc-outlined-button {
-  border-radius: $border-radius !important;
+::ng-deep .modal-container {
+
+  // ── Checkboxes ──────────────────────────────
+  .mat-mdc-checkbox {
+    --mdc-checkbox-selected-icon-color:              #A4B1BD;
+    --mdc-checkbox-selected-focus-icon-color:        #A4B1BD;
+    --mdc-checkbox-selected-hover-icon-color:        #A4B1BD;
+    --mdc-checkbox-selected-pressed-icon-color:      #A4B1BD;
+    --mdc-checkbox-selected-checkmark-color:         #ffffff;
+    --mdc-checkbox-unselected-focus-icon-color:      #9ca3af;
+    --mdc-checkbox-unselected-hover-icon-color:      #9ca3af;
+    --mdc-checkbox-unselected-icon-color:            #9ca3af;
+    --mat-checkbox-checked-ripple-color:             rgba(164, 177, 189, 0.2);
+    --mat-checkbox-label-text-color:                 #374151;
+  }
+
+  // ── Form fields : outline focus ──────────────
+  .mat-mdc-form-field {
+    --mdc-outlined-text-field-focus-outline-color:       #A4B1BD;
+    --mdc-outlined-text-field-focus-label-text-color:    #A4B1BD;
+    --mdc-outlined-text-field-hover-outline-color:       #A4B1BD;
+    --mdc-outlined-text-field-caret-color:               #A4B1BD;
+    --mdc-outlined-text-field-label-text-color:          #6b7280;
+    --mdc-outlined-text-field-outline-color:             #d1d5db;
+  }
+
+  // ── Buttons raised (primary) ─────────────────
+  .mat-mdc-raised-button.mat-primary,
+  button[mat-raised-button][color="primary"] {
+    --mdc-protected-button-container-color:          #A4B1BD;
+    --mdc-protected-button-label-text-color:         #ffffff;
+    background-color: #A4B1BD !important;
+    color: #ffffff !important;
+  }
+
+  // ── Buttons stroked (primary) ────────────────
+  .mat-mdc-outlined-button.mat-primary,
+  button[mat-stroked-button][color="primary"] {
+    --mdc-outlined-button-outline-color:             #A4B1BD;
+    --mdc-outlined-button-label-text-color:          #A4B1BD;
+    color: #A4B1BD !important;
+    border-color: #A4B1BD !important;
+  }
+
+  // ── Select arrow ─────────────────────────────
+  .mat-mdc-select-arrow { color: #A4B1BD !important; }
+
+  // ── Ripple & focus ring ──────────────────────
+  .mat-ripple-element { background-color: rgba(164, 177, 189, 0.15) !important; }
+  .mat-mdc-focus-indicator::before { border-color: #A4B1BD !important; }
+
+  // ── Option selected ──────────────────────────
+  .mat-mdc-option.mdc-list-item--selected:not(.mat-mdc-option-multiple) {
+    color: #A4B1BD !important;
+    &::after { color: #A4B1BD !important; }
+  }
 }

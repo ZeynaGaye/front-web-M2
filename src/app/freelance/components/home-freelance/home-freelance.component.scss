@@ -43,6 +43,13 @@ body {
   background: linear-gradient(135deg, #FAFAFA 0%, #F0F0F0 100%);
 }
 
+/* ✨ MASQUER TOUTES LES SCROLLBARS */
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+  &::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+}
+
 /* ✨ CONTAINER PRINCIPAL REDESIGNÉ */
 .beauty-container {
   height: 100vh;
@@ -266,11 +273,24 @@ body {
       color: #757575;
       border-radius: 50%;
       transition: var(--transition);
-      
+
       &:hover {
-        background: rgba(245, 163, 147, 0.1);
-        color: #F5A393;
+        background: rgba(164, 177, 189, 0.1);
+        color: $beauty-secondary;
         transform: scale(1.05);
+      }
+    }
+
+    .home-icon-btn {
+      color: #6C757D !important;
+      --mdc-icon-button-icon-color: #6C757D;
+
+      mat-icon { color: #6C757D !important; }
+
+      &:hover {
+        color: $beauty-secondary !important;
+        --mdc-icon-button-icon-color: #{$beauty-secondary};
+        mat-icon { color: $beauty-secondary !important; }
       }
     }
   }

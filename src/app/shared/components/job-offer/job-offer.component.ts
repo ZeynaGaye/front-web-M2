@@ -74,34 +74,34 @@ export class JobOfferComponent {
   openLoginModal() {
     this.showLoginModal = true;
     this.showRegisterModal = false;
-    console.log('Modal de connexion ouvert');
+
   }
 
   closeLoginModal() {
     this.showLoginModal = false;
-    console.log('Modal de connexion fermé');
+
   }
 
   openRegisterModal() {
     this.showRegisterModal = true;
     this.showLoginModal = false;
-    console.log("Modal d'inscription ouvert");
+
   }
 
   closeRegisterModal() {
     this.showRegisterModal = false;
-    console.log("Modal d'inscription fermé");
+
   }
 
   switchToRegister() {
     this.closeLoginModal();
     this.openRegisterModal();
-    console.log("Basculement du modal de connexion vers le modal d'inscription");
+
   }
 
   switchToLogin() {
     this.closeRegisterModal();
     this.openLoginModal();
-    // console.log("Basculement du modal d'inscription vers le modal de connexion");
+    //
   }
 }

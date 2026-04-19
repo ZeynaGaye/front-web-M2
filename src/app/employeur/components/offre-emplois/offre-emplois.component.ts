@@ -134,7 +134,7 @@ export class OffreEmploisComponent implements OnInit {
       this.offreEmploisService.createOffreEmploiWithSalon(offreData, salonId)
         .subscribe({
           next: (response) => {
-            console.log('Offre publiée avec succès:', response);
+
             this.isSubmitting = false;
             this.submitSuccess = true;
             // Fermer le modal après 1.5 seconde pour montrer le message de succès

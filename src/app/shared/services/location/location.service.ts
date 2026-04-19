@@ -17,7 +17,7 @@ export class LocationService {
   getUserLocation(): Observable<UserLocation> {
     // Vérifier si la géolocalisation est disponible
     if (!navigator.geolocation) {
-      console.log('Géolocalisation non disponible, utilisation des coordonnées par défaut');
+
       return of({ latitude: 14.6937, longitude: -17.4441 }); // Coordonnées de Dakar par défaut
     }
     
@@ -26,7 +26,7 @@ export class LocationService {
       new Promise<UserLocation>((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(
           (position) => {
-            console.log('Position obtenue:', position.coords);
+
             resolve({
               latitude: position.coords.latitude,
               longitude: position.coords.longitude

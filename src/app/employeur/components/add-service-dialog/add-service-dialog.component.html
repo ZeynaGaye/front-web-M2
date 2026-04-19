@@ -14,21 +14,15 @@
     <!-- ✅ SÉLECTION SERVICE COMPACT -->
     <div class="step-section" *ngIf="!estFormulaireDemande">
       <div class="step-header">
-        <mat-icon>search</mat-icon>
+        <mat-icon>business</mat-icon>
         <span>1. Choisir un service</span>
       </div>
       
       <div class="service-selection-compact">
-        <mat-form-field appearance="outline" class="search-field">
-          <mat-label>Rechercher un service</mat-label>
-          <input matInput formControlName="rechercheQuery" placeholder="Ex: Coupe, Manucure...">
-          <mat-icon matSuffix>search</mat-icon>
-        </mat-form-field>
-
         <mat-form-field appearance="outline" class="select-field">
           <mat-label>Service prédéfini</mat-label>
           <mat-select formControlName="servicePredefini" (selectionChange)="onServicePredefiniSelected($event)">
-            <mat-option value="">-- Choisir --</mat-option>
+            <mat-option value="">-- Choisir un service --</mat-option>
             <mat-optgroup *ngFor="let groupe of servicesGroupes" [label]="groupe.categorie">
               <mat-option *ngFor="let service of groupe.services" [value]="service.id">
                 {{service.nom}}
@@ -36,90 +30,9 @@
             </mat-optgroup>
           </mat-select>
         </mat-form-field>
-
-        <button type="button" mat-stroked-button class="custom-service-btn" (click)="demanderNouveauService()">
-          <mat-icon>add</mat-icon> Créer un service
-        </button>
       </div>
     </div>
 
-    <!-- ✅ SECTION NOUVEAU SERVICE -->
-    <ng-container *ngIf="estFormulaireDemande">
-      <div class="section-nouveau">
-        <h3 class="section-title">
-          <mat-icon>add_circle_outline</mat-icon>
-          Nouveau service salon personnalisé
-        </h3>
-        <!-- ✅ CHAMP AVEC SUGGESTIONS TEMPS RÉEL -->
-        <div class="service-input-container">
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Nom du service</mat-label>
-            <input 
-              matInput 
-              formControlName="nomPersonnalise"
-              placeholder="Ex: Coupe + Brushing premium"
-              maxlength="100"
-              (focus)="afficherSuggestionsTempsReel = true"
-              (blur)="masquerSuggestionsTempsReel()"
-              autocomplete="off">
-            <mat-icon matSuffix>content_cut</mat-icon>
-            <mat-error *ngIf="getFieldErrorMessage('nomPersonnalise')">
-              {{getFieldErrorMessage('nomPersonnalise')}}
-            </mat-error>
-          </mat-form-field>
-          
-          <!-- ✅ SUGGESTIONS EN TEMPS RÉEL -->
-          <div class="suggestions-dropdown" *ngIf="afficherSuggestionsTempsReel && (suggestionsTempsReel.length > 0 || rechercheEnCours)">
-            <div class="suggestions-header">
-              <mat-icon>lightbulb</mat-icon>
-              <span>Suggestions</span>
-              <mat-spinner diameter="16" *ngIf="rechercheEnCours"></mat-spinner>
-            </div>
-            
-            <div class="suggestion-item" 
-                 *ngFor="let suggestion of suggestionsTempsReel"
-                 (click)="selectionnerSuggestionTempsReel(suggestion)">
-              <div class="suggestion-content">
-                <div class="suggestion-name">{{suggestion.nom}}</div>
-                <div class="suggestion-category">{{suggestion.categorie}}</div>
-              </div>
-              <mat-icon>arrow_forward</mat-icon>
-            </div>
-            
-            <div class="no-suggestions" *ngIf="!rechercheEnCours && suggestionsTempsReel.length === 0">
-              <mat-icon>info</mat-icon>
-              <span>Aucune suggestion trouvée</span>
-            </div>
-          </div>
-        </div>
-        
-        <!-- ✅ NOUVEAU : Catégorie pour service personnalisé -->
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Catégorie du service</mat-label>
-          <mat-select formControlName="categorie">
-            <mat-option value="Coiffure">Coiffure</mat-option>
-            <mat-option value="Manucure">Manucure</mat-option>
-            <mat-option value="Pédicure">Pédicure</mat-option>
-            <mat-option value="Soins du visage">Soins du visage</mat-option>
-            <mat-option value="Soins du corps">Soins du corps</mat-option>
-            <mat-option value="Maquillage">Maquillage</mat-option>
-            <mat-option value="Épilation">Épilation</mat-option>
-            <mat-option value="Massage">Massage</mat-option>
-            <mat-option value="Autre">Autre</mat-option>
-          </mat-select>
-          <mat-icon matSuffix>category</mat-icon>
-          <mat-error *ngIf="getFieldErrorMessage('categorie')">
-            {{getFieldErrorMessage('categorie')}}
-          </mat-error>
-        </mat-form-field>
-        <div class="action-buttons" *ngIf="aServicesPredefinis">
-          <button type="button" mat-stroked-button (click)="annulerDemandeNouveauService()">
-            <mat-icon>arrow_back</mat-icon>
-            Retour à la sélection
-          </button>
-        </div>
-      </div>
-    </ng-container>
 
     <!-- ✅ SECTION CONFIRMATION - MODIFIÉE -->
     <div class="confirmation-section" *ngIf="enAttenteConfirmation && suggestionService">
@@ -219,23 +132,24 @@
           {{getFieldErrorMessage('prix')}}
         </mat-error>
       </mat-form-field>
+
+      <mat-form-field appearance="outline" class="half-width">
+        <mat-label>Durée du service</mat-label>
+        <input 
+          matInput 
+          type="number" 
+          formControlName="dureeEnMinutes"
+          placeholder="60"
+          min="15"
+          max="480"
+          step="15">
+        <mat-icon matSuffix>schedule</mat-icon>
+        <mat-hint>Durée en minutes (15 min minimum)</mat-hint>
+        <mat-error *ngIf="getFieldErrorMessage('dureeEnMinutes')">
+          {{getFieldErrorMessage('dureeEnMinutes')}}
+        </mat-error>
+      </mat-form-field>
     </div>
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Durée du service</mat-label>
-      <input 
-        matInput 
-        type="number" 
-        formControlName="dureeEnMinutes"
-        placeholder="60"
-        min="15"
-        max="480"
-        step="15">
-      <mat-icon matSuffix>schedule</mat-icon>
-      <mat-hint>Durée en minutes (15 min minimum)</mat-hint>
-      <mat-error *ngIf="getFieldErrorMessage('dureeEnMinutes')">
-        {{getFieldErrorMessage('dureeEnMinutes')}}
-      </mat-error>
-    </mat-form-field>
 
 
     <!-- ✅ APERÇU -->
