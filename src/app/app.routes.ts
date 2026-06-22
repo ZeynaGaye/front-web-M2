@@ -15,6 +15,9 @@ import { OpportunitesEmploiComponent } from './freelance/components/opportunites
 import { PortfolioComponent } from './freelance/components/portfolio/portfolio.component';
 import { JobOfferComponent } from './shared/components/job-offer/job-offer.component';
 import { SalonRegistrationComponent } from './shared/components/salon-registration/salon-registration.component';
+import { PaymentSuccessComponent } from './shared/components/payment-success/payment-success.component';
+import { PaymentCancelComponent } from './shared/components/payment-cancel/payment-cancel.component';
+import { VerifyEmailComponent } from './shared/components/verify-email/verify-email.component';
 
 
 
@@ -103,10 +106,26 @@ export const routes: Routes = [
     data: { roles: ['EMPLOYEUR'] },
   },
   
+  // VERIFICATION EMAIL
+  {
+    path: 'verify-email',
+    component: VerifyEmailComponent
+  },
+
+  // ROUTES PAIEMENT
+  {
+    path: 'payment/success',
+    component: PaymentSuccessComponent
+  },
+  {
+    path: 'payment/cancel',
+    component: PaymentCancelComponent
+  },
+
   //  ROUTE WILDCARD (IMPORTANTE - toujours en dernier)
-  { 
-    path: '**', 
-    redirectTo: '/', 
-    pathMatch: 'full' 
+  {
+    path: '**',
+    redirectTo: '/',
+    pathMatch: 'full'
   }
 ];

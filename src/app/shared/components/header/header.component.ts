@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef, Inject, PLATFORM_ID, HostListener, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, inject, ChangeDetectorRef, Inject, PLATFORM_ID, HostListener, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { HeaderService } from '../../services/header/header.service';
@@ -145,7 +145,7 @@ interface FlexibleSearchCriteria {
   styleUrls: ['./header.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class HeaderComponent implements OnInit, OnDestroy {
+export class HeaderComponent implements OnInit, AfterViewInit, OnDestroy {
 [x: string]: any;
 
 
@@ -247,6 +247,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
   isAnalyzingPhoto = false;
   detectedHairstyles: string[] = [];
   photoAnalysisError: string | null = null;
+
+  // ===============================================
+  // FAVORIS
+  // ===============================================
+  private likedProviderIds: Set<string> = new Set();
   // ===============================================
   // PROPRIÉTÉS POUR LA RECHERCHE FLEXIBLE
   // ===============================================
@@ -282,6 +287,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   //  Adapter le nombre de cartes selon la taille d'écran
   this.updateCarouselConfig();
+  this.loadFavorites();
 
   this.authService.currentUser$
     .pipe(takeUntil(this.destroy$))
@@ -391,6 +397,66 @@ export class HeaderComponent implements OnInit, OnDestroy {
           this.cdr.detectChanges();
         }
       });
+  }
+
+  ngAfterViewInit(): void {
+    if (!this.isBrowser) return;
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    import('motion').then(({ animate }) => {
+      const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
+
+      const anim = (sel: string, kf: Record<string, any>, opts: Record<string, any>) => {
+        document.querySelectorAll<HTMLElement>(sel).forEach(el => animate(el as any, kf, opts));
+      };
+
+      if (prefersReducedMotion) return;
+
+      // ── Côté gauche ───────────────────────────────────────────────────────
+      anim('.header-title',        { opacity: [0, 1], transform: ['translateY(28px)', 'translateY(0px)'] }, { duration: 0.75, ease: EASE });
+      anim('.header-title2',       { opacity: [0, 1], transform: ['translateY(18px)', 'translateY(0px)'] }, { duration: 0.65, delay: 0.15, ease: EASE });
+      anim('.provider-toggle',     { opacity: [0, 1], transform: ['translateY(14px)', 'translateY(0px)'] }, { duration: 0.60, delay: 0.28, ease: EASE });
+      anim('.enhanced-search-bar', { opacity: [0, 1], transform: ['translateY(18px)', 'translateY(0px)'] }, { duration: 0.65, delay: 0.42, ease: EASE });
+      anim('.dual-service-nav',    { opacity: [0, 1], transform: ['translateY(18px)', 'translateY(0px)'] }, { duration: 0.60, delay: 0.55, ease: EASE });
+
+      document.querySelectorAll<HTMLElement>('.service-btn').forEach((btn, i) => {
+        animate(btn as any,
+          { opacity: [0, 1], transform: ['translateY(22px) scale(0.94)', 'translateY(0px) scale(1)'] },
+          { duration: 0.50, delay: 0.70 + i * 0.07, ease: EASE }
+        );
+      });
+
+      // ── Côté droit — image + miniatures ──────────────────────────────────
+      anim('.hero-image', { opacity: [0, 1], transform: ['translateX(36px)', 'translateX(0px)'] }, { duration: 0.85, delay: 0.10, ease: EASE });
+
+      document.querySelectorAll<HTMLElement>('.floating-thumb').forEach((thumb, i) => {
+        animate(thumb as any,
+          { opacity: [0, 1], transform: ['translateX(24px) scale(0.9)', 'translateX(0px) scale(1)'] },
+          { duration: 0.55, delay: 0.55 + i * 0.15, ease: EASE }
+        );
+      });
+
+      anim('.hero-text', { opacity: [0, 1], transform: ['translateY(22px)', 'translateY(0px)'] }, { duration: 0.60, delay: 0.70, ease: EASE });
+
+      // ── Boucles flottantes continues ──────────────────────────────────────
+      setTimeout(() => {
+        document.querySelectorAll<HTMLElement>('.floating-thumb').forEach((thumb, i) => {
+          animate(thumb as any,
+            { transform: ['translateY(0px)', 'translateY(-6px)', 'translateY(0px)'] },
+            { duration: 3.2 + i * 0.7, repeat: Infinity, ease: 'easeInOut', delay: i * 0.5 }
+          );
+        });
+
+        const quote = document.querySelector<HTMLElement>('.hero-text');
+        if (quote) {
+          animate(quote as any,
+            { transform: ['translateY(0px)', 'translateY(-8px)', 'translateY(0px)'] },
+            { duration: 4.2, repeat: Infinity, ease: 'easeInOut' }
+          );
+        }
+      }, 1500);
+    }).catch(() => {});
   }
 
   // Nettoyage des souscriptions
@@ -2577,6 +2643,51 @@ private construireCriteresTexte(criteres: any): string[] {
     return Math.max(0, numReviews);
   }
 
+  // ===============================================
+  // MÉTHODES FAVORIS
+  // ===============================================
+
+  private loadFavorites(): void {
+    if (!this.isBrowser) return;
+    try {
+      const saved = localStorage.getItem('beautyHubFavorites');
+      if (saved) {
+        this.likedProviderIds = new Set(JSON.parse(saved));
+      }
+    } catch (e) {}
+  }
+
+  private saveFavorites(): void {
+    if (!this.isBrowser) return;
+    localStorage.setItem('beautyHubFavorites', JSON.stringify([...this.likedProviderIds]));
+  }
+
+  toggleFavorite = (provider: EnhancedProviderData, event: Event): void => {
+    event.stopPropagation();
+
+    if (!this.isLoggedIn || !this.user) {
+      this.snackBar.open('Connectez-vous pour gérer vos favoris', 'Se connecter', { duration: 4000 })
+        .onAction().subscribe(() => this.login());
+      return;
+    }
+
+    const key = `${provider.type}-${provider.id}`;
+    if (this.likedProviderIds.has(key)) {
+      this.likedProviderIds.delete(key);
+      this.snackBar.open('Retiré des favoris', '', { duration: 2000 });
+    } else {
+      this.likedProviderIds.add(key);
+      this.snackBar.open('Ajouté aux favoris', '', { duration: 2000 });
+    }
+    this.likedProviderIds = new Set(this.likedProviderIds);
+    this.saveFavorites();
+    this.cdr.detectChanges();
+  }
+
+  isFavorite = (provider: EnhancedProviderData): boolean => {
+    return this.likedProviderIds.has(`${provider.type}-${provider.id}`);
+  }
+
   /**
    *  MÉTHODE AMÉLIORÉE : Gestionnaires d'erreur d'image pour les deux types
    */
@@ -3295,29 +3406,16 @@ retryPhotoAnalysis(): void {
 
   navigateToSalonRegistration(): void {
     if (!this.isBrowser) return;
-
-    if (this.isMobileMenuOpen) {
-      this.toggleMobileMenu();
+    if (this.isMobileMenuOpen) this.toggleMobileMenu();
+    const scrollToSection = () => {
+      const section = document.getElementById('salon-section');
+      if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+    if (this.router.url === '/' || this.router.url === '/accueil') {
+      scrollToSection();
+    } else {
+      this.router.navigate(['/']).then(() => setTimeout(scrollToSection, 300));
     }
-
-    this.snackBar.open('', '', {
-      duration: 2000,
-      horizontalPosition: 'center',
-      verticalPosition: 'bottom',
-      panelClass: ['subtle-snackbar']
-    });
-
-    document.body.classList.add('page-transition');
-
-    setTimeout(() => {
-      this.router.navigate(['/salon-registration']).then(() => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-
-        setTimeout(() => {
-          document.body.classList.remove('page-transition');
-        }, 500);
-      });
-    }, 100);
   }
 
   toggleMobileMenu(): void {

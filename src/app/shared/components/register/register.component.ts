@@ -3,7 +3,6 @@ import { FormBuilder, FormGroup, Validators, AbstractControl, ReactiveFormsModul
 import { RegisterService, SignupRequest } from '../../services/register.service';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { GeocodingService } from '../../../core/servces/GeocodingService/geocoding-service.service';
 
 @Component({
@@ -21,6 +20,8 @@ export class RegisterComponent implements OnInit {
   currentStep = 1;
   errorMessage = '';
   isLoading = false;
+  registrationSuccess = false;
+  registeredEmail = '';
 
   roles = ['CLIENT', 'FREELANCE', 'EMPLOYEUR'];
   sexeOptions = [
@@ -32,7 +33,6 @@ export class RegisterComponent implements OnInit {
     private fb: FormBuilder,
     private authService: RegisterService,
     private router: Router,
-    private snackBar: MatSnackBar,
     private geocodingService: GeocodingService
   ) {}
 
@@ -179,20 +179,12 @@ export class RegisterComponent implements OnInit {
     this.authService.signup(signupRequest).subscribe({
       next: (response) => {
         this.isLoading = false;
-        this.snackBar.open('Inscription réussie! Bienvenue!', 'Fermer', {
-          duration: 3000,
-          panelClass: ['success-snackbar']
-        });
-        this.closeModal();
-        this.router.navigate(['/acueil']);
+        this.registeredEmail = response.email ?? signupRequest.email;
+        this.registrationSuccess = true;
       },
       error: (error) => {
         this.isLoading = false;
         this.errorMessage = error.message || 'Une erreur est survenue lors de l\'inscription';
-        this.snackBar.open(this.errorMessage, 'Fermer', {
-          duration: 5000,
-          panelClass: ['error-snackbar']
-        });
       }
     });
   }

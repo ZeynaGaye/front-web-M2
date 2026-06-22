@@ -125,16 +125,26 @@ export class NavBarComponent  implements OnInit, OnDestroy {
     });
   }
 
+  private scrollToSection(sectionId: string): void {
+    const onAccueil = this.router.url === '/' || this.router.url === '/accueil' || this.router.url.startsWith('/?');
+    const scroll = () => document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
+    if (onAccueil) {
+      scroll();
+    } else {
+      this.router.navigate(['/']).then(() => setTimeout(scroll, 300));
+    }
+  }
+
   navigateToFreelancePage(): void {
-    this.router.navigate(['/freelance-registration']);
+    this.scrollToSection('pro-section');
   }
 
   navigateToHiring(): void {
-    this.router.navigate(['/hiring']);
+    this.scrollToSection('hiring-section');
   }
 
   navigateToSalonRegistration(): void {
-    this.router.navigate(['/salon-registration']);
+    this.scrollToSection('salon-section');
   }
 
   openContactModal(): void {

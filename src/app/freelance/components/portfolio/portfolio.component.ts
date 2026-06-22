@@ -2,7 +2,7 @@ import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { Component, Inject, OnDestroy, OnInit, PLATFORM_ID, CUSTOM_ELEMENTS_SCHEMA, AfterViewInit, Input, HostListener } from '@angular/core';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { trigger, transition, style, animate, state, query, stagger } from '@angular/animations';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -38,6 +38,7 @@ register();
     MatDialogModule,
     MatChipsModule,
     MatProgressSpinnerModule,
+    FormsModule,
     ReactiveFormsModule
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
@@ -89,6 +90,13 @@ export class PortfolioComponent implements OnInit, OnDestroy, AfterViewInit {
   imagesErrors: { [itemId: number]: string } = {};
   portfolioImages: { [itemId: number]: any[] } = {};
   loadingStates: { [key: string]: boolean } = {};
+  // Videos par item
+  itemVideos: { [itemId: number]: any[] } = {};
+  videosLoading: { [itemId: number]: boolean } = {};
+  showVideoSection: { [itemId: number]: boolean } = {};
+  showAddVideoForm: { [itemId: number]: boolean } = {};
+  newVideoTitre: { [itemId: number]: string } = {};
+  newVideoLegende: { [itemId: number]: string } = {};
   // Propriétés pour le contact
   showContactModal: boolean = false;
   selectedFreelanceForContact: Freelance | null = null;
@@ -116,7 +124,7 @@ export class PortfolioComponent implements OnInit, OnDestroy, AfterViewInit {
   // Configuration Swiper
   swiperConfig = {
     slidesPerView: 1,
-    navigation: true,
+    navigation: false,
     pagination: {
       clickable: true
     },
@@ -546,8 +554,12 @@ Cordialement.`;
 
   get filteredItems(): PortfolioItem[] {
     if (this.activeFilter === 'all') return this.portfolioItems;
-    return this.portfolioItems.filter(item => 
-      item.categories?.includes(this.activeFilter)
+    const filter = this.activeFilter.toLowerCase();
+    return this.portfolioItems.filter(item =>
+      item.categories?.some(cat => {
+        const c = cat.toLowerCase();
+        return c === filter || c.includes(filter) || filter.includes(c);
+      })
     );
   }
 
@@ -810,10 +822,91 @@ isLikedByUser(itemId: number): boolean {
     this.isImageLoading = false;
   }
 
+
+  // Videos portfolio
+
+  toggleVideoSection(itemId: number): void {
+    this.showVideoSection[itemId] = !this.showVideoSection[itemId];
+    if (this.showVideoSection[itemId] && !this.itemVideos[itemId]) {
+      this.loadItemVideos(itemId);
+    }
+  }
+
+  loadItemVideos(itemId: number): void {
+    this.videosLoading[itemId] = true;
+    this.portfolioService.getPortfolioItemVideos(itemId).subscribe({
+      next: (videos: any[]) => {
+        this.itemVideos[itemId] = videos || [];
+        this.videosLoading[itemId] = false;
+      },
+      error: () => {
+        this.itemVideos[itemId] = [];
+        this.videosLoading[itemId] = false;
+      }
+    });
+  }
+
+  toggleAddVideoForm(itemId: number): void {
+    this.showAddVideoForm[itemId] = !this.showAddVideoForm[itemId];
+    if (!this.newVideoTitre[itemId]) this.newVideoTitre[itemId] = '';
+    if (!this.newVideoLegende[itemId]) this.newVideoLegende[itemId] = '';
+  }
+
+  openVideoFileSelector(itemId: number): void {
+    const input = document.getElementById('video-input-' + itemId) as HTMLInputElement;
+    if (input) input.click();
+  }
+
+  onVideoFileSelected(event: Event, itemId: number): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    this.loadingStates['upload-video-' + itemId] = true;
+    const formData = new FormData();
+    formData.append('videoFile', file);
+    formData.append('portfolioItemId', itemId.toString());
+    formData.append('titre', this.newVideoTitre[itemId] || file.name.replace(/\.[^/.]+$/, ''));
+    if (this.newVideoLegende[itemId]) formData.append('legende', this.newVideoLegende[itemId]);
+    this.portfolioService.uploadPortfolioItemVideo(formData).subscribe({
+      next: (response: any) => {
+        if (response?.success && response.video) {
+          if (!this.itemVideos[itemId]) this.itemVideos[itemId] = [];
+          this.itemVideos[itemId] = [...this.itemVideos[itemId], response.video];
+        }
+        this.showAddVideoForm[itemId] = false;
+        this.newVideoTitre[itemId] = '';
+        this.newVideoLegende[itemId] = '';
+        this.loadingStates['upload-video-' + itemId] = false;
+        input.value = '';
+      },
+      error: () => { this.loadingStates['upload-video-' + itemId] = false; }
+    });
+  }
+
+  deleteItemVideo(videoId: number, itemId: number): void {
+    this.loadingStates['delete-video-' + videoId] = true;
+    this.portfolioService.deletePortfolioItemVideo(videoId).subscribe({
+      next: () => {
+        this.itemVideos[itemId] = this.itemVideos[itemId].filter((v: any) => v.id !== videoId);
+        this.loadingStates['delete-video-' + videoId] = false;
+      },
+      error: () => { this.loadingStates['delete-video-' + videoId] = false; }
+    });
+  }
+
+  getItemVideosCount(itemId: number): number {
+    return this.itemVideos[itemId]?.length || 0;
+  }
+
   ngOnDestroy(): void {
     if (this.isBrowser) {
       document.body.style.overflow = 'auto';
     }
+    // Détruire proprement toutes les instances Swiper pour éviter les artefacts visuels
+    Object.values(this.swiperInstances).forEach((el: any) => {
+      try { el?.swiper?.destroy(true, true); } catch (_) {}
+    });
+    this.swiperInstances = {};
   }
 
   

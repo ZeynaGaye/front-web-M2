@@ -1,10 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, PLATFORM_ID, Inject } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 import { ProFreeComponent } from "../pro-free/pro-free.component";
+import { SalonRegistrationComponent } from "../salon-registration/salon-registration.component";
 import { JobOfferComponent } from "../job-offer/job-offer.component";
 import { RouterModule, RouterOutlet } from '@angular/router';
 import { ClientSectionComponent } from '../client-section/client-section.component';
@@ -24,6 +26,7 @@ import { HeaderComponent } from '../header/header.component';
     CommonModule,
     RouterModule,
     ProFreeComponent,
+    SalonRegistrationComponent,
     JobOfferComponent,
     RecommendationsComponent,
     OpportunitesEmploiComponent,
@@ -32,7 +35,7 @@ import { HeaderComponent } from '../header/header.component';
   templateUrl: './accueil.component.html',
   styleUrl: './accueil.component.scss'
 })
-export class AccueilComponent implements OnInit, OnDestroy {
+export class AccueilComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private destroy$ = new Subject<void>();
 
@@ -45,13 +48,43 @@ export class AccueilComponent implements OnInit, OnDestroy {
   maxJobOffersOnHomepage = 3;
   searchQuery = '';
 
-  constructor(private router: Router, private route: ActivatedRoute) {}
+  constructor(
+    private router: Router,
+    private route: ActivatedRoute,
+    @Inject(PLATFORM_ID) private platformId: object
+  ) {}
 
   ngOnInit(): void {
     this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
       this.searchQuery = params['q'] || '';
     });
     this.getCurrentLocation();
+  }
+
+  ngAfterViewInit(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    import('motion').then(({ animate }) => {
+      const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (!entry.isIntersecting) return;
+          const el = entry.target as HTMLElement;
+          const i = Number(el.dataset['revealIndex'] ?? 0);
+          animate(el as any,
+            { opacity: [0, 1], transform: ['translateY(40px)', 'translateY(0px)'] },
+            { duration: 0.7, delay: i * 0.05, ease: EASE }
+          );
+          observer.unobserve(el);
+        });
+      }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+      document.querySelectorAll<HTMLElement>('.reveal-section').forEach((el, i) => {
+        el.dataset['revealIndex'] = String(i);
+        observer.observe(el);
+      });
+    });
   }
 
   ngOnDestroy(): void {

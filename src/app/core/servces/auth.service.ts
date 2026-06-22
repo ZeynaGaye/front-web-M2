@@ -22,9 +22,10 @@ export interface AuthResponse {
   nom: string;
   prenom: string;
   role: string;
-  accesToken: string;
-  refreshToken: string;
-  expiresIn: string;
+  accesToken?: string;
+  refreshToken?: string;
+  expiresIn?: string;
+  pendingEmailVerification?: boolean;
 }
 
 @Injectable({
@@ -105,18 +106,20 @@ export class AuthService {
 
           // Initialiser Keycloak avec le token obtenu
           return this.initKeycloakWithToken(
-            response.accesToken,
-            response.refreshToken
+            response.accesToken!,
+            response.refreshToken!
           );
         }),
         catchError((error) => {
           console.error(" Erreur d'authentification:", error);
-          return throwError(
-            () =>
-              error.error?.message || 
-              error.message || 
-              'Échec de la connexion. Veuillez vérifier vos identifiants.'
-          );
+          const serverMsg: string = error.error?.message || error.message || '';
+          const isEmailUnverified = error.status === 403 ||
+            serverMsg.toLowerCase().includes('vérifié') ||
+            serverMsg.toLowerCase().includes('verifi');
+          const msg = isEmailUnverified
+            ? 'Votre email n\'est pas encore vérifié. Consultez votre boîte mail pour activer votre compte.'
+            : (serverMsg || 'Échec de la connexion. Veuillez vérifier vos identifiants.');
+          return throwError(() => msg);
         })
       );
   }
@@ -211,10 +214,12 @@ export class AuthService {
           this.currentUserSubject.next(updatedUser);
 
           // Mettre à jour Keycloak avec le nouveau token
-          this.initKeycloakWithToken(
-            response.accesToken,
-            response.refreshToken
-          );
+          if (response.accesToken && response.refreshToken) {
+            this.initKeycloakWithToken(
+              response.accesToken,
+              response.refreshToken
+            );
+          }
 
           // Réinitialiser le timer de rafraîchissement
           this.setupRefreshTokenTimer(updatedUser);

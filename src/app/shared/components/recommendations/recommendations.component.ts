@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, inject, Inject, PLATFORM_ID, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, Input, Output, EventEmitter, inject, Inject, PLATFORM_ID, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
@@ -16,7 +16,7 @@ import { FreelanceDetailsComponent } from '../../../freelance/components/freelan
   styleUrls: ['./recommendations.component.scss'],
   templateUrl: './recommendations.component.html',
 })
-export class RecommendationsComponent implements OnInit, OnDestroy {
+export class RecommendationsComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // ==================== INPUTS ET OUTPUTS ====================
 
@@ -96,6 +96,7 @@ export class RecommendationsComponent implements OnInit, OnDestroy {
         this.disponibleNearbyCount = this.getDisponibleNearbyCount();
         if (!state.loading && state.homepage && this.isBrowser) {
           setTimeout(() => this.updateNearbyMap(), 300);
+          setTimeout(() => this.animatePopularCards(), 450);
         }
       });
 
@@ -116,9 +117,12 @@ export class RecommendationsComponent implements OnInit, OnDestroy {
     }
   }
 
+  ngAfterViewInit(): void {
+    if (!this.isBrowser) return;
+    // Animation déclenchée après chargement des données (voir subscription dans ngOnInit)
+  }
+
   ngOnDestroy(): void {
-
-
     // Nettoyer le timeout de rafraîchissement
     if (this.refreshTimeout) {
       clearTimeout(this.refreshTimeout);
@@ -132,6 +136,30 @@ export class RecommendationsComponent implements OnInit, OnDestroy {
       this.leafletMap.remove();
       this.leafletMap = null;
     }
+  }
+
+  // ==================== ANIMATION POPULAR CARDS ====================
+
+  private animatePopularCards(): void {
+    if (!this.isBrowser) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    import('motion').then(({ animate }) => {
+      const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
+      const cards = document.querySelectorAll<HTMLElement>(
+        '.salons-carousel .salon-card, .salons-carousel .freelance-card'
+      );
+      cards.forEach((card, i) => {
+        animate(
+          card as any,
+          {
+            opacity: [0, 1],
+            transform: ['translateY(32px) scale(0.95)', 'translateY(0px) scale(1)']
+          },
+          { duration: 0.52, delay: 0.04 + i * 0.08, ease: EASE }
+        );
+      });
+    }).catch(() => {});
   }
 
   // ==================== MÉTHODES PUBLIQUES ====================

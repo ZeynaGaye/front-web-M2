@@ -42,6 +42,7 @@
     "keycloak-angular": "^19.0.2",
     "keycloak-js": "^26.1.2",
     "leaflet": "^1.9.4",
+    "motion": "^12.40.0",
     "primeng": "^19.0.10",
     "rxjs": "~7.8.0",
     "swiper": "^11.2.6",

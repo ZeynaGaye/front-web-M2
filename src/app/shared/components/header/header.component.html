@@ -106,6 +106,17 @@
 
 <div class="header-wrapper">
   <div class="main-header">
+    <!-- Orbes flottants décoratifs -->
+    <div class="hero-orb hero-orb-1"></div>
+    <div class="hero-orb hero-orb-2"></div>
+    <div class="hero-orb hero-orb-3"></div>
+    <div class="hero-sparkles">
+      <span class="sparkle s1"></span>
+      <span class="sparkle s2"></span>
+      <span class="sparkle s3"></span>
+      <span class="sparkle s4"></span>
+      <span class="sparkle s5"></span>
+    </div>
     <div class="left-section">
       <div class="header-container">
       </div>
@@ -302,13 +313,39 @@
       </div>
     </div>
     <div class="right-section">
-      <div class="hero-image">
-        <div class="hero-text">
-          <em>"Propulsez votre carrière : Accédez aux meilleures offres d'emploi du secteur."</em>
-          <span class="hero-text-author" (click)="scrollToOffres()">
-            — BEAUTYHUB CAREERS <i class="fas fa-arrow-down"></i>
-          </span>
+      <div class="hero-visual-wrapper">
+
+        <!-- Miniatures flottantes -->
+        <div class="floating-thumb thumb-1">
+          <div class="thumb-img-wrap">
+            <img src="assets/images/photos-charmantes-coiffeurs-africains-talentueux_640251-73688.avif" alt="Coiffeurs BeautyHub" />
+          </div>
+          <div class="thumb-label">
+            <i class="fas fa-scissors"></i>
+            Coiffure
+          </div>
         </div>
+        <div class="floating-thumb thumb-2">
+          <div class="thumb-img-wrap">
+            <img src="assets/images/pexels-rdne-7755238.jpg" alt="Soins beauté BeautyHub" />
+          </div>
+          <div class="thumb-label">
+            <i class="fas fa-spa"></i>
+            Soins
+          </div>
+        </div>
+
+        <!-- Image hero -->
+        <div class="hero-image">
+          <!-- Citation flottante bas-gauche -->
+          <div class="hero-text">
+            <em>"Propulsez votre carrière : Accédez aux meilleures offres d'emploi du secteur."</em>
+            <span class="hero-text-author" (click)="scrollToOffres()">
+              — BEAUTYHUB CAREERS <i class="fas fa-arrow-down"></i>
+            </span>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -488,6 +525,13 @@
              [alt]="provider.nom + (provider.prenom ? ' ' + provider.prenom : '')"
              (error)="onImageError($event, provider)"
              (load)="onImageLoad($event, provider)">
+        <button class="fav-btn"
+                *ngIf="isLoggedIn && !!user"
+                [class.active]="isFavorite(provider)"
+                (click)="toggleFavorite(provider, $event)"
+                [title]="isFavorite(provider) ? 'Retirer des favoris' : 'Ajouter aux favoris'">
+          <i class="fas fa-heart"></i>
+        </button>
         <div class="image-overlay" *ngIf="provider.type === 'freelance'">
           <i class="fas fa-user-tie"></i>
         </div>

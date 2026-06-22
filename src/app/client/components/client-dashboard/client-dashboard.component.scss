@@ -3,8 +3,8 @@ $sec:     #A4B1BD;
 $sec-dk:  #7A8C9B;   
 $sec-lt:  #D3E3EE;  
 $warm:    #fb8f71;   
-$dark:    #1A1A2E;
-$dark-2:  #2E2E50;
+$dark:    #1C1B1A;
+$dark-2:  #2C2A28;
 $white:   #ffffff;
 $bg:      #F4F4F7;
 $text:    #2C2C2C;
@@ -266,7 +266,7 @@ $topbar:  64px;
 
 /* ── Prochain RDV ────────────────────────────────────────── */
 .rdv-card {
-  background: $dark; border-radius: $r;
+  background: linear-gradient(135deg, $warm, #e07058); border-radius: $r;
   padding: 18px 22px;
   display: flex; align-items: center; gap: 18px;
   box-shadow: $sh-md; color: $white;
@@ -344,7 +344,7 @@ $topbar:  64px;
   background: $white; border-radius: $r; box-shadow: $sh; overflow: hidden;
 
   .svc-card-img {
-    height: 105px; background: linear-gradient(135deg, #2C2C54, #1A1A38);
+    height: 105px; background: linear-gradient(135deg, #3a2218, #c47359);
     position: relative; display: flex; align-items: center; justify-content: center;
     mat-icon { font-size: 36px; width: 36px; height: 36px; color: rgba($white,.2); }
     .svc-fav {

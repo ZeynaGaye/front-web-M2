@@ -352,12 +352,6 @@
 
       <!-- ✨ AUTRES SECTIONS -->
       <div *ngIf="showPortfolio" class="portfolio-section">
-        <div class="section-header">
-          <button mat-icon-button (click)="backToHome()">
-            <mat-icon>arrow_back</mat-icon>
-          </button>
-          <h2>Mon Portfolio</h2>
-        </div>
         <div class="section-content">
           <app-portfolio></app-portfolio>
         </div>
@@ -372,36 +366,18 @@
         </app-opportunites-emploi>
       </div>
       <div *ngIf="showServices" class="services-section">
-        <div class="section-header">
-          <button mat-icon-button (click)="backToHome()">
-            <mat-icon>arrow_back</mat-icon>
-          </button>
-          <h2>Mes Services</h2>
-        </div>
         <div class="section-content">
           <app-mes-services-freelance (closeModalEvent)="backToHome()"></app-mes-services-freelance>
         </div>
       </div>
 
       <div *ngIf="showProfile" class="profile-section">
-        <div class="section-header">
-          <button mat-icon-button (click)="backToHome()">
-            <mat-icon>arrow_back</mat-icon>
-          </button>
-          <h2>Mon Profil</h2>
-        </div>
         <div class="section-content">
           <app-profile-management></app-profile-management>
         </div>
       </div>
 
       <div *ngIf="showAvailability" class="availability-section">
-        <div class="section-header">
-          <button mat-icon-button (click)="backToHome()">
-            <mat-icon>arrow_back</mat-icon>
-          </button>
-          <h2> Gérer Planning</h2>
-        </div>
         <div class="section-content">
           <app-horaires-manager 
             [entityId]="currentUser?.id" 
@@ -411,12 +387,6 @@
       </div>
       
       <div *ngIf="showReservations" class="reservations-section">
-        <div class="section-header">
-          <button mat-icon-button (click)="backToHome()">
-            <mat-icon>arrow_back</mat-icon>
-          </button>
-          <h2>Rendez-vous et Avis</h2>
-        </div>
         <div class="section-content">
           <mat-tab-group>
             <mat-tab label="Mes Réservations">
@@ -444,12 +414,6 @@
       </div>
 
       <div *ngIf="showNotifications" class="notifications-section">
-        <div class="section-header">
-          <button mat-icon-button (click)="backToHome()">
-            <mat-icon>arrow_back</mat-icon>
-          </button>
-          <h2>Notifications</h2>
-        </div>
         <div class="section-content">
           <app-notification-list 
             [notifications]="notifications"

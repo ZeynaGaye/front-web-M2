@@ -406,6 +406,40 @@ export class SalonService {
     );
   }
 
+  // ── Vidéos salon ─────────────────────────────────────────
+  getVideosBySalon(salonId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/salons/${salonId}/videos`).pipe(
+      catchError(error => {
+        console.error('Erreur récupération vidéos salon:', error);
+        return of([]);
+      })
+    );
+  }
+
+  uploadSalonVideo(salonId: number, formData: FormData): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/salons/${salonId}/videos/upload`, formData).pipe(
+      catchError(error => {
+        console.error('Erreur upload vidéo salon:', error);
+        throw error;
+      })
+    );
+  }
+
+  updateSalonVideo(salonId: number, videoId: number, data: { titre?: string; description?: string }): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/salons/${salonId}/videos/${videoId}`, data).pipe(
+      catchError(error => { throw error; })
+    );
+  }
+
+  deleteSalonVideo(salonId: number, videoId: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/salons/${salonId}/videos/${videoId}`).pipe(
+      catchError(error => {
+        console.error('Erreur suppression vidéo salon:', error);
+        throw error;
+      })
+    );
+  }
+
   private handleError<T>(operation = 'opération', result?: T) {
     return (error: any): Observable<T> => {
       console.error(`${operation} a échoué: ${error.message}`);

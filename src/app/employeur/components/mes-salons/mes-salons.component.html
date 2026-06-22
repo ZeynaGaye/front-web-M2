@@ -118,6 +118,13 @@
               </button>
               <button
                 mat-button
+                [class.active-tab]="activeTab[salon.id] === 'videos'"
+                (click)="setActiveTab(salon.id, 'videos')"
+              >
+                <mat-icon>videocam</mat-icon> Vidéos
+              </button>
+              <button
+                mat-button
                 [class.active-tab]="activeTab[salon.id] === 'employes'"
                 (click)="setActiveTab(salon.id, 'employes')"
               >
@@ -375,6 +382,101 @@
                 </button>
               </div>
             </div>
+            <!-- Contenu de l'onglet Vidéos -->
+            <div class="tab-content" *ngIf="activeTab[salon.id] === 'videos'" [@tabAnimation]>
+
+              <div *ngIf="areVideosLoading(salon.id)" class="loading-section">
+                <mat-spinner diameter="40"></mat-spinner>
+                <p>Chargement des vidéos...</p>
+              </div>
+
+              <div *ngIf="!areVideosLoading(salon.id) && hasVideosError(salon.id)" class="error-message">
+                <mat-icon>error</mat-icon> {{ getVideosError(salon.id) }}
+                <button mat-button (click)="reloadVideos(salon.id)">Réessayer</button>
+              </div>
+
+              <ng-container *ngIf="!areVideosLoading(salon.id) && hasVideosLoaded(salon.id)">
+
+                <!-- Formulaire ajout -->
+                <div class="video-add-form" *ngIf="showAddVideoForm[salon.id]">
+                  <input class="video-form-input" placeholder="Titre (optionnel)"
+                    [(ngModel)]="newVideoTitre[salon.id]" [ngModelOptions]="{standalone: true}" />
+                  <textarea class="video-form-textarea" placeholder="Description (optionnel)" rows="2"
+                    [(ngModel)]="newVideoDescription[salon.id]" [ngModelOptions]="{standalone: true}"></textarea>
+                  <div class="video-form-actions">
+                    <button class="video-form-btn-cancel" (click)="toggleAddVideoForm(salon.id)">Annuler</button>
+                    <button class="video-form-btn-file" (click)="openVideoSelector(salon.id)"
+                      [disabled]="getLoadingState('upload-video-' + salon.id)">
+                      <mat-icon>attach_file</mat-icon>
+                      {{ getLoadingState('upload-video-' + salon.id) ? 'Upload...' : 'Choisir un fichier' }}
+                      <mat-spinner *ngIf="getLoadingState('upload-video-' + salon.id)" diameter="16"></mat-spinner>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Grille vidéos -->
+                <div class="videos-grid" *ngIf="getVideosCount(salon.id) > 0">
+                  <div class="video-card" *ngFor="let video of salonVideos[salon.id]">
+
+                    <!-- Mode lecture -->
+                    <ng-container *ngIf="editingVideoId !== video.id">
+                      <video [src]="'http://localhost:8081/uploads/' + video.url"
+                        controls preload="metadata" class="video-card-player"></video>
+                      <div class="video-card-footer">
+                        <div class="video-card-info">
+                          <span class="video-card-title">{{ video.titre || 'Sans titre' }}</span>
+                          <span class="video-card-desc" *ngIf="video.description">{{ video.description }}</span>
+                        </div>
+                        <div class="video-card-actions">
+                          <button mat-icon-button matTooltip="Modifier" (click)="startEditVideo(video)">
+                            <mat-icon>edit</mat-icon>
+                          </button>
+                          <button mat-icon-button matTooltip="Supprimer" color="warn"
+                            (click)="deleteVideo(video.id, salon.id)"
+                            [disabled]="getLoadingState('delete-video-' + video.id)">
+                            <mat-icon>delete</mat-icon>
+                          </button>
+                        </div>
+                      </div>
+                    </ng-container>
+
+                    <!-- Mode édition inline -->
+                    <ng-container *ngIf="editingVideoId === video.id">
+                      <div class="video-edit-form">
+                        <input class="video-form-input" placeholder="Titre"
+                          [(ngModel)]="editTitre" [ngModelOptions]="{standalone: true}" />
+                        <textarea class="video-form-textarea" placeholder="Description" rows="2"
+                          [(ngModel)]="editDescription" [ngModelOptions]="{standalone: true}"></textarea>
+                        <div class="video-form-actions">
+                          <button class="video-form-btn-cancel" (click)="cancelEditVideo()">Annuler</button>
+                          <button class="video-form-btn-save" (click)="saveVideoEdit(video.id, salon.id)"
+                            [disabled]="getLoadingState('edit-video-' + video.id)">
+                            <mat-spinner *ngIf="getLoadingState('edit-video-' + video.id)" diameter="16"></mat-spinner>
+                            Enregistrer
+                          </button>
+                        </div>
+                      </div>
+                    </ng-container>
+
+                  </div>
+                </div>
+
+                <!-- Vide -->
+                <p class="video-empty" *ngIf="getVideosCount(salon.id) === 0 && !showAddVideoForm[salon.id]">
+                  Aucune vidéo pour ce salon.
+                </p>
+
+                <!-- Bouton ajouter -->
+                <button *ngIf="!showAddVideoForm[salon.id]" class="add-video-btn"
+                  (click)="toggleAddVideoForm(salon.id)"
+                  [disabled]="getVideosCount(salon.id) >= 5">
+                  <mat-icon>video_call</mat-icon>
+                  {{ getVideosCount(salon.id) >= 5 ? 'Limite atteinte (5/5)' : 'Ajouter une vidéo' }}
+                </button>
+
+              </ng-container>
+            </div>
+
           <div
             class="tab-content"
             *ngIf="activeTab[salon.id] === 'employes'"

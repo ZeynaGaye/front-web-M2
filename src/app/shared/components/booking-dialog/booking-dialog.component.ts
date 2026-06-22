@@ -14,7 +14,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ReservationService } from '../../services/reservation/reservation.service';
 import { AuthService } from '../../../core/servces/auth.service';
-import { PaymentService, BeautyPaymentRequest, BeautyPaymentResponse } from '../../../services/payment.service';
+import { PaymentService, DexPaymentRequest, DexPaymentResponse } from '../../../services/payment.service';
 
 
 @Component({
@@ -57,19 +57,19 @@ export class BookingDialogComponent implements OnInit {
   // Créneaux dynamiques depuis votre API
   availableTimeSlots: Array<{value: string, label: string, dateTime: string}> = [];
 
-  // ========================================
+
   // NOUVELLES PROPRIÉTÉS POUR LE PAIEMENT
-  // ========================================
+
   currentStep: 'booking' | 'payment' = 'booking';
   selectedPaymentMethod: string = '';
   paymentForm: FormGroup;
   isProcessingPayment = false;
-  paymentStatus: BeautyPaymentResponse | null = null;
+  paymentStatus: DexPaymentResponse | null = null;
   createdReservation: any = null; // Stocke la réservation créée
 
-  // ========================================
+
   // NOUVELLES PROPRIÉTÉS POUR TEMPS RÉEL
-  // ========================================
+
   private refreshInterval: any = null;
   private currentSelectedDate: Date | null = null;
   private pollSubscription: any = null;
@@ -93,14 +93,14 @@ export class BookingDialogComponent implements OnInit {
       description: 'Payez avec votre compte Wave',
       phonePattern: '^(221)?(77|78|76|70)\\d{7}$'
     },
-    {
-      id: 'carte_bancaire',
-      name: 'Carte Bancaire',
-      icon: 'assets/images/mastercard-visa.jpg',
-      type: 'mobile',
-      description: 'Payez par carte Visa/mastercard-visa',
-      phonePattern: null
-    }
+    // {
+    //   id: 'carte_bancaire',
+    //   name: 'Carte Bancaire',
+    //   icon: 'assets/images/mastercard-visa.jpg',
+    //   type: 'mobile',
+    //   description: 'Payez par carte Visa/mastercard-visa',
+    //   phonePattern: null
+    // }
   ];
 
   constructor(
@@ -840,13 +840,12 @@ export class BookingDialogComponent implements OnInit {
       this.createdReservation = reservationData;
 
       // 2. Initier le paiement
-      const paymentRequest: BeautyPaymentRequest = {
+      const paymentRequest: DexPaymentRequest = {
         bookingId: reservationData.id,
-        method: 'PAYDUNYA',
+        method: 'DEXPAY',
         phoneNumber: this.formatPhoneNumber(this.paymentForm.value.phoneNumber),
         email: this.paymentForm.value.email,
-        customerName: this.paymentForm.value.customerName,
-        preferredOperator: this.selectedPaymentMethod
+        customerName: this.paymentForm.value.customerName
       };
 
       const initResponse = await new Promise<any>((resolve, reject) => {
@@ -962,7 +961,7 @@ export class BookingDialogComponent implements OnInit {
   /**
    * Gérer le succès du paiement
    */
-  private handlePaymentSuccess(response: BeautyPaymentResponse): void {
+  private handlePaymentSuccess(response: DexPaymentResponse): void {
     this.isProcessingPayment = false;
 
 
@@ -984,7 +983,7 @@ export class BookingDialogComponent implements OnInit {
   /**
    * Gérer l'échec du paiement
    */
-  private handlePaymentFailure(response: BeautyPaymentResponse): void {
+  private handlePaymentFailure(response: DexPaymentResponse): void {
     this.isProcessingPayment = false;
 
 

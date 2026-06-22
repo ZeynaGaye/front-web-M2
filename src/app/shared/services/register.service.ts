@@ -32,11 +32,12 @@ export interface LoginRequest {
 
 // Interface pour la réponse d'authentification
 export interface AuthResponse {
-  accessToken: string;
-  refreshToken: string;
-  userId: string;
-  role: string;
-  // Autres informations retournées par le backend
+  accessToken?: string;
+  refreshToken?: string;
+  userId?: string;
+  role?: string;
+  pendingEmailVerification?: boolean;
+  email?: string;
 }
 
 @Injectable({
@@ -102,12 +103,13 @@ signup(request: SignupRequest): Observable<AuthResponse> {
   //   localStorage.removeItem('user_id');
   // }
 
-  // Stocker les données d'authentification
+  // Stocker les données d'authentification (ignoré si en attente de vérification email)
   private storeAuthData(authData: AuthResponse): void {
-    localStorage.setItem('auth_token', authData.accessToken);
-    localStorage.setItem('refresh_token', authData.refreshToken);
-    localStorage.setItem('user_role', authData.role);
-    localStorage.setItem('user_id', authData.userId);
+    if (authData.pendingEmailVerification) return;
+    if (authData.accessToken)  localStorage.setItem('auth_token',    authData.accessToken);
+    if (authData.refreshToken) localStorage.setItem('refresh_token', authData.refreshToken);
+    if (authData.role)         localStorage.setItem('user_role',     authData.role);
+    if (authData.userId)       localStorage.setItem('user_id',       authData.userId);
   }
 
   // // Vérifier si l'utilisateur est connecté

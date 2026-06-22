@@ -1,4 +1,5 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { SalonService } from '../../services/salon.service';
 import { ServiceSalonService } from '../../services/service-salon.service';
 import { EmployeService } from '../../services/employe';
@@ -50,6 +51,7 @@ interface DeleteResponse {
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     MatCardModule,
     MatIconModule,
     MatListModule,
@@ -120,6 +122,7 @@ export class MesSalonsComponent implements OnInit {
   expandedSalonId: number | null = null;
   services: { [salonId: number]: any[] } = {};
   salonPhotos: { [salonId: number]: any[] } = {};
+  salonVideos: { [salonId: number]: any[] } = {};
   salonEmployes: { [salonId: number]: EmployeListItem[] } = {};
 
 
@@ -136,6 +139,20 @@ export class MesSalonsComponent implements OnInit {
   // États spécifiques pour les photos
   photosInitialized: { [salonId: number]: boolean } = {};
   photosErrors: { [salonId: number]: string } = {};
+
+  // États spécifiques pour les vidéos
+  videosInitialized: { [salonId: number]: boolean } = {};
+  videosErrors: { [salonId: number]: string } = {};
+
+  // Formulaire ajout vidéo
+  showAddVideoForm: { [salonId: number]: boolean } = {};
+  newVideoTitre: { [salonId: number]: string } = {};
+  newVideoDescription: { [salonId: number]: string } = {};
+
+  // Édition vidéo inline
+  editingVideoId: number | null = null;
+  editTitre = '';
+  editDescription = '';
 
   // États spécifiques pour les employés
   employesInitialized: { [salonId: number]: boolean } = {};
@@ -172,6 +189,9 @@ export class MesSalonsComponent implements OnInit {
           this.photosInitialized[salon.id] = false;
           this.salonPhotos[salon.id] = [];
           this.photosErrors[salon.id] = '';
+          this.videosInitialized[salon.id] = false;
+          this.salonVideos[salon.id] = [];
+          this.videosErrors[salon.id] = '';
           // Initialiser les états des employés
           this.employesInitialized[salon.id] = false;
           this.salonEmployes[salon.id] = [];
@@ -301,6 +321,8 @@ export class MesSalonsComponent implements OnInit {
     } else if (tab === 'photos') {
 
       this.loadSalonPhotos(salonId);
+    } else if (tab === 'videos') {
+      this.loadSalonVideos(salonId);
     } else if (tab === 'employes') {
 
       this.loadSalonEmployes(salonId);
@@ -343,6 +365,135 @@ export class MesSalonsComponent implements OnInit {
     this.photosInitialized[salonId] = false;
     this.photosErrors[salonId] = '';
     this.loadSalonPhotos(salonId, true);
+  }
+
+  // ── Vidéos ──────────────────────────────────────────────
+
+  loadSalonVideos(salonId: number, forceReload: boolean = false) {
+    if (this.videosInitialized[salonId] && !forceReload) return;
+    if (this.getLoadingState(`videos-${salonId}`)) return;
+
+    this.setLoadingState(`videos-${salonId}`, true);
+    this.videosErrors[salonId] = '';
+
+    this.salonService.getVideosBySalon(salonId).subscribe({
+      next: (videos: any[]) => {
+        this.salonVideos[salonId] = videos || [];
+        this.videosInitialized[salonId] = true;
+        this.setLoadingState(`videos-${salonId}`, false);
+      },
+      error: (error) => {
+        this.videosErrors[salonId] = error.message || 'Erreur de chargement';
+        this.salonVideos[salonId] = [];
+        this.videosInitialized[salonId] = true;
+        this.setLoadingState(`videos-${salonId}`, false);
+      }
+    });
+  }
+
+  areVideosLoading(salonId: number): boolean { return this.getLoadingState(`videos-${salonId}`); }
+  hasVideosLoaded(salonId: number): boolean { return this.videosInitialized[salonId] === true; }
+  getVideosCount(salonId: number): number { return this.salonVideos[salonId]?.length || 0; }
+  hasVideosError(salonId: number): boolean { return !!(this.videosErrors[salonId]); }
+  getVideosError(salonId: number): string { return this.videosErrors[salonId] || ''; }
+
+  reloadVideos(salonId: number) {
+    this.videosInitialized[salonId] = false;
+    this.videosErrors[salonId] = '';
+    this.loadSalonVideos(salonId, true);
+  }
+
+  toggleAddVideoForm(salonId: number) {
+    this.showAddVideoForm[salonId] = !this.showAddVideoForm[salonId];
+    if (!this.newVideoTitre[salonId]) this.newVideoTitre[salonId] = '';
+    if (!this.newVideoDescription[salonId]) this.newVideoDescription[salonId] = '';
+  }
+
+  openVideoSelector(salonId: number) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'video/mp4,video/webm,video/ogg,video/quicktime';
+    input.addEventListener('change', (event) => {
+      const file = (event.target as HTMLInputElement).files?.[0];
+      if (file) this.uploadSalonVideo(salonId, file);
+    });
+    input.click();
+  }
+
+  uploadSalonVideo(salonId: number, file: File) {
+    this.setLoadingState(`upload-video-${salonId}`, true);
+    const formData = new FormData();
+    formData.append('videoFile', file);
+    formData.append('titre', this.newVideoTitre[salonId] || file.name.replace(/\.[^/.]+$/, ''));
+    formData.append('description', this.newVideoDescription[salonId] || '');
+
+    this.salonService.uploadSalonVideo(salonId, formData).subscribe({
+      next: (response: any) => {
+        if (response?.success && response.video) {
+          if (!this.salonVideos[salonId]) this.salonVideos[salonId] = [];
+          this.salonVideos[salonId] = [...this.salonVideos[salonId], response.video];
+        }
+        this.showAddVideoForm[salonId] = false;
+        this.newVideoTitre[salonId] = '';
+        this.newVideoDescription[salonId] = '';
+        this.setLoadingState(`upload-video-${salonId}`, false);
+      },
+      error: (error) => {
+        this.errorMessage = 'Erreur upload vidéo: ' + (error.error?.message || error.message);
+        this.setLoadingState(`upload-video-${salonId}`, false);
+      }
+    });
+  }
+
+  startEditVideo(video: any) {
+    this.editingVideoId = video.id;
+    this.editTitre = video.titre || '';
+    this.editDescription = video.description || '';
+  }
+
+  cancelEditVideo() {
+    this.editingVideoId = null;
+    this.editTitre = '';
+    this.editDescription = '';
+  }
+
+  saveVideoEdit(videoId: number, salonId: number) {
+    this.setLoadingState(`edit-video-${videoId}`, true);
+    this.salonService.updateSalonVideo(salonId, videoId, { titre: this.editTitre, description: this.editDescription }).subscribe({
+      next: () => {
+        const video = this.salonVideos[salonId]?.find(v => v.id === videoId);
+        if (video) { video.titre = this.editTitre; video.description = this.editDescription; }
+        this.cancelEditVideo();
+        this.setLoadingState(`edit-video-${videoId}`, false);
+      },
+      error: (error) => {
+        this.errorMessage = 'Erreur modification vidéo: ' + error.message;
+        this.setLoadingState(`edit-video-${videoId}`, false);
+      }
+    });
+  }
+
+  deleteVideo(videoId: number, salonId: number) {
+    if (!confirm('Supprimer cette vidéo ?')) return;
+    this.setLoadingState(`delete-video-${videoId}`, true);
+
+    this.salonService.deleteSalonVideo(salonId, videoId).subscribe({
+      next: () => {
+        this.salonVideos[salonId] = this.salonVideos[salonId].filter(v => v.id !== videoId);
+        this.setLoadingState(`delete-video-${videoId}`, false);
+      },
+      error: (error) => {
+        this.errorMessage = 'Erreur suppression vidéo: ' + error.message;
+        this.setLoadingState(`delete-video-${videoId}`, false);
+      }
+    });
+  }
+
+  formatDuree(secondes: number): string {
+    if (!secondes) return '0:00';
+    const m = Math.floor(secondes / 60);
+    const s = secondes % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
   }
 
   //  NOUVELLE: Méthode pour gérer les erreurs remontées par HorairesManagerComponent

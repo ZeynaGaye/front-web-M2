@@ -24,8 +24,8 @@ interface DeleteResponse {
 export class PortfolioService {
 
   private apiUrl = 'http://localhost:8081/api/portfolio';
-  //  AJOUT : URL de base pour les images (comme votre salon)
-private imageBaseUrl = 'http://localhost:8081/uploads';
+  private videoApiUrl = 'http://localhost:8081/api/portfolio-videos';
+  private imageBaseUrl = 'http://localhost:8081/uploads';
   constructor(private http: HttpClient) {}
 
   /**
@@ -391,6 +391,23 @@ private imageBaseUrl = 'http://localhost:8081/uploads';
       console.error(` Erreur vérification image ${filename}:`, error);
       return false;
     }
+  }
+
+  // ── Vidéos portfolio ─────────────────────────────────────
+
+  getPortfolioItemVideos(itemId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.videoApiUrl}/portfolio-item/${itemId}`)
+      .pipe(catchError(this.handleError));
+  }
+
+  uploadPortfolioItemVideo(formData: FormData): Observable<any> {
+    return this.http.post<any>(`${this.videoApiUrl}/upload`, formData)
+      .pipe(catchError(this.handleError));
+  }
+
+  deletePortfolioItemVideo(videoId: number): Observable<any> {
+    return this.http.delete<any>(`${this.videoApiUrl}/${videoId}`)
+      .pipe(catchError(this.handleError));
   }
 
   /**

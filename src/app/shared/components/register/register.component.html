@@ -1,17 +1,43 @@
 <!-- register.component.html -->
 <div class="modal-overlay" (click)="closeModal()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
+  <div class="modal-content" [class.success-mode]="registrationSuccess" (click)="$event.stopPropagation()">
     <span class="close" (click)="closeModal()">&times;</span>
-    <h2>Créez votre compte</h2>
 
-    <!-- Message d'erreur -->
-    <div class="error-message" *ngIf="errorMessage">{{ errorMessage }}</div>
-
-    <div class="step-indicators">
-      <div class="step" [class.active]="currentStep >= 1"></div>
-      <div class="step" [class.active]="currentStep >= 2"></div>
-      <div class="step" [class.active]="currentStep >= 3"></div>
+    <!-- ══════════ ÉCRAN SUCCÈS ══════════ -->
+    <div *ngIf="registrationSuccess" class="success-screen">
+      <div class="success-icon-wrap">
+        <div class="success-ripple"></div>
+        <div class="success-ripple delay1"></div>
+        <svg class="success-check" viewBox="0 0 52 52">
+          <circle class="check-circle" cx="26" cy="26" r="25" fill="none"/>
+          <path class="check-path" d="M14 27 l8 8 l16-16" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h2 class="success-title">Inscription réussie !</h2>
+      <p class="success-email-label">Un email de confirmation a été envoyé à</p>
+      <div class="success-email-box">
+        <span class="email-icon">✉</span>
+        <strong>{{ registeredEmail }}</strong>
+      </div>
+      <p class="success-hint">Vérifiez votre boîte mail (et vos spams) puis cliquez sur le lien pour activer votre compte.</p>
+      <button class="btn-primary success-btn" (click)="closeModal()">Compris !</button>
+      <p class="login-link" style="margin-top: 1rem;">
+        Déjà vérifié ? <a (click)="switchToLogin()">Se connecter</a>
+      </p>
     </div>
+
+    <!-- ══════════ FORMULAIRE NORMAL ══════════ -->
+    <ng-container *ngIf="!registrationSuccess">
+      <h2>Créez votre compte</h2>
+
+      <!-- Message d'erreur -->
+      <div class="error-message" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+      <div class="step-indicators">
+        <div class="step" [class.active]="currentStep >= 1"></div>
+        <div class="step" [class.active]="currentStep >= 2"></div>
+        <div class="step" [class.active]="currentStep >= 3"></div>
+      </div>
 
     <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
       <!-- Étape 1 - Inchangée -->
@@ -170,11 +196,13 @@
           <button type="button" class="btn-secondary" (click)="previousStep()">
             Retour
           </button>
-          <button type="submit" class="btn-primary" [disabled]="registerForm.invalid">
-            S'inscrire
+          <button type="submit" class="btn-primary" [disabled]="registerForm.invalid || isLoading">
+            <span *ngIf="!isLoading">S'inscrire</span>
+            <span *ngIf="isLoading" class="btn-spinner">⟳ Inscription...</span>
           </button>
         </div>
       </div>
     </form>
+    </ng-container>
   </div>
 </div>

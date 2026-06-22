@@ -1,83 +1,96 @@
 /* ===============================================
-    VARIABLES
+    VARIABLES — BeautyHub Soft UI Evolution
 =============================================== */
 $primary-color: #F5A393;
 $secondary-color: #A4B1BD;
-$text-color: #333;
-$text-light: #666;
-$success-color: #28a745;
-$error-color: #dc3545;
-$warning-color: #ffc107;
-$info-color: #17a2b8;
+$text-color: #1c1c2e;
+$text-light: #6b7280;
+$success-color: #10b981;
+$error-color: #ef4444;
+$warning-color: #f59e0b;
+$info-color: #3b82f6;
 
-$border-radius: 8px;
-$border-radius-large: 15px;
-$box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-$box-shadow-hover: 0 6px 20px rgba(0,0,0,0.1);
-$transition: all 0.3s ease;
+$border-radius: 12px;
+$border-radius-large: 22px;
+$box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+$box-shadow-hover: 0 10px 36px rgba(0,0,0,0.11);
+$transition: all 0.22s ease;
 $spacing-unit: 20px;
 
-body {
-    font-family: 'Helvetica Neue', Arial, sans-serif;
-    line-height: 1.6;
-    color: $text-color;
-}
+$serif: 'Playfair Display', Georgia, serif;
 
 /* ===============================================
     SECTION PRINCIPALE DES RECOMMANDATIONS
 =============================================== */
 .recommendations-section {
-    max-width: 1200px;
+    max-width: 1240px;
     margin: $spacing-unit * 2 auto;
     padding: 0 $spacing-unit;
-    animation: slideIn 0.8s ease-out;
     display: flex;
     flex-direction: column;
-    gap: $spacing-unit * 2;
+    gap: $spacing-unit * 2.5;
 }
 
 /* ===============================================
-    HEADER AVEC GÉOLOCALISATION
+    HEADER — Clean, centered, Playfair Display
 =============================================== */
 .recommendations-header {
-    margin-bottom: $spacing-unit * 1.5;
-    padding: $spacing-unit + 5px;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border-radius: $border-radius-large;
-    border-left: 4px solid $primary-color;
-    box-shadow: $box-shadow;
+    margin-bottom: $spacing-unit;
+    padding: $spacing-unit * 1.5 $spacing-unit;
+    background: transparent;
+    text-align: center;
 
     .header-content {
         .title-wrapper {
             display: flex;
+            flex-direction: column;
             align-items: center;
             gap: 10px;
-            justify-content: center;
 
             .header-icon {
-                color: $primary-color;
-                font-size: 1.7rem;
-                display: flex;
+                display: inline-flex;
                 align-items: center;
                 justify-content: center;
+                width: 48px;
+                height: 48px;
+                border-radius: 50%;
+                background: linear-gradient(135deg, rgba($primary-color, 0.18), rgba($primary-color, 0.06));
+                color: $primary-color;
+                font-size: 1.3rem;
+                margin-bottom: 4px;
             }
 
             .text-content {
                 text-align: center;
 
                 h2 {
-                    font-size: 1.9rem;
-                    font-weight: 700;
+                    font-family: $serif;
+                    font-size: 2.1rem;
+                    font-weight: 600;
                     color: $text-color;
-                    margin: 0 0 $spacing-unit / 2 0;
-                    line-height: 1.2;
+                    margin: 0 0 8px 0;
+                    line-height: 1.25;
+                    letter-spacing: -0.02em;
                 }
 
                 .subtitle {
-                    font-size: 1.05rem;
+                    font-size: 1rem;
                     color: $text-light;
                     margin: 0;
-                    line-height: 1.5;
+                    line-height: 1.6;
+                    max-width: 480px;
+                    margin-inline: auto;
+                }
+
+                // Decorative underline under the title
+                &::after {
+                    content: '';
+                    display: block;
+                    width: 48px;
+                    height: 3px;
+                    background: linear-gradient(90deg, $primary-color, $secondary-color);
+                    border-radius: 2px;
+                    margin: 14px auto 0;
                 }
             }
         }
@@ -90,66 +103,59 @@ body {
 .loading-container {
     display: flex;
     justify-content: center;
-    padding: $spacing-unit * 2 0;
+    padding: $spacing-unit * 3 0;
 
     .loading-card {
         background: white;
-        border-radius: $border-radius;
-        padding: $spacing-unit * 2 $spacing-unit;
+        border-radius: $border-radius-large;
+        padding: $spacing-unit * 2.5 $spacing-unit * 2;
         text-align: center;
-        box-shadow: $box-shadow;
+        box-shadow: $box-shadow-hover;
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: $spacing-unit;
+        gap: 14px;
+        min-width: 260px;
 
         .loading-spinner {
             position: relative;
-            width: 45px;
-            height: 45px;
+            width: 48px;
+            height: 48px;
             margin: 0 auto;
 
             .spinner-ring {
                 position: absolute;
-                border: 5px solid rgba($primary-color, 0.2);
+                border: 3px solid rgba($primary-color, 0.15);
                 border-radius: 50%;
                 border-top-color: $primary-color;
                 animation: spin 1s ease-in-out infinite;
 
-                &:nth-child(1) {
-                    width: 45px;
-                    height: 45px;
-                }
-
+                &:nth-child(1) { width: 48px; height: 48px; }
                 &:nth-child(2) {
-                    width: 35px;
-                    height: 35px;
-                    top: 5px;
-                    left: 5px;
-                    border-top-color: darken($primary-color, 10%);
-                    animation-delay: -0.1s;
+                    width: 36px; height: 36px;
+                    top: 6px; left: 6px;
+                    border-top-color: $secondary-color;
+                    animation-delay: -0.15s;
                 }
-
                 &:nth-child(3) {
-                    width: 25px;
-                    height: 25px;
-                    top: 10px;
-                    left: 10px;
-                    border-top-color: darken($primary-color, 20%);
-                    animation-delay: -0.2s;
+                    width: 24px; height: 24px;
+                    top: 12px; left: 12px;
+                    border-top-color: darken($primary-color, 12%);
+                    animation-delay: -0.3s;
                 }
             }
         }
 
         h3 {
-            font-size: 1.25rem;
+            font-family: $serif;
+            font-size: 1.1rem;
             font-weight: 600;
             color: $text-color;
             margin: 0;
         }
 
         p {
-            font-size: 1rem;
+            font-size: 0.9rem;
             color: $text-light;
             margin: 0;
         }
@@ -171,54 +177,63 @@ body {
 .recommendations-section-block {
     background: transparent;
     border-radius: 0;
-    padding: $spacing-unit + 5px 0;
+    padding: $spacing-unit 0;
     box-shadow: none;
-    margin-bottom: $spacing-unit * 1.5;
+    margin-bottom: $spacing-unit;
 
     .section-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 20px;
+        margin-bottom: 24px;
 
         .header-left {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 14px;
 
             .section-icon {
+                width: 44px;
+                height: 44px;
+                border-radius: 13px;
+                background: linear-gradient(135deg, rgba($primary-color, 0.18), rgba($primary-color, 0.07));
                 color: $primary-color;
-                font-size: 1.3rem;
-                width: auto;
-                height: auto;
-                background: none;
-                border-radius: 0;
+                font-size: 1.1rem;
                 display: flex;
                 align-items: center;
                 justify-content: center;
+                flex-shrink: 0;
+                box-shadow: 0 2px 8px rgba($primary-color, 0.15);
 
                 &.nearby {
-                    color: $info-color;
+                    background: linear-gradient(135deg, rgba($secondary-color, 0.18), rgba($secondary-color, 0.07));
+                    color: darken($secondary-color, 15%);
+                    box-shadow: 0 2px 8px rgba($secondary-color, 0.15);
                 }
 
                 &.specialist {
-                    color: $warning-color;
+                    background: linear-gradient(135deg, rgba($warning-color, 0.16), rgba($warning-color, 0.06));
+                    color: darken($warning-color, 10%);
+                    box-shadow: 0 2px 8px rgba($warning-color, 0.15);
                 }
             }
 
             .header-text {
                 h3 {
-                    font-size: 1.9rem;
-                    font-weight: 700;
+                    font-family: $serif;
+                    font-size: 1.65rem;
+                    font-weight: 600;
                     color: $text-color;
                     margin: 0;
-                    font-family: Georgia, 'Times New Roman', serif;
+                    line-height: 1.2;
+                    letter-spacing: -0.01em;
                 }
 
                 p {
-                    font-size: 0.9rem;
+                    font-size: 0.875rem;
                     color: $text-light;
-                    margin: 4px 0 0;
+                    margin: 3px 0 0;
+                    line-height: 1.4;
                 }
             }
         }
@@ -229,35 +244,32 @@ body {
 
             .carousel-btn {
                 background: white;
-                border: 1px solid $primary-color;
-                color: $primary-color;
-                width: 40px;
-                height: 40px;
+                border: 1.5px solid #e5e7eb;
+                color: $text-light;
+                width: 38px;
+                height: 38px;
                 border-radius: 50%;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 cursor: pointer;
-                transition: $transition;
-                font-size: 0.9rem;
+                transition: border-color $transition, background $transition, color $transition, box-shadow $transition;
+                font-size: 0.85rem;
+                box-shadow: $box-shadow;
 
                 &:hover {
                     background: $primary-color;
+                    border-color: $primary-color;
                     color: white;
-                    transform: translateY(-1px);
-                    box-shadow: $box-shadow;
+                    box-shadow: 0 4px 14px rgba($primary-color, 0.35);
                 }
 
                 &:disabled {
-                    background: #f5f5f5;
-                    border-color: #ddd;
-                    color: #ccc;
+                    background: #f9fafb;
+                    border-color: #e5e7eb;
+                    color: #d1d5db;
                     cursor: not-allowed;
-                    transform: none;
-                }
-
-                &.prev {
-                    margin-right: 4px;
+                    box-shadow: none;
                 }
             }
         }
@@ -266,23 +278,21 @@ body {
             display: flex;
             align-items: center;
             gap: 6px;
-            background: linear-gradient(135deg, rgba($primary-color, 0.15) 0%, rgba($primary-color, 0.05) 100%);
-            color: $primary-color;
-            padding: 6px 12px;
-            border-radius: $border-radius;
-            font-size: 0.85rem;
+            background: rgba($primary-color, 0.08);
+            color: darken($primary-color, 10%);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
             font-weight: 600;
-            border: 1px solid rgba($primary-color, 0.3);
-            animation: indicator-glow 2s infinite;
-            box-shadow: 0 2px 8px rgba($primary-color, 0.1);
+            border: 1px solid rgba($primary-color, 0.2);
+            letter-spacing: 0.03em;
 
             .live-dot {
-                width: 8px;
-                height: 8px;
+                width: 7px;
+                height: 7px;
                 background: $primary-color;
                 border-radius: 50%;
                 animation: live-pulse 1.5s infinite;
-                box-shadow: 0 0 6px rgba($primary-color, 0.4);
             }
         }
     }
@@ -311,8 +321,8 @@ body {
     }
 
     .salon-card, .freelance-card {
-        flex: 0 0 240px;
-        max-width: 240px;
+        flex: 0 0 272px;
+        max-width: 272px;
     }
 }
 
@@ -321,17 +331,20 @@ body {
     width: 100%;
     margin-top: 10px;
     padding: 10px 0;
-    background: $secondary-color;
+    background: linear-gradient(135deg, $primary-color, darken($primary-color, 8%));
     color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 0.82rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: transform $transition, box-shadow $transition, background $transition;
+    letter-spacing: 0.02em;
 
     &:hover {
-        background: darken($secondary-color, 10%);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 14px rgba($primary-color, 0.4);
+        background: linear-gradient(135deg, darken($primary-color, 5%), darken($primary-color, 13%));
     }
 }
 
@@ -350,73 +363,77 @@ body {
 .nearby-filters {
     display: flex;
     gap: 8px;
+    flex-wrap: wrap;
 
     .filter-btn {
         display: flex;
         align-items: center;
         gap: 6px;
-        background: #f8f9fa;
-        border: 1px solid #e9ecef;
+        background: white;
+        border: 1.5px solid #e5e7eb;
         color: $text-light;
-        padding: 8px 18px;
-        border-radius: 20px;
-        font-size: 0.85rem;
+        padding: 7px 16px;
+        border-radius: 24px;
+        font-size: 0.83rem;
         font-weight: 500;
         cursor: pointer;
-        transition: $transition;
+        transition: border-color $transition, background $transition, color $transition, box-shadow $transition;
+        box-shadow: $box-shadow;
 
-        i { font-size: 0.8rem; }
+        i { font-size: 0.78rem; }
 
         &:hover {
-            background: #f0f0f0;
-            border-color: $primary-color;
+            border-color: rgba($primary-color, 0.5);
             color: $primary-color;
+            background: rgba($primary-color, 0.04);
         }
 
         &.active {
             background: $primary-color;
             color: white;
             border-color: $primary-color;
-            box-shadow: 0 2px 8px rgba($primary-color, 0.3);
+            box-shadow: 0 3px 12px rgba($primary-color, 0.3);
         }
     }
 
     .filter-btn-disponible {
-        border-color: #28a745;
-        color: #28a745;
+        border-color: rgba($success-color, 0.4);
+        color: darken($success-color, 8%);
 
         &:hover {
-            background: #f0fff4;
-            border-color: #28a745;
-            color: #28a745;
+            background: rgba($success-color, 0.05);
+            border-color: $success-color;
+            color: darken($success-color, 8%);
         }
 
         &.active {
-            background: #28a745;
-            border-color: #28a745;
-            box-shadow: 0 2px 8px rgba(#28a745, 0.3);
+            background: $success-color;
+            border-color: $success-color;
+            color: white;
+            box-shadow: 0 3px 12px rgba($success-color, 0.3);
         }
     }
 }
 
 .libre-badge {
-    background: rgba(#28a745, 0.92);
-    color: white;
-    padding: 3px 7px;
-    border-radius: 10px;
+    background: rgba($success-color, 0.12);
+    border: 1px solid rgba($success-color, 0.3);
+    color: darken($success-color, 10%);
+    padding: 3px 8px;
+    border-radius: 12px;
     font-size: 0.65rem;
     font-weight: 700;
     display: flex;
     align-items: center;
-    gap: 3px;
-    letter-spacing: 0.3px;
+    gap: 4px;
+    letter-spacing: 0.04em;
 
     .live-dot {
         width: 5px;
         height: 5px;
-        background: white;
+        background: $success-color;
         border-radius: 50%;
-        animation: live-pulse 1.2s infinite;
+        animation: live-pulse 1.4s infinite;
     }
 }
 
@@ -432,43 +449,16 @@ body {
     strong { font-weight: 600; }
 }
 
-/* Split : carte à gauche, liste à droite */
-.nearby-split {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    align-items: start;
-    min-height: 460px;
-
-    @media (max-width: 900px) {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* Panneau carte Google Maps */
-.nearby-map-panel {
-    border-radius: $border-radius-large;
-    overflow: hidden;
-    height: 460px;
-    display: flex;
-    flex-direction: column;
-    box-shadow: $box-shadow-hover;
-    position: sticky;
-    top: 20px;
-
-    google-map {
-        flex: 1;
-    }
-}
+/* Nearby list scroll panel */
 
 .map-legend {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
     gap: 12px;
-    padding: 10px 14px;
+    padding: 9px 14px;
     background: white;
-    border-top: 1px solid #f0f0f0;
+    border-top: 1px solid #f4f4f4;
 }
 
 .legend-item {
@@ -491,7 +481,7 @@ body {
     height: 10px;
     border-radius: 50%;
     border: 2px solid white;
-    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.12);
     flex-shrink: 0;
 
     &.user      { background: #4285F4; }
@@ -501,18 +491,18 @@ body {
 
 /* Panneau liste avec scroll interne */
 .nearby-cards-panel {
-    height: 460px;
+    height: 500px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
     padding-right: 4px;
 
     scrollbar-width: thin;
-    scrollbar-color: rgba($primary-color, 0.3) transparent;
+    scrollbar-color: rgba($primary-color, 0.25) transparent;
 
     &::-webkit-scrollbar       { width: 4px; }
     &::-webkit-scrollbar-track { background: transparent; }
-    &::-webkit-scrollbar-thumb { background: rgba($primary-color, 0.3); border-radius: 4px; }
+    &::-webkit-scrollbar-thumb { background: rgba($primary-color, 0.25); border-radius: 4px; }
 }
 
 .nearby-list {
@@ -525,34 +515,34 @@ body {
 .nearby-card {
     background: white;
     border-radius: $border-radius-large;
-    padding: 12px;
+    padding: 13px;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 13px;
     border: 1.5px solid #f0f0f0;
-    transition: $transition;
+    transition: transform $transition, box-shadow $transition, border-color $transition;
     cursor: pointer;
     width: 100%;
     box-shadow: $box-shadow;
 
     &:hover {
-        border-color: rgba($primary-color, 0.4);
+        border-color: rgba($primary-color, 0.35);
         box-shadow: $box-shadow-hover;
-        transform: translateX(3px);
+        transform: translateY(-3px);
     }
 
     &.active {
         border-color: $primary-color;
-        box-shadow: 0 0 0 3px rgba($primary-color, 0.15), $box-shadow-hover;
-        background: #fffaf9;
+        box-shadow: 0 0 0 3px rgba($primary-color, 0.12), $box-shadow-hover;
+        background: #fffbfa;
 
         .nearby-name { color: $primary-color; }
     }
 
     .nearby-image {
         position: relative;
-        width: 80px;
-        height: 80px;
+        width: 88px;
+        height: 88px;
         border-radius: $border-radius;
         overflow: hidden;
         flex-shrink: 0;
@@ -561,18 +551,20 @@ body {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition: transform 0.3s ease;
+            transition: transform 0.28s ease;
         }
 
         .distance-badge-main {
             position: absolute;
             top: 6px;
             left: 6px;
-            background: rgba(darken($secondary-color, 10%), 0.9);
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
             color: white;
             padding: 3px 7px;
             border-radius: 10px;
-            font-size: 0.7rem;
+            font-size: 0.68rem;
             font-weight: 600;
             display: flex;
             align-items: center;
@@ -583,17 +575,23 @@ body {
             position: absolute;
             bottom: 4px;
             right: 4px;
-            background: rgba(0, 0, 0, 0.75);
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
             color: white;
-            padding: 2px 5px;
-            border-radius: 4px;
-            font-size: 0.6rem;
+            padding: 2px 6px;
+            border-radius: 5px;
+            font-size: 0.58rem;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.4px;
+            letter-spacing: 0.5px;
 
-            &.freelance { background: rgba($primary-color, 0.85); }
+            &.freelance { background: rgba($primary-color, 0.82); }
         }
+    }
+
+    &:hover .nearby-image img {
+        transform: scale(1.07);
     }
 
     .nearby-content {
@@ -697,20 +695,21 @@ body {
             }
 
             .reserve-btn {
-                background: $primary-color;
+                background: linear-gradient(135deg, $primary-color, darken($primary-color, 8%));
                 color: white;
                 border: none;
-                padding: 6px 12px;
-                border-radius: 16px;
-                font-size: 0.78rem;
+                padding: 7px 14px;
+                border-radius: 20px;
+                font-size: 0.76rem;
                 font-weight: 600;
                 cursor: pointer;
-                transition: $transition;
+                transition: transform $transition, box-shadow $transition;
                 white-space: nowrap;
+                letter-spacing: 0.02em;
 
                 &:hover {
-                    background: darken($primary-color, 10%);
                     transform: translateY(-1px);
+                    box-shadow: 0 4px 12px rgba($primary-color, 0.4);
                 }
             }
         }
@@ -808,24 +807,26 @@ body {
 
 .salon-card {
     background: white;
-    border-radius: 16px;
+    border-radius: $border-radius-large;
     overflow: hidden;
-    border: 1px solid #ebebeb;
-    transition: $transition;
+    border: 1.5px solid #efefef;
+    transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+                box-shadow 0.28s ease,
+                border-color 0.22s ease;
     cursor: pointer;
     position: relative;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    box-shadow: 0 4px 18px rgba(0,0,0,0.07);
 
     &:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+        transform: translateY(-10px) scale(1.02);
+        box-shadow: 0 20px 48px rgba(0,0,0,0.13);
         border-color: rgba($primary-color, 0.3);
     }
 
     .card-image {
-        height: 190px;
+        height: 260px;
         overflow: hidden;
         position: relative;
         flex-shrink: 0;
@@ -834,118 +835,151 @@ body {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition: transform 0.3s ease;
+            transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
         }
 
-        .rating-badge {
+        // Fort gradient sombre en bas → nom lisible en blanc
+        .image-overlay {
             position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba($warning-color, 0.95);
-            color: white;
-            padding: 5px 10px;
-            border-radius: $border-radius - 2px;
-            font-size: 0.8rem;
-            font-weight: 600;
+            inset: 0;
+            background: linear-gradient(
+                to top,
+                rgba(0,0,0,0.72) 0%,
+                rgba(0,0,0,0.25) 45%,
+                transparent 70%
+            );
+            pointer-events: none;
+        }
+
+        // Top row: badge type + bouton favori
+        .card-top-row {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        // Badge type — glass pill
+        .type-badge {
             display: flex;
             align-items: center;
             gap: 5px;
-
-            i {
-                font-size: 0.75rem;
-            }
-
-            .rating-text {
-                line-height: 1;
-            }
-        }
-
-        .distance-badge {
-            position: absolute;
-            bottom: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: $secondary-color;
+            background: rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.35);
             color: white;
-            padding: 5px 10px;
-            border-radius: $border-radius - 2px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 5px;
+            padding: 5px 11px;
+            border-radius: 24px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
 
-            i {
-                font-size: 0.75rem;
+            &.freelance {
+                background: rgba($primary-color, 0.45);
+                border-color: rgba($primary-color, 0.6);
             }
 
-            .distance-text {
-                line-height: 1;
-            }
+            i { font-size: 0.62rem; }
         }
 
+        // Favori — cercle blanc
         .favorite-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(255, 255, 255, 0.95);
-            color: #ccc;
-            border: none;
+            background: rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.35);
+            color: rgba(255,255,255,0.85);
             border-radius: 50%;
-            width: 36px;
-            height: 36px;
+            width: 34px;
+            height: 34px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: $transition;
-            font-size: 0.9rem;
-            box-shadow: $box-shadow;
+            transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+            font-size: 0.85rem;
 
             &:hover {
-                background: white;
+                background: rgba(255,255,255,0.92);
                 color: $error-color;
-                transform: scale(1.15);
+                transform: scale(1.12);
             }
 
             &.is-favorite {
+                background: rgba(255,255,255,0.92);
                 color: $error-color;
-                background: white;
+            }
+        }
+
+        // Footer sur l'image : nom + note
+        .card-img-footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 14px 14px 16px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 8px;
+            transition: transform 0.28s ease;
+
+            .salon-name {
+                font-family: $serif;
+                font-size: 1.05rem;
+                font-weight: 600;
+                color: white;
+                margin: 0;
+                line-height: 1.25;
+                text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+                flex: 1;
+                overflow: hidden;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+            }
+
+            .card-img-rating {
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                background: rgba(0,0,0,0.35);
+                backdrop-filter: blur(6px);
+                -webkit-backdrop-filter: blur(6px);
+                border: 1px solid rgba(255,255,255,0.15);
+                color: white;
+                padding: 4px 9px;
+                border-radius: 16px;
+                font-size: 0.78rem;
+                font-weight: 700;
+                flex-shrink: 0;
+
+                i { color: $warning-color; font-size: 0.68rem; }
             }
         }
     }
 
     .card-content {
-        padding: 14px 16px 16px;
+        padding: 12px 14px 14px;
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 7px;
         flex-grow: 1;
 
-        .salon-name {
-            font-size: 1rem;
-            font-weight: 700;
-            color: $text-color;
-            margin: 0;
-            line-height: 1.3;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
         .salon-location {
-            font-size: 0.82rem;
-            color: $primary-color;
+            font-size: 0.8rem;
+            color: $text-light;
             margin: 0;
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 5px;
 
-            i {
-                color: $primary-color;
-                font-size: 0.75rem;
-                flex-shrink: 0;
-            }
+            i { color: $primary-color; font-size: 0.7rem; flex-shrink: 0; }
 
             span {
                 white-space: nowrap;
@@ -958,20 +992,19 @@ body {
             display: flex;
             flex-wrap: wrap;
             gap: 5px;
-            margin: 2px 0;
 
             .service-tag {
-                background: rgba($primary-color, 0.12);
-                color: $primary-color;
-                padding: 3px 8px;
-                border-radius: 12px;
-                font-size: 0.75rem;
+                background: rgba($primary-color, 0.1);
+                color: darken($primary-color, 10%);
+                padding: 3px 10px;
+                border-radius: 20px;
+                font-size: 0.72rem;
                 font-weight: 600;
             }
 
             .more-count {
                 color: $text-light;
-                font-size: 0.75rem;
+                font-size: 0.72rem;
                 font-style: italic;
                 align-self: center;
             }
@@ -981,34 +1014,23 @@ body {
             display: flex;
             flex-direction: column;
             gap: 4px;
-            margin: 2px 0;
 
             .freelance-meta-item {
                 display: flex;
                 align-items: center;
                 gap: 6px;
-                font-size: 0.82rem;
+                font-size: 0.79rem;
                 color: $text-light;
 
-                i {
-                    color: $primary-color;
-                    font-size: 0.75rem;
-                    flex-shrink: 0;
-                    width: 12px;
-                }
-
-                span {
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                }
+                i { color: $primary-color; font-size: 0.7rem; flex-shrink: 0; width: 12px; }
+                span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
             }
         }
     }
 
-    &:hover .card-image img {
-        transform: scale(1.1);
-    }
+    // Image zoom + footer lift on hover
+    &:hover .card-image img { transform: scale(1.1); }
+    &:hover .card-img-footer { transform: translateY(-4px); }
 }
 
 // Styles pour les cartes freelances (identique aux salons)
@@ -1226,210 +1248,95 @@ body {
 }
 
 /* ===============================================
-    MESSAGE AUCUNE RECOMMANDATION (Adapté)
+    MESSAGE AUCUNE RECOMMANDATION
 =============================================== */
 .empty-state {
     background: white;
     border-radius: $border-radius-large;
-    padding: $spacing-unit * 3 $spacing-unit;
+    padding: $spacing-unit * 3.5 $spacing-unit;
     text-align: center;
     box-shadow: $box-shadow;
+    border: 1.5px solid #f0f0f0;
 
     .empty-content {
-        max-width: 450px;
+        max-width: 420px;
         margin: 0 auto;
 
         .empty-icon {
             width: 80px;
             height: 80px;
-            background: #f0f0f0;
+            background: linear-gradient(135deg, rgba($primary-color, 0.14), rgba($primary-color, 0.05));
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto $spacing-unit;
+            margin: 0 auto 20px;
 
-            i {
-                font-size: 3.5rem;
-                color: $text-light;
-            }
+            i { font-size: 2.2rem; color: $primary-color; }
         }
 
         h3 {
-            font-size: 1.6rem;
+            font-family: $serif;
+            font-size: 1.5rem;
+            font-weight: 600;
             color: $text-color;
-            margin: 0 0 $spacing-unit / 2 0;
+            margin: 0 0 10px 0;
         }
 
         p {
-            font-size: 1.05rem;
+            font-size: 0.95rem;
             color: $text-light;
-            margin: 0 0 $spacing-unit + 5px 0;
-            line-height: 1.6;
+            margin: 0 0 24px 0;
+            line-height: 1.65;
         }
 
         .retry-button {
-            background: $primary-color;
+            background: linear-gradient(135deg, $primary-color, darken($primary-color, 8%));
             color: white;
             border: none;
-            padding: 14px 28px;
-            border-radius: $border-radius;
-            font-weight: 500;
+            padding: 12px 28px;
+            border-radius: $border-radius-large;
+            font-weight: 600;
+            font-size: 0.9rem;
             cursor: pointer;
-            transition: $transition;
+            transition: transform $transition, box-shadow $transition;
             display: inline-flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
 
             &:hover {
-                background: darken($primary-color, 10%);
                 transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba($primary-color, 0.38);
             }
 
-            i {
-                font-size: 1rem;
-            }
+            i { font-size: 0.9rem; }
         }
     }
 }
 
 
 /* ===============================================
-    ANIMATIONS
+    ANIMATIONS — Minimal, functional only
 =============================================== */
-@keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: translateY($spacing-unit);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
 
+// Spinner for loading state
 @keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
+    to { transform: rotate(360deg); }
 }
 
-@keyframes pulse {
-    0%, 100% {
-        opacity: 1;
-        transform: scale(1);
-    }
-    50% {
-        opacity: 0.7;
-        transform: scale(1.1);
-    }
-}
-
-@keyframes float {
-    0%, 100% {
-        transform: translateY(0px);
-    }
-    50% {
-        transform: translateY(-10px);
-    }
-}
-
-@keyframes subtle-pulse {
-    0%, 100% {
-        opacity: 1;
-        transform: scale(1);
-    }
-    50% {
-        opacity: 0.9;
-        transform: scale(1.02);
-    }
-}
-
-@keyframes tick {
-    0%, 100% {
-        transform: rotate(0deg);
-    }
-    25% {
-        transform: rotate(-5deg);
-    }
-    75% {
-        transform: rotate(5deg);
-    }
-}
-
-@keyframes live-glow {
-    0%, 100% {
-        box-shadow: 0 2px 8px rgba($primary-color, 0.4);
-        transform: scale(1);
-    }
-    50% {
-        box-shadow: 0 4px 16px rgba($primary-color, 0.6);
-        transform: scale(1.02);
-    }
-}
-
+// Live availability dot (functional, not decorative)
 @keyframes live-pulse {
-    0%, 100% {
-        opacity: 1;
-        transform: scale(1);
-        box-shadow: 0 0 4px rgba(white, 0.5);
-    }
-    50% {
-        opacity: 0.6;
-        transform: scale(1.3);
-        box-shadow: 0 0 8px rgba(white, 0.8);
-    }
-}
-
-@keyframes button-ready {
-    0%, 90%, 100% {
-        transform: translateY(0);
-    }
-    5% {
-        transform: translateY(-1px);
-    }
-    10% {
-        transform: translateY(0);
-    }
-}
-
-@keyframes icon-bounce {
-    0%, 90%, 100% {
-        transform: scale(1);
-    }
-    45% {
-        transform: scale(1.1);
-    }
-}
-
-@keyframes card-appear {
-    0% {
-        opacity: 0;
-        transform: translateY(20px) scale(0.9);
-    }
-    100% {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-
-@keyframes indicator-glow {
-    0%, 100% {
-        box-shadow: 0 2px 8px rgba($primary-color, 0.1);
-    }
-    50% {
-        box-shadow: 0 4px 12px rgba($primary-color, 0.2);
-    }
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.5; transform: scale(1.35); }
 }
 
 /* ===============================================
     RESPONSIVE DESIGN
 =============================================== */
 @media (max-width: 992px) {
-
     .salons-grid {
         grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-        gap: $spacing-unit / 1.5;
+        gap: 16px;
     }
 
     .services-grid {
@@ -1440,60 +1347,32 @@ body {
 @media (max-width: 768px) {
     .recommendations-section {
         margin: $spacing-unit * 1.5 auto;
-        padding: 0 $spacing-unit / 1.5;
+        padding: 0 16px;
     }
 
     .salons-carousel {
         .salon-card, .freelance-card {
-            flex: 0 0 220px;
-            max-width: 220px;
-        }
-    }
-
-    .available-grid {
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-        gap: 12px;
-    }
-
-    .available-card {
-        height: 200px;
-
-        .card-image-compact {
-            height: 90px;
-        }
-
-        .card-content-compact {
-            padding: 10px;
+            flex: 0 0 210px;
+            max-width: 210px;
         }
     }
 
     .recommendations-header {
-        padding: $spacing-unit;
+        padding: $spacing-unit 16px;
 
-        .header-content {
-            .title-wrapper {
-                .text-content h2 {
-                    font-size: 1.6rem;
-                }
-
-                .text-content .subtitle {
-                    font-size: 0.95rem;
-                }
-            }
+        .header-content .title-wrapper .text-content {
+            h2 { font-size: 1.65rem; }
+            .subtitle { font-size: 0.92rem; }
         }
     }
 
     .recommendations-section-block {
-        padding: $spacing-unit;
-
         .section-header {
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
             align-items: flex-start;
 
-            .header-left {
-                justify-content: center;
-            }
+            .header-left { justify-content: flex-start; }
 
             .view-all-link {
                 align-self: stretch;
@@ -1505,143 +1384,35 @@ body {
 
     .salons-grid {
         grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-        gap: $spacing-unit / 2;
+        gap: 14px;
     }
 
     .salon-card {
-        .card-image {
-            height: 120px;
-        }
-
-        .card-content {
-            padding: 12px;
-
-            .salon-name {
-                font-size: 1rem;
-            }
-
-            .salon-location {
-                font-size: 0.85rem;
-            }
-        }
-    }
-
-    .service-card {
-        padding: 15px;
-
-        .service-icon {
-            width: 45px;
-            height: 45px;
-
-            i {
-                font-size: 1.1rem;
-            }
-        }
-
-        .service-info {
-            h4 {
-                font-size: 1.05rem;
-            }
-
-            p {
-                font-size: 0.9rem;
-            }
-        }
-
-        .service-preview {
-            width: 40px;
-            height: 40px;
-        }
-    }
-
-    .cta-section .cta-card {
-        padding: $spacing-unit;
-        text-align: center;
-
-        .cta-content {
-            h3 {
-                font-size: 1.3rem;
-            }
-
-            p {
-                font-size: 1rem;
-            }
-        }
-
-        .cta-decoration {
-            display: none;
-        }
+        .card-image { height: 160px; }
+        .card-content { padding: 12px; }
     }
 }
 
 @media (max-width: 576px) {
-
-    .salons-grid {
-        grid-template-columns: 1fr;
-    }
+    .salons-grid { grid-template-columns: 1fr; }
 
     .salons-carousel {
         .salon-card, .freelance-card {
-            flex: 0 0 200px;
-            max-width: 200px;
+            flex: 0 0 192px;
+            max-width: 192px;
         }
     }
 
-    .available-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
-    }
-
-    .available-card {
-        height: 180px;
-
-        .card-image-compact {
-            height: 80px;
-
-            .live-badge {
-                font-size: 0.65rem;
-                padding: 3px 6px;
-            }
-        }
-
-        .card-content-compact {
-            padding: 8px;
-            gap: 6px;
-
-            .salon-name-compact {
-                font-size: 0.9rem;
-            }
-
-            .availability-info {
-                .book-now-btn {
-                    padding: 5px 8px;
-                    font-size: 0.75rem;
-                }
-            }
-        }
-    }
-
-    .carousel-controls {
-        .carousel-btn {
-            width: 36px;
-            height: 36px;
-            font-size: 0.8rem;
-        }
-    }
-
-    .service-card {
-        .service-preview {
-            display: none;
-        }
+    .nearby-filters {
+        gap: 6px;
+        .filter-btn { padding: 6px 12px; font-size: 0.8rem; }
     }
 
     .empty-state {
-        padding: $spacing-unit * 1.5 $spacing-unit / 1.5;
+        padding: $spacing-unit * 2 16px;
 
         .empty-content {
-            .empty-icon i {
-                font-size: 3rem;
-            }
+            .empty-icon i { font-size: 2rem; }
 
             h3 {
                 font-size: 1.3rem;
@@ -1653,38 +1424,43 @@ body {
 /* ===============================================
     ACCESSIBILITÉ
 =============================================== */
-.salon-card:focus,
-.service-card:focus {
+.salon-card:focus-visible,
+.freelance-card:focus-visible,
+.nearby-card:focus-visible {
     outline: 2px solid $primary-color;
     outline-offset: 3px;
 }
 
-.view-all-link:focus,
-.cta-button:focus,
-.retry-button:focus {
-    outline: 2px solid rgba($primary-color, 0.6);
+.retry-button:focus-visible,
+.reserve-btn:focus-visible,
+.popular-reserve-btn:focus-visible,
+.location-request-btn:focus-visible,
+.carousel-btn:focus-visible,
+.filter-btn:focus-visible,
+.favorite-btn:focus-visible,
+.favorite-btn-minimal:focus-visible {
+    outline: 2px solid rgba($primary-color, 0.7);
     outline-offset: 3px;
 }
 
-/* Réduction d'animations pour accessibilité */
 @media (prefers-reduced-motion: reduce) {
-    .salon-card,
-    .service-card,
-    .recommendations-section-block {
+    *,
+    *::before,
+    *::after {
+        transition: none !important;
         animation: none !important;
     }
 
     .salon-card:hover,
-    .service-card:hover {
+    .freelance-card:hover,
+    .nearby-card:hover {
         transform: none !important;
     }
 
-    .salon-card:hover .card-image img {
+    .salon-card:hover .card-image img,
+    .freelance-card:hover .card-image img,
+    .nearby-card:hover .nearby-image img {
         transform: none !important;
-    }
-
-    .location-status .status-dot {
-        animation: none !important;
     }
 }
 
@@ -1700,8 +1476,8 @@ body {
     align-items: center;
     gap: 20px;
     padding: 24px 28px;
-    background: linear-gradient(135deg, #fff9f7 0%, #fff3ee 100%);
-    border: 1.5px dashed rgba($primary-color, 0.5);
+    background: linear-gradient(135deg, #fffaf8 0%, #fff4ef 100%);
+    border: 1.5px solid rgba($primary-color, 0.3);
     border-radius: $border-radius-large;
     box-shadow: $box-shadow;
 
@@ -1799,13 +1575,13 @@ body {
    ========================================================================== */
 
 .nearby-section {
-  margin-top: 2rem;
+  margin-top: 0;
 
   .nearby-split {
     display: flex;
     gap: 20px;
-    height: 500px; /* Hauteur fixe pour le conteneur split */
-    margin-top: 1.5rem;
+    height: 500px;
+    margin-top: 20px;
 
     @media (max-width: 992px) {
       flex-direction: column;
@@ -1818,10 +1594,10 @@ body {
 .nearby-map-panel {
   flex: 1.2;
   position: relative;
-  border-radius: 16px;
+  border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid #eee;
+  box-shadow: $box-shadow-hover;
+  border: 1.5px solid #f0f0f0;
 
   .leaflet-map-container {
     width: 100%;

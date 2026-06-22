@@ -153,6 +153,7 @@ export class AddServiceDialogComponent implements OnInit, OnDestroy {
     }, {
       validators: [this['serviceValidator'].bind(this)]
     });
+
   }
 
   private populateForm(service: ServiceSalon): void {

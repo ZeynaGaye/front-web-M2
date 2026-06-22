@@ -1,0 +1,50 @@
+<div class="verify-page">
+  <div class="verify-card" [class.success]="state === 'success'" [class.error]="state === 'error'">
+
+    <!-- LOADING -->
+    <div *ngIf="state === 'loading'" class="state-block loading-block">
+      <div class="spinner-ring">
+        <div></div><div></div><div></div><div></div>
+      </div>
+      <h2>Vérification en cours…</h2>
+      <p>Nous confirmons votre adresse email, veuillez patienter.</p>
+    </div>
+
+    <!-- SUCCESS -->
+    <div *ngIf="state === 'success'" class="state-block success-block">
+      <div class="icon-circle success-circle">
+        <svg viewBox="0 0 52 52" class="check-svg">
+          <circle class="check-circle" cx="26" cy="26" r="25" fill="none"/>
+          <path class="check-path" d="M14 27 l8 8 l16-16" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h2>Email vérifié !</h2>
+      <p>Votre compte BeautyHub est maintenant actif.<br/>Vous pouvez vous connecter et profiter de tous nos services.</p>
+      <button class="btn-primary" (click)="goToLogin()">
+        Se connecter
+      </button>
+    </div>
+
+    <!-- ERROR -->
+    <div *ngIf="state === 'error'" class="state-block error-block">
+      <div class="icon-circle error-circle">
+        <svg viewBox="0 0 52 52" class="cross-svg">
+          <circle class="cross-circle" cx="26" cy="26" r="25" fill="none"/>
+          <line class="cross-line" x1="17" y1="17" x2="35" y2="35" stroke-linecap="round"/>
+          <line class="cross-line" x1="35" y1="17" x2="17" y2="35" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h2>Lien invalide</h2>
+      <p>{{ errorMessage }}</p>
+      <p class="hint">Le lien est valide pendant 24h. Si nécessaire, créez un nouveau compte ou contactez le support.</p>
+      <button class="btn-secondary" (click)="goHome()">
+        Retour à l'accueil
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Décor fond -->
+  <div class="bg-blob blob1"></div>
+  <div class="bg-blob blob2"></div>
+</div>

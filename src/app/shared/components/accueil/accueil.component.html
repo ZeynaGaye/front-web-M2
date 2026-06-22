@@ -1,28 +1,26 @@
 <div class="accueil-container">
-       <app-header></app-header>
-    <!-- SECTION RECOMMANDATIONS -->
-  <section class="recommendations-wrapper" *ngIf="showRecommendations">
+  <app-header></app-header>
+
+  <!-- SECTION RECOMMANDATIONS -->
+  <section class="recommendations-wrapper reveal-section" *ngIf="showRecommendations">
     <app-recommendations
       ngSkipHydration
       [showRecommendations]="true"
       [autoLoad]="true"
       [userLocation]="userLocation"
       [headerTitle]="'Découvrez les meilleurs professionnels'"
-      [headerSubtitle]="'Sélectionnés spécialement pour vous selon vos préférences'"
+      [headerSubtitle]="'Salons et freelances beauté soigneusement sélectionnés près de chez vous'"
       (salonClick)="onSalonClick($event)"
       (viewAllSection)="onViewAllSection($event)"
       (favoriteToggle)="onFavoriteToggle($event)">
     </app-recommendations>
   </section>
-  <!-- <app-header></app-header> -->
-  <section id="pro-section"><app-pro-free></app-pro-free></section>
-  <!-- <app-client-section></app-client-section> -->
-  
 
-  
+  <section id="pro-section" class="reveal-section"><app-pro-free></app-pro-free></section>
+  <section id="salon-section" class="reveal-section"><app-salon-registration></app-salon-registration></section>
 
   <!-- SECTION OPPORTUNITÉS D'EMPLOI -->
-  <section id="offres-section" class="job-opportunities-wrapper" *ngIf="showJobOpportunities">
+  <section id="offres-section" class="job-opportunities-wrapper reveal-section" *ngIf="showJobOpportunities">
     <app-opportunites-emploi
       [maxOffersToShow]="maxJobOffersOnHomepage"
       [showHeader]="true"
@@ -35,6 +33,6 @@
   </section>
 
   <!-- SECTION RECRUTEMENT EMPLOYEURS -->
-  <section id="hiring-section"><app-job-offer></app-job-offer></section>
-  
+  <section id="hiring-section" class="reveal-section"><app-job-offer></app-job-offer></section>
+
 </div>
