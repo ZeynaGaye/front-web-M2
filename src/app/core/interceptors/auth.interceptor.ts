@@ -2,7 +2,7 @@ import { Injectable, Optional } from '@angular/core';
 import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent, HttpErrorResponse } from '@angular/common/http';
 import { KeycloakService } from 'keycloak-angular';
 import { Observable, from, throwError, of, BehaviorSubject } from 'rxjs';
-import { mergeMap, catchError, switchMap, filter, take } from 'rxjs/operators';
+import { mergeMap, catchError, switchMap, filter, take, timeout } from 'rxjs/operators';
 import { TokenService } from '../servces/token.service';
 import { AuthService } from '../servces/auth.service';
 
@@ -117,15 +117,15 @@ export class AuthInterceptor implements HttpInterceptor {
         })
       );
     } else {
-
-      
       return this.refreshTokenSubject.pipe(
         filter(token => token !== null),
         take(1),
+        timeout(10000),
         switchMap((token) => {
           const newAuthReq = this.addToken(request, token);
           return next.handle(newAuthReq);
-        })
+        }),
+        catchError(() => throwError(() => new Error('Session expirée — veuillez vous reconnecter')))
       );
     }
   }

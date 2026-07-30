@@ -1,7 +1,7 @@
 import { Injectable, inject, PLATFORM_ID, Inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, throwError, from, of } from 'rxjs';
-import { catchError, tap, switchMap, share } from 'rxjs/operators';
+import { catchError, tap, switchMap, share, first } from 'rxjs/operators';
 import { KeycloakService } from 'keycloak-angular';
 import { Router } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
@@ -10,6 +10,7 @@ import { environment } from '../../../environments/environment';
 import { RoleRedirectService } from '../services/auth/role-redirect.service';
 import { AuthUIService } from '../../shared/services/authUI/auth-ui.service';
 import { UserProfile } from '../../shared/services/profile/profile-management.service';
+import { NotificationService } from '../../shared/services/notification/notification.service';
 
 export interface LoginCredentials {
   email: string;
@@ -46,6 +47,7 @@ export class AuthService {
   private roleRedirectService = inject(RoleRedirectService);
   private isBrowser: boolean;
   private authUIService = inject(AuthUIService);
+  private notificationService = inject(NotificationService);
 
   private apiUrl = `${environment.apiUrl}/auth`;
   private currentUserSubject = new BehaviorSubject<any>(null);
@@ -70,6 +72,9 @@ export class AuthService {
           const user = JSON.parse(storedUser);
           this.currentUserSubject.next(user);
           this.setupRefreshTokenTimer(user);
+          if (user.id && user.accesToken) {
+            this.notificationService.connectWebSocket(user.id.toString(), user.accesToken);
+          }
 
         } catch (error) {
           console.error(' Error parsing stored user data:', error);
@@ -104,6 +109,11 @@ export class AuthService {
           // Configurer le timer de rafraîchissement de token
           this.setupRefreshTokenTimer(response);
 
+          // Connecter le WebSocket pour les notifications temps réel
+          if (response.id && response.accesToken) {
+            this.notificationService.connectWebSocket(response.id.toString(), response.accesToken);
+          }
+
           // Initialiser Keycloak avec le token obtenu
           return this.initKeycloakWithToken(
             response.accesToken!,
@@ -126,7 +136,9 @@ export class AuthService {
 
   logout(): Observable<any> {
 
-    
+    // Déconnecter le WebSocket avant de nettoyer la session
+    this.notificationService.disconnectWebSocket();
+
     // Nettoyer le localStorage
     this.clearLocalStorage();
     
@@ -305,6 +317,40 @@ export class AuthService {
   //  MÉTHODE UTILITAIRE: Vérifier si on doit afficher les modals d'auth
   shouldShowAuthModals(): boolean {
     return !this.isAuthenticated();
+  }
+
+  // ── SOCIAL LOGIN via Keycloak Identity Providers ──────────────────
+  loginWithSocial(idpHint: 'google' | 'facebook' | 'instagram'): void {
+    this.keycloakService.login({ idpHint });
+  }
+
+  /**
+   * Appelé après une redirection Keycloak (social login).
+   * Keycloak a déjà un token valide — on le transmet au backend pour récupérer
+   * l'AuthResponse avec id, role, nom, prenom de notre DB.
+   */
+  syncAfterKeycloakLogin(): Observable<any> {
+    return from(this.keycloakService.getToken()).pipe(
+      switchMap(token => {
+        if (!token) return of(null);
+        return this.http.get<AuthResponse>(`${this.apiUrl}/keycloak-sync`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }).pipe(
+          tap(user => {
+            if (user) {
+              this.currentUserSubject.next(user);
+              if (this.isBrowser) {
+                localStorage.setItem('currentUser', JSON.stringify(user));
+              }
+            }
+          }),
+          catchError(err => {
+            console.error('keycloak-sync failed:', err);
+            return of(null);
+          })
+        );
+      })
+    );
   }
 
   // Initialise Keycloak avec les tokens obtenus via l'API

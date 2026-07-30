@@ -1,270 +1,323 @@
-<!-- service-dialog.component.html - VERSION AVEC GRILLE 2x2 -->
-<div class="modal-overlay">
-  <div class="modal-container">
-    
-    <!-- ✅ HEADER -->
-    <div class="modal-header">
-      <div class="header-content">
-        <mat-icon>{{ isEditMode ? 'edit' : 'add_business' }}</mat-icon>
-        <h2>{{ isEditMode ? 'Modifier le service' : 'Ajouter un service freelance' }}</h2>
-      </div>
-      <button class="close-button" (click)="onCancel()">
-        <mat-icon>close</mat-icon>
+<div class="asf">
+
+  <!-- ── Header ──────────────────────────────────────────── -->
+  <div class="asf-header">
+    <div class="asf-header__left">
+      <button class="asf-back" type="button" (click)="onCancel()">
+        <mat-icon>arrow_back</mat-icon> Retour à Mes Services
+      </button>
+      <h1>{{ isEditMode ? 'Modifier le service' : 'Nouveau service' }}</h1>
+      <p>Choisissez une prestation à ajouter à votre carte.</p>
+    </div>
+    <div class="asf-header__actions">
+      <button class="asf-btn asf-btn--ghost" type="button" (click)="onCancel()">Annuler</button>
+      <button class="asf-btn asf-btn--dark" type="button"
+              [disabled]="!isFormValid() || enCoursCreation"
+              (click)="onSubmit()">
+        <mat-icon>check</mat-icon>
+        {{ isEditMode ? 'Enregistrer' : 'Publier le service' }}
       </button>
     </div>
-
-    <!-- ✅ LOADING -->
-    <div *ngIf="chargementServices" class="loading-section">
-      <mat-spinner diameter="40"></mat-spinner>
-      <p>Chargement des services...</p>
-    </div>
-
-    <!-- ✅ ERROR -->
-    <div *ngIf="erreurChargement && !chargementServices" class="error-section">
-      <mat-icon>error_outline</mat-icon>
-      <h4>Impossible de charger les services</h4>
-      <p>Vous pouvez continuer en saisissant manuellement.</p>
-    </div>
-
-    <!-- ✅ CONFIRMATION -->
-    <div *ngIf="enAttenteConfirmation" class="confirmation-section">
-      <mat-card>
-        <mat-card-header>
-          <mat-icon mat-card-avatar>lightbulb_outline</mat-icon>
-          <mat-card-title>Service similaire trouvé</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="suggestion-content">
-            <p><strong>Votre saisie :</strong> "{{ nomOriginal }}"</p>
-            <p><strong>Service suggéré :</strong> {{ suggestionService?.nom }} ({{ suggestionService?.categorie }})</p>
-            <p>Nous avons trouvé un service similaire. Que souhaitez-vous faire ?</p>
-          </div>
-        </mat-card-content>
-        <mat-card-actions>
-          <button mat-raised-button color="primary" (click)="utiliserSuggestion()">
-            <mat-icon>check_circle</mat-icon>
-            Utiliser "{{ suggestionService?.nom }}"
-          </button>
-          <button mat-button (click)="annulerDemandeNouveauService()">
-            <mat-icon>arrow_back</mat-icon>
-            Retour
-          </button>
-        </mat-card-actions>
-      </mat-card>
-    </div>
-
-    <!-- ✅ CONTENU PRINCIPAL -->
-    <div class="dialog-content" *ngIf="!chargementServices && !enAttenteConfirmation">
-      <form [formGroup]="serviceForm" (ngSubmit)="onSubmit()">
-
-        <!-- ✅ SECTION : SÉLECTION SERVICE -->
-        <div class="form-section" *ngIf="aServicesPredefinis && !estFormulaireDemande">
-          <h3 class="section-title">
-            <mat-icon>list_alt</mat-icon>
-            Choisissez votre service
-          </h3>
-          
-          <!-- ✅ SÉLECTION SERVICE SIMPLIFIÉE -->
-          <div class="form-row-single">
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Sélectionnez votre service</mat-label>
-              <mat-select formControlName="servicePredefini" 
-                         (selectionChange)="onServicePredefiniSelected({target: {value: $event.value.id}})">
-                <!-- Services par catégorie -->
-                <mat-optgroup *ngFor="let groupe of servicesGroupes" [label]="groupe.categorie + ' (' + groupe.count + ')'">
-                  <mat-option *ngFor="let service of groupe.services" [value]="service">
-                    {{service.nom}}
-                  </mat-option>
-                </mat-optgroup>
-              </mat-select>
-              <mat-error>{{ getFormErrorMessage() }}</mat-error>
-            </mat-form-field>
-          </div>
-
-          <!-- ✅ BOUTONS D'ACTION EN GRILLE -->
-          <div class="form-row service-actions">
-            <button type="button" mat-stroked-button (click)="basculerAffichageServices()">
-              <mat-icon>{{afficherTousServices ? 'category' : 'list'}}</mat-icon>
-              {{afficherTousServices ? 'Par catégorie' : 'Vue liste'}}
-            </button>
-            <button type="button" mat-stroked-button color="primary" (click)="demanderNouveauService()">
-              <mat-icon>add_circle</mat-icon>
-              Service non listé
-            </button>
-          </div>
-
-          <!-- Info service sélectionné -->
-          <div class="service-info" *ngIf="serviceSelectionne">
-            <mat-card>
-              <mat-card-content>
-                <div class="info-content">
-                  <strong>{{serviceSelectionne.nom}}</strong>
-                  <span>Catégorie: {{serviceSelectionne.categorie}}</span>
-                </div>
-              </mat-card-content>
-            </mat-card>
-          </div>
-        </div>
-
-        <!-- ✅ NOUVEAU SERVICE -->
-        <div class="form-section" *ngIf="estFormulaireDemande">
-          <h3 class="section-title">
-            <mat-icon>add_circle_outline</mat-icon>
-            Nouveau service personnalisé
-          </h3>
-          
-          <div class="form-row-single">
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Nom de votre service</mat-label>
-              <input matInput formControlName="nomPersonnalise" 
-                     placeholder="Ex: Coiffure afro spécialisée"
-                     maxlength="100">
-              <mat-icon matSuffix>edit</mat-icon>
-              <mat-error>{{ getFieldErrorMessage('nomPersonnalise') }}</mat-error>
-            </mat-form-field>
-          </div>
-          
-          <div class="form-actions" *ngIf="aServicesPredefinis">
-            <button type="button" mat-button (click)="annulerDemandeNouveauService()">
-              <mat-icon>arrow_back</mat-icon>
-              Retour à la sélection
-            </button>
-          </div>
-        </div>
-
-        <!-- ✅ DESCRIPTION -->
-        <div class="form-section">
-          <h3 class="section-title">
-            <mat-icon>description</mat-icon>
-            Description (optionnelle)
-          </h3>
-          
-          <div class="form-row-single">
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Description de votre prestation</mat-label>
-              <textarea matInput formControlName="description" rows="3" 
-                       placeholder="Décrivez votre prestation..."
-                       maxlength="500"></textarea>
-              <mat-hint>Maximum 500 caractères</mat-hint>
-              <mat-error>{{ getFieldErrorMessage('description') }}</mat-error>
-            </mat-form-field>
-          </div>
-        </div>
-
-        <!-- ✅ TARIFICATION EN GRILLE -->
-        <div class="form-section">
-          <h3 class="section-title">
-            <mat-icon>payments</mat-icon>
-            Tarification
-          </h3>
-          
-          <div class="form-row">
-            <mat-form-field appearance="outline">
-              <mat-label>Prix minimum</mat-label>
-              <input matInput type="number" formControlName="prixMin" min="1" step="5">
-              <span matTextSuffix>CFA</span>
-              <mat-error>{{ getFieldErrorMessage('prixMin') }}</mat-error>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-              <mat-label>Prix maximum</mat-label>
-              <input matInput type="number" formControlName="prixMax" min="1" step="5">
-              <span matTextSuffix>CFA</span>
-              <mat-error>{{ getFieldErrorMessage('prixMax') }}</mat-error>
-            </mat-form-field>
-          </div>
-          
-          <div class="price-preview" *ngIf="getPrixFormate()">
-            <mat-icon>visibility</mat-icon>
-            <span>Fourchette affichée: <strong>{{ getPrixFormate() }}</strong></span>
-          </div>
-        </div>
-
-        <!-- ✅ DURÉE ET TYPE EN GRILLE -->
-        <div class="form-section">
-          <h3 class="section-title">
-            <mat-icon>schedule</mat-icon>
-            Durée et lieu d'intervention
-          </h3>
-          
-          <div class="form-row">
-            <mat-form-field appearance="outline">
-              <mat-label>Durée en minutes</mat-label>
-              <input matInput type="number" formControlName="dureeEnMinutes" 
-                     min="15" max="480" step="15">
-              <span matTextSuffix>min</span>
-              <mat-hint>Entre 15 min et 8h</mat-hint>
-              <mat-error>{{ getFieldErrorMessage('dureeEnMinutes') }}</mat-error>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline">
-              <mat-label>Type d'intervention</mat-label>
-              <mat-select formControlName="typeIntervention">
-                <mat-option *ngFor="let type of typesIntervention" [value]="type.value">
-                  {{ type.label }}
-                </mat-option>
-              </mat-select>
-              <mat-icon matSuffix>place</mat-icon>
-            </mat-form-field>
-          </div>
-          
-          <div class="duration-preview" *ngIf="getFormattedDuration()">
-            <mat-icon>access_time</mat-icon>
-            <span>Durée affichée: <strong>{{ getFormattedDuration() }}</strong></span>
-          </div>
-        </div>
-
-        <!-- ✅ OPTIONS EN GRILLE 2x2 -->
-        <div class="form-section">
-          <h3 class="section-title">
-            <mat-icon>tune</mat-icon>
-            Options et inclusions
-          </h3>
-          
-          <div class="checkbox-group">
-            <mat-checkbox formControlName="materielInclus">
-              <div class="checkbox-content">
-                <strong>Matériel inclus</strong>
-                <span>J'apporte tout le matériel</span>
-              </div>
-            </mat-checkbox>
-
-            <mat-checkbox formControlName="deplacementInclus">
-              <div class="checkbox-content">
-                <strong>Déplacement inclus</strong>
-                <span>Pas de frais de transport</span>
-              </div>
-            </mat-checkbox>
-
-            <mat-checkbox formControlName="disponibleWeekend">
-              <div class="checkbox-content">
-                <strong>Disponible weekend</strong>
-                <span>Samedi et dimanche</span>
-              </div>
-            </mat-checkbox>
-
-            <mat-checkbox formControlName="disponibleSoir">
-              <div class="checkbox-content">
-                <strong>Disponible soirée</strong>
-                <span>Après 18h en semaine</span>
-              </div>
-            </mat-checkbox>
-          </div>
-        </div>
-
-      </form>
-    </div>
-
-    <!-- ✅ FOOTER ACTIONS -->
-    <div class="dialog-actions">
-      <button type="button" class="cancel-btn" (click)="onCancel()">
-        Annuler
-      </button>
-      <button type="submit" class="submit-btn" [disabled]="!serviceForm.valid" (click)="onSubmit()">
-        <mat-icon>{{ isEditMode ? 'save' : 'add' }}</mat-icon>
-        {{ isEditMode ? 'Modifier' : 'Ajouter' }}
-      </button>
-    </div>
-
   </div>
+
+  <!-- ── Confirmation service similaire ──────────────────── -->
+  <div class="asf-confirm" *ngIf="enAttenteConfirmation">
+    <div class="asf-confirm__icon"><mat-icon>lightbulb</mat-icon></div>
+    <div class="asf-confirm__body">
+      <h4>Service similaire trouvé</h4>
+      <p>Votre saisie : <strong>{{ nomOriginal }}</strong></p>
+      <p>Suggéré : <strong>{{ suggestionService?.nom }}</strong>
+         <span *ngIf="suggestionService?.categorie"> · {{ suggestionService?.categorie }}</span>
+      </p>
+      <div class="asf-confirm__btns">
+        <button class="asf-btn asf-btn--dark" type="button" (click)="utiliserSuggestion()">
+          Utiliser "{{ suggestionService?.nom }}"
+        </button>
+        <button class="asf-btn asf-btn--ghost" type="button" (click)="annulerDemandeNouveauService()">
+          <mat-icon>arrow_back</mat-icon> Retour
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Corps principal ─────────────────────────────────── -->
+  <form [formGroup]="serviceForm" (ngSubmit)="onSubmit()"
+        *ngIf="!enAttenteConfirmation" class="asf-body">
+
+    <!-- ═══ COLONNE PRINCIPALE ═══ -->
+    <div class="asf-main">
+
+      <!-- CARD : Choisir un service -->
+      <div class="asf-card">
+
+        <!-- Chargement prédéfinis -->
+        <div class="asf-svc-loading" *ngIf="chargementServices">
+          <mat-spinner diameter="28"></mat-spinner>
+          <span>Chargement des services…</span>
+        </div>
+
+        <!-- === SÉLECTION PRÉDÉFINIE === -->
+        <ng-container *ngIf="!chargementServices && !estFormulaireDemande">
+          <h3 class="asf-card-title">Choisir un service</h3>
+
+          <!-- Barre de recherche -->
+          <div class="asf-search-bar" *ngIf="aServicesPredefinis">
+            <mat-icon>search</mat-icon>
+            <input type="text" [(ngModel)]="rechercheGrille" [ngModelOptions]="{standalone:true}"
+                   placeholder="Rechercher un service…" autocomplete="off">
+            <button type="button" *ngIf="rechercheGrille" (click)="rechercheGrille = ''"
+                    class="asf-search-clear"><mat-icon>close</mat-icon></button>
+          </div>
+
+          <!-- Filtres par catégorie -->
+          <div class="asf-chips" *ngIf="aServicesPredefinis && !rechercheGrille">
+            <button type="button" class="asf-chip"
+                    [class.asf-chip--active]="filterCategorie === ''"
+                    (click)="setFilterCategorie('')">Tous</button>
+            <button type="button" class="asf-chip"
+                    *ngFor="let cat of categories"
+                    [class.asf-chip--active]="filterCategorie === cat"
+                    (click)="setFilterCategorie(cat)">{{ cat }}</button>
+          </div>
+
+          <!-- Grille des services prédéfinis -->
+          <div class="asf-svc-grid" *ngIf="filteredServices.length > 0; else noServices">
+            <button type="button" class="asf-svc-card"
+                    *ngFor="let svc of filteredServices"
+                    [class.asf-svc-card--selected]="serviceSelectionne?.id === svc.id"
+                    (click)="selectPredefinedService(svc)">
+              <div class="asf-svc-card__check" *ngIf="serviceSelectionne?.id === svc.id">
+                <mat-icon>check</mat-icon>
+              </div>
+              <span class="asf-svc-card__name">{{ svc.nom }}</span>
+              <span class="asf-svc-card__cat">{{ svc.categorie }}</span>
+            </button>
+          </div>
+
+          <ng-template #noServices>
+            <p class="asf-empty-msg">
+              <mat-icon>search_off</mat-icon>
+              {{ rechercheGrille ? 'Aucun service ne correspond à "' + rechercheGrille + '".' : 'Aucun service dans cette catégorie.' }}
+            </p>
+          </ng-template>
+
+          <!-- Lien vers proposition -->
+          <div class="asf-not-listed" *ngIf="!modeProposition">
+            <span>Ce service n'est pas dans la liste ?</span>
+            <button type="button" class="asf-link-btn" (click)="ouvrirProposition()">
+              Proposer un service
+            </button>
+          </div>
+        </ng-container>
+
+        <!-- === PROPOSITION NOUVEAU SERVICE === -->
+        <ng-container *ngIf="!chargementServices && modeProposition">
+          <div class="asf-custom-header">
+            <button type="button" class="asf-back-inline" (click)="fermerProposition()">
+              <mat-icon>arrow_back</mat-icon> Retour à la liste
+            </button>
+            <h3 class="asf-card-title">Proposer un nouveau service</h3>
+          </div>
+          <p class="asf-info-msg">
+            <mat-icon>info_outline</mat-icon>
+            Le service sera ajouté au catalogue commun et automatiquement sélectionné.
+          </p>
+
+          <label class="asf-label">Nom du service <span class="asf-required">*</span></label>
+          <div class="asf-proposition-input-wrap">
+            <input class="asf-input" type="text" [(ngModel)]="propositionNom"
+                   [ngModelOptions]="{standalone: true}"
+                   (ngModelChange)="onPropositionNomChange()"
+                   placeholder="Ex: Tresses Twists Sénégalaises Longues"
+                   maxlength="100" autocomplete="off">
+
+            <!-- Suggestions temps réel -->
+            <div class="asf-prop-suggestions" *ngIf="suggestionsPropositon.length > 0">
+              <p class="asf-prop-suggestions__label">
+                <mat-icon>auto_awesome</mat-icon>
+                Ces services existent déjà — cliquez pour en sélectionner un :
+              </p>
+              <button type="button" class="asf-prop-suggestion-item"
+                      *ngFor="let s of suggestionsPropositon"
+                      (click)="selectionnerSuggestionProposition(s)">
+                <span class="asf-prop-suggestion-nom">{{ s.nom }}</span>
+                <span class="asf-prop-suggestion-cat">{{ s.categorie }}</span>
+              </button>
+              <p class="asf-prop-suggestions__footer">
+                Si aucun ne correspond, complétez le formulaire ci-dessous pour créer un nouveau service.
+              </p>
+            </div>
+          </div>
+
+          <label class="asf-label" style="margin-top:12px">Catégorie <span class="asf-required">*</span></label>
+          <select class="asf-input asf-select" [(ngModel)]="propositionCategorie"
+                  [ngModelOptions]="{standalone: true}">
+            <option value="">-- Choisir une catégorie --</option>
+            <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+          </select>
+
+          <p class="asf-error-msg" *ngIf="propositionErreur">
+            <mat-icon>warning_amber</mat-icon> {{ propositionErreur }}
+          </p>
+
+          <div class="asf-proposition-btns">
+            <button type="button" class="asf-btn asf-btn--dark"
+                    [disabled]="propositionEnCours"
+                    (click)="soumettrePropositon()">
+              <mat-spinner diameter="14" *ngIf="propositionEnCours"></mat-spinner>
+              <mat-icon *ngIf="!propositionEnCours">add_circle</mat-icon>
+              Valider et sélectionner
+            </button>
+            <button type="button" class="asf-btn asf-btn--ghost" (click)="fermerProposition()">
+              Annuler
+            </button>
+          </div>
+        </ng-container>
+
+      </div><!-- /asf-card choisir -->
+
+      <!-- Service sélectionné résumé (mode prédéfini) -->
+      <div class="asf-selected-banner" *ngIf="serviceSelectionne && !estFormulaireDemande">
+        <mat-icon>check_circle</mat-icon>
+        <div>
+          <strong>{{ serviceSelectionne.nom }}</strong>
+          <span>{{ serviceSelectionne.categorie }}</span>
+        </div>
+        <button type="button" class="asf-selected-clear" (click)="serviceSelectionne = null; serviceForm.patchValue({servicePredefini: ''})">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <!-- CARD : Description -->
+      <div class="asf-card">
+        <h3 class="asf-card-title">Description <span class="asf-optional">(optionnelle)</span></h3>
+        <textarea class="asf-input asf-textarea" formControlName="description" rows="3"
+                  placeholder="Décrivez la prestation, le style, ce qui vous distingue…"></textarea>
+      </div>
+
+      <!-- CARD : Tarif & durée -->
+      <div class="asf-card">
+        <h3 class="asf-card-title">Tarif &amp; durée</h3>
+        <div class="asf-row-3">
+          <div class="asf-field">
+            <label class="asf-label">Prix minimum (CFA)</label>
+            <input class="asf-input" type="number" formControlName="prixMin" placeholder="8 000" min="1">
+          </div>
+          <div class="asf-field">
+            <label class="asf-label">Prix maximum (CFA)</label>
+            <input class="asf-input" type="number" formControlName="prixMax" placeholder="15 000" min="1">
+          </div>
+          <div class="asf-field">
+            <label class="asf-label">Durée</label>
+            <select class="asf-input asf-select" formControlName="dureeEnMinutes">
+              <option value="15">15 min</option>
+              <option value="30">30 min</option>
+              <option value="45">45 min</option>
+              <option value="60">1h</option>
+              <option value="90">1h30</option>
+              <option value="120">2h</option>
+              <option value="150">2h30</option>
+              <option value="180">3h</option>
+              <option value="240">4h</option>
+              <option value="300">5h</option>
+              <option value="360">6h</option>
+              <option value="480">8h</option>
+            </select>
+          </div>
+        </div>
+        <div class="asf-price-hint" *ngIf="getPrixFormate()">
+          {{ getPrixFormate() }} · {{ getFormattedDuration() }}
+        </div>
+      </div>
+
+      <!-- CARD : Lieu de prestation -->
+      <div class="asf-card">
+        <h3 class="asf-card-title">Lieu de prestation</h3>
+        <div class="asf-loc-btns">
+          <button type="button" class="asf-loc-btn"
+                  *ngFor="let t of typesIntervention"
+                  [class.asf-loc-btn--active]="serviceForm.get('typeIntervention')?.value === t.value"
+                  (click)="setTypeIntervention(t.value)">
+            <mat-icon>{{ t.icon }}</mat-icon> {{ t.label }}
+          </button>
+        </div>
+        <div class="asf-field asf-deploy-field"
+             *ngIf="serviceForm.get('typeIntervention')?.value !== 'SALON'">
+          <label class="asf-label">Frais de déplacement (CFA/km)</label>
+          <input class="asf-input asf-input--sm" type="number"
+                 formControlName="supplementDeplacementKm" placeholder="0,5" min="0">
+        </div>
+      </div>
+
+      <!-- CARD : Inclusions -->
+      <div class="asf-card">
+        <h3 class="asf-card-title">Inclusions</h3>
+        <div class="asf-inclusions">
+          <button type="button" class="asf-inc-tag"
+                  [class.asf-inc-tag--active]="serviceForm.get('materielInclus')?.value"
+                  (click)="toggleInclusion('materielInclus')">
+            <mat-icon>check_circle</mat-icon> Matériel inclus
+          </button>
+          <button type="button" class="asf-inc-tag"
+                  [class.asf-inc-tag--active]="serviceForm.get('horairesFlexibles')?.value"
+                  (click)="toggleInclusion('horairesFlexibles')">
+            <mat-icon>check_circle</mat-icon> Horaires flexibles
+          </button>
+          <button type="button" class="asf-inc-tag"
+                  [class.asf-inc-tag--active]="serviceForm.get('disponibleWeekend')?.value"
+                  (click)="toggleInclusion('disponibleWeekend')">
+            <mat-icon>check_circle</mat-icon> Weekend
+          </button>
+          <button type="button" class="asf-inc-tag"
+                  [class.asf-inc-tag--active]="serviceForm.get('disponibleSoir')?.value"
+                  (click)="toggleInclusion('disponibleSoir')">
+            <mat-icon>check_circle</mat-icon> Soirée
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /asf-main -->
+
+    <!-- ═══ SIDEBAR ═══ -->
+    <aside class="asf-side">
+
+      <!-- Photo de couverture -->
+      <div class="asf-card">
+        <h3 class="asf-card-title">Photo de couverture</h3>
+        <div class="asf-photo-zone">
+          <mat-icon>add_a_photo</mat-icon>
+          <span>Ajouter une photo</span>
+        </div>
+      </div>
+
+      <!-- Aperçu de la carte -->
+      <div class="asf-card">
+        <h3 class="asf-card-title">Aperçu de la carte</h3>
+        <div class="asf-preview-card">
+          <div class="asf-preview-ico"><mat-icon>auto_awesome</mat-icon></div>
+          <div class="asf-preview-body">
+            <span class="asf-preview-name">
+              {{ serviceSelectionne?.nom || 'Sélectionnez un service…' }}
+            </span>
+            <span class="asf-preview-price">
+              {{ getPrixFormate() || '8 000 – 15 000 CFA' }}
+              · {{ getFormattedDuration() || '1h' }}
+            </span>
+            <span class="asf-preview-cat">
+              {{ serviceSelectionne?.categorie || selectedCategorie || '' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Info si erreur chargement -->
+      <div class="asf-card asf-card--info" *ngIf="erreurChargement && !chargementServices">
+        <mat-icon>warning_amber</mat-icon>
+        <p>Impossible de charger la liste des services. Veuillez réessayer.</p>
+      </div>
+
+    </aside>
+
+  </form>
+
 </div>

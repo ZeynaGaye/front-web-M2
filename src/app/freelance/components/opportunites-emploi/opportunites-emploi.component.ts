@@ -160,11 +160,16 @@ export class OpportunitesEmploiComponent implements OnInit, OnDestroy {
       this.selectedStatus = this.initialFilter.status || '';
     }
     
-    if (this.autoLoad) {
+    if (this.autoLoad && isPlatformBrowser(this.platformId)) {
       this.loadOffres();
     }
-    
+
     this.setupFormSubscriptions();
+
+    // Géolocalisation auto uniquement sur la page dédiée (pas en mode compact)
+    if (!this.compactMode) {
+      this.detectUserLocation();
+    }
   }
 
   private setupFormSubscriptions(): void {
@@ -664,6 +669,55 @@ export class OpportunitesEmploiComponent implements OnInit, OnDestroy {
 
   getSalonImage(offre: OffreEmploi): string {
     return offre.salonPhotoProfil || '';
+  }
+
+  // ==========================================
+  //  GÉOLOCALISATION
+  // ==========================================
+
+  isGeolocating = false;
+  geoCity: string | null = null;
+  geoError: string | null = null;
+
+  detectUserLocation(): void {
+    if (!isPlatformBrowser(this.platformId) || !navigator.geolocation) return;
+
+    this.isGeolocating = true;
+    this.geoError = null;
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        // Reverse geocoding via Nominatim (OpenStreetMap, gratuit, sans clé API)
+        fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=fr`)
+          .then(r => r.json())
+          .then(data => {
+            const city = data.address?.city
+              || data.address?.town
+              || data.address?.village
+              || data.address?.county
+              || '';
+            if (city) {
+              this.geoCity = city;
+              this.searchForm.patchValue({ ville: city });
+            }
+            this.isGeolocating = false;
+          })
+          .catch(() => { this.isGeolocating = false; });
+      },
+      (err) => {
+        this.isGeolocating = false;
+        if (err.code === 1) {
+          this.geoError = 'Localisation refusée';
+        }
+      },
+      { enableHighAccuracy: false, timeout: 6000, maximumAge: 600000 }
+    );
+  }
+
+  clearGeoLocation(): void {
+    this.geoCity = null;
+    this.searchForm.patchValue({ ville: '' });
   }
 
   trackByOffreId(index: number, offre: OffreEmploi): any {

@@ -14,13 +14,14 @@ import { RegisterComponent } from '../../../shared/components/register/register.
 import { AuthUIService } from '../../services/authUI/auth-ui.service';
 import { AuthService } from '../../../core/servces/auth.service';
 import { forkJoin, Subject, of, catchError } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { takeUntil, distinctUntilChanged } from 'rxjs/operators';
 import { FreelanceDetailsComponent } from '../../../freelance/components/freelance-details/freelance-details.component';
 import { ReservationService } from '../../services/reservation/reservation.service';
 import {MatChip} from '@angular/material/chips';
 import { MatIcon } from '@angular/material/icon';
 import { HairstyleGeneratorService, HairstyleResponse } from '../../../gemini/HairstyleGeneratorService';
 import { FreelanceService } from '../../../freelance/services/freelance.service';
+import { ServicePredefiniService, ServicePredefiniDto } from '../../services/ServicePredefini/service-predefini.service';
 
 // ===============================================
 // INTERFACES POUR LES NOUVELLES FONCTIONNALITÉS
@@ -179,6 +180,11 @@ export class HeaderComponent implements OnInit, AfterViewInit, OnDestroy {
   salons: any[] = [];
   searchTerm: string = '';
   isBrowser: boolean;
+
+  // Suggestions temps réel pour la barre de recherche
+  searchSuggestions: ServicePredefiniDto[] = [];
+  showSearchSuggestions = false;
+  private servicesPredefinisCached: ServicePredefiniDto[] = [];
   private authService = inject(AuthService);
   private authUIService: AuthUIService;
   isProfileMenuOpen = false;
@@ -269,7 +275,7 @@ export class HeaderComponent implements OnInit, AfterViewInit, OnDestroy {
     private freelanceService: FreelanceService,
     @Inject(PLATFORM_ID) private platformId: Object,
     private hairstyleService: HairstyleGeneratorService,
-
+    private servicePredefiniService: ServicePredefiniService,
     authUIService: AuthUIService
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
@@ -284,19 +290,28 @@ export class HeaderComponent implements OnInit, AfterViewInit, OnDestroy {
 
 
  ngOnInit(): void {
+  if (this.isBrowser) {
+    this.servicePredefiniService.getTousLesServices()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(services => { this.servicesPredefinisCached = services; });
+  }
 
   //  Adapter le nombre de cartes selon la taille d'écran
   this.updateCarouselConfig();
   this.loadFavorites();
 
   this.authService.currentUser$
-    .pipe(takeUntil(this.destroy$))
+    .pipe(
+      takeUntil(this.destroy$),
+      distinctUntilChanged((a, b) => JSON.stringify(a) === JSON.stringify(b))
+    )
     .subscribe(user => {
       this.user = user;
       this.isLoggedIn = !!user;
       this.isClient = user && user.role === 'CLIENT';
       this.isFreelance = user && user.role === 'FREELANCE';
       this.isEmployeur = user && user.role === 'EMPLOYEUR';
+      this.loadingClientData = false;
        this.checkAuthAndLoadClientData();
        this.loadWelcomeBannerState();
 
@@ -504,9 +519,10 @@ export class HeaderComponent implements OnInit, AfterViewInit, OnDestroy {
     try {
 
       const dialogRef = this.dialog.open(FreelanceDetailsComponent, {
-        width: '900px',
+        width: '95vw',
         height: '90vh',
-        maxWidth: '90vw',
+        maxWidth: '1200px',
+        maxHeight: '800px',
         data: { freelanceId: freelanceId },
         panelClass: 'freelance-detail-dialog-container',
         autoFocus: false,
@@ -886,6 +902,41 @@ export class HeaderComponent implements OnInit, AfterViewInit, OnDestroy {
     this.searchFromSuggestion = false; //  Réinitialiser le flag
     this.searchSalonsAdvanced();
   }
+
+  // =====================================================
+  //  SUGGESTIONS TEMPS RÉEL — BARRE DE RECHERCHE
+  // =====================================================
+
+  onSearchTermInput(): void {
+    const q = (this.searchTerm || '').trim().toLowerCase();
+    if (q.length === 0) {
+      this.searchSuggestions = [];
+      this.showSearchSuggestions = false;
+      return;
+    }
+    this.searchSuggestions = this.servicesPredefinisCached
+      .filter(s =>
+        s.nom.toLowerCase().includes(q) ||
+        (s.motsCles || '').toLowerCase().includes(q) ||
+        s.categorie.toLowerCase().includes(q)
+      )
+      .slice(0, 7);
+    this.showSearchSuggestions = this.searchSuggestions.length > 0;
+  }
+
+  selectSearchSuggestion(service: ServicePredefiniDto): void {
+    this.searchTerm = service.nom;
+    this.showSearchSuggestions = false;
+    this.searchSuggestions = [];
+    this.searchSalonsAdvanced();
+  }
+
+  hideSearchSuggestions(): void {
+    // délai pour laisser le clic sur une suggestion s'exécuter
+    setTimeout(() => { this.showSearchSuggestions = false; }, 200);
+  }
+
+  // =====================================================
 
   searchSalonsAdvanced(): void {
 
@@ -1366,6 +1417,18 @@ private construireCriteresTexte(criteres: any): string[] {
     }
 
     this.filteredSalons = this.processSalonData(uniqueResults);
+
+    // Tri composite : proximité (distanceKm) + note — les résultats sans distance se trient par note seule
+    this.filteredSalons.sort((a, b) => {
+      const hasDistA = a.distanceKm != null && isFinite(a.distanceKm);
+      const hasDistB = b.distanceKm != null && isFinite(b.distanceKm);
+      if (hasDistA && hasDistB) {
+        const scoreA = (a.rating ?? 0) * 10 - a.distanceKm! * 0.5;
+        const scoreB = (b.rating ?? 0) * 10 - b.distanceKm! * 0.5;
+        return scoreB - scoreA;
+      }
+      return (b.rating ?? 0) - (a.rating ?? 0);
+    });
 
     //  Initialiser la pagination avec infinite scroll
     this.allProviders = this.filteredSalons;
@@ -2545,8 +2608,8 @@ private construireCriteresTexte(criteres: any): string[] {
     //  IMAGE PAR DÉFAUT SELON LE TYPE
     const providerType = item.type || this.determineProviderType(item);
     const defaultImage = providerType === 'freelance'
-      ? 'assets/images/freelance-default.jpg'
-      : 'assets/images/salon-default.jpg';
+      ? 'assets/images/placeholders/freelance-tresses.jpg'
+      : 'assets/images/placeholders/salon-coiffure-1.jpg';
 
     return defaultImage;
   }
@@ -2556,7 +2619,7 @@ private construireCriteresTexte(criteres: any): string[] {
    */
   public getImageUrl = (imageUrl: string | undefined): string => {
     if (!imageUrl) {
-      return 'assets/images/freelance-default.jpg';
+      return 'assets/images/placeholders/freelance-tresses.jpg';
     }
     return this.processImageUrl(imageUrl);
   }
@@ -2709,14 +2772,14 @@ private construireCriteresTexte(criteres: any): string[] {
     //  IMAGES DE FALLBACK SELON LE TYPE
     const fallbackImages = provider.type === 'freelance'
       ? [
-          'assets/images/freelance-default.jpg',
-          'assets/images/freelance-placeholder.jpg',
-          'assets/images/avatar-placeholder.png'
+          'assets/images/placeholders/freelance-tresses.jpg',
+          'assets/images/placeholders/freelance-africaine.jpg',
+          'assets/images/placeholders/freelance-afro.jpg'
         ]
       : [
-          'assets/images/salon-default.jpg',
-          'assets/images/salon-placeholder.jpg',
-          'assets/images/store-placeholder.jpg'
+          'assets/images/placeholders/salon-coiffure-1.jpg',
+          'assets/images/placeholders/salon-manucure.jpg',
+          'assets/images/placeholders/salon-coiffeur.jpg'
         ];
 
     const currentRetry = parseInt(event.target.dataset.retryCount) - 1;
@@ -2815,14 +2878,7 @@ private construireCriteresTexte(criteres: any): string[] {
   const file = event.target.files[0];
   if (file && file.type.match(/image\/*/) && file.size < 5000000) {
     this.uploadedPhoto = file;
-
-    const reader = new FileReader();
-    reader.onload = (e: any) => {
-      this.uploadedPhotoPreview = e.target.result;
-    };
-    reader.readAsDataURL(file);
-
-    //  NOUVEAU : Lancer l'analyse automatique de la coiffure
+    this.uploadedPhotoPreview = URL.createObjectURL(file);
     this.analyzeHairstyleFromPhoto(file);
   } else {
     this.snackBar.open('Veuillez sélectionner une image valide (max 5MB)', 'Fermer', {
@@ -3194,7 +3250,9 @@ retryPhotoAnalysis(): void {
     event.stopPropagation();
   }
 
-  // Nettoyer tout
+  if (this.uploadedPhotoPreview?.startsWith('blob:')) {
+    URL.revokeObjectURL(this.uploadedPhotoPreview);
+  }
   this.uploadedPhoto = null;
   this.uploadedPhotoPreview = null;
   this.detectedHairstyles = [];
@@ -3819,6 +3877,9 @@ retryPhotoAnalysis(): void {
     this.selectedTime = '';
     this.userLocation = null;
     this.locationInput = '';
+    if (this.uploadedPhotoPreview?.startsWith('blob:')) {
+      URL.revokeObjectURL(this.uploadedPhotoPreview);
+    }
     this.uploadedPhoto = null;
     this.uploadedPhotoPreview = null;
     this.showAdvancedSearch = false;
@@ -3922,6 +3983,7 @@ retryPhotoAnalysis(): void {
    *  Charger enrichissements client
    */
   loadClientEnrichments(): void {
+    if (this.loadingClientData) return;
     this.loadingClientData = true;
 
     // Charger TOUTES les données pour des suggestions réelles

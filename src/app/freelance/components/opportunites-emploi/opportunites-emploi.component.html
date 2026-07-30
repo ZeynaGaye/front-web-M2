@@ -22,9 +22,18 @@
           <i class="fas fa-search"></i>
           <input formControlName="searchTerm" type="text" placeholder="Poste (ex: Coiffeur Expert)">
         </div>
-        <div class="hero-search-field">
+        <div class="hero-search-field geo-field">
           <i class="fas fa-map-marker-alt"></i>
           <input formControlName="ville" type="text" placeholder="Ville ou quartier (ex: Dakar Plateau)">
+          <button type="button" class="geo-btn"
+                  [class.loading]="isGeolocating"
+                  [title]="geoError || 'Détecter ma position'"
+                  (click)="detectUserLocation()">
+            <i class="fas" [ngClass]="isGeolocating ? 'fa-spinner fa-spin' : 'fa-crosshairs'"></i>
+          </button>
+          <button type="button" class="geo-clear-btn" *ngIf="geoCity" (click)="clearGeoLocation()" title="Effacer la localisation">
+            <i class="fas fa-times"></i>
+          </button>
         </div>
         <div class="hero-search-field select-wrap">
           <i class="fas fa-tag"></i>

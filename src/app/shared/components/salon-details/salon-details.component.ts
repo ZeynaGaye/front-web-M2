@@ -120,7 +120,12 @@ export class SalonDetailsComponent implements OnInit {
 
     this.salonService.getSalonById(this.salonId).subscribe({
       next: (salon) => {
-
+        const rawUrl = salon?.photoProfilUrl || salon?.photoProfil;
+        if (rawUrl) {
+          salon.photoProfil = this.processImageUrl(rawUrl);
+        } else {
+          salon.photoProfil = null;
+        }
 
         this.salon = salon;
 
@@ -279,7 +284,7 @@ loadSalonPhotos(): void {
 
   //  MÉTHODE DE TRAITEMENT D'URL D'IMAGE
   private processImageUrl(imageUrl: string): string {
-    if (!imageUrl) return 'assets/images/salon-placeholder.jpg';
+    if (!imageUrl) return 'assets/images/placeholders/salon-coiffure-1.jpg';
 
 
 
@@ -320,9 +325,9 @@ loadSalonPhotos(): void {
 
     // Essayer des fallbacks
     const fallbacks = [
-      'assets/images/salon-placeholder.jpg',
-      'assets/images/default-salon.jpg',
-      'assets/images/no-image.jpg'
+      'assets/images/placeholders/salon-coiffure-1.jpg',
+      'assets/images/placeholders/salon-manucure.jpg',
+      'assets/images/placeholders/salon-coiffeur.jpg'
     ];
 
     const currentSrc = event.target.src;

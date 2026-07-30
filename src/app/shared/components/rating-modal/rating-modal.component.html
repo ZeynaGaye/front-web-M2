@@ -1,169 +1,108 @@
-<!-- ========================================
-     MODAL DE NOTATION ET AVIS
-======================================== -->
+<div class="rm">
 
-<div class="rating-modal">
-  
-  <!-- Header de la modal -->
-  <div class="modal-header">
-    <h2 mat-dialog-title>{{ getModalTitle() }}</h2>
-    <button mat-icon-button class="close-btn" (click)="cancel()">
+  <!-- ── Header ─────────────────────────────────────────── -->
+  <div class="rm-header">
+    <div class="rm-header__left">
+      <mat-icon class="rm-header__star">star</mat-icon>
+      <h2 class="rm-title">{{ getModalTitle() }}</h2>
+    </div>
+    <button class="rm-close" type="button" (click)="cancel()">
       <mat-icon>close</mat-icon>
     </button>
   </div>
 
-  <!-- Contenu principal -->
-  <div mat-dialog-content class="modal-content">
-    
-    <!-- Informations du service -->
-    <div class="service-info">
-      <div class="service-details">
-        <h3>{{ data.serviceNom }}</h3>
-        <div class="provider-info">
+  <!-- ── Contenu ────────────────────────────────────────── -->
+  <div mat-dialog-content class="rm-content">
+
+    <!-- Badge prestataire -->
+    <div class="rm-provider">
+      <div class="rm-provider__text">
+        <span class="rm-provider__name">{{ data.serviceNom }}</span>
+        <span class="rm-provider__sub">
           <mat-icon>{{ data.type === 'salon' ? 'store' : 'person' }}</mat-icon>
-          <span>{{ data.prestataire }}</span>
-        </div>
+          {{ data.prestataire }}
+        </span>
       </div>
-      <div class="service-icon">
+      <div class="rm-provider__ico">
         <mat-icon>{{ data.type === 'salon' ? 'store' : 'person' }}</mat-icon>
       </div>
     </div>
 
-    <!-- Section de notation principale -->
-    <div class="rating-section">
-      <h4>Votre note globale</h4>
-      
-      <!-- Étoiles principales -->
-      <div class="stars-container">
-        <div class="stars-rating">
-          <button 
-            *ngFor="let star of [1,2,3,4,5]"
-            class="star-btn"
-            [class]="getStarClass(star)"
-            (click)="setRating(star)"
-            (mouseenter)="onStarHover(star)"
-            (mouseleave)="onStarLeave()"
-            [attr.aria-label]="'Note ' + star + ' étoiles'">
-            <mat-icon>{{ getStarIcon(star) }}</mat-icon>
-          </button>
-        </div>
-        <div class="rating-info">
-          <span class="rating-value" [style.color]="getRatingColor()">
-            {{ rating }}/5
-          </span>
-          <span class="rating-text" [style.color]="getRatingColor()">
-            {{ getRatingText() }}
-          </span>
-        </div>
+    <!-- Étoiles globales -->
+    <div class="rm-stars-section">
+      <h4 class="rm-section-title">Votre note globale</h4>
+      <div class="rm-stars">
+        <button type="button" class="rm-star"
+          *ngFor="let star of [1,2,3,4,5]"
+          [class]="getStarClass(star)"
+          (click)="setRating(star)"
+          (mouseenter)="onStarHover(star)"
+          (mouseleave)="onStarLeave()"
+          [attr.aria-label]="'Note ' + star + ' étoiles'">
+          <mat-icon>{{ getStarIcon(star) }}</mat-icon>
+        </button>
       </div>
-
-      <!-- Bouton pour notation détaillée -->
-      <button 
-        mat-button 
-        class="detailed-rating-toggle"
-        (click)="toggleDetailedRating()">
-        <mat-icon>{{ showDetailedRating ? 'expand_less' : 'expand_more' }}</mat-icon>
-        {{ showDetailedRating ? 'Notation simple' : 'Notation détaillée' }}
-      </button>
-    </div>
-
-    <!-- Notation détaillée par critères -->
-    <div class="detailed-rating-section" *ngIf="showDetailedRating">
-      <h4>Évaluez chaque aspect</h4>
-      
-      <div class="criteria-grid">
-        <div 
-          *ngFor="let criteria of ['qualite', 'professionnalisme', 'proprete', 'rapport_qualite_prix', 'ponctualite']"
-          class="criteria-item">
-          <label>{{ criteriaLabels[criteria] }}</label>
-          <div class="criteria-stars">
-            <button
-              *ngFor="let star of getCriteriaStars(criteria)"
-              class="criteria-star-btn"
-              [class.filled]="isCriteriaStarFilled(criteria, star)"
-              (click)="setCriteriaRating(criteria, star)">
-              <mat-icon>{{ isCriteriaStarFilled(criteria, star) ? 'star' : 'star_border' }}</mat-icon>
-            </button>
-          </div>
-        </div>
+      <p class="rm-stars-hint" *ngIf="rating === 0">Sélectionnez une note</p>
+      <div class="rm-rating-info" *ngIf="rating > 0">
+        <span class="rm-rating-value" [style.color]="getRatingColor()">{{ rating }}/5</span>
+        <span class="rm-rating-text" [style.color]="getRatingColor()">— {{ getRatingText() }}</span>
       </div>
     </div>
 
-    <!-- Section commentaire -->
-    <div class="comment-section">
-      <h4>Votre commentaire</h4>
-      
-      <!-- Suggestions de commentaires -->
-      <div class="comment-suggestions" *ngIf="rating > 0">
-        <p class="suggestions-label">Suggestions :</p>
-        <div class="suggestions-chips">
-          <button 
-            *ngFor="let suggestion of getCommentSuggestions()"
-            mat-stroked-button
-            class="suggestion-chip"
-            (click)="useSuggestion(suggestion)">
-            {{ suggestion }}
+    <!-- Toggle notation détaillée -->
+    <button type="button" class="rm-detail-toggle" (click)="toggleDetailedRating()">
+      <mat-icon>{{ showDetailedRating ? 'expand_less' : 'expand_more' }}</mat-icon>
+      Notation détaillée
+    </button>
+
+    <!-- Critères détaillés -->
+    <div class="rm-criteria" *ngIf="showDetailedRating">
+      <div class="rm-criterion"
+        *ngFor="let key of ['qualite', 'professionnalisme', 'proprete', 'rapport_qualite_prix', 'ponctualite']">
+        <span class="rm-criterion__label">{{ criteriaLabels[key] }}</span>
+        <div class="rm-criterion__stars">
+          <button type="button" class="rm-criterion-star"
+            *ngFor="let s of [1,2,3,4,5]"
+            [class.filled]="isCriteriaStarFilled(key, s)"
+            (click)="setCriteriaRating(key, s)">
+            <mat-icon>{{ isCriteriaStarFilled(key, s) ? 'star' : 'star_border' }}</mat-icon>
           </button>
         </div>
       </div>
-
-      <!-- Champ de commentaire -->
-      <mat-form-field appearance="outline" class="comment-field">
-        <mat-label>Partagez votre expérience (optionnel)</mat-label>
-        <textarea 
-          matInput 
-          [(ngModel)]="comment"
-          rows="4"
-          maxlength="500"
-          placeholder="Décrivez votre expérience avec ce prestataire...">
-        </textarea>
-        <mat-hint align="end">{{ comment.length }}/500</mat-hint>
-      </mat-form-field>
     </div>
 
-    <!-- Aperçu de l'avis -->
-    <div class="rating-preview" *ngIf="rating > 0">
-      <h4>Aperçu de votre avis</h4>
-      <div class="preview-card">
-        <div class="preview-header">
-          <div class="preview-stars">
-            <mat-icon *ngFor="let star of [1,2,3,4,5]" 
-              [class.filled]="star <= rating">
-              {{ star <= rating ? 'star' : 'star_border' }}
-            </mat-icon>
-          </div>
-          <span class="preview-rating">{{ rating }}/5</span>
-        </div>
-        <p class="preview-comment" *ngIf="comment.trim()">
-          "{{ comment }}"
-        </p>
-        <div class="preview-footer">
-          <span class="preview-service">{{ data.serviceNom }}</span>
-          <span class="preview-provider">{{ data.prestataire }}</span>
-        </div>
+    <!-- Suggestions -->
+    <div class="rm-suggestions" *ngIf="rating > 0">
+      <div class="rm-suggestion-chips">
+        <button type="button" class="rm-chip"
+          *ngFor="let s of getCommentSuggestions()"
+          (click)="useSuggestion(s)">{{ s }}</button>
       </div>
+    </div>
+
+    <!-- Commentaire -->
+    <div class="rm-comment">
+      <h4 class="rm-section-title">Votre commentaire</h4>
+      <textarea class="rm-textarea"
+        [(ngModel)]="comment"
+        rows="4"
+        maxlength="500"
+        placeholder="Partagez votre expérience (optionnel)"></textarea>
+      <span class="rm-char-count">{{ comment.length }}/500</span>
     </div>
 
   </div>
 
-  <!-- Actions de la modal -->
-  <div mat-dialog-actions class="modal-actions">
-    <button 
-      mat-button 
-      class="cancel-btn"
-      (click)="cancel()"
-      [disabled]="isSubmitting">
+  <!-- ── Actions ────────────────────────────────────────── -->
+  <div mat-dialog-actions class="rm-actions">
+    <button type="button" class="rm-btn rm-btn--ghost"
+      (click)="cancel()" [disabled]="isSubmitting">
       Annuler
     </button>
-    
-    <button 
-      mat-raised-button 
-      color="primary"
-      class="submit-btn"
-      (click)="submitRating()"
-      [disabled]="!isFormValid()">
-      <mat-icon *ngIf="isSubmitting" class="loading-icon">hourglass_empty</mat-icon>
-      <mat-icon *ngIf="!isSubmitting">{{ isEditMode ? 'edit' : 'send' }}</mat-icon>
+    <button type="button" class="rm-btn rm-btn--primary"
+      (click)="submitRating()" [disabled]="!isFormValid()">
+      <mat-icon class="rm-spin" *ngIf="isSubmitting">hourglass_empty</mat-icon>
+      <mat-icon *ngIf="!isSubmitting">send</mat-icon>
       {{ getSubmitButtonText() }}
     </button>
   </div>

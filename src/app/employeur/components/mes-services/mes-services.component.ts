@@ -7,6 +7,8 @@ import { MatCardActions, MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
 import { SalonService } from '../../services/salon.service';
 import { MatDialog } from '@angular/material/dialog';
 import { ServiceSalonService } from '../../services/service-salon.service';
@@ -15,8 +17,8 @@ import { AddServiceDialogComponent } from '../add-service-dialog/add-service-dia
 
 @Component({
   selector: 'app-mes-services',
-  imports: [CommonModule,MatCardActions,NgFor,NgIf,MatButtonModule,MatCardModule,
-    MatIconModule,MatProgressSpinnerModule],
+  imports: [CommonModule, MatCardActions, NgFor, NgIf, MatButtonModule, MatCardModule,
+    MatIconModule, MatProgressSpinnerModule, MatMenuModule, MatDividerModule],
 
   templateUrl: './mes-services.component.html',
   styleUrl: './mes-services.component.scss'
@@ -27,6 +29,11 @@ export class MesServicesComponent implements OnInit {
   loading = false;
   error: string | null = null;
   salonId: number | null = null;
+  lastUpdated = new Date();
+
+  get hasServices(): boolean { return this.services.length > 0; }
+  get servicesCount(): number { return this.services.length; }
+  get canAddService(): boolean { return !!this.salonId && !this.loading; }
 
   constructor(
     private serviceSalonService: ServiceSalonService,
@@ -40,14 +47,18 @@ export class MesServicesComponent implements OnInit {
 
   loadSalonId(): void {
     this.salonId = this.salonService.getCurrentSalonId();
-  
+
     if (this.salonId) {
       this.loadServices();
     } else {
       this.error = "Aucun salon sélectionné. Veuillez d'abord créer ou sélectionner un salon.";
-      this.services = []; // Vide, mais on affiche quand même
+      this.services = [];
     }
   }
+
+  refreshServices(): void { this.loadSalonId(); }
+  retryLoadServices(): void { this.loadServices(); }
+  debugState(): void { console.log({ salonId: this.salonId, services: this.services, loading: this.loading }); }
   
 
   loadServices(): void {

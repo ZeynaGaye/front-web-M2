@@ -220,7 +220,7 @@ export class ProfilePhotoUploadComponent implements OnInit {
 
   onImageError(event: any): void {
     console.warn(' Erreur chargement image de profil');
-    event.target.src = 'assets/images/freelance-avatar-default.jpg';
+    event.target.src = 'assets/images/placeholders/freelance-africaine.jpg';
     this.hasPhoto = false;
   }
 }

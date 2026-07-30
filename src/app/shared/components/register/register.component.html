@@ -1,208 +1,299 @@
 <!-- register.component.html -->
-<div class="modal-overlay" (click)="closeModal()">
-  <div class="modal-content" [class.success-mode]="registrationSuccess" (click)="$event.stopPropagation()">
-    <span class="close" (click)="closeModal()">&times;</span>
+<div class="reg-wrapper">
+  <div class="reg" [class.reg--success]="registrationSuccess">
 
-    <!-- ══════════ ÉCRAN SUCCÈS ══════════ -->
-    <div *ngIf="registrationSuccess" class="success-screen">
-      <div class="success-icon-wrap">
-        <div class="success-ripple"></div>
-        <div class="success-ripple delay1"></div>
-        <svg class="success-check" viewBox="0 0 52 52">
-          <circle class="check-circle" cx="26" cy="26" r="25" fill="none"/>
-          <path class="check-path" d="M14 27 l8 8 l16-16" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Close -->
+    <button class="reg__close" type="button" (click)="closeModal()" aria-label="Fermer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+
+    <!-- ═══ SUCCESS ═══ -->
+    <div *ngIf="registrationSuccess" class="suc">
+      <div class="suc__ring-wrap">
+        <div class="suc__ring"></div>
+        <div class="suc__ring suc__ring--d"></div>
+        <svg class="suc__check" viewBox="0 0 52 52">
+          <circle class="suc__circle" cx="26" cy="26" r="25" fill="none"/>
+          <path class="suc__path" d="M14 27l8 8 16-16" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
-      <h2 class="success-title">Inscription réussie !</h2>
-      <p class="success-email-label">Un email de confirmation a été envoyé à</p>
-      <div class="success-email-box">
-        <span class="email-icon">✉</span>
+      <h2 class="suc__title">Inscription réussie !</h2>
+      <p class="suc__sub">Un email de confirmation a été envoyé à</p>
+      <div class="suc__email">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/></svg>
         <strong>{{ registeredEmail }}</strong>
       </div>
-      <p class="success-hint">Vérifiez votre boîte mail (et vos spams) puis cliquez sur le lien pour activer votre compte.</p>
-      <button class="btn-primary success-btn" (click)="closeModal()">Compris !</button>
-      <p class="login-link" style="margin-top: 1rem;">
-        Déjà vérifié ? <a (click)="switchToLogin()">Se connecter</a>
-      </p>
+      <p class="suc__hint">Vérifiez votre boîte mail (et vos spams) puis cliquez sur le lien pour activer votre compte.</p>
+      <button class="reg__btn reg__btn--primary suc__cta" type="button" (click)="closeModal()">Compris !</button>
+      <p class="reg__footer-link" style="margin-top:14px">Déjà vérifié ? <a (click)="switchToLogin()">Se connecter</a></p>
     </div>
 
-    <!-- ══════════ FORMULAIRE NORMAL ══════════ -->
+    <!-- Loading overlay -->
+    <div class="reg__loading-overlay" *ngIf="isLoading">
+      <div class="reg__loading-box">
+        <div class="reg__loading-spinner"></div>
+        <p>Création de votre compte...</p>
+      </div>
+    </div>
+
+    <!-- ═══ FORM ═══ -->
     <ng-container *ngIf="!registrationSuccess">
-      <h2>Créez votre compte</h2>
 
-      <!-- Message d'erreur -->
-      <div class="error-message" *ngIf="errorMessage">{{ errorMessage }}</div>
-
-      <div class="step-indicators">
-        <div class="step" [class.active]="currentStep >= 1"></div>
-        <div class="step" [class.active]="currentStep >= 2"></div>
-        <div class="step" [class.active]="currentStep >= 3"></div>
+      <!-- Header -->
+      <div class="reg__head">
+        <div class="reg__brand">B</div>
+        <h1 class="reg__title">Créer un compte</h1>
+        <p class="reg__sub">Rejoignez la communauté BeautyHub</p>
       </div>
 
-    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
-      <!-- Étape 1 - Inchangée -->
-      <div class="step-content" *ngIf="currentStep === 1">
-        <div class="form-row">
-          <div class="input-group">
-            <i class="fas fa-user"></i>
-            <input type="text" formControlName="nom" placeholder="Nom" />
-            <small *ngIf="registerForm.get('nom')?.invalid && registerForm.get('nom')?.touched">
-              Le nom est obligatoire
-            </small>
+      <!-- Progress steps -->
+      <div class="reg__progress">
+        <div class="reg__step" [class.is-done]="currentStep > 1" [class.is-active]="currentStep === 1">
+          <div class="reg__step-dot">
+            <svg *ngIf="currentStep > 1" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 8l3.5 3.5L13 5"/></svg>
+            <span *ngIf="currentStep <= 1">1</span>
           </div>
-
-          <div class="input-group">
-            <i class="fas fa-user"></i>
-            <input type="text" formControlName="prenom" placeholder="Prénom" />
-            <small *ngIf="registerForm.get('prenom')?.invalid && registerForm.get('prenom')?.touched">
-              Le prénom est obligatoire
-            </small>
+          <span class="reg__step-lbl">Identité</span>
+        </div>
+        <div class="reg__conn" [class.is-done]="currentStep > 1"></div>
+        <div class="reg__step" [class.is-done]="currentStep > 2" [class.is-active]="currentStep === 2">
+          <div class="reg__step-dot">
+            <svg *ngIf="currentStep > 2" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 8l3.5 3.5L13 5"/></svg>
+            <span *ngIf="currentStep <= 2">2</span>
           </div>
+          <span class="reg__step-lbl">Profil</span>
         </div>
-
-        <div class="input-group">
-          <i class="fas fa-envelope"></i>
-          <input type="email" formControlName="email" placeholder="Email" />
-          <small *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched">
-            Email invalide
-          </small>
-        </div>
-
-        <button type="button" class="btn-primary" (click)="nextStep()">
-          Continuer
-        </button>
-        
-        <!-- Lien pour basculer vers la connexion -->
-        <div class="login-link">
-          Déjà un compte ? <a (click)="switchToLogin()">Se connecter</a>
+        <div class="reg__conn" [class.is-done]="currentStep > 2"></div>
+        <div class="reg__step" [class.is-active]="currentStep === 3">
+          <div class="reg__step-dot"><span>3</span></div>
+          <span class="reg__step-lbl">Sécurité</span>
         </div>
       </div>
 
-      <!-- Étape 2 - Modifiée pour inclure le type d'utilisateur et le sexe -->
-      <div class="step-content" *ngIf="currentStep === 2">
-        <div class="input-group">
-          <i class="fas fa-phone"></i>
-          <input type="tel" formControlName="telephone" placeholder="Téléphone" />
-          <small *ngIf="registerForm.get('telephone')?.invalid && registerForm.get('telephone')?.touched">
-            Format : 10 chiffres
-          </small>
-        </div>
-         <div class="input-group">
-          <i class="fas fa-home"></i>
-          <input type="text" formControlName="ville" placeholder="ville" />
-        </div>
-        <div class="input-group">
-          <i class="fas fa-home"></i>
-          <input type="text" formControlName="adresse" placeholder="Adresse" />
-        </div>
+      <!-- Error banner -->
+      <div class="reg__err" *ngIf="errorMessage">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        {{ errorMessage }}
+      </div>
 
-        <div class="form-row">
-          <div class="input-group">
-            <i class="fas fa-user-tag"></i>
-            <select formControlName="role">
-              <option value="">Sélectionnez le type de compte</option>
-              <option *ngFor="let role of roles" [value]="role">{{role}}</option>
-            </select>
-            <small *ngIf="registerForm.get('role')?.invalid && registerForm.get('role')?.touched">
-              Le type de compte est obligatoire
-            </small>
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+
+        <!-- ─── STEP 1 : IDENTITÉ ─── -->
+        <div class="reg__body" *ngIf="currentStep === 1">
+          <div class="rf-row">
+            <div class="rf-field">
+              <label class="rf-label" for="nom">Nom</label>
+              <input class="rf-input" id="nom" type="text" formControlName="nom" placeholder="Dupont"
+                     [class.is-err]="registerForm.get('nom')?.invalid && registerForm.get('nom')?.touched"/>
+              <span class="rf-err-msg" *ngIf="registerForm.get('nom')?.invalid && registerForm.get('nom')?.touched">Obligatoire</span>
+            </div>
+            <div class="rf-field">
+              <label class="rf-label" for="prenom">Prénom</label>
+              <input class="rf-input" id="prenom" type="text" formControlName="prenom" placeholder="Marie"
+                     [class.is-err]="registerForm.get('prenom')?.invalid && registerForm.get('prenom')?.touched"/>
+              <span class="rf-err-msg" *ngIf="registerForm.get('prenom')?.invalid && registerForm.get('prenom')?.touched">Obligatoire</span>
+            </div>
           </div>
 
-          <div class="input-group">
-            <i class="fas fa-venus-mars"></i>
-            <select formControlName="sexe">
-              <option value="">Sélectionnez le sexe</option>
-              <option *ngFor="let option of sexeOptions" [value]="option.value">{{option.label}}</option>
-            </select>
-            <small *ngIf="registerForm.get('sexe')?.invalid && registerForm.get('sexe')?.touched">
-              Le sexe est obligatoire
-            </small>
+          <div class="rf-field">
+            <label class="rf-label" for="email">Adresse email</label>
+            <div class="rf-input-wrap">
+              <svg class="rf-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/></svg>
+              <input class="rf-input rf-input--ico" id="email" type="email" formControlName="email" placeholder="marie@exemple.com"
+                     [class.is-err]="registerForm.get('email')?.invalid && registerForm.get('email')?.touched"/>
+            </div>
+            <span class="rf-err-msg" *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched">Email invalide</span>
           </div>
-        </div>
 
-        <!-- Champs spécifiques selon le rôle -->
-        <div *ngIf="registerForm.get('role')?.value === 'EMPLOYEUR'">
-          <div class="input-group">
-            <i class="fas fa-building"></i>
-            <textarea formControlName="description" placeholder="Description de l'entreprise"></textarea>
-            <small *ngIf="registerForm.get('description')?.invalid && registerForm.get('description')?.touched">
-              La description est obligatoire
-            </small>
-          </div>
-        </div>
-
-        <div *ngIf="registerForm.get('role')?.value === 'CLIENT'">
-          <div class="input-group">
-            <i class="fas fa-list-ul"></i>
-            <textarea formControlName="preferences" placeholder="Vos préférences"></textarea>
-            <small *ngIf="registerForm.get('preferences')?.invalid && registerForm.get('preferences')?.touched">
-              Les préférences sont obligatoires
-            </small>
-          </div>
-        </div>
-
-        <div *ngIf="registerForm.get('role')?.value === 'FREELANCE'">
-          <div class="input-group">
-            <i class="fas fa-tools"></i>
-            <textarea formControlName="competences" placeholder="Vos compétences"></textarea>
-            <small *ngIf="registerForm.get('competences')?.invalid && registerForm.get('competences')?.touched">
-              Les compétences sont obligatoires
-            </small>
-          </div>
-          
-          <div class="input-group">
-            <i class="fas fa-briefcase"></i>
-            <textarea formControlName="experiences" placeholder="Vos expériences"></textarea>
-            <small *ngIf="registerForm.get('experiences')?.invalid && registerForm.get('experiences')?.touched">
-              Les expériences sont obligatoires
-            </small>
-          </div>
-          
-          <div class="input-group">
-            <i class="fas fa-folder-open"></i>
-            <input type="text" formControlName="portfolio" placeholder="URL de votre portfolio (optionnel)" />
-          </div>
-        </div>
-
-        <div class="button-group">
-          <button type="button" class="btn-secondary" (click)="previousStep()">
-            Retour
-          </button>
-          <button type="button" class="btn-primary" (click)="nextStep()">
+          <button type="button" class="reg__btn reg__btn--primary" (click)="nextStep()">
             Continuer
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           </button>
-        </div>
-      </div>
-
-      <!-- Étape 3 - Inchangée -->
-      <div class="step-content" *ngIf="currentStep === 3">
-        <div class="input-group">
-          <i class="fas fa-lock"></i>
-          <input type="password" formControlName="motDePasse" placeholder="Mot de passe" />
-          <small *ngIf="registerForm.get('motDePasse')?.invalid && registerForm.get('motDePasse')?.touched">
-            Min 6 caractères, au moins 1 chiffre
-          </small>
+          <p class="reg__footer-link">Déjà un compte ? <a (click)="switchToLogin()">Se connecter</a></p>
         </div>
 
-        <div class="input-group">
-          <i class="fas fa-lock"></i>
-          <input type="password" formControlName="confirmPassword" placeholder="Confirmez le mot de passe" />
-          <small *ngIf="registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched">
-            Les mots de passe ne correspondent pas
-          </small>
+        <!-- ─── STEP 2 : PROFIL ─── -->
+        <div class="reg__body" *ngIf="currentStep === 2">
+
+          <div class="rf-row">
+            <div class="rf-field">
+              <label class="rf-label" for="telephone">Téléphone</label>
+              <div class="rf-input-wrap">
+                <svg class="rf-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.72 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.63 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6.07 6.07l.97-.97a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                <input class="rf-input rf-input--ico" id="telephone" type="tel" formControlName="telephone" placeholder="0612345678"
+                       [class.is-err]="registerForm.get('telephone')?.invalid && registerForm.get('telephone')?.touched"/>
+              </div>
+              <span class="rf-err-msg" *ngIf="registerForm.get('telephone')?.invalid && registerForm.get('telephone')?.touched">Format invalide</span>
+            </div>
+            <div class="rf-field">
+              <label class="rf-label" for="ville">Ville <span class="rf-req">*</span></label>
+              <div class="rf-input-wrap">
+                <svg class="rf-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                <input class="rf-input rf-input--ico" id="ville" type="text" formControlName="ville" placeholder="Paris"
+                       [class.is-err]="registerForm.get('ville')?.invalid && registerForm.get('ville')?.touched"/>
+              </div>
+            </div>
+          </div>
+
+          <div class="rf-field">
+            <label class="rf-label" for="adresse">Adresse <span class="rf-req">*</span></label>
+            <div class="rf-input-wrap">
+              <svg class="rf-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              <input class="rf-input rf-input--ico" id="adresse" type="text" formControlName="adresse" placeholder="12 rue de la Paix"
+                     [class.is-err]="registerForm.get('adresse')?.invalid && registerForm.get('adresse')?.touched"/>
+            </div>
+          </div>
+
+          <!-- Role cards -->
+          <div class="rf-field">
+            <span class="rf-label">Type de compte <span class="rf-req">*</span></span>
+            <div class="rf-roles">
+              <button type="button" class="rf-role" [class.rf-role--active]="registerForm.get('role')?.value === 'CLIENT'" (click)="selectRole('CLIENT')">
+                <div class="rf-role-ico">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </div>
+                <span class="rf-role-name">Client</span>
+                <span class="rf-role-desc">Services beauté</span>
+              </button>
+              <button type="button" class="rf-role" [class.rf-role--active]="registerForm.get('role')?.value === 'FREELANCE'" (click)="selectRole('FREELANCE')">
+                <div class="rf-role-ico">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </div>
+                <span class="rf-role-name">Freelance</span>
+                <span class="rf-role-desc">Prestataire indep.</span>
+              </button>
+              <button type="button" class="rf-role" [class.rf-role--active]="registerForm.get('role')?.value === 'EMPLOYEUR'" (click)="selectRole('EMPLOYEUR')">
+                <div class="rf-role-ico">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                </div>
+                <span class="rf-role-name">Employeur</span>
+                <span class="rf-role-desc">Gérant de salon</span>
+              </button>
+            </div>
+            <span class="rf-err-msg" *ngIf="registerForm.get('role')?.invalid && registerForm.get('role')?.touched">
+              Sélectionnez un type de compte
+            </span>
+          </div>
+
+          <!-- Gender pills -->
+          <div class="rf-field">
+            <span class="rf-label">Vous êtes <span class="rf-req">*</span></span>
+            <div class="rf-sexe">
+              <button type="button" class="rf-sexe-btn" [class.rf-sexe-btn--active]="registerForm.get('sexe')?.value === 'MASCULIN'" (click)="selectSexe('MASCULIN')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10" cy="14" r="5"/><line x1="14.35" y1="9.65" x2="20" y2="4"/><polyline points="16 4 20 4 20 8"/></svg>
+                Homme
+              </button>
+              <button type="button" class="rf-sexe-btn" [class.rf-sexe-btn--active]="registerForm.get('sexe')?.value === 'FEMININ'" (click)="selectSexe('FEMININ')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="5"/><line x1="12" y1="13" x2="12" y2="21"/><line x1="8" y1="18" x2="16" y2="18"/></svg>
+                Femme
+              </button>
+            </div>
+            <span class="rf-err-msg" *ngIf="registerForm.get('sexe')?.invalid && registerForm.get('sexe')?.touched">Obligatoire</span>
+          </div>
+
+          <!-- Conditional: EMPLOYEUR -->
+          <div *ngIf="registerForm.get('role')?.value === 'EMPLOYEUR'" class="rf-field">
+            <label class="rf-label" for="description">Description de l'entreprise <span class="rf-req">*</span></label>
+            <textarea class="rf-input rf-textarea" id="description" formControlName="description"
+                      placeholder="Décrivez votre salon ou entreprise..."
+                      [class.is-err]="registerForm.get('description')?.invalid && registerForm.get('description')?.touched"></textarea>
+            <span class="rf-err-msg" *ngIf="registerForm.get('description')?.invalid && registerForm.get('description')?.touched">Obligatoire</span>
+          </div>
+
+          <!-- Conditional: CLIENT -->
+          <div *ngIf="registerForm.get('role')?.value === 'CLIENT'" class="rf-field">
+            <label class="rf-label" for="preferences">Vos préférences <span class="rf-req">*</span></label>
+            <textarea class="rf-input rf-textarea" id="preferences" formControlName="preferences"
+                      placeholder="Ex: coiffure, maquillage, soins..."
+                      [class.is-err]="registerForm.get('preferences')?.invalid && registerForm.get('preferences')?.touched"></textarea>
+            <span class="rf-err-msg" *ngIf="registerForm.get('preferences')?.invalid && registerForm.get('preferences')?.touched">Obligatoire</span>
+          </div>
+
+          <!-- Conditional: FREELANCE -->
+          <ng-container *ngIf="registerForm.get('role')?.value === 'FREELANCE'">
+            <div class="rf-field">
+              <label class="rf-label" for="competences">Compétences <span class="rf-req">*</span></label>
+              <textarea class="rf-input rf-textarea" id="competences" formControlName="competences"
+                        placeholder="Ex: coiffure, coloration, maquillage..."
+                        [class.is-err]="registerForm.get('competences')?.invalid && registerForm.get('competences')?.touched"></textarea>
+              <span class="rf-err-msg" *ngIf="registerForm.get('competences')?.invalid && registerForm.get('competences')?.touched">Obligatoire</span>
+            </div>
+            <div class="rf-field">
+              <label class="rf-label" for="experiences">Expériences <span class="rf-req">*</span></label>
+              <textarea class="rf-input rf-textarea" id="experiences" formControlName="experiences"
+                        placeholder="Décrivez votre parcours professionnel..."
+                        [class.is-err]="registerForm.get('experiences')?.invalid && registerForm.get('experiences')?.touched"></textarea>
+              <span class="rf-err-msg" *ngIf="registerForm.get('experiences')?.invalid && registerForm.get('experiences')?.touched">Obligatoire</span>
+            </div>
+          </ng-container>
+
+          <div class="rf-btns">
+            <button type="button" class="reg__btn reg__btn--ghost" (click)="previousStep()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+              Retour
+            </button>
+            <button type="button" class="reg__btn reg__btn--primary" (click)="nextStep()">
+              Continuer
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </button>
+          </div>
         </div>
 
-        <div class="button-group">
-          <button type="button" class="btn-secondary" (click)="previousStep()">
-            Retour
-          </button>
-          <button type="submit" class="btn-primary" [disabled]="registerForm.invalid || isLoading">
-            <span *ngIf="!isLoading">S'inscrire</span>
-            <span *ngIf="isLoading" class="btn-spinner">⟳ Inscription...</span>
-          </button>
+        <!-- ─── STEP 3 : SÉCURITÉ ─── -->
+        <div class="reg__body" *ngIf="currentStep === 3">
+
+          <div class="rf-field">
+            <label class="rf-label" for="motDePasse">Mot de passe</label>
+            <div class="rf-input-wrap">
+              <svg class="rf-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <input class="rf-input rf-input--ico rf-input--pr" id="motDePasse"
+                     [type]="showPassword ? 'text' : 'password'"
+                     formControlName="motDePasse"
+                     placeholder="Min. 6 car. dont 1 chiffre"
+                     [class.is-err]="registerForm.get('motDePasse')?.invalid && registerForm.get('motDePasse')?.touched"/>
+              <button type="button" class="rf-eye" (click)="showPassword = !showPassword" aria-label="Afficher le mot de passe" tabindex="-1">
+                <svg *ngIf="!showPassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg *ngIf="showPassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
+            </div>
+            <span class="rf-err-msg" *ngIf="registerForm.get('motDePasse')?.invalid && registerForm.get('motDePasse')?.touched">
+              Min. 6 caractères, au moins 1 chiffre
+            </span>
+          </div>
+
+          <div class="rf-field">
+            <label class="rf-label" for="confirmPassword">Confirmer le mot de passe</label>
+            <div class="rf-input-wrap">
+              <svg class="rf-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 12l2 2 4-4"/><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <input class="rf-input rf-input--ico rf-input--pr" id="confirmPassword"
+                     [type]="showConfirmPassword ? 'text' : 'password'"
+                     formControlName="confirmPassword"
+                     placeholder="Répétez votre mot de passe"
+                     [class.is-err]="registerForm.get('confirmPassword')?.touched && (registerForm.get('confirmPassword')?.invalid || registerForm.hasError('notMatching'))"/>
+              <button type="button" class="rf-eye" (click)="showConfirmPassword = !showConfirmPassword" aria-label="Afficher la confirmation" tabindex="-1">
+                <svg *ngIf="!showConfirmPassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg *ngIf="showConfirmPassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
+            </div>
+            <span class="rf-err-msg" *ngIf="registerForm.get('confirmPassword')?.touched && (registerForm.hasError('notMatching') || registerForm.get('confirmPassword')?.invalid)">
+              Les mots de passe ne correspondent pas
+            </span>
+          </div>
+
+          <div class="rf-btns">
+            <button type="button" class="reg__btn reg__btn--ghost" (click)="previousStep()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+              Retour
+            </button>
+            <button type="submit" class="reg__btn reg__btn--primary" [disabled]="registerForm.invalid || isLoading">
+              <span class="reg__spinner" *ngIf="isLoading"></span>
+              <span>{{ isLoading ? 'Inscription...' : "S'inscrire" }}</span>
+            </button>
+          </div>
         </div>
-      </div>
-    </form>
+
+      </form>
     </ng-container>
   </div>
 </div>
+

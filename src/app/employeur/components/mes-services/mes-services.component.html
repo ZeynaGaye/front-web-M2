@@ -6,7 +6,7 @@
       <span class="services-count" *ngIf="hasServices">({{ servicesCount }} service{{ servicesCount > 1 ? 's' : '' }})</span>
     </div>
     <div class="header-actions">
-      <!-- ✅ Bouton refresh -->
+      <!--  Bouton refresh -->
       <button mat-icon-button 
               (click)="refreshServices()" 
               [disabled]="loading || !salonId"
@@ -14,7 +14,7 @@
         <mat-icon>refresh</mat-icon>
       </button>
       
-      <!-- ✅ Bouton debug (caché en production) -->
+      <!--  Bouton debug (caché en production) -->
       <button mat-icon-button 
               (click)="debugState()" 
               style="display: none;"
@@ -29,7 +29,7 @@
     </div>
   </div>
 
-  <!-- ✅ CHARGEMENT -->
+  <!-- CHARGEMENT -->
   <div *ngIf="loading" class="loading-state">
     <mat-spinner diameter="40"></mat-spinner>
     <p>Chargement des services...</p>
@@ -182,7 +182,7 @@
   <div class="services-footer" *ngIf="!loading && !error && hasServices">
     <div class="footer-info">
       <small>
-        Dernière mise à jour : {{ Date.now() | date:'dd/MM/yyyy HH:mm' }}
+        Dernière mise à jour : {{ lastUpdated | date:'dd/MM/yyyy HH:mm' }}
       </small>
     </div>
   </div>

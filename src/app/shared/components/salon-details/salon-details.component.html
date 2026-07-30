@@ -1,4 +1,4 @@
-<div class="salon-detail-dialog">
+1q2w 9<div class="salon-detail-dialog">vh
   <!-- En-tête du dialogue -->
   <div class="dialog-header">
     <button mat-icon-button class="close-button" (click)="closeDialog()">
@@ -10,17 +10,14 @@
   <div class="dialog-content" *ngIf="salon; else loading" >
     <!-- Partie supérieure avec image et infos principales -->
     <div class="salon-hero" @fadeIn>
-      <div class="salon-cover" [style.background-image]="'url(' + (salon.photoProfil || 'assets/images/salon-default.jpg') + ')'">
+      <div class="salon-cover" [style.background-image]="'url(' + (salon.photoProfil || 'assets/images/placeholders/salon-coiffure-1.jpg') + ')'">
+        <div class="rating-badge" *ngIf="(salon.note || 0) > 0">
+          <i class="fas fa-star"></i>
+          <span class="badge-value">{{ salon.note }}</span>
+          <span class="review-count">({{ salon.nombreAvis || 0 }} avis)</span>
+        </div>
         <div class="salon-overlay">
           <h2 class="salon-name">{{ salon.nom }}</h2>
-          <div class="salon-rating">
-            <span class="stars">
-              <i class="fas fa-star" *ngFor="let star of getStarArray(salon.note || 0)"></i>
-              <i class="fas fa-star-half-alt" *ngIf="hasHalfStar(salon.note || 0)"></i>
-            </span>
-            <span class="rating-value">{{ salon.note || 0 }}</span>
-            <span class="review-count">({{ salon.nombreAvis || 0 }} avis)</span>
-          </div>
           <p class="salon-address">
             <mat-icon>location_on</mat-icon> {{ salon.adresse }}
           </p>

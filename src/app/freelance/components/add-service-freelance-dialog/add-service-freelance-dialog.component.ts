@@ -1,6 +1,6 @@
-import { Component, Inject, OnInit, OnDestroy, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Inject, OnInit, OnDestroy, Input, Output, EventEmitter, Optional } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -20,7 +20,7 @@ import { ServiceFreelanceRequestDto } from '../../ServiceFreelance/service-freel
   selector: 'app-add-service-freelance-dialog',
   standalone: true,
   imports: [
-    CommonModule, ReactiveFormsModule,
+    CommonModule, ReactiveFormsModule, FormsModule,
     MatFormFieldModule, MatInputModule, MatSelectModule, MatCheckboxModule,
     MatButtonModule, MatIconModule,
     MatProgressSpinnerModule,
@@ -71,22 +71,38 @@ export class AddServiceFreelanceDialogComponent implements OnInit, OnDestroy {
   servicesSimilaires: ServicePredefiniDto[] = [];
   serviceExistantDetecte: ServicePredefiniDto | null = null;
 
+  //  PROPOSITION NOUVEAU SERVICE
+  modeProposition = false;
+  propositionNom = '';
+  propositionCategorie = '';
+  propositionEnCours = false;
+  propositionErreur = '';
+  suggestionsPropositon: ServicePredefiniDto[] = [];
+
+  //  RECHERCHE DANS LA GRILLE
+  rechercheGrille = '';
+
   //  SOUMISSION
   enCoursCreation = false;
 
   // Options d'intervention
   typesIntervention = [
-    { value: 'DOMICILE', label: 'À domicile uniquement' },
-    { value: 'SALON', label: 'En salon uniquement' },
-    { value: 'MIXTE', label: 'Domicile et salon' }
+    { value: 'DOMICILE', label: 'À domicile', icon: 'home' },
+    { value: 'SALON',    label: 'En studio',  icon: 'business' },
+    { value: 'MIXTE',    label: 'Les deux',   icon: 'swap_horiz' }
   ];
+
+  // Catégories
+  categories: string[] = ['Coiffure', 'Maquillage', 'Manucure', 'Barbier', 'Soins'];
+  filterCategorie = '';    // filtre visuel de la liste prédéfinie
+  selectedCategorie = '';  // catégorie du service personnalisé
 
   private destroy$ = new Subject<void>();
 
   constructor(
     private fb: FormBuilder,
-    public dialogRef: MatDialogRef<AddServiceFreelanceDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: {
+    @Optional() public dialogRef: MatDialogRef<AddServiceFreelanceDialogComponent>,
+    @Optional() @Inject(MAT_DIALOG_DATA) public data: {
       service?: ServiceFreelance,
       freelanceId: number
     },
@@ -135,6 +151,7 @@ export class AddServiceFreelanceDialogComponent implements OnInit, OnDestroy {
       nomPersonnalise: [''],
       estFormulaireDemande: [false],
       rechercheQuery: [''],
+      categorie: [''],
 
       //  DÉTAILS SERVICE (spécifiques freelance)
       description: [''],
@@ -190,6 +207,8 @@ export class AddServiceFreelanceDialogComponent implements OnInit, OnDestroy {
           this.servicesPredefinis = services;
           this.servicesPredefinisFiltres = services;
           this.servicesGroupes = this.servicePredefiniService.grouperParCategorie(services);
+          const cats = [...new Set(services.map(s => s.categorie).filter(Boolean))];
+          if (cats.length > 0) this.categories = cats;
           this.chargementServices = false;
           this.erreurChargement = false;
         },
@@ -197,7 +216,6 @@ export class AddServiceFreelanceDialogComponent implements OnInit, OnDestroy {
           console.error(' Erreur chargement services:', error);
           this.chargementServices = false;
           this.erreurChargement = true;
-          this.basculerVersSaisieLibre();
         }
       });
   }
@@ -356,6 +374,57 @@ export class AddServiceFreelanceDialogComponent implements OnInit, OnDestroy {
    */
   basculerAffichageServices(): void {
     this.afficherTousServices = !this.afficherTousServices;
+  }
+
+  // Filtre de catégorie dans la liste prédéfinie
+  setFilterCategorie(cat: string): void {
+    this.filterCategorie = this.filterCategorie === cat ? '' : cat;
+  }
+
+  // Catégorie pour le service personnalisé
+  selectCategorie(cat: string): void {
+    this.selectedCategorie = this.selectedCategorie === cat ? '' : cat;
+    this.serviceForm.patchValue({ categorie: this.selectedCategorie });
+  }
+
+  // Services filtrés pour la grille (catégorie + recherche textuelle)
+  get filteredServices(): ServicePredefiniDto[] {
+    let list = this.servicesPredefinis;
+    if (this.filterCategorie) {
+      list = list.filter(s => s.categorie === this.filterCategorie);
+    }
+    const q = this.rechercheGrille.trim().toLowerCase();
+    if (q.length >= 1) {
+      list = list.filter(s =>
+        s.nom.toLowerCase().includes(q) ||
+        s.categorie.toLowerCase().includes(q) ||
+        (s.motsCles || '').toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }
+
+  // Sélection directe d'un service prédéfini depuis la grille
+  selectPredefinedService(service: ServicePredefiniDto): void {
+    this.serviceSelectionne = service;
+    this.serviceForm.patchValue({
+      servicePredefini: service,
+      estFormulaireDemande: false,
+      nomPersonnalise: ''
+    });
+  }
+
+  setTypeIntervention(type: string): void {
+    this.serviceForm.patchValue({ typeIntervention: type });
+    if (type === 'SALON') {
+      this.serviceForm.patchValue({ deplacementInclus: true });
+    }
+  }
+
+  toggleInclusion(field: string): void {
+    const current = this.serviceForm.get(field)?.value;
+    this.serviceForm.patchValue({ [field]: !current });
+    if (field === 'deplacementInclus') this.gererDeplacementInclus();
   }
 
   /**
@@ -548,25 +617,7 @@ export class AddServiceFreelanceDialogComponent implements OnInit, OnDestroy {
       disponibleSoir: formValue.disponibleSoir
     };
 
-    if (formValue.estFormulaireDemande && formValue.nomPersonnalise) {
-      //  NOUVEAU SERVICE LIBRE - Utiliser l'endpoint intelligent pour détecter les doublons
-      requestData.nomService = formValue.nomPersonnalise.trim();
-
-
-      this.creationService.creerServiceFreelanceIntelligent(this.freelanceId!, requestData)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (response: ServiceCreationResponse) => {
-            this.enCoursCreation = false;
-            this.gererReponseCreationIntelligente(response, requestData);
-          },
-          error: (error) => {
-            console.error(' Erreur création service intelligent:', error);
-            this.enCoursCreation = false;
-          }
-        });
-
-    } else if (this.serviceSelectionne) {
+    if (this.serviceSelectionne) {
       //  SERVICE PRÉDÉFINI CHOISI
       requestData.servicePredefiniId = this.serviceSelectionne.id;
 
@@ -638,6 +689,77 @@ export class AddServiceFreelanceDialogComponent implements OnInit, OnDestroy {
         this.serviceCreated.emit(serviceData);
       }
     }
+  }
+
+  // ==========================================
+  //  PROPOSITION D'UN NOUVEAU SERVICE
+  // ==========================================
+
+  onPropositionNomChange(): void {
+    const q = this.propositionNom.trim().toLowerCase();
+    if (q.length < 1) {
+      this.suggestionsPropositon = [];
+      return;
+    }
+    this.suggestionsPropositon = this.servicesPredefinis
+      .filter(s =>
+        s.nom.toLowerCase().includes(q) ||
+        (s.motsCles || '').toLowerCase().includes(q)
+      )
+      .slice(0, 5);
+  }
+
+  selectionnerSuggestionProposition(s: ServicePredefiniDto): void {
+    this.selectPredefinedService(s);
+    this.modeProposition = false;
+    this.suggestionsPropositon = [];
+  }
+
+  ouvrirProposition(): void {
+    this.modeProposition = true;
+    this.propositionNom = '';
+    this.propositionCategorie = '';
+    this.propositionErreur = '';
+  }
+
+  fermerProposition(): void {
+    this.modeProposition = false;
+    this.propositionNom = '';
+    this.propositionCategorie = '';
+    this.propositionErreur = '';
+    this.suggestionsPropositon = [];
+  }
+
+  soumettrePropositon(): void {
+    const nom = this.propositionNom.trim();
+    if (nom.length < 3) {
+      this.propositionErreur = 'Le nom doit contenir au moins 3 caractères.';
+      return;
+    }
+    if (!this.propositionCategorie) {
+      this.propositionErreur = 'Veuillez choisir une catégorie.';
+      return;
+    }
+
+    this.propositionEnCours = true;
+    this.propositionErreur = '';
+
+    this.servicePredefiniService.proposerNouveauService(nom, this.propositionCategorie)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          this.propositionEnCours = false;
+          if (res.estNouveau && !this.servicesPredefinis.find(s => s.id === res.service.id)) {
+            this.servicesPredefinis = [...this.servicesPredefinis, res.service];
+          }
+          this.selectPredefinedService(res.service);
+          this.modeProposition = false;
+        },
+        error: (err) => {
+          this.propositionEnCours = false;
+          this.propositionErreur = err?.error?.error || 'Une erreur est survenue, veuillez réessayer.';
+        }
+      });
   }
 
   /**

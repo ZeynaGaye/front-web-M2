@@ -220,6 +220,17 @@ export class PortfolioService {
   }
 
   /**
+   * Enregistre une vue sur un élément (appelé par l'IntersectionObserver)
+   */
+  recordView(itemId: number): Observable<void> {
+    return this.http
+      .post<void>(`${this.apiUrl}/${itemId}/view`, {})
+      .pipe(catchError(() => {
+        return new Observable<void>(obs => obs.complete());
+      }));
+  }
+
+  /**
    * Ajoute un "j'aime" à un élément du portfolio
    */
   likeItem(itemId: number): Observable<PortfolioItem> {

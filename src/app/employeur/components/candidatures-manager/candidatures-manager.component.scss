@@ -1,0 +1,639 @@
+/* =============================================
+   CANDIDATURES MANAGER
+============================================= */
+
+$coral:    #D4735A;
+$coral-bg: #FEE4DC;
+$slate:    #8B9EA8;
+$slate-dk: #5C7380;
+$dark:     #111111;
+$bg:       #F0EFED;
+$white:    #FFFFFF;
+$text:     #111111;
+$muted:    #6B7280;
+$border:   #EBEBEB;
+$green:    #16A34A;
+$green-bg: #DCFCE7;
+$amber:    #92400E;
+$amber-bg: #FEF3C7;
+$red:      #DC2626;
+$red-bg:   #FEE2E2;
+$blue:     #2563EB;
+
+// ── PAGE LISTE ────────────────────────────
+.cm-page {
+  padding: 36px 40px;
+  background: $bg;
+  min-height: 100%;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  box-sizing: border-box;
+}
+
+.cm-header { margin-bottom: 24px; }
+
+.cm-title {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: $dark;
+  margin: 0 0 4px;
+  letter-spacing: -0.4px;
+}
+
+.cm-sub { margin: 0; font-size: 0.9rem; color: $coral; }
+
+// Filtres
+.cm-filters-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.cm-tabs {
+  display: flex;
+  gap: 2px;
+  background: $white;
+  border-radius: 12px;
+  padding: 4px;
+  border: 1px solid $border;
+  box-shadow: 0 1px 3px rgba(0,0,0,.04);
+}
+
+.cm-tab {
+  border: none;
+  background: transparent;
+  border-radius: 9px;
+  padding: 7px 14px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: $muted;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+
+  .tc {
+    background: $border;
+    color: $muted;
+    border-radius: 999px;
+    padding: 1px 7px;
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
+
+  &.active {
+    background: $dark;
+    color: $white;
+    font-weight: 600;
+    .tc { background: rgba(255,255,255,.22); color: $white; }
+  }
+
+  &:hover:not(.active) { background: $bg; color: $text; }
+}
+
+.cm-offre-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: $white;
+  border: 1px solid $border;
+  border-radius: 10px;
+  padding: 7px 12px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: $text;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,.04);
+
+  mat-icon { font-size: 16px; width: 16px; height: 16px; color: $muted; }
+}
+
+// Loading / Empty
+.cm-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 60px 0;
+  color: $muted;
+  font-size: 0.9rem;
+}
+
+.cm-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 64px 0;
+  text-align: center;
+
+  mat-icon { font-size: 50px; width: 50px; height: 50px; color: darken($border, 8%); }
+  h3 { margin: 0; font-size: 1.05rem; color: $text; }
+  p  { margin: 0; font-size: 0.875rem; color: $muted; }
+}
+
+.cm-link-btn {
+  background: none; border: none; color: $coral; font-weight: 600;
+  font-size: inherit; cursor: pointer; text-decoration: underline; padding: 0;
+}
+
+// Cartes liste
+.cm-list { display: flex; flex-direction: column; gap: 8px; }
+
+.cm-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: $white;
+  border-radius: 14px;
+  padding: 15px 20px;
+  border: 1px solid $border;
+  box-shadow: 0 1px 3px rgba(0,0,0,.04);
+  transition: box-shadow 0.15s;
+
+  &:hover { box-shadow: 0 4px 12px rgba(0,0,0,.07); }
+  &.cm-card--faded { opacity: 0.55; pointer-events: none; }
+  &.cm-card--entretien { background: #FAFAF9; }
+}
+
+.cm-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $white;
+  font-weight: 700;
+  font-size: 0.88rem;
+  flex-shrink: 0;
+}
+
+.cm-body { flex: 1; min-width: 0; }
+
+.cm-name-row { display: flex; align-items: center; gap: 7px; margin-bottom: 3px; }
+.cm-name { font-size: 0.93rem; font-weight: 700; color: $text; }
+.cm-rating { display: flex; align-items: center; gap: 2px; font-size: 0.82rem; color: $muted; }
+.cm-star { font-size: 13px !important; width: 13px !important; height: 13px !important; color: #F59E0B !important; }
+
+.cm-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  font-size: 0.79rem;
+  color: $muted;
+  strong { color: darken($muted, 16%); font-weight: 600; }
+}
+
+.cm-sep { color: darken($border, 6%); }
+
+.cm-chip {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  mat-icon { font-size: 12px; width: 12px; height: 12px; }
+  &.cm-chip--blue { color: $blue; mat-icon { color: $blue; } }
+}
+
+.cm-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+// Badges
+.cm-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  border-radius: 5px;
+  padding: 3px 8px;
+  white-space: nowrap;
+
+  &.badge-nouveau   { background: $coral-bg; color: $coral; }
+  &.badge-entretien { background: #E5E7EB;  color: #6B7280; }
+  &.badge-acceptee  { background: $green-bg; color: $green; }
+  &.badge-refusee   { background: $red-bg;   color: $red;   }
+}
+
+// Boutons liste
+.cm-btn-profil {
+  border: 1.5px solid #D1D5DB;
+  background: $white;
+  border-radius: 999px;
+  padding: 6px 16px;
+  font-size: 0.79rem;
+  font-weight: 600;
+  color: $text;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s;
+  &:hover { border-color: $muted; }
+}
+
+.cm-btn-entretien {
+  background: $dark;
+  color: $white;
+  border: none;
+  border-radius: 999px;
+  padding: 7px 16px;
+  font-size: 0.79rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+  mat-icon { font-size: 14px; width: 14px; height: 14px; }
+  &:hover { opacity: 0.82; }
+}
+
+.cm-btn-recruter {
+  background: $green;
+  color: $white;
+  border: none;
+  border-radius: 999px;
+  padding: 7px 16px;
+  font-size: 0.79rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+  mat-icon { font-size: 14px; width: 14px; height: 14px; }
+  &:hover { opacity: 0.85; }
+}
+
+.cm-btn-x {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  color: #E57373;
+  transition: color 0.15s;
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+  &:hover { color: $red; }
+}
+
+
+// ════════════════════════════════════════════
+// PAGE PROFIL CANDIDAT
+// ════════════════════════════════════════════
+.cp-page {
+  padding: 20px 40px 40px;
+  background: $bg;
+  min-height: 100%;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  box-sizing: border-box;
+}
+
+// Lien retour
+.cp-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: $muted;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-bottom: 20px;
+  padding: 0;
+  transition: color 0.15s;
+
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+  &:hover { color: $text; }
+}
+
+// Hero
+.cp-hero {
+  background: $slate;
+  border-radius: 16px;
+  padding: 28px 32px;
+  margin-bottom: 20px;
+  color: $white;
+}
+
+.cp-hero__tag {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  background: rgba(255,255,255,.18);
+  border-radius: 6px;
+  padding: 4px 10px;
+  display: inline-block;
+  margin-bottom: 20px;
+  color: rgba(255,255,255,.9);
+}
+
+.cp-hero__main {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+// Wrapper photo / initiales — carré arrondi comme les cartes salon
+.cp-hero__avatar-wrap {
+  flex-shrink: 0;
+  width: 180px;
+  height: 180px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 3px solid rgba(255,255,255,.40);
+  box-shadow: 0 6px 18px rgba(0,0,0,.22);
+  position: relative;
+  background: transparent;
+}
+
+// Initiales (fallback) — remplit le carré
+.cp-hero__avatar {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 3rem;
+  color: $white;
+}
+
+// Photo réelle — couvre tout le carré
+.cp-hero__avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+
+  &:hover { transform: scale(1.04); }
+}
+
+.cp-hero__info { flex: 1; }
+
+.cp-hero__name {
+  font-size: 1.75rem;
+  font-weight: 800;
+  margin: 0 0 4px;
+  color: $white;
+  line-height: 1.2;
+}
+
+.cp-hero__sub {
+  font-size: 0.9rem;
+  margin: 0 0 16px;
+  color: rgba(255,255,255,.75);
+}
+
+.cp-hero__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cp-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255,255,255,.15);
+  border: 1px solid rgba(255,255,255,.25);
+  border-radius: 999px;
+  padding: 5px 13px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: $white;
+
+  &--green {
+    background: rgba(34, 197, 94, .2);
+    border-color: rgba(34, 197, 94, .4);
+    color: #86EFAC;
+  }
+
+  .hero-star {
+    font-size: 14px !important;
+    width: 14px !important;
+    height: 14px !important;
+    color: #F59E0B !important;
+  }
+
+  .hero-badge-sub { opacity: 0.8; margin-left: 1px; }
+
+  mat-icon { font-size: 14px; width: 14px; height: 14px; }
+}
+
+// Corps 2 colonnes
+.cp-body {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 16px;
+  align-items: start;
+}
+
+// Cartes
+.cp-card {
+  background: $white;
+  border-radius: 14px;
+  padding: 20px 22px;
+  border: 1px solid $border;
+  box-shadow: 0 1px 3px rgba(0,0,0,.04);
+  margin-bottom: 14px;
+
+  &:last-child { margin-bottom: 0; }
+  &.cp-card--portfolio { padding: 20px 22px; }
+  &.cp-card--stats { padding: 18px 22px; }
+}
+
+.cp-section-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: $text;
+  margin: 0 0 12px;
+}
+
+.cp-text {
+  font-size: 0.875rem;
+  color: $muted;
+  line-height: 1.65;
+  margin: 0;
+}
+
+// Offre
+.cp-card--offre { padding: 16px 18px; }
+
+.cp-offre-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.cp-offre-icon {
+  color: $coral;
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.cp-offre-titre {
+  font-size: 0.9rem;
+  margin: 0 0 3px;
+  color: $coral;
+  font-weight: 500;
+}
+
+.cp-offre-meta {
+  font-size: 0.8rem;
+  color: $muted;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+
+  span { display: flex; align-items: center; gap: 3px; }
+  mat-icon { font-size: 13px; width: 13px; height: 13px; }
+}
+
+// Stats
+.cp-stats-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: $muted;
+  margin: 0 0 12px;
+}
+
+.cp-stats-row {
+  display: flex;
+  gap: 24px;
+}
+
+.cp-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cp-stat-num {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: $text;
+  line-height: 1;
+}
+
+.cp-stat-lbl {
+  font-size: 0.75rem;
+  color: $muted;
+}
+
+// Coordonnées
+.cp-coords {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.85rem;
+    color: $muted;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    line-height: 1.4;
+  }
+}
+
+
+// Actions sidebar
+.cp-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cp-btn-dark {
+  background: $dark;
+  color: $white;
+  border: none;
+  border-radius: 10px;
+  padding: 13px 16px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  transition: opacity 0.15s;
+
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+  &:hover { opacity: 0.82; }
+}
+
+.cp-btn-outline {
+  background: $white;
+  color: $text;
+  border: 1.5px solid $border;
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  transition: border-color 0.15s;
+
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+  &:hover { border-color: $muted; }
+}
+
+.cp-btn-refuse {
+  background: $white;
+  color: $red;
+  border: 1.5px solid lighten($red, 25%);
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  transition: background 0.15s;
+
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+  &:hover { background: $red-bg; }
+}
+
+// Garantit que [hidden] écrase display:flex / display:block des cartes et li
+[hidden] { display: none !important; }
+
+// Responsive
+@media (max-width: 768px) {
+  .cm-page, .cp-page { padding: 20px 16px; }
+  .cp-body { grid-template-columns: 1fr; }
+  .cm-card { flex-wrap: wrap; }
+  .cm-right { width: 100%; justify-content: flex-end; }
+  .cp-hero__main { gap: 14px; flex-wrap: wrap; }
+  .cp-hero__avatar-wrap { width: 100%; height: 200px; border-radius: 10px; }
+  .cp-hero__name { font-size: 1.35rem; }
+}

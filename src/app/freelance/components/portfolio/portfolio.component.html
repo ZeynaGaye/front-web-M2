@@ -1,46 +1,48 @@
-<!-- Portfolio container existant -->
+<!-- Portfolio container -->
 <div class="portfolio-container">
-  <!-- En-tête avec statistiques - Visible uniquement si non clientMode -->
-  <div class="portfolio-header" *ngIf="!clientMode">
-    <h1>Mon Portfolio</h1>
-    <p class="subtitle">Découvrez mes créations et réalisations dans le domaine de la beauté</p>
-    
-    <!-- Statistiques - Visible seulement pour le propriétaire -->
-    <div class="stats-container">
-      <div class="stat-item">
-        <div class="stat-value">{{stats.totalItems || 0}}</div>
-        <div class="stat-label">Créations</div>
+
+  <!-- ── HEADER PROPRIÉTAIRE ── -->
+  <div class="pf-header" *ngIf="!clientMode">
+    <div class="pf-header__left">
+      <span class="pf-header__badge">Espace Freelance</span>
+      <h1 class="pf-header__title">Mon Portfolio</h1>
+      <p class="pf-header__sub">Vos créations sont votre meilleure carte de visite.</p>
+    </div>
+    <div class="pf-header__stats">
+      <div class="pf-stat-pill">
+        <span class="pf-stat-pill__num">{{stats.totalItems || 0}}</span>
+        <span class="pf-stat-pill__lbl">Créations</span>
       </div>
-      <div class="stat-item">
-        <div class="stat-value">{{stats.totalViews || 0}}</div>
-        <div class="stat-label">Vues</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-value">{{stats.totalLikes || 0}}</div>
-        <div class="stat-label">J'aime</div>
+      <!-- <div class="pf-stat-pill">
+        <span class="pf-stat-pill__num">{{stats.totalViews || 0}}</span>
+        <span class="pf-stat-pill__lbl">Vues</span>
+      </div> -->
+      <div class="pf-stat-pill pf-stat-pill--love">
+        <span class="pf-stat-pill__num">
+          <mat-icon class="pf-stat-pill__heart">favorite</mat-icon>
+          {{stats.totalLikes || 0}}
+        </span>
+        <span class="pf-stat-pill__lbl">J'aime</span>
       </div>
     </div>
   </div>
-  
-  <!-- En-tête alternative pour le mode client avec informations complètes du freelance -->
-  <div class="portfolio-header client-header" *ngIf="clientMode">
+
+  <!-- ── HEADER CLIENT ── -->
+  <div class="pf-header pf-header--client" *ngIf="clientMode && !hideHeader">
     <div class="freelance-info">
-      <!-- ✅ AMÉLIORÉ : Titre avec fallback intelligent -->
       <h1>
         <ng-container *ngIf="getOwnerDisplayName(); else loadingTitle">
           Portfolio de {{getOwnerDisplayName()}}
         </ng-container>
         <ng-template #loadingTitle>
           <span class="loading-title">
-            Portfolio 
+            Portfolio
             <mat-spinner diameter="20" class="inline-spinner"></mat-spinner>
           </span>
         </ng-template>
       </h1>
-      
-      <!-- ✅ AMÉLIORÉ : Affichage conditionnel des détails -->
+
       <div class="freelance-details" *ngIf="getOwnerInfo(); else loadingDetails">
-        <!-- Profession et notation -->
         <div class="profession-rating">
           <span class="profession" *ngIf="getOwnerInfo()?.profession">{{getOwnerInfo()?.profession}}</span>
           <div class="rating" *ngIf="getOwnerInfo()?.rating">
@@ -53,8 +55,7 @@
             <span class="reviews-count" *ngIf="getOwnerInfo()?.reviews">({{getOwnerInfo()?.reviews}} avis)</span>
           </div>
         </div>
-        
-        <!-- Informations de contact -->
+
         <div class="contact-details">
           <div class="contact-item" *ngIf="getOwnerInfo()?.telephone">
             <i class="material-icons">phone</i>
@@ -73,8 +74,7 @@
             </span>
           </div>
         </div>
-        
-        <!-- ✅ Bouton de contact qui ouvre la modal -->
+
         <div class="contact-actions">
           <button mat-raised-button color="primary" (click)="contactFreelance(getOwnerInfo()!, $event)">
             <mat-icon>chat_bubble_outline</mat-icon> Contacter
@@ -82,7 +82,6 @@
         </div>
       </div>
 
-      <!-- ✅ NOUVEAU : Template de chargement pour les détails -->
       <ng-template #loadingDetails>
         <div class="freelance-details loading-details">
           <div class="profession-rating">
@@ -102,44 +101,45 @@
     </div>
   </div>
 
-  <!-- Filtres -->
-  <div class="filters">
-    <button
-            *ngFor="let filter of filters"
-            [class.active]="activeFilter === filter.id"
-            (click)="filterByCategory(filter.id)">
-      {{filter.label}}
-    </button>
-    <!-- Bouton Ajouter - Visible seulement pour le propriétaire -->
-    <button mat-button class="add-button" (click)="openAddPortfolioDialog()" 
+  <!-- ── BARRE FILTRES ── -->
+  <div class="pf-filterrow">
+    <div class="pf-filters">
+      <button [class.active]="activeFilter === 'all'" (click)="filterByCategory('all')">Tous</button>
+      <button
+        *ngFor="let cat of categories"
+        [class.active]="activeFilter === cat"
+        (click)="filterByCategory(cat)">
+        {{cat}}
+      </button>
+    </div>
+    <button class="pf-add-creation-btn" (click)="openAddPortfolioDialog()"
             *ngIf="authManager.isAuthenticated() && (portfolioItems.length > 0 && portfolioItems[0].isOwner)">
-      <mat-icon>add</mat-icon> Ajouter
+      <mat-icon>add</mat-icon> Ajouter une création
     </button>
   </div>
 
-  <!-- Loader -->
-  <div *ngIf="loading" class="loader">
-    <mat-spinner diameter="50"></mat-spinner>
+  <!-- ── LOADER ── -->
+  <div *ngIf="loading" class="pf-loader">
+    <mat-spinner diameter="44"></mat-spinner>
     <p>Chargement en cours...</p>
   </div>
 
-  <!-- Message d'erreur -->
-  <div *ngIf="error && !loading" class="error-message">
+  <!-- ── ERREUR ── -->
+  <div *ngIf="error && !loading" class="pf-error">
     <mat-icon>error_outline</mat-icon>
     <p>Une erreur est survenue lors du chargement du portfolio</p>
-    <button mat-raised-button color="primary" (click)="loadPortfolio()">
+    <button mat-raised-button (click)="loadPortfolio()">
       <mat-icon>refresh</mat-icon> Réessayer
     </button>
   </div>
 
-  <!-- Portfolio vide -->
-  <div *ngIf="!loading && !error && portfolioItems.length === 0" class="empty-portfolio">
+  <!-- ── PORTFOLIO VIDE ── -->
+  <div *ngIf="!loading && !error && portfolioItems.length === 0" class="pf-empty">
     <mat-icon>collections</mat-icon>
     <h3>Aucune réalisation pour le moment</h3>
-    <!-- Différent selon le mode -->
     <ng-container *ngIf="authManager.isAuthenticated() && portfolioItems.length > 0 && portfolioItems[0].isOwner">
       <p>Commencez par ajouter vos premières créations</p>
-      <button mat-raised-button color="primary" (click)="openAddPortfolioDialog()">
+      <button mat-raised-button (click)="openAddPortfolioDialog()">
         <mat-icon>add</mat-icon> Ajouter une réalisation
       </button>
     </ng-container>
@@ -148,8 +148,8 @@
     </ng-container>
   </div>
 
-  <!-- Filtre vide -->
-  <div *ngIf="!loading && !error && portfolioItems.length > 0 && filteredItems.length === 0" class="empty-filter">
+  <!-- ── FILTRE SANS RÉSULTAT ── -->
+  <div *ngIf="!loading && !error && portfolioItems.length > 0 && filteredItems.length === 0" class="pf-empty">
     <mat-icon>search_off</mat-icon>
     <h3>Aucun résultat pour cette catégorie</h3>
     <button mat-button (click)="filterByCategory('all')">
@@ -157,19 +157,22 @@
     </button>
   </div>
 
-  <!-- Grille des réalisations -->
+  <!-- ── GRILLE ── -->
   <div class="portfolio-grid" [@portfolioAnimation]="filteredItems.length"
        *ngIf="!loading && !error && filteredItems.length > 0">
-    <div class="portfolio-card" *ngFor="let item of filteredItems; trackBy: trackById" 
-         [class.deleting]="item['isDeleting']">
-      
-      <!-- Overlay de suppression -->
+
+    <!-- Cartes réalisations -->
+    <div class="portfolio-card" *ngFor="let item of filteredItems; trackBy: trackById"
+         [class.deleting]="item['isDeleting']"
+         [attr.data-item-id]="item.id">
+
+      <!-- Overlay suppression -->
       <div class="delete-overlay" *ngIf="item.isDeleting">
-        <mat-spinner diameter="40"></mat-spinner>
+        <mat-spinner diameter="36"></mat-spinner>
         <span>Suppression en cours...</span>
       </div>
-      
-      <!-- Actions - Visible uniquement pour le propriétaire -->
+
+      <!-- Actions propriétaire (hover) -->
       <div class="card-actions" *ngIf="item.isOwner">
         <button mat-icon-button (click)="editItem(item)" matTooltip="Modifier">
           <mat-icon>edit</mat-icon>
@@ -178,41 +181,39 @@
           <mat-icon>delete</mat-icon>
         </button>
       </div>
-      
-      <!-- Information du freelance - Visible uniquement en mode client et si on affiche plusieurs freelances -->
+
+      <!-- Header freelance (mode client multi-freelances) -->
       <div class="freelance-header" *ngIf="clientMode && item.freelance && !freelanceId">
         <div class="freelance-profile">
-          <div class="profile-image" *ngIf="item.freelance.profileImage" 
-               [style.backgroundImage]="'url(' + item.freelance.profileImage + ')'">
-          </div>
+          <div class="profile-image" *ngIf="item.freelance.profileImage"
+               [style.backgroundImage]="'url(' + item.freelance.profileImage + ')'"></div>
           <div class="profile-details">
             <h4>{{item.freelance.prenom}} {{item.freelance.nom}}</h4>
             <p *ngIf="item.freelance.profession">{{item.freelance.profession}}</p>
           </div>
         </div>
-        <!-- ✅ Bouton contact qui ouvre la modal -->
-        <button mat-icon-button (click)="contactFreelance(item.freelance, $event)" 
+        <button mat-icon-button (click)="contactFreelance(item.freelance, $event)"
                 matTooltip="Contacter" class="contact-btn">
           <mat-icon>chat_bubble_outline</mat-icon>
         </button>
       </div>
-      
-      <!-- Carousel d'images avec Swiper -->
+
+      <!-- Carousel images -->
       <div class="card-carousel">
         <swiper-container [attr.data-item-id]="item.id" class="portfolio-carousel">
           <swiper-slide *ngFor="let image of item.images">
             <div class="carousel-image-container">
               <img [src]="image.url"
-                  [alt]="image.legende || item.titre"
-                  (load)="onImageLoad()"
-                  (error)="onImageError($event)">
+                   [alt]="image.legende || item.titre"
+                   (load)="onImageLoad()"
+                   (error)="onImageError($event)">
             </div>
           </swiper-slide>
         </swiper-container>
-        <!-- Overlay titre + catégorie -->
+        <!-- Overlay : catégorie haut-gauche, titre en bas -->
         <div class="card-img-overlay">
           <span class="card-img-category" *ngIf="item.categories?.length">
-            {{item.categories[0] | titlecase}}
+            {{item.categories[0] | uppercase}}
           </span>
           <h3 class="card-img-title">{{item.titre}}</h3>
         </div>
@@ -220,42 +221,32 @@
 
       <!-- Contenu -->
       <div class="card-content">
-        <!-- Description avec possibilité d'expansion -->
         <div class="description-container">
           <p class="description" [class.truncated]="!item.isExpanded && shouldShowMore(item.description)">
             {{item.description}}
           </p>
-          <button 
-            *ngIf="shouldShowMore(item.description)" 
-            class="read-more-button" 
-            (click)="toggleExpand(item)"
-            mat-button
-            color="primary">
+          <button *ngIf="shouldShowMore(item.description)"
+                  class="read-more-button"
+                  (click)="toggleExpand(item)"
+                  mat-button>
             {{ item.isExpanded ? 'Voir moins' : 'Voir plus...' }}
           </button>
         </div>
-        
-        <!-- Tags -->
+
         <div class="tags" *ngIf="item.tags && item.tags.length > 0">
-          <mat-chip-listbox>
-            <mat-chip *ngFor="let tag of item.tags">{{tag}}</mat-chip>
-          </mat-chip-listbox>
+          <span class="pf-tag" *ngFor="let tag of item.tags">{{tag}}</span>
         </div>
 
-        <!-- Statistiques -->
         <div class="stats">
-          <!-- Vue - Visible uniquement pour le propriétaire -->
-          <div class="stat" *ngIf="item.isOwner">
+          <!-- <div class="stat" *ngIf="item.isOwner">
             <mat-icon>visibility</mat-icon>
             <span>{{item.nombreVues || 0}}</span>
-          </div>
-          <!-- Like - Visible pour tous -->
+          </div> -->
           <div class="stat like-stat" (click)="likeItem(item.id, $event)">
             <mat-icon [class.liked]="isLikedByUser(item.id)" class="liked-icon"
-                  [attr.data-item-id]="item.id">favorite</mat-icon>
+                      [attr.data-item-id]="item.id">favorite</mat-icon>
             <span>{{item.nombreLikes || 0}}</span>
           </div>
-          <!-- Date d'ajout - Informative -->
           <div class="stat date-stat">
             <mat-icon>calendar_today</mat-icon>
             <span>{{item.dateCreation | date:'dd/MM/yyyy'}}</span>
@@ -263,7 +254,7 @@
         </div>
       </div>
 
-      <!-- Section vidéos - mode propriétaire uniquement -->
+      <!-- Section vidéos (propriétaire) -->
       <div class="card-videos" *ngIf="item.isOwner">
         <div class="card-videos-header" (click)="toggleVideoSection(item.id)">
           <span><mat-icon>videocam</mat-icon> Vidéos ({{ getItemVideosCount(item.id) }})</span>
@@ -273,68 +264,72 @@
           <div *ngIf="videosLoading[item.id]" class="pf-videos-loading">
             <mat-spinner diameter="24"></mat-spinner>
           </div>
-          <!-- Formulaire ajout -->
           <div class="pf-video-add-form" *ngIf="showAddVideoForm[item.id]">
             <input class="pf-video-form-input" placeholder="Titre (optionnel)"
-              [(ngModel)]="newVideoTitre[item.id]" [ngModelOptions]="{standalone: true}" />
+                   [(ngModel)]="newVideoTitre[item.id]" [ngModelOptions]="{standalone: true}" />
             <textarea class="pf-video-form-textarea" placeholder="Légende (optionnel)" rows="2"
-              [(ngModel)]="newVideoLegende[item.id]" [ngModelOptions]="{standalone: true}"></textarea>
+                      [(ngModel)]="newVideoLegende[item.id]" [ngModelOptions]="{standalone: true}"></textarea>
             <div class="pf-video-form-actions">
               <button class="pf-video-btn-cancel" (click)="toggleAddVideoForm(item.id)">Annuler</button>
               <button class="pf-video-btn-file" (click)="openVideoFileSelector(item.id)"
-                [disabled]="loadingStates['upload-video-' + item.id]">
+                      [disabled]="loadingStates['upload-video-' + item.id]">
                 <mat-icon>attach_file</mat-icon>
                 {{ loadingStates['upload-video-' + item.id] ? 'Upload...' : 'Choisir un fichier' }}
               </button>
             </div>
           </div>
-          <!-- Input fichier caché -->
           <input [id]="'video-input-' + item.id" type="file" accept="video/*" style="display:none"
-            (change)="onVideoFileSelected($event, item.id)">
-          <!-- Grille vidéos -->
+                 (change)="onVideoFileSelected($event, item.id)">
           <div class="pf-videos-grid" *ngIf="!videosLoading[item.id] && itemVideos[item.id]?.length">
             <div class="pf-video-card" *ngFor="let video of itemVideos[item.id]">
               <video [src]="'http://localhost:8081/uploads/' + video.urlVideo"
-                controls preload="metadata" class="pf-video-player"></video>
+                     controls preload="metadata" class="pf-video-player"></video>
               <div class="pf-video-footer">
                 <div class="pf-video-info">
                   <span class="pf-video-title">{{ video.titre || 'Sans titre' }}</span>
                   <span class="pf-video-desc" *ngIf="video.legende">{{ video.legende }}</span>
                 </div>
                 <button mat-icon-button color="warn" matTooltip="Supprimer"
-                  (click)="deleteItemVideo(video.id, item.id)"
-                  [disabled]="loadingStates['delete-video-' + video.id]">
+                        (click)="deleteItemVideo(video.id, item.id)"
+                        [disabled]="loadingStates['delete-video-' + video.id]">
                   <mat-icon>delete</mat-icon>
                 </button>
               </div>
             </div>
           </div>
-          <p class="pf-video-empty" *ngIf="!videosLoading[item.id] && !itemVideos[item.id]?.length && !showAddVideoForm[item.id]">
+          <p class="pf-video-empty"
+             *ngIf="!videosLoading[item.id] && !itemVideos[item.id]?.length && !showAddVideoForm[item.id]">
             Aucune vidéo pour cette réalisation
           </p>
           <button class="pf-add-video-btn" *ngIf="!showAddVideoForm[item.id]"
-            (click)="toggleAddVideoForm(item.id)"
-            [disabled]="getItemVideosCount(item.id) >= 5">
+                  (click)="toggleAddVideoForm(item.id)"
+                  [disabled]="getItemVideosCount(item.id) >= 5">
             <mat-icon>video_call</mat-icon>
             {{ getItemVideosCount(item.id) >= 5 ? 'Limite (5/5)' : 'Ajouter une vidéo' }}
           </button>
         </div>
       </div>
-
     </div>
+
+    <!-- Carte "+ Ajouter" (dans la grille, en dernier) -->
+    <div class="portfolio-card portfolio-card--add"
+         *ngIf="authManager.isAuthenticated() && (portfolioItems.length > 0 && portfolioItems[0].isOwner)"
+         (click)="openAddPortfolioDialog()">
+      <mat-icon>collections</mat-icon>
+      <span>Ajouter une création</span>
+      <small>Photo ou vidéo</small>
+    </div>
+
   </div>
 
-  <!-- ==========================================
-  🆕 MODAL DE CONTACT POUR PORTFOLIO
-  ========================================== -->
-  <div class="portfolio-contact-modal-overlay" 
-       *ngIf="showContactModal" 
+  <!-- ── MODAL CONTACT ── -->
+  <div class="portfolio-contact-modal-overlay"
+       *ngIf="showContactModal"
        [@modalAnimation]="showContactModal ? 'open' : 'closed'"
        (click)="closeContactModal()">
-    
+
     <div class="portfolio-contact-modal-container" (click)="$event.stopPropagation()">
-      
-      <!-- Header adapté au thème portfolio -->
+
       <div class="portfolio-contact-modal-header">
         <div class="contact-header-info">
           <h2>
@@ -342,7 +337,7 @@
             Contacter {{ selectedFreelanceForContact?.prenom }}
           </h2>
           <p *ngIf="selectedFreelanceForContact">
-            Envoyez votre message après avoir consulté le portfolio de 
+            Envoyez votre message après avoir consulté le portfolio de
             <strong>{{ selectedFreelanceForContact.prenom }} {{ selectedFreelanceForContact.nom }}</strong>
           </p>
         </div>
@@ -351,117 +346,79 @@
         </button>
       </div>
 
-      <!-- Formulaire de contact adapté au portfolio -->
       <form [formGroup]="contactForm" (ngSubmit)="onSubmitContact()" class="portfolio-contact-form">
-        
-        <!-- Champ Nom -->
+
         <div class="form-group">
           <label for="portfolio-contact-name">
             <mat-icon>person_outline</mat-icon>
             Votre nom complet <span class="required">*</span>
           </label>
-          <input
-            id="portfolio-contact-name"
-            type="text"
-            formControlName="name"
-            placeholder="Prénom Nom"
-            [class.error]="hasFieldError('name')"
-          />
-          <div *ngIf="hasFieldError('name')" class="error-message">
-            <mat-icon>error_outline</mat-icon>
-            {{ getFieldError('name') }}
+          <input id="portfolio-contact-name" type="text" formControlName="name"
+                 placeholder="Prénom Nom" [class.error]="hasFieldError('name')" />
+          <div *ngIf="hasFieldError('name')" class="error-msg">
+            <mat-icon>error_outline</mat-icon> {{ getFieldError('name') }}
           </div>
         </div>
 
-        <!-- Champ E-mail -->
         <div class="form-group">
           <label for="portfolio-contact-email">
             <mat-icon>mail_outline</mat-icon>
             Votre adresse e-mail <span class="required">*</span>
           </label>
-          <input
-            id="portfolio-contact-email"
-            type="email"
-            formControlName="email"
-            placeholder="votre.email@exemple.com"
-            [class.error]="hasFieldError('email')"
-          />
-          <div *ngIf="hasFieldError('email')" class="error-message">
-            <mat-icon>error_outline</mat-icon>
-            {{ getFieldError('email') }}
+          <input id="portfolio-contact-email" type="email" formControlName="email"
+                 placeholder="votre.email@exemple.com" [class.error]="hasFieldError('email')" />
+          <div *ngIf="hasFieldError('email')" class="error-msg">
+            <mat-icon>error_outline</mat-icon> {{ getFieldError('email') }}
           </div>
         </div>
 
-        <!-- Champ Sujet -->
         <div class="form-group">
           <label for="portfolio-contact-subject">
             <mat-icon>subject</mat-icon>
             Sujet de votre demande <span class="required">*</span>
           </label>
-          <input
-            id="portfolio-contact-subject"
-            type="text"
-            formControlName="subject"
-            placeholder="Ex: Collaboration suite à consultation de votre portfolio"
-            [class.error]="hasFieldError('subject')"
-          />
-          <div *ngIf="hasFieldError('subject')" class="error-message">
-            <mat-icon>error_outline</mat-icon>
-            {{ getFieldError('subject') }}
+          <input id="portfolio-contact-subject" type="text" formControlName="subject"
+                 placeholder="Ex: Collaboration suite à consultation de votre portfolio"
+                 [class.error]="hasFieldError('subject')" />
+          <div *ngIf="hasFieldError('subject')" class="error-msg">
+            <mat-icon>error_outline</mat-icon> {{ getFieldError('subject') }}
           </div>
         </div>
 
-        <!-- Champ Message -->
         <div class="form-group">
           <label for="portfolio-contact-message">
             <mat-icon>chat_bubble_outline</mat-icon>
             Votre message <span class="required">*</span>
           </label>
-          <textarea
-            id="portfolio-contact-message"
-            formControlName="message"
-            placeholder="Décrivez votre projet, vos inspirations d'après le portfolio consulté..."
-            rows="5"
-            [class.error]="hasFieldError('message')"
-          ></textarea>
-          <div *ngIf="hasFieldError('message')" class="error-message">
-            <mat-icon>error_outline</mat-icon>
-            {{ getFieldError('message') }}
+          <textarea id="portfolio-contact-message" formControlName="message"
+                    placeholder="Décrivez votre projet, vos inspirations d'après le portfolio consulté..."
+                    rows="5" [class.error]="hasFieldError('message')"></textarea>
+          <div *ngIf="hasFieldError('message')" class="error-msg">
+            <mat-icon>error_outline</mat-icon> {{ getFieldError('message') }}
           </div>
         </div>
 
-        <!-- Actions adaptées au thème Material -->
         <div class="portfolio-contact-modal-actions">
           <button type="button" mat-button (click)="closeContactModal()">
-            <mat-icon>close</mat-icon>
-            Annuler
+            <mat-icon>close</mat-icon> Annuler
           </button>
-          
-          <button 
-            type="submit" 
-            mat-raised-button
-            color="primary"
-            [disabled]="contactForm.invalid || isSubmittingContact"
-            [class.loading]="isSubmittingContact">
-            
+          <button type="submit" mat-raised-button
+                  [disabled]="contactForm.invalid || isSubmittingContact"
+                  [class.loading]="isSubmittingContact">
             <span *ngIf="!isSubmittingContact">
-              <mat-icon>send</mat-icon>
-              Envoyer le message
+              <mat-icon>send</mat-icon> Envoyer le message
             </span>
-            
             <span *ngIf="isSubmittingContact" class="loading-state">
-              <mat-spinner diameter="16"></mat-spinner>
-              Envoi en cours...
+              <mat-spinner diameter="16"></mat-spinner> Envoi en cours...
             </span>
           </button>
         </div>
       </form>
 
-      <!-- Info adaptée au portfolio -->
       <div class="portfolio-contact-info-footer">
         <p>
           <mat-icon>info_outline</mat-icon>
-          Votre message fait référence au portfolio consulté, ce qui aidera 
+          Votre message fait référence au portfolio consulté, ce qui aidera
           {{ selectedFreelanceForContact?.prenom }} à mieux comprendre vos attentes.
         </p>
       </div>

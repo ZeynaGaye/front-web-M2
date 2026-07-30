@@ -57,6 +57,16 @@ export class EmployeService {
     return this.http.patch<EmployeResponse>(`${this.apiUrl}/${employeId}/reactiver`, {});
   }
 
+  // Transférer un employé vers un autre salon
+  transfererEmploye(employeId: number, newSalonId: number): Observable<EmployeResponse> {
+    return this.http.patch<EmployeResponse>(`${this.apiUrl}/${employeId}/transferer`, { salonId: newSalonId });
+  }
+
+  // Retirer un employé d'un salon (archive / désactivation)
+  retirerDuSalon(employeId: number): Observable<void> {
+    return this.http.patch<void>(`${this.apiUrl}/${employeId}/retirer`, {});
+  }
+
   // Rechercher des employés
   rechercherEmployes(salonId: number, recherche: string): Observable<EmployeListItem[]> {
     const params = new HttpParams().set('q', recherche);

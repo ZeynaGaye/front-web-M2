@@ -384,6 +384,22 @@ export class OffresManagerComponent implements OnInit {
     return dateObj.toLocaleDateString('fr-FR');
   }
 
+  getTimeAgo(date: string | Date | undefined): string {
+    if (!date) return '';
+    const d = typeof date === 'string' ? new Date(date) : date;
+    const diffMs = Date.now() - d.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    if (diffDays === 0) return "aujourd'hui";
+    if (diffDays === 1) return 'il y a 1 jour';
+    if (diffDays < 7) return `il y a ${diffDays} jours`;
+    const diffWeeks = Math.floor(diffDays / 7);
+    if (diffWeeks === 1) return 'il y a 1 semaine';
+    if (diffWeeks < 5) return `il y a ${diffWeeks} semaines`;
+    const diffMonths = Math.floor(diffDays / 30);
+    if (diffMonths === 1) return 'il y a 1 mois';
+    return `il y a ${diffMonths} mois`;
+  }
+
   isExpired(dateLimite: string): boolean {
     return new Date(dateLimite) < new Date();
   }
@@ -475,6 +491,29 @@ export class OffresManagerComponent implements OnInit {
 
     
     return freelanceId ? Number(freelanceId) : null;
+  }
+
+  activeFilter = 'all';
+
+  setFilter(filter: string) {
+    this.activeFilter = filter;
+  }
+
+  getFilteredOffres(): OffreEmploi[] {
+    switch (this.activeFilter) {
+      case 'active': return this.offres.filter(o => o.status === 'ACTIVE' || o.status === 'OUVERT');
+      case 'pause': return this.offres.filter(o => o.status === 'BROUILLON');
+      case 'closed': return this.offres.filter(o => o.status === 'FERMÉE' || o.status === 'FERMÉ' || o.status === 'ARCHIVÉE');
+      default: return this.offres;
+    }
+  }
+
+  getPauseCount(): number {
+    return this.offres.filter(o => o.status === 'BROUILLON').length;
+  }
+
+  getClosedCount(): number {
+    return this.offres.filter(o => o.status === 'FERMÉE' || o.status === 'FERMÉ' || o.status === 'ARCHIVÉE').length;
   }
 
   // Toggle du portfolio

@@ -301,6 +301,27 @@ $bg: #f8f9fa;
       &::placeholder { color: #aaa; }
     }
 
+    &.geo-field {
+      input { flex: 1; }
+
+      .geo-btn, .geo-clear-btn {
+        border: none;
+        background: none;
+        cursor: pointer;
+        padding: 4px 6px;
+        border-radius: 4px;
+        color: $secondary;
+        font-size: 0.85rem;
+        flex-shrink: 0;
+        transition: background 0.2s, color 0.2s;
+
+        &:hover { background: rgba(0,0,0,0.06); color: $primary; }
+        &.loading { color: $primary; cursor: default; }
+      }
+
+      .geo-clear-btn { color: #aaa; font-size: 0.75rem; }
+    }
+
     &.select-wrap {
       position: relative;
       select {

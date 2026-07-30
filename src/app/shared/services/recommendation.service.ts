@@ -641,7 +641,7 @@ export class RecommendationService {
       nom: item.prenom ? `${item.prenom} ${item.nom || ''}`.trim() : item.nom || item.name || 'Freelancer',
       description: item.description || item.specialite || 'Professionnel indépendant',
       adresse: item.adresse || item.address || 'Adresse non spécifiée',
-      photoProfil: item.photoProfil || item.photoProfilUrl || item.imageUrl || item.avatar,
+      photoProfil: item.photoProfil || item.photoProfilUrl || item.imageUrl || item.profileImage || item.avatar,
       note: item.note || item.rating || item.noteMoyenne || 0,
       nombreAvis: item.nombreAvis || item.reviewCount || item.reviews || item.nbAvis || 0,
       services: this.extractServiceNames(item.services || item.serviceNoms || item.specialites || (item.specialite ? [item.specialite] : [])),

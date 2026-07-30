@@ -1,467 +1,735 @@
-/* horaires-manager.component.scss */
+// ─── Palette ───────────────────────────────────────────────
+$bg:        #F5F0EB;
+$bg2:       #EEEAE4;
+$coral:     #D4735A;
+$coral-lt:  rgba(212, 115, 90, .12);
+$slate:     #8B9EA8;
+$slate-dk:  #5C7380;
+$slate-bg:  #3B4F5C;
+$text:      #1A1A1A;
+$muted:     #6B7280;
+$border:    rgba(0,0,0,.08);
+$shadow:    0 2px 8px rgba(0,0,0,.06);
+$shadow-md: 0 4px 20px rgba(0,0,0,.1);
 
-@use 'sass:map';
-
-// Palette principale - Orange coral élégant
-$primary-palette: (
-  main: #F5A393,
-  lighter: #ffeee9,
-  darker: #f37e63,
-  text: #ffffff
-);
-
-// Palette complémentaire - Gris bleu sophistiqué
-$secondary-palette: (
-  main: #A4B1BD,
-  lighter: #e8edf1,
-  darker: #7a8892,
-  text: #ffffff
-);
-
-// Variables utilitaires pour les couleurs spécifiques
-$primary-main: map-get($primary-palette, main);
-$primary-text: map-get($primary-palette, text);
-$secondary-main: map-get($secondary-palette, main);
-$secondary-lighter: map-get($secondary-palette, lighter);
-$secondary-darker: map-get($secondary-palette, darker);
-$secondary-text: #343a40; // Texte sombre pour le fond secondaire plus clair
-$gray-text: #6c757d; // For muted text
-$light-bg: #f8f9fa; // Very light background for elements
-
-
-// General Styling
-.container {
-  max-width: 960px;
+// ─── Root ──────────────────────────────────────────────────
+.hm-root {
+  position: relative;
+  font-family: 'Inter', system-ui, sans-serif;
+  color: $text;
+  min-height: 100%;
 }
 
-.card {
-  border: 1px solid $secondary-lighter; // Bordure subtile pour toutes les cartes
-  border-radius: 12px;
-  background-color: #ffffff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  .card-body {
-    padding: 1.5rem;
-  }
+// ─── Toast ─────────────────────────────────────────────────
+@keyframes slideInToast {
+  from { transform: translateY(-16px); opacity: 0; }
+  to   { transform: translateY(0);     opacity: 1; }
 }
 
-.header-card-body {
-  background-color: $secondary-main; // Couleur de fond de la palette secondaire
-  color: $secondary-text; // Couleur de texte sombre pour un meilleur contraste
-  text-align: center; // Centrer le texte
-  border-radius: 12px; // Arrondir toutes les bordures de la carte d'en-tête
-  margin-bottom: -1rem; // Conserver la marge négative si nécessaire pour l'alignement
-  padding: 1.5rem 1.5rem; // Réajuster le padding
-
-  .card-title {
-    color: $secondary-text; // Couleur du titre
-    font-size: 1.6rem;
-  }
-  .card-text {
-    color: darken($secondary-text, 10%); // Couleur du texte plus clair
-    font-size: 0.95rem;
-  }
-}
-
-h1, h2, h3, h4, h5, h6 {
-  color: #343a40; // Darker text for titles
-}
-
-.text-muted {
-  color: $gray-text !important;
-}
-
-.icon-text {
-  margin-right: 0.5rem;
-}
-
-/* Tabs Styling */
-.nav-tabs {
-  border-bottom: 2px solid $secondary-lighter;
-  .nav-item {
-    .nav-link {
-      color: $secondary-darker;
-      border: none;
-      border-radius: 8px 8px 0 0;
-      padding: 0.75rem 1.25rem;
-      transition: all 0.3s ease;
-      font-weight: 500;
-      &.active {
-        background-color: $primary-main;
-        color: $primary-text;
-        border-bottom: 2px solid $primary-main;
-        font-weight: 600;
-        &:hover {
-          background-color: $primary-main;
-        }
-      }
-      &:hover {
-        background-color: $secondary-lighter;
-        color: $secondary-darker;
-      }
-    }
-  }
-}
-
-.tab-pane {
-  padding-top: 1rem;
-}
-
-/* --- Section Horaires --- */
-.horaires-main-card {
-    border: 1px solid $secondary-main; // Bordure principale pour la carte des horaires
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
-}
-
-.horaires-form-list {
-  .horaire-list-item {
-    padding: 1rem;
-    margin-bottom: 0.75rem;
-    background-color: $secondary-lighter; // Utilisation de la couleur lighter de la palette secondaire
-    border-radius: 8px;
-    border: 1px solid lighten($secondary-main, 15%); // Bordure plus claire de la couleur main
-    transition: all 0.2s ease-in-out;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-
-    &:hover {
-      background-color: lighten($secondary-lighter, 2%);
-      border-color: $primary-main; // Bordure primaire au survol
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    }
-
-    .day-label {
-      flex: 0 0 auto; // Ne pas étirer
-      min-width: 90px; // Largeur minimale pour le jour
-      color: #343a40;
-      font-size: 1.05rem;
-    }
-
-    .toggle-control {
-        // Styles pour mat-slide-toggle
-        mat-slide-toggle {
-            // Cible le track (la barre) quand le toggle est "on"
-            ::ng-deep .mdc-switch.mdc-switch--selected .mdc-switch__track {
-                background-color: $primary-main !important; // Couleur de la barre quand ON
-                opacity: 0.7 !important;
-            }
-            // Cible le pouce (le cercle) quand le toggle est "on"
-            ::ng-deep .mdc-switch.mdc-switch--selected .mdc-switch__handle {
-                background-color: darken($primary-main, 10%) !important; // Couleur du cercle quand ON
-            }
-             // Cible le track (la barre) quand le toggle est "off"
-             ::ng-deep .mdc-switch:not(.mdc-switch--selected) .mdc-switch__track {
-                // --- CHANGEMENT ICI : Utilisation de la couleur de la palette secondaire pour le track OFF ---
-                background-color: $secondary-main !important; // Couleur de la barre quand OFF
-                opacity: 0.5 !important; // Légèrement transparent pour montrer que c'est désactivé
-             }
-             // Cible le pouce (le cercle) quand le toggle est "off"
-             ::ng-deep .mdc-switch:not(.mdc-switch--selected) .mdc-switch__handle {
-                // --- CHANGEMENT ICI : Utilisation d'une nuance plus claire de la palette secondaire pour le handle OFF ---
-                background-color: lighten($secondary-main, 10%) !important; // Couleur du cercle quand OFF
-            }
-        }
-    }
-
-    .time-input-group {
-        flex: 1; // Permet aux inputs de prendre de l'espace
-        input[type="time"] {
-            padding: 0.5rem 0.75rem;
-            border: 1px solid lighten($secondary-main, 15%);
-            border-radius: 6px;
-            font-size: 0.95rem;
-            width: 100%; // Pour qu'il prenne toute la largeur disponible
-            &:disabled {
-                background-color: #e9ecef;
-                cursor: not-allowed;
-            }
-        }
-    }
-
-    .time-separator {
-      color: $gray-text;
-      font-weight: 500;
-    }
-
-    .duration-input-group {
-      min-width: 80px; // Largeur minimale pour le champ de durée
-      text-align: right;
-      display: flex; // Utiliser flexbox pour aligner l'input et le "min"
-      align-items: center; // Aligner verticalement au centre
-      gap: 0.5rem; // Espacement entre l'input et le "min"
-      // --- CHANGEMENT ICI : Ajout de styles pour l'alignement vertical ---
-      margin-top: -0.25rem; // Petit ajustement pour l'alignement visuel si nécessaire
-      margin-bottom: 0.25rem; // Ajustement si besoin
-      // --- FIN CHANGEMENT ---
-
-      input[type="number"] {
-        padding: 0.5rem 0.75rem;
-        border: 1px solid lighten($secondary-main, 15%);
-        border-radius: 6px;
-        width: 100%; // Prend toute la largeur disponible
-        font-size: 0.95rem;
-        &:disabled {
-          background-color: #e9ecef;
-          cursor: not-allowed;
-        }
-      }
-      small {
-        display: inline-block; // Pour que "min" soit sur la même ligne
-        // margin-top: 0.25rem; // Supprimer si non nécessaire avec flex
-        color: $gray-text;
-      }
-    }
-  }
-}
-
-/* Buttons Styling */
-.btn-primary {
-  background-color: $primary-main;
-  border-color: $primary-main;
-  color: $primary-text;
-  &:hover {
-    background-color: darken($primary-main, 10%);
-    border-color: darken($primary-main, 10%);
-  }
-}
-
-.btn-secondary {
-  background-color: $secondary-main;
-  border-color: $secondary-main;
-  color: $secondary-text;
-  &:hover {
-    background-color: darken($secondary-main, 10%);
-    border-color: darken($secondary-main, 10%);
-  }
-}
-
-.btn-danger {
-  background-color: #dc3545;
-  border-color: #dc3545;
-  color: #fff;
-  &:hover {
-    background-color: darken(#dc3545, 10%);
-    border-color: darken(#dc3545, 10%);
-  }
-}
-
-// Custom button colors for action section
-.btn-success-custom {
-  background-color: #28a745;
-  border-color: #28a745;
-  color: #fff;
-  &:hover {
-    background-color: darken(#28a745, 10%);
-    border-color: darken(#28a745, 10%);
-  }
-}
-
-.btn-info-custom {
-  background-color: #17a2b8;
-  border-color: #17a2b8;
-  color: #fff;
-  &:hover {
-    background-color: darken(#17a2b8, 10%);
-    border-color: darken(#17a2b8, 10%);
-  }
-}
-
-.btn-warning-custom {
-  background-color: #ffc107;
-  border-color: #ffc107;
-  color: #212529;
-  &:hover {
-    background-color: darken(#ffc107, 10%);
-    border-color: darken(#ffc107, 10%);
-  }
-}
-
-.btn-danger-custom {
-  background-color: #dc3545;
-  border-color: #dc3545;
-  color: #fff;
-  &:hover {
-    background-color: darken(#dc3545, 10%);
-    border-color: darken(#dc3545, 10%);
-  }
-}
-
-
-/* --- Section Planning --- */
-.calendar-week {
+.hm-toast {
+  position: fixed;
+  top: 20px;
+  right: 24px;
+  z-index: 9999;
   display: flex;
-  justify-content: space-around;
-  gap: 0.5rem;
-  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: $shadow-md;
+  animation: slideInToast .25s ease;
 
-  .calendar-day {
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+
+  &--success { background: #1D6B4E; color: #fff; }
+  &--error   { background: #B91C1C; color: #fff; }
+}
+
+// ─── Page header ───────────────────────────────────────────
+.hm-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+
+  &__title {
+    margin: 0 0 4px;
+    font-size: 22px;
+    font-weight: 700;
+    color: $text;
+  }
+
+  &__sub {
+    margin: 0;
+    font-size: 13px;
+    color: $muted;
+  }
+}
+
+.hm-save-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  background: $coral;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .2s, opacity .2s;
+  flex-shrink: 0;
+
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+
+  &:hover:not(:disabled) { background: darken($coral, 8%); }
+  &:disabled { opacity: .55; cursor: not-allowed; }
+}
+
+// ─── 2-Column Layout ───────────────────────────────────────
+.hm-layout {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 24px;
+  align-items: start;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// ─── Main column ───────────────────────────────────────────
+.hm-main {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+// ─── Cards ─────────────────────────────────────────────────
+.hm-card {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid $border;
+  box-shadow: $shadow;
+  overflow: hidden;
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 20px;
+    border-bottom: 1px solid $border;
+    font-size: 15px;
+    font-weight: 600;
+    color: $text;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: $coral;
+    }
+  }
+
+  &__body {
+    padding: 16px 20px;
+  }
+
+  &--toggle {
+    .hm-card__body { padding: 20px; }
+  }
+
+  &--conges .hm-card__head { flex-wrap: wrap; }
+}
+
+// ─── Master toggle row ─────────────────────────────────────
+.hm-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  &__text { flex: 1; min-width: 0; }
+
+  &__label {
+    display: block;
+    font-size: 15px;
+    font-weight: 600;
+    color: $text;
+    margin-bottom: 2px;
+  }
+
+  &__sub {
+    display: block;
+    font-size: 13px;
+    color: $muted;
+  }
+}
+
+// ── Switch (master toggle) ──────────────────────────────────
+.hm-switch {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  flex-shrink: 0;
+
+  &__track {
+    display: flex;
+    align-items: center;
+    width: 52px;
+    height: 28px;
+    background: #CBD5E1;
+    border-radius: 14px;
+    padding: 3px;
+    transition: background .25s;
+  }
+
+  &__thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,.25);
+    transition: transform .25s;
+  }
+
+  &--on .hm-switch__track  { background: $coral; }
+  &--on .hm-switch__thumb  { transform: translateX(24px); }
+}
+
+// ─── Day rows ──────────────────────────────────────────────
+.hm-day-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid $border;
+
+  &:last-child { border-bottom: none; }
+
+  &__name {
+    width: 90px;
+    font-size: 14px;
+    font-weight: 500;
+    color: $text;
+    flex-shrink: 0;
+  }
+
+  &__slots {
     flex: 1;
-    min-width: 80px;
-    max-width: 120px;
-    text-align: center;
-    padding: 0.75rem 0.5rem;
-    border: 1px solid $secondary-lighter;
+    min-width: 0;
+  }
+
+  &__toggle {
+    flex-shrink: 0;
+  }
+
+  &--closed .hm-day-row__name { color: $muted; }
+
+  &--weekend .hm-day-row__name { color: $slate; }
+}
+
+// ─── Slot chip ─────────────────────────────────────────────
+.hm-slot-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px 6px 10px;
+  background: $coral-lt;
+  border: 1.5px solid rgba($coral, .3);
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: $coral;
+
+  &__icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    color: $coral;
+  }
+
+  &__time { color: darken($coral, 10%); }
+
+  &__edit, &__del {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: $coral;
+    opacity: .6;
+    transition: opacity .15s;
+    mat-icon { font-size: 14px; width: 14px; height: 14px; }
+    &:hover { opacity: 1; }
+  }
+
+  &__edit { margin-left: 2px; }
+}
+
+// ─── Slot editor (inline time picker) ──────────────────────
+.hm-slot-editor {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  &__sep { font-size: 13px; color: $muted; }
+}
+
+.hm-time-input {
+  padding: 6px 10px;
+  border: 1.5px solid $border;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  color: $text;
+  background: $bg;
+  cursor: pointer;
+  transition: border-color .2s;
+
+  &:focus { outline: none; border-color: $coral; }
+}
+
+.hm-btn-confirm, .hm-btn-cancel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  mat-icon { font-size: 16px; width: 16px; height: 16px; }
+  transition: background .2s;
+}
+
+.hm-btn-confirm {
+  background: $coral;
+  color: #fff;
+  &:hover { background: darken($coral, 8%); }
+}
+
+.hm-btn-cancel {
+  background: #E5E7EB;
+  color: $muted;
+  &:hover { background: darken(#E5E7EB, 6%); }
+}
+
+// ─── "+ Ajouter un créneau" button ─────────────────────────
+.hm-add-slot-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: none;
+  border: 1.5px dashed rgba($slate, .4);
+  border-radius: 20px;
+  font-size: 13px;
+  color: $muted;
+  cursor: pointer;
+  transition: border-color .2s, color .2s;
+
+  mat-icon { font-size: 14px; width: 14px; height: 14px; }
+
+  &:hover {
+    border-color: $coral;
+    color: $coral;
+  }
+}
+
+// ─── Pill toggle (Ouvert/Fermé) ────────────────────────────
+.hm-pill-toggle {
+  padding: 4px 14px;
+  border-radius: 20px;
+  border: 1.5px solid $border;
+  background: $bg2;
+  font-size: 12px;
+  font-weight: 500;
+  color: $muted;
+  cursor: pointer;
+  transition: all .2s;
+
+  &--on {
+    background: rgba(#16A34A, .1);
+    border-color: rgba(#16A34A, .3);
+    color: #15803D;
+  }
+}
+
+// ─── Badge ─────────────────────────────────────────────────
+.hm-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  background: $coral;
+  color: #fff;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+// ─── Add button (card head) ────────────────────────────────
+.hm-add-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  padding: 5px 12px;
+  background: $coral;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .2s;
+
+  mat-icon { font-size: 14px; width: 14px; height: 14px; }
+
+  &:hover { background: darken($coral, 8%); }
+}
+
+// ─── Congé form ────────────────────────────────────────────
+.hm-conge-form {
+  padding: 16px 20px;
+  background: $bg;
+  border-bottom: 1px solid $border;
+
+  &__row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+}
+
+.hm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 140px;
+
+  &__label {
+    font-size: 12px;
+    font-weight: 500;
+    color: $muted;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+
+  &--grow { flex: 1; min-width: 200px; }
+}
+
+.hm-muted { color: $muted; font-size: 11px; }
+
+.hm-input {
+  padding: 8px 12px;
+  border: 1.5px solid $border;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  color: $text;
+  background: #fff;
+  transition: border-color .2s;
+
+  &:focus { outline: none; border-color: $coral; }
+}
+
+// ─── Buttons ───────────────────────────────────────────────
+.hm-ghost-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1.5px solid $border;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  color: $text;
+  cursor: pointer;
+  transition: border-color .2s;
+
+  mat-icon { font-size: 15px; width: 15px; height: 15px; }
+
+  &:hover { border-color: $slate; }
+
+  &--danger { color: #B91C1C; border-color: rgba(#B91C1C, .3); }
+  &--danger:hover { border-color: #B91C1C; background: rgba(#B91C1C, .04); }
+
+  &--sm { padding: 5px 10px; font-size: 12px; }
+}
+
+.hm-primary-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  background: $coral;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .2s;
+
+  mat-icon { font-size: 15px; width: 15px; height: 15px; }
+
+  &:hover:not(:disabled) { background: darken($coral, 8%); }
+  &:disabled { opacity: .55; cursor: not-allowed; }
+}
+
+// ─── Congé list ────────────────────────────────────────────
+.hm-conge-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hm-conge-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  background: $bg;
+  transition: background .15s;
+
+  &:hover { background: $bg2; }
+
+  &__icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: $coral-lt;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    mat-icon { color: $coral; font-size: 18px; width: 18px; height: 18px; }
+  }
+
+  &__info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__dates {
+    font-size: 14px;
+    font-weight: 500;
+    color: $text;
+  }
+
+  &__dur {
+    font-size: 12px;
+    color: $muted;
+  }
+
+  &__motif {
+    font-size: 12px;
+    color: $slate;
+    font-style: italic;
+  }
+
+  &__del {
+    background: none;
+    border: none;
+    padding: 6px;
     border-radius: 8px;
     cursor: pointer;
-    transition: all 0.3s ease;
-    background-color: $light-bg;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    color: $muted;
+    display: flex;
+    align-items: center;
+    transition: color .2s, background .2s;
+    mat-icon { font-size: 18px; width: 18px; height: 18px; }
 
     &:hover {
-      background-color: lighten($secondary-main, 25%);
-      border-color: $secondary-main;
-      transform: translateY(-2px);
-    }
-
-    &.is-today {
-      border: 2px solid $primary-main;
-      font-weight: 600;
-      background-color: lighten($primary-main, 20%);
-      color: darken($primary-main, 20%);
-    }
-
-    &.is-available {
-      background-color: lighten(#28a745, 40%);
-      border-color: lighten(#28a745, 20%);
-    }
-
-    &.not-available {
-      background-color: lighten(#dc3545, 40%);
-      border-color: lighten(#dc3545, 20%);
-    }
-
-    .day-of-month {
-      font-size: 1.5rem;
-      font-weight: 700;
-      line-height: 1;
-      margin-bottom: 0.25rem;
-    }
-
-    .day-of-week-short {
-      font-size: 0.85rem;
-      color: $gray-text;
-      margin-bottom: 0.5rem;
-    }
-
-    .creneaux-count {
-      font-size: 0.8rem;
-      font-weight: 500;
-      &.available {
-        color: darken(#28a745, 10%);
-      }
-      &.not-available {
-        color: darken(#dc3545, 10%);
-      }
+      color: #B91C1C;
+      background: rgba(#B91C1C, .08);
     }
   }
 }
 
-.creneaux-list {
-  max-height: 250px;
-  overflow-y: auto;
+.hm-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 28px 20px;
+  color: $muted;
+  font-size: 13px;
+  text-align: center;
+
+  mat-icon {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+    color: $border;
+  }
+}
+
+// ─── Sidebar ───────────────────────────────────────────────
+.hm-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: sticky;
+  top: 16px;
+}
+
+.hm-sidebar-card {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid $border;
+  box-shadow: $shadow;
+  padding: 20px;
+  overflow: hidden;
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: $text;
+    margin-bottom: 16px;
+
+    mat-icon { font-size: 18px; width: 18px; height: 18px; color: $coral; }
+  }
+
+  &__label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: rgba(#1A1A1A, .6);
+    margin-bottom: 6px;
+  }
+
+  &__day {
+    font-size: 13px;
+    color: rgba(#1A1A1A, .75);
+    margin-bottom: 4px;
+  }
+
+  &__time {
+    font-size: 26px;
+    font-weight: 700;
+    color: #1A1A1A;
+    line-height: 1.1;
+    margin-bottom: 8px;
+  }
+
+  &__note {
+    font-size: 12px;
+    color: rgba(#1A1A1A, .55);
+  }
+
+  &--dark {
+    background: #A4B1BD;
+    border-color: transparent;
+  }
+
+  &--zone {
+    padding: 0;
+    overflow: hidden;
+
+    .hm-sidebar-card__title {
+      padding: 16px 16px 0;
+      margin-bottom: 12px;
+    }
+  }
+}
+
+// ─── Réglages list ─────────────────────────────────────────
+.hm-settings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.hm-setting-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  &__label {
+    font-size: 12px;
+    color: $muted;
+    font-weight: 500;
+  }
+}
+
+.hm-select {
+  padding: 7px 10px;
+  border: 1.5px solid $border;
   border-radius: 8px;
-  border: 1px solid $secondary-lighter;
-  .list-group-item {
-    border-radius: 0;
-    border-left: none;
-    border-right: none;
-    &:first-child {
-      border-top-left-radius: 8px;
-      border-top-right-radius: 8px;
-    }
-    &:last-child {
-      border-bottom-left-radius: 8px;
-      border-bottom-right-radius: 8px;
-    }
+  background: $bg;
+  font-size: 13px;
+  font-family: inherit;
+  color: $text;
+  cursor: pointer;
+  transition: border-color .2s;
+
+  &:focus { outline: none; border-color: $coral; }
+}
+
+// ─── Zone / Map placeholder ────────────────────────────────
+.hm-zone-map {
+  background: #E2E8F0;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &__placeholder {
+    color: #94A3B8;
+    mat-icon { font-size: 40px; width: 40px; height: 40px; }
   }
 }
 
-.badge.bg-success-custom {
-  background-color: #28a745 !important;
-  color: #fff;
-}
+.hm-zone-info {
+  padding: 14px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 
-
-/* --- Section Congés --- */
-.conge-item {
-    border: 1px solid $secondary-lighter;
-    border-radius: 8px;
-    margin-bottom: 0.5rem;
-    padding: 0.75rem 1rem;
-    background-color: $light-bg;
-    transition: all 0.2s ease-in-out;
-    &:hover {
-        background-color: lighten($light-bg, 2%);
-        border-color: $primary-main;
-    }
-    .btn-outline-danger {
-        border-color: darken(#dc3545, 5%);
-        color: darken(#dc3545, 5%);
-        &:hover {
-            background-color: #dc3545;
-            color: #fff;
-        }
-    }
-}
-
-
-/* --- Section Actions Rapides --- */
-.action-card {
-    background-color: $light-bg;
-    border: 1px solid $secondary-lighter;
-    transition: all 0.2s ease-in-out;
-    &:hover {
-        border-color: $primary-main;
-        box-shadow: 0 6px 16px rgba(0,0,0,0.1);
-        transform: translateY(-3px);
-    }
-    .card-title {
-        color: darken($primary-main, 10%);
-    }
-    .btn {
-        width: 100%;
-    }
-}
-
-
-// Responsive adjustments
-@media (max-width: 768px) {
-  .horaires-form-list .horaire-list-item {
-    flex-direction: column; // Empile les éléments verticalement sur mobile
-    align-items: flex-start !important; // Alignement au début pour les éléments empilés
-    .day-label {
-      margin-bottom: 0.5rem;
-    }
-    .toggle-control, .time-input-group, .duration-input-group {
-      width: 100%; // Prend toute la largeur
-      margin-right: 0 !important; // Supprime les marges horizontales
-      margin-bottom: 0.75rem; // Ajoute de la marge en bas
-    }
-    .time-input-group {
-        display: flex; // Pour aligner les inputs heure ensemble
-        gap: 0.5rem;
-    }
-    .time-separator {
-        display: block !important; // Afficher le "à" même sur mobile
-        text-align: center;
-        width: 100%;
-        margin: 0.5rem 0 !important;
-    }
-    .duration-input-group {
-        text-align: left;
-    }
+  &__name {
+    font-size: 14px;
+    font-weight: 600;
+    color: $text;
   }
 
-  .calendar-week {
-    flex-direction: column;
-    .calendar-day {
-      max-width: 100%;
-    }
-  }
-}
+  &__addr {
+    display: flex;
+    align-items: flex-start;
+    gap: 4px;
+    font-size: 13px;
+    color: $muted;
 
-@media (max-width: 576px) {
-    .d-flex.flex-wrap {
-        .btn {
-            width: 100%; // Boutons pleine largeur
-        }
-    }
+    mat-icon { font-size: 16px; width: 16px; height: 16px; margin-top: 1px; flex-shrink: 0; }
+  }
 }

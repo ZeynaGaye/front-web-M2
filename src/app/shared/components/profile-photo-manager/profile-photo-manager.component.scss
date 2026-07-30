@@ -260,14 +260,22 @@ $error-color: #F44336;
   flex-wrap: wrap;
 
   button {
-    border-radius: 25px;
-    font-weight: 600;
-    min-width: 140px;
-    transition: var(--transition);
+    border-radius: 12px !important;
+    font-weight: 600 !important;
+    min-width: 140px !important;
+    transition: var(--transition) !important;
 
+    // Bouton principal : forcer couleurs via tokens MDC + fallback
     &[color="primary"] {
-      background: var(--beauty-gradient);
-      color: $white;
+      --mdc-filled-button-container-color: #{$beauty-primary};
+      --mdc-filled-button-label-text-color: #{$white};
+      --mdc-filled-button-hover-container-color: #{$beauty-primary-dark};
+      --mat-filled-button-ripple-color: rgba(255,255,255,.2);
+      background: linear-gradient(135deg, #{$beauty-primary}, #{$beauty-primary-dark}) !important;
+      color: $white !important;
+
+      .mdc-button__label { color: $white !important; }
+      mat-icon { color: $white !important; }
 
       &:hover:not(:disabled) {
         transform: translateY(-2px);
@@ -276,18 +284,20 @@ $error-color: #F44336;
     }
 
     &[color="warn"] {
-      border-color: $error-color;
-      color: $error-color;
+      --mdc-outlined-button-outline-color: #{$error-color};
+      --mdc-outlined-button-label-text-color: #{$error-color};
+      border-color: $error-color !important;
+      color: $error-color !important;
+
+      .mdc-button__label { color: $error-color !important; }
 
       &:hover:not(:disabled) {
-        background: rgba(244, 67, 54, 0.1);
+        background: rgba(244, 67, 54, 0.08) !important;
         transform: translateY(-2px);
       }
     }
 
-    mat-icon {
-      margin-right: 0.5rem;
-    }
+    mat-icon { margin-right: 0.5rem; }
   }
 }
 

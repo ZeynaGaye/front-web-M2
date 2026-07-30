@@ -1,4 +1,4 @@
-import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Output, EventEmitter, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, AbstractControl, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { RegisterService, SignupRequest } from '../../services/register.service';
 import { Router } from '@angular/router';
@@ -22,62 +22,62 @@ export class RegisterComponent implements OnInit {
   isLoading = false;
   registrationSuccess = false;
   registeredEmail = '';
-
-  roles = ['CLIENT', 'FREELANCE', 'EMPLOYEUR'];
-  sexeOptions = [
-    { value: 'MASCULIN', label: 'Homme' },
-    { value: 'FEMININ', label: 'Femme' }
-  ];
+  showPassword = false;
+  showConfirmPassword = false;
+  private cachedCoords: { lat: number; lon: number } | null = null;
 
   constructor(
     private fb: FormBuilder,
     private authService: RegisterService,
     private router: Router,
-    private geocodingService: GeocodingService
+    private geocodingService: GeocodingService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
     this.registerForm = this.fb.group({
-      nom: ['', Validators.required],
-      prenom: ['', Validators.required],
-      email: ['', [Validators.required, Validators.email]],
-      telephone: ['', [Validators.pattern(/^\d{9}$/)]],
-      ville: ['', Validators.required],
-      adresse: ['', Validators.required],
-      role: ['', Validators.required],
-      sexe: ['', Validators.required],
+      nom:       ['', Validators.required],
+      prenom:    ['', Validators.required],
+      email:     ['', [Validators.required, Validators.email]],
+      telephone: ['', [Validators.pattern(/^\d{9,10}$/)]],
+      ville:     ['', Validators.required],
+      adresse:   ['', Validators.required],
+      role:      ['', Validators.required],
+      sexe:      ['', Validators.required],
       motDePasse: ['', [
         Validators.required,
         Validators.minLength(6),
         Validators.pattern(/^(?=.*\d).+$/)
       ]],
       confirmPassword: ['', Validators.required],
-    }, {
-      validators: this.checkPasswords
-    });
+    }, { validators: this.checkPasswords });
 
     this.registerForm.get('role')?.valueChanges.subscribe(role => {
-      if (role) {
-        this.updateFormFields(role);
+      if (role) this.updateFormFields(role);
+    });
+
+    // Géocodage en arrière-plan dès que l'adresse change
+    this.registerForm.get('adresse')?.valueChanges.subscribe(adresse => {
+      this.cachedCoords = null;
+      if (adresse && adresse.length > 5) {
+        this.geocodingService.getCoordinates(adresse).subscribe({
+          next: coords => { if (coords) this.cachedCoords = coords; }
+        });
       }
     });
   }
 
   checkPasswords(group: AbstractControl): { [key: string]: boolean } | null {
-    const password = group.get('motDePasse')?.value;
-    const confirmPassword = group.get('confirmPassword')?.value;
-    return password === confirmPassword ? null : { notMatching: true };
+    const pw  = group.get('motDePasse')?.value;
+    const cpw = group.get('confirmPassword')?.value;
+    return pw === cpw ? null : { notMatching: true };
   }
 
   updateFormFields(role: string | null): void {
     if (!role) return;
-
-    ['description', 'preferences', 'competences', 'experiences', 'portfolio'].forEach(field => {
-      if (this.registerForm.contains(field)) {
-        this.registerForm.removeControl(field);
-      }
+    ['description', 'preferences', 'competences', 'experiences'].forEach(f => {
+      if (this.registerForm.contains(f)) this.registerForm.removeControl(f);
     });
-
     switch (role) {
       case 'EMPLOYEUR':
         this.registerForm.addControl('description', this.fb.control('', Validators.required));
@@ -87,14 +87,23 @@ export class RegisterComponent implements OnInit {
         break;
       case 'FREELANCE':
         this.registerForm.addControl('competences', this.fb.control('', Validators.required));
-        this.registerForm.addControl('experiences', this.fb.control('', Validators.required));
-        this.registerForm.addControl('portfolio', this.fb.control(''));
+        this.registerForm.addControl('experiences',  this.fb.control('', Validators.required));
         break;
     }
   }
 
+  selectRole(role: string): void {
+    this.registerForm.get('role')?.setValue(role);
+    this.registerForm.get('role')?.markAsTouched();
+  }
+
+  selectSexe(sexe: string): void {
+    this.registerForm.get('sexe')?.setValue(sexe);
+    this.registerForm.get('sexe')?.markAsTouched();
+  }
+
   nextStep(): void {
-    if (this.currentStep === 1 && this.validateStep1()) {
+    if (this.currentStep === 1 && this.validateControls(['nom', 'prenom', 'email'])) {
       this.currentStep++;
     } else if (this.currentStep === 2 && this.validateStep2()) {
       this.currentStep++;
@@ -105,95 +114,69 @@ export class RegisterComponent implements OnInit {
     this.currentStep--;
   }
 
-  validateStep1(): boolean {
-    return this.validateControls(['nom', 'prenom', 'email']);
+  private validateStep2(): boolean {
+    const base = ['telephone', 'ville', 'adresse', 'role', 'sexe'];
+    const role  = this.registerForm.get('role')?.value;
+    const extra = role === 'EMPLOYEUR' ? ['description']
+                : role === 'CLIENT'    ? ['preferences']
+                : role === 'FREELANCE' ? ['competences', 'experiences']
+                : [];
+    return this.validateControls([...base, ...extra]);
   }
 
-  validateStep2(): boolean {
-    return this.validateControls(['telephone', 'role', 'sexe']);
-  }
-
-  validateControls(controlNames: string[]): boolean {
+  validateControls(names: string[]): boolean {
     let valid = true;
-
-    controlNames.forEach(controlName => {
-      const control = this.registerForm.get(controlName);
-      if (control && control.invalid) {
-        control.markAsTouched();
-        valid = false;
-      }
+    names.forEach(name => {
+      const ctrl = this.registerForm.get(name);
+      if (ctrl?.invalid) { ctrl.markAsTouched(); valid = false; }
     });
-
     return valid;
   }
 
   onSubmit(): void {
-    if (this.registerForm.invalid) {
-      return;
-    }
+    if (this.registerForm.invalid) return;
 
     this.isLoading = true;
     this.errorMessage = '';
 
-    const signupRequest: SignupRequest = {
-      email: this.registerForm.value.email,
-      motDePasse: this.registerForm.value.motDePasse,
-      nom: this.registerForm.value.nom,
-      prenom: this.registerForm.value.prenom,
-      telephone: this.registerForm.value.telephone || '',
-      ville: this.registerForm.value.ville || '',
-      adresse: this.registerForm.value.adresse || '',
-      role: this.registerForm.value.role,
-      sexe: this.registerForm.value.sexe
+    const v = this.registerForm.value;
+    const req: SignupRequest = {
+      email:      v.email,
+      motDePasse: v.motDePasse,
+      nom:        v.nom,
+      prenom:     v.prenom,
+      telephone:  v.telephone || '',
+      ville:      v.ville     || '',
+      adresse:    v.adresse   || '',
+      role:       v.role,
+      sexe:       v.sexe,
     };
+    if (v.description) req.description = v.description;
+    if (v.preferences)  req.preferences = v.preferences;
+    if (v.competences)  req.competences = v.competences;
+    if (v.experiences)  req.experiences = v.experiences;
+    if (this.cachedCoords) { req.latitude = this.cachedCoords.lat; req.longitude = this.cachedCoords.lon; }
 
-    if (this.registerForm.value.description) signupRequest.description = this.registerForm.value.description;
-    if (this.registerForm.value.preferences) signupRequest.preferences = this.registerForm.value.preferences;
-    if (this.registerForm.value.competences) signupRequest.competences = this.registerForm.value.competences;
-    if (this.registerForm.value.experiences) signupRequest.experiences = this.registerForm.value.experiences;
-    if (this.registerForm.value.portfolio) signupRequest.portfolio = this.registerForm.value.portfolio;
-
-    if (signupRequest.adresse) {
-      this.geocodingService.getCoordinates(signupRequest.adresse).subscribe({
-        next: coords => {
-          if (coords) {
-            signupRequest.latitude = coords.lat;
-            signupRequest.longitude = coords.lon;
-
-          } else {
-            console.warn('Adresse non trouvée par le géocodage');
-          }
-          this.sendSignupRequest(signupRequest);
-        },
-        error: err => {
-          console.error('Erreur géocodage:', err);
-          this.sendSignupRequest(signupRequest);
-        }
-      });
-    } else {
-      this.sendSignupRequest(signupRequest);
-    }
+    this.sendSignupRequest(req);
   }
 
-  private sendSignupRequest(signupRequest: SignupRequest) {
-    this.authService.signup(signupRequest).subscribe({
-      next: (response) => {
+  private sendSignupRequest(req: SignupRequest): void {
+    this.authService.signup(req).subscribe({
+      next: res => {
         this.isLoading = false;
-        this.registeredEmail = response.email ?? signupRequest.email;
+        this.registeredEmail = res.email ?? req.email;
         this.registrationSuccess = true;
+        this.cdr.detectChanges();
       },
-      error: (error) => {
+      error: err => {
         this.isLoading = false;
-        this.errorMessage = error.message || 'Une erreur est survenue lors de l\'inscription';
+        this.errorMessage = typeof err === 'string'
+          ? err
+          : (err?.message || "Une erreur est survenue lors de l'inscription");
       }
     });
   }
 
-  closeModal(): void {
-    this.close.emit();
-  }
-
-  switchToLogin(): void {
-    this.switchToLoginEvent.emit();
-  }
+  closeModal():    void { this.close.emit(); }
+  switchToLogin(): void { this.switchToLoginEvent.emit(); }
 }

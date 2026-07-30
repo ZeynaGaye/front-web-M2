@@ -1,4 +1,5 @@
 import { Component, EventEmitter, OnInit, Output, OnDestroy, Input } from '@angular/core';
+import { trigger, transition, style, animate } from '@angular/animations';
 import { CommonModule, NgFor, NgIf } from '@angular/common';
 import { MatCardActions, MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -20,7 +21,19 @@ import { AuthService } from '../../../core/servces/auth.service';
     AddServiceFreelanceDialogComponent
 ],
   templateUrl: './mes-service-freelance.component.html',
-  styleUrls: ['./mes-service-freelance.component.scss']
+  styleUrls: ['./mes-service-freelance.component.scss'],
+  animations: [
+    trigger('expandDown', [
+      transition(':enter', [
+        style({ height: 0, opacity: 0, overflow: 'hidden' }),
+        animate('420ms cubic-bezier(0.34, 1.56, 0.64, 1)', style({ height: '*', opacity: 1 }))
+      ]),
+      transition(':leave', [
+        style({ overflow: 'hidden' }),
+        animate('240ms cubic-bezier(0.4, 0, 0.2, 1)', style({ height: 0, opacity: 0 }))
+      ])
+    ])
+  ]
 })
 export class MesServicesFreelanceComponent implements OnInit, OnDestroy {
 
@@ -309,9 +322,9 @@ export class MesServicesFreelanceComponent implements OnInit, OnDestroy {
     if (!price || price === 0) {
       return '0 CFA';
     }
-    
-    // Formater le nombre avec des espaces pour les milliers
-    const formattedNumber = new Intl.NumberFormat('fr-FR').format(price);
+    const formattedNumber = new Intl.NumberFormat('fr-FR', {
+      maximumFractionDigits: 0
+    }).format(Math.round(price));
     return `${formattedNumber} CFA`;
   }
 
@@ -350,7 +363,7 @@ export class MesServicesFreelanceComponent implements OnInit, OnDestroy {
       'Coiffure': 'content_cut',
       'Maquillage': 'palette',
       'Soins du visage': 'spa',
-      'Manucure/Pédicure': 'back_hand',
+      'Manucure/Pédicure': 'pan_tool',
       'Épilation': 'remove',
       'Massage': 'healing',
       'Extensions': 'extension',

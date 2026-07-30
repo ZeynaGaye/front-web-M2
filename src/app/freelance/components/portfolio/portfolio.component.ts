@@ -1,5 +1,5 @@
 import { isPlatformBrowser, CommonModule } from '@angular/common';
-import { Component, Inject, OnDestroy, OnInit, PLATFORM_ID, CUSTOM_ELEMENTS_SCHEMA, AfterViewInit, Input, HostListener } from '@angular/core';
+import { Component, Inject, NgZone, OnDestroy, OnInit, PLATFORM_ID, CUSTOM_ELEMENTS_SCHEMA, AfterViewInit, Input, HostListener } from '@angular/core';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { trigger, transition, style, animate, state, query, stagger } from '@angular/animations';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -72,6 +72,7 @@ export class PortfolioComponent implements OnInit, OnDestroy, AfterViewInit {
   // Paramètres d'entrée existants
   @Input() clientMode: boolean = false;
   @Input() freelanceId: number | null = null;
+  @Input() hideHeader: boolean = false;
   
   // Variables existantes pour le portfolio
   swiperInstances: { [key: number]: any } = {};
@@ -106,20 +107,14 @@ export class PortfolioComponent implements OnInit, OnDestroy, AfterViewInit {
   // Statistiques
   stats: any = {
     totalItems: 0,
-    totalViews: 0, 
+    totalViews: 0,
     totalLikes: 0
   };
+
+  private viewedItems = new Set<number>();
+  private intersectionObserver: IntersectionObserver | null = null;
   
-  // Filtres disponibles
-  filters = [
-    { id: 'all', label: 'Tous' },
-    { id: 'coiffure', label: 'Coiffure' },
-    { id: 'maquillage', label: 'Maquillage' },
-    { id: 'manucure', label: 'Manucure' },
-    { id: 'pédicure', label: 'Pédicure' },
-    { id: 'massage', label: 'Massage' },
-    { id: 'soins', label: 'Soins de la peau' }
-  ];
+  // Filtres : dynamiques depuis les catégories réelles des items
   
   // Configuration Swiper
   swiperConfig = {
@@ -147,6 +142,7 @@ export class PortfolioComponent implements OnInit, OnDestroy, AfterViewInit {
     private snackBar: MatSnackBar,
     private fb: FormBuilder,
     public authManager: PortfolioAuthManagerService,
+    private ngZone: NgZone,
     @Inject(PLATFORM_ID) platformId: Object
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
@@ -244,8 +240,11 @@ export class PortfolioComponent implements OnInit, OnDestroy, AfterViewInit {
           this.freelanceInfoLoading = false;
         }
         
-        // Initialiser les swipers après le chargement
-        setTimeout(() => this.initSwipers(), 100);
+        // Initialiser les swipers et le tracking des vues après le chargement
+        setTimeout(() => {
+          this.initSwipers();
+          this.setupViewTracking();
+        }, 300);
       },
       error: (error) => {
         console.error(' Erreur chargement portfolio:', error);
@@ -490,19 +489,57 @@ Cordialement.`;
   // MÉTHODES EXISTANTES (INCHANGÉES)
   // ==========================================
 
+  setupViewTracking(): void {
+    if (!this.isBrowser || this.filteredItems.length === 0) return;
+
+    this.intersectionObserver?.disconnect();
+
+    this.ngZone.runOutsideAngular(() => {
+      this.intersectionObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (!entry.isIntersecting) return;
+          const id = parseInt(entry.target.getAttribute('data-item-id') || '0');
+          if (!id || this.viewedItems.has(id)) return;
+
+          this.viewedItems.add(id);
+          this.intersectionObserver?.unobserve(entry.target);
+          this.portfolioService.recordView(id).subscribe();
+
+          this.ngZone.run(() => {
+            this.stats.totalViews = (this.stats.totalViews || 0) + 1;
+            const idx = this.portfolioItems.findIndex(i => i.id === id);
+            if (idx !== -1) {
+              this.portfolioItems[idx] = {
+                ...this.portfolioItems[idx],
+                nombreVues: (this.portfolioItems[idx].nombreVues || 0) + 1
+              };
+            }
+          });
+        });
+      }, { threshold: 0.5 });
+
+      setTimeout(() => {
+        document.querySelectorAll('.portfolio-card[data-item-id]').forEach(card => {
+          this.intersectionObserver!.observe(card);
+        });
+      }, 200);
+    });
+  }
+
   initSwipers(): void {
+    if (!this.isBrowser) return;
     const swiperElements = document.querySelectorAll('swiper-container');
-    if (swiperElements.length > 0) {
-      swiperElements.forEach((element: any) => {
-        const itemId = element.getAttribute('data-item-id');
-        if (itemId) {
+    swiperElements.forEach((element: any) => {
+      const itemId = element.getAttribute('data-item-id');
+      if (itemId && !element.initialized) {
+        try {
           Object.assign(element, this.swiperConfig);
           element.initialize();
           this.swiperInstances[parseInt(itemId)] = element;
           this.autoplayStatus[parseInt(itemId)] = true;
-        }
-      });
-    }
+        } catch (_) {}
+      }
+    });
   }
 
   loadPortfolio(): void {
@@ -537,29 +574,28 @@ Cordialement.`;
 
   get categories(): string[] {
     if (!this.portfolioItems || this.portfolioItems.length === 0) return [];
-    
     const allCategories = new Set<string>();
     this.portfolioItems.forEach(item => {
-      if (item.categories) {
-        item.categories.forEach(cat => allCategories.add(cat));
-      }
+      (item.categories || []).forEach(cat => {
+        if (cat?.trim()) allCategories.add(cat.trim());
+      });
     });
-    
-    return Array.from(allCategories);
+    return Array.from(allCategories).sort();
   }
 
   filterByCategory(category: string): void {
     this.activeFilter = category;
   }
 
+  private normalize(s: string): string {
+    return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  }
+
   get filteredItems(): PortfolioItem[] {
     if (this.activeFilter === 'all') return this.portfolioItems;
-    const filter = this.activeFilter.toLowerCase();
+    const filter = this.normalize(this.activeFilter);
     return this.portfolioItems.filter(item =>
-      item.categories?.some(cat => {
-        const c = cat.toLowerCase();
-        return c === filter || c.includes(filter) || filter.includes(c);
-      })
+      (item.categories || []).some(cat => this.normalize(cat) === filter)
     );
   }
 
@@ -631,51 +667,21 @@ Cordialement.`;
   }
 
 isLikedByUser(itemId: number): boolean {
-  //  Mode dashboard freelance : ne peut pas aimer son propre travail
-  if (!this.clientMode) {
-    return false;
-  }
-  
-  //  Mode client non connecté : ne peut pas avoir aimé
-  if (!this.authManager.isAuthenticated()) {
-    return false;
-  }
-  
-  //  Mode client connecté : vérifier s'il a déjà aimé cet élément
-  return this.userLikes.has(itemId);
+  return this.authManager.isAuthenticated() && this.userLikes.has(itemId);
 }
  loadUserLikes(): void {
-  //  Charger les likes utilisateur SEULEMENT si :
-  // 1. On est en mode CLIENT (on consulte les portfolios depuis la page d'accueil)
-  // 2. ET l'utilisateur est connecté (pour savoir ce qu'il a déjà aimé)
-  
-  if (!this.clientMode) {
-
-    this.userLikes.clear();
-    return;
-  }
-  
   if (!this.authManager.isAuthenticated()) {
-
     this.userLikes.clear();
     return;
   }
-  
 
-  
   this.portfolioService.getUserLikes().subscribe({
     next: (likedItemsIds) => {
-
       this.userLikes.clear();
       likedItemsIds.forEach(id => this.userLikes.add(id));
     },
-    error: (error) => {
-      console.error(' Erreur chargement user likes:', error);
-      
-      if (error.status === 401) {
-
-        this.userLikes.clear();
-      }
+    error: () => {
+      this.userLikes.clear();
     }
   });
 }
@@ -747,25 +753,10 @@ isLikedByUser(itemId: number): boolean {
 
         this.portfolioService.deletePortfolioItem(item.id).subscribe({
           next: () => {
-
-
-            
-            // Supprimer immédiatement de la liste locale
-            const portfolioAvant = this.portfolioItems.length;
             this.portfolioItems = this.portfolioItems.filter(i => i.id !== item.id);
-
-            
-            // Mettre à jour les statistiques
             this.stats.totalItems = (this.stats.totalItems || 0) - 1;
             this.stats.totalViews = (this.stats.totalViews || 0) - (item.nombreVues || 0);
             this.stats.totalLikes = (this.stats.totalLikes || 0) - (item.nombreLikes || 0);
-            
-            // Recharger le portfolio depuis le serveur pour s'assurer de la cohérence
-            setTimeout(() => {
-
-              this.loadPortfolioAndFreelanceInfo();
-            }, 1000);
-            
             this.snackBar.open(`"${item.titre}" a été supprimé avec succès`, 'Fermer', {
               duration: 3000,
               panelClass: 'success-snackbar'
@@ -902,7 +893,8 @@ isLikedByUser(itemId: number): boolean {
     if (this.isBrowser) {
       document.body.style.overflow = 'auto';
     }
-    // Détruire proprement toutes les instances Swiper pour éviter les artefacts visuels
+    this.intersectionObserver?.disconnect();
+    this.intersectionObserver = null;
     Object.values(this.swiperInstances).forEach((el: any) => {
       try { el?.swiper?.destroy(true, true); } catch (_) {}
     });

@@ -1,323 +1,331 @@
-<div class="profile-management-container">
-  <header class="profile-header">
-    <div class="profile-header-content">
-      <mat-icon class="header-icon">person</mat-icon>
-      <h1 class="header-title">Gestion du Profil</h1>
-      <p class="header-subtitle">
-        <strong>Gérez vos informations personnelles et paramètres de compte</strong>
-      </p>
-    </div>
-  </header>
+<div class="pm-wrap">
 
-  <div *ngIf="isLoading" class="loading-container">
-    <mat-spinner></mat-spinner>
-    <p>Chargement de votre profil...</p>
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="pm-loading">
+    <mat-spinner diameter="32"></mat-spinner>
   </div>
 
-  <main *ngIf="!isLoading && currentUser" class="profile-content">
-    
-    <mat-tab-group [(selectedIndex)]="selectedTabIndex" class="profile-tabs">
-      
-      <mat-tab label="Informations Personnelles">
-        <div class="tab-content">
+  <!-- Error -->
+  <div *ngIf="!isLoading && !currentUser" class="pm-error">
+    <p>Impossible de charger votre profil.</p>
+    <button class="pm-btn pm-btn--ghost" (click)="loadUserProfile()">Réessayer</button>
+  </div>
+
+  <!-- Layout -->
+  <div *ngIf="!isLoading && currentUser" class="pm-layout">
+
+    <!-- ════ HERO ════ -->
+    <div class="pm-hero">
+      <div class="pm-hero__inner">
+
+        <!-- Avatar -->
+        <div class="pm-avatar">
+          <div class="pm-avatar__initials">
+            {{ (currentUser.prenom?.[0] || '') }}{{ (currentUser.nom?.[0] || '') }}
+          </div>
+          <div class="pm-avatar__photo-wrap">
+            <app-profile-photo-manager
+              [userId]="currentUser.id!"
+              [currentPhotoUrl]="currentUser.photoProfile || null"
+              [userRole]="currentUser.role"
+              (photoUploaded)="onProfilePhotoUpdated($event)"
+              (photoDeleted)="onProfilePhotoDeleted()">
+            </app-profile-photo-manager>
+          </div>
+        </div>
+
+        <!-- Infos -->
+        <div class="pm-hero__info">
+          <p class="pm-hero__role">{{ currentUser.role }}</p>
+          <h1 class="pm-hero__name">{{ currentUser.prenom }} {{ currentUser.nom }}</h1>
+          <p class="pm-hero__sub">
+            Sur BeautyHub
+            <ng-container *ngIf="profileForm.get('ville')?.value || currentUser.ville">
+              · {{ profileForm.get('ville')?.value || currentUser.ville }}
+            </ng-container>
+          </p>
+          <div class="pm-hero__badges">
+            <span class="pm-badge pm-badge--check">
+              <mat-icon>verified</mat-icon> Identité vérifiée
+            </span>
+            <span class="pm-badge pm-badge--star"
+                  *ngIf="currentUser.role?.toUpperCase() === 'FREELANCE'">
+              <mat-icon>workspace_premium</mat-icon> Top pro
+            </span>
+          </div>
+        </div>
+
+        <!-- CTA -->
+        <button class="pm-hero__cta" type="button">
+          <mat-icon>edit</mat-icon>
+          Modifier le profil
+        </button>
+
+      </div>
+    </div>
+
+    <!-- ════ BODY ════ -->
+    <div class="pm-body">
+
+      <!-- MAIN -->
+      <main class="pm-main">
+
+        <!-- ── Vue Profil ── -->
+        <ng-container *ngIf="selectedTabIndex !== 1">
           <form [formGroup]="profileForm" (ngSubmit)="onSaveProfile()">
-            
-            <mat-card class="app-card profile-photo-card">
-              <mat-card-header>
-                <div mat-card-avatar class="card-icon-avatar">
-                  <mat-icon>photo_camera</mat-icon>
-                </div>
-                <mat-card-title>Photo de Profil</mat-card-title>
-                <mat-card-subtitle>Une photo professionnelle inspire confiance</mat-card-subtitle>
-              </mat-card-header>
-              <mat-card-content>
-                <app-profile-photo-manager
-                  [userId]="currentUser.id!"
-                  [currentPhotoUrl]="currentUser.photoProfile || null"
-                  [userRole]="currentUser.role"
-                  (photoUploaded)="onProfilePhotoUpdated($event)"
-                  (photoDeleted)="onProfilePhotoDeleted()">
-                </app-profile-photo-manager>
-              </mat-card-content>
-            </mat-card>
 
-            <mat-card class="app-card profile-info-card">
-              <mat-card-header>
-                <div mat-card-avatar class="card-icon-avatar">
-                  <mat-icon>info</mat-icon>
-                </div>
-                <mat-card-title>Informations de Base</mat-card-title>
-                <mat-card-subtitle>Vos informations principales</mat-card-subtitle>
-              </mat-card-header>
-              <mat-card-content>
-                <div class="form-grid">
-                  <mat-form-field appearance="outline">
-                    <mat-label>Nom</mat-label>
-                    <input matInput formControlName="nom" required>
-                    <mat-icon matSuffix>person</mat-icon>
-                    <mat-error>{{ getFieldError('nom') }}</mat-error>
-                  </mat-form-field>
+            <!-- Informations personnelles -->
+            <div class="pm-card">
+              <h2 class="pm-card__title">Informations personnelles</h2>
 
+              <div class="pm-grid-2">
+                <div class="pm-field">
+                  <label class="pm-lbl">Prénom</label>
                   <mat-form-field appearance="outline">
-                    <mat-label>Prénom</mat-label>
-                    <input matInput formControlName="prenom" required>
-                    <mat-icon matSuffix>person</mat-icon>
+                    <input matInput formControlName="prenom" required placeholder="Prénom">
                     <mat-error>{{ getFieldError('prenom') }}</mat-error>
                   </mat-form-field>
-
+                </div>
+                <div class="pm-field">
+                  <label class="pm-lbl">Nom</label>
                   <mat-form-field appearance="outline">
-                    <mat-label>Email</mat-label>
-                    <input matInput formControlName="email" type="email" required>
-                    <mat-icon matSuffix>email</mat-icon>
-                    <mat-error>{{ getFieldError('email') }}</mat-error>
-                    <mat-hint>
-                      <mat-icon class="hint-icon">info</mat-icon>
-                      Cette adresse est utilisée pour la connexion.
-                    </mat-hint>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Téléphone</mat-label>
-                    <input matInput formControlName="telephone" type="tel">
-                    <mat-icon matSuffix>phone</mat-icon>
-                    <mat-error>{{ getFieldError('telephone') }}</mat-error>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Sexe</mat-label>
-                    <mat-select formControlName="sexe">
-                      <mat-option *ngFor="let option of sexeOptions" [value]="option.value">
-                        {{ option.label }}
-                      </mat-option>
-                    </mat-select>
-                    <mat-icon matSuffix>wc</mat-icon>
+                    <input matInput formControlName="nom" required placeholder="Nom">
+                    <mat-error>{{ getFieldError('nom') }}</mat-error>
                   </mat-form-field>
                 </div>
-              </mat-card-content>
-            </mat-card>
-
-            <mat-card class="app-card profile-address-card">
-              <mat-card-header>
-                <div mat-card-avatar class="card-icon-avatar">
-                  <mat-icon>location_on</mat-icon>
-                </div>
-                <mat-card-title>Adresse</mat-card-title>
-              </mat-card-header>
-              <mat-card-content>
-                <div class="form-grid">
-                  <mat-form-field appearance="outline">
-                    <mat-label>Adresse complète</mat-label>
-                    <textarea matInput formControlName="adresse" rows="2"></textarea>
-                    <mat-icon matSuffix>home</mat-icon>
-                  </mat-form-field>
-
-                  <mat-form-field appearance="outline">
-                    <mat-label>Ville</mat-label>
-                    <input matInput formControlName="ville">
-                    <mat-icon matSuffix>location_city</mat-icon>
-                  </mat-form-field>
-                </div>
-              </mat-card-content>
-            </mat-card>
-
-            <mat-card *ngIf="isFreelance" class="app-card profile-freelance-card">
-              <mat-card-header>
-                <div mat-card-avatar class="card-icon-avatar">
-                  <mat-icon>work</mat-icon>
-                </div>
-                <mat-card-title>Informations Professionnelles</mat-card-title>
-                <mat-card-subtitle>Spécifique aux freelances</mat-card-subtitle>
-              </mat-card-header>
-              <mat-card-content>
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Compétences</mat-label>
-                  <textarea matInput formControlName="competences" rows="2" 
-                              placeholder="Séparez vos compétences par des virgules"></textarea>
-                  <mat-icon matSuffix>star</mat-icon>
-                  <mat-hint>Exemple: Coiffure, Maquillage, Manucure</mat-hint>
-                </mat-form-field>
-
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Expériences</mat-label>
-                  <textarea matInput formControlName="experiences" rows="4" 
-                              placeholder="Décrivez vos expériences professionnelles"></textarea>
-                  <mat-icon matSuffix>timeline</mat-icon>
-                </mat-form-field>
-              </mat-card-content>
-            </mat-card>
-
-            <mat-card *ngIf="isClient" class="app-card profile-client-card">
-              <mat-card-header>
-                <div mat-card-avatar class="card-icon-avatar">
-                  <mat-icon>favorite</mat-icon>
-                </div>
-                <mat-card-title>Préférences Client</mat-card-title>
-              </mat-card-header>
-              <mat-card-content>
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Préférences</mat-label>
-                  <textarea matInput formControlName="preferences" rows="3" 
-                              placeholder="Décrivez vos préférences en matière de services"></textarea>
-                  <mat-icon matSuffix>tune</mat-icon>
-                </mat-form-field>
-              </mat-card-content>
-            </mat-card>
-
-            <mat-card *ngIf="isEmployeur" class="app-card profile-employer-card">
-              <mat-card-header>
-                <div mat-card-avatar class="card-icon-avatar">
-                  <mat-icon>business</mat-icon>
-                </div>
-                <mat-card-title>Informations Entreprise</mat-card-title>
-              </mat-card-header>
-              <mat-card-content>
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Description de l'entreprise</mat-label>
-                  <textarea matInput formControlName="description" rows="4" 
-                              placeholder="Décrivez votre entreprise et vos activités"></textarea>
-                  <mat-icon matSuffix>description</mat-icon>
-                </mat-form-field>
-              </mat-card-content>
-            </mat-card>
-            
-            <div class="form-actions">
-              <button mat-raised-button color="primary" type="submit" 
-                      [disabled]="profileForm.invalid || isSaving">
-                <mat-icon *ngIf="!isSaving">save</mat-icon>
-                <mat-spinner *ngIf="isSaving" diameter="20"></mat-spinner>
-                {{ isSaving ? 'Sauvegarde...' : 'Sauvegarder' }}
-              </button>
-              
-              <button mat-stroked-button type="button" 
-                      (click)="loadUserProfile()" 
-                      [disabled]="isSaving">
-                <mat-icon>refresh</mat-icon>
-                Annuler
-              </button>
-            </div>
-          </form>
-        </div>
-      </mat-tab>
-
-      <mat-tab label="Sécurité">
-        <div class="tab-content">
-          <mat-card class="app-card password-card">
-            <mat-card-header>
-              <div mat-card-avatar class="card-icon-avatar">
-                <mat-icon>lock</mat-icon>
               </div>
-              <mat-card-title>Changement de Mot de Passe</mat-card-title>
-              <mat-card-subtitle>Modifiez votre mot de passe de connexion</mat-card-subtitle>
-            </mat-card-header>
-            <mat-card-content>
-              <form [formGroup]="passwordForm" (ngSubmit)="onChangePassword()">
-                <mat-form-field appearance="outline" class="full-width">
+
+              <div class="pm-grid-2">
+                <div class="pm-field">
+                  <label class="pm-lbl">Email</label>
+                  <mat-form-field appearance="outline">
+                    <mat-icon matPrefix class="pm-icon-pre">mail_outline</mat-icon>
+                    <input matInput formControlName="email" type="email" required>
+                    <mat-error>{{ getFieldError('email') }}</mat-error>
+                  </mat-form-field>
+                </div>
+                <div class="pm-field">
+                  <label class="pm-lbl">Téléphone</label>
+                  <mat-form-field appearance="outline">
+                    <mat-icon matPrefix class="pm-icon-pre">phone</mat-icon>
+                    <input matInput formControlName="telephone" type="tel" placeholder="+221 77…">
+                  </mat-form-field>
+                </div>
+              </div>
+
+              <div class="pm-field">
+                <label class="pm-lbl">Adresse</label>
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-icon matPrefix class="pm-icon-pre">location_on</mat-icon>
+                  <input matInput formControlName="adresse" placeholder="Quartier, ville">
+                </mat-form-field>
+              </div>
+            </div>
+
+            <!-- À propos -->
+            <div class="pm-card">
+              <h2 class="pm-card__title">À propos</h2>
+
+              <p class="pm-about__text"
+                 *ngIf="profileForm.get('experiences')?.value ||
+                        profileForm.get('competences')?.value ||
+                        profileForm.get('description')?.value ||
+                        profileForm.get('preferences')?.value; else noBio">
+                {{ profileForm.get('experiences')?.value ||
+                   profileForm.get('competences')?.value ||
+                   profileForm.get('description')?.value ||
+                   profileForm.get('preferences')?.value }}
+              </p>
+              <ng-template #noBio>
+                <p class="pm-about__text pm-about__text--empty">
+                  Présentez-vous pour être mieux trouvé par vos clients…
+                </p>
+              </ng-template>
+
+              <details class="pm-about__details">
+                <summary class="pm-about__toggle">
+                  <mat-icon>edit</mat-icon> Modifier
+                </summary>
+                <div class="pm-about__edit">
+                  <ng-container *ngIf="currentUser.role?.toUpperCase() === 'FREELANCE'">
+                    <mat-form-field appearance="outline">
+                      <mat-label>Présentation</mat-label>
+                      <textarea matInput formControlName="experiences" rows="4"
+                                placeholder="Maquilleuse professionnelle depuis 6 ans, spécialisée dans les tresses afro et le maquillage de mariée…"></textarea>
+                      <mat-hint>Décrivez qui vous êtes, votre style, votre approche</mat-hint>
+                    </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>Compétences</mat-label>
+                      <textarea matInput formControlName="competences" rows="2"
+                                placeholder="Coiffure, Tresses afro, Maquillage, Manucure…"></textarea>
+                      <mat-hint>Séparez par des virgules</mat-hint>
+                    </mat-form-field>
+                  </ng-container>
+                  <ng-container *ngIf="currentUser.role?.toUpperCase() === 'EMPLOYEUR'">
+                    <mat-form-field appearance="outline">
+                      <mat-label>Description du salon</mat-label>
+                      <textarea matInput formControlName="description" rows="4"
+                                placeholder="Présentez votre salon…"></textarea>
+                    </mat-form-field>
+                  </ng-container>
+                  <ng-container *ngIf="currentUser.role?.toUpperCase() === 'CLIENT'">
+                    <mat-form-field appearance="outline">
+                      <mat-label>Vos préférences</mat-label>
+                      <textarea matInput formControlName="preferences" rows="3"
+                                placeholder="Styles, services préférés…"></textarea>
+                    </mat-form-field>
+                  </ng-container>
+                  <ng-container *ngIf="!['FREELANCE','EMPLOYEUR','CLIENT'].includes(currentUser.role?.toUpperCase() || '')">
+                    <mat-form-field appearance="outline">
+                      <mat-label>À propos de vous</mat-label>
+                      <textarea matInput formControlName="competences" rows="3"></textarea>
+                    </mat-form-field>
+                  </ng-container>
+                </div>
+              </details>
+            </div>
+
+            <!-- Documents (freelance) -->
+            <div class="pm-card" *ngIf="currentUser.role?.toUpperCase() === 'FREELANCE'">
+              <h2 class="pm-card__title">Vérification & documents</h2>
+              <ul class="pm-docs">
+                <li class="pm-docs__item">
+                  <mat-icon class="pm-docs__check">check_circle</mat-icon>
+                  <div class="pm-docs__info">
+                    <span class="pm-docs__name">Pièce d'Identité</span>
+                    <span class="pm-docs__sub">Vérifiée</span>
+                  </div>
+                  <span class="pm-docs__badge">VALIDÉ</span>
+                </li>
+                <li class="pm-docs__item">
+                  <mat-icon class="pm-docs__check">check_circle</mat-icon>
+                  <div class="pm-docs__info">
+                    <span class="pm-docs__name">Certification professionnelle</span>
+                    <span class="pm-docs__sub">CAP Esthétique</span>
+                  </div>
+                  <span class="pm-docs__badge">VALIDÉ</span>
+                </li>
+              </ul>
+            </div>
+
+            <!-- Barre sauvegarde sticky -->
+            <div class="pm-save-bar">
+              <div class="pm-save-bar__btns">
+                <button class="pm-btn pm-btn--ghost" type="button"
+                        (click)="loadUserProfile()" [disabled]="isSaving">
+                  Annuler
+                </button>
+                <button class="pm-btn pm-btn--primary" type="submit" [disabled]="isSaving">
+                  <mat-spinner *ngIf="isSaving" diameter="14"></mat-spinner>
+                  {{ isSaving ? 'Sauvegarde…' : 'Sauvegarder les modifications' }}
+                </button>
+              </div>
+            </div>
+
+          </form>
+        </ng-container>
+
+        <!-- ── Vue Mot de passe ── -->
+        <ng-container *ngIf="selectedTabIndex === 1">
+          <form [formGroup]="passwordForm" (ngSubmit)="onChangePassword()">
+            <div class="pm-card">
+              <h2 class="pm-card__title">Mot de passe & sécurité</h2>
+              <div class="pm-col">
+                <mat-form-field appearance="outline">
                   <mat-label>Mot de passe actuel</mat-label>
                   <input matInput formControlName="currentPassword" type="password" required>
-                  <mat-icon matSuffix>lock_outline</mat-icon>
                   <mat-error>{{ getPasswordError('currentPassword') }}</mat-error>
                 </mat-form-field>
-
-                <mat-form-field appearance="outline" class="full-width">
+                <mat-form-field appearance="outline">
                   <mat-label>Nouveau mot de passe</mat-label>
                   <input matInput formControlName="newPassword" type="password" required>
-                  <mat-icon matSuffix>lock</mat-icon>
                   <mat-error>{{ getPasswordError('newPassword') }}</mat-error>
-                  
-                  <div class="password-strength" *ngIf="passwordForm.get('newPassword')?.value">
-                    <div class="strength-bar">
-                      <div class="strength-fill" [class]="'strength-' + passwordStrength"></div>
-                    </div>
-                    <span class="strength-text" [class]="'strength-' + passwordStrength">
-                      {{ passwordStrength === 'weak' ? 'Faible' : 
-                          passwordStrength === 'medium' ? 'Moyen' : 'Fort' }}
-                    </span>
-                  </div>
                 </mat-form-field>
-
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Confirmer le nouveau mot de passe</mat-label>
+                <div class="pm-strength" *ngIf="passwordForm.get('newPassword')?.value">
+                  <div class="pm-strength__bar">
+                    <div class="pm-strength__fill" [class]="'pm-strength__fill--' + passwordStrength"></div>
+                  </div>
+                  <span class="pm-strength__label" [class]="'pm-strength__label--' + passwordStrength">
+                    {{ passwordStrength === 'weak' ? 'Faible' :
+                       passwordStrength === 'medium' ? 'Moyen' : 'Fort' }}
+                  </span>
+                </div>
+                <mat-form-field appearance="outline">
+                  <mat-label>Confirmer le mot de passe</mat-label>
                   <input matInput formControlName="confirmPassword" type="password" required>
-                  <mat-icon matSuffix>lock</mat-icon>
                   <mat-error>{{ getPasswordError('confirmPassword') }}</mat-error>
                 </mat-form-field>
-
-                <div class="form-actions">
-                  <button mat-raised-button color="primary" type="submit" 
-                          [disabled]="passwordForm.invalid || isChangingPassword">
-                    <mat-icon *ngIf="!isChangingPassword">security</mat-icon>
-                    <mat-spinner *ngIf="isChangingPassword" diameter="20"></mat-spinner>
-                    {{ isChangingPassword ? 'Modification...' : 'Changer le mot de passe' }}
-                  </button>
-                  
-                  <button mat-stroked-button type="button" 
-                          (click)="passwordForm.reset()" 
-                          [disabled]="isChangingPassword">
-                    <mat-icon>clear</mat-icon>
-                    Effacer
-                  </button>
-                </div>
-              </form>
-            </mat-card-content>
-          </mat-card>
-        </div>
-      </mat-tab>
-
-      <mat-tab label="Informations de Compte">
-        <div class="tab-content">
-          <mat-card class="app-card account-info-card">
-            <mat-card-header>
-              <div mat-card-avatar class="card-icon-avatar">
-                <mat-icon>account_circle</mat-icon>
               </div>
-              <mat-card-title>Informations de Compte</mat-card-title>
-            </mat-card-header>
-            <mat-card-content>
-              <div class="info-grid">
-                <div class="info-item">
-                  <mat-icon>assignment_ind</mat-icon>
-                  <div class="info-content">
-                    <label>Rôle</label>
-                    <span class="role-badge" [class]="'role-' + currentUser.role.toLowerCase()">
-                      {{ currentUser.role }}
-                    </span>
-                  </div>
-                </div>
-
-                <div class="info-item">
-                  <mat-icon>person</mat-icon>
-                  <div class="info-content">
-                    <label>Nom Complet</label>
-                    <span>{{ userDisplayName }}</span>
-                  </div>
-                </div>
-
-                <div class="info-item">
-                  <mat-icon>email</mat-icon>
-                  <div class="info-content">
-                    <label>Email</label>
-                    <span>{{ currentUser.email }}</span>
-                  </div>
-                </div>
+            </div>
+            <div class="pm-save-bar">
+              <button class="pm-btn pm-btn--ghost" type="button"
+                      (click)="selectedTabIndex = 0; passwordForm.reset()">
+                <mat-icon>arrow_back</mat-icon> Retour au profil
+              </button>
+              <div class="pm-save-bar__btns">
+                <button class="pm-btn pm-btn--primary" type="submit"
+                        [disabled]="passwordForm.invalid || isChangingPassword">
+                  <mat-spinner *ngIf="isChangingPassword" diameter="14"></mat-spinner>
+                  {{ isChangingPassword ? 'Modification…' : 'Modifier le mot de passe' }}
+                </button>
               </div>
-            </mat-card-content>
-          </mat-card>
-        </div>
-      </mat-tab>
-    </mat-tab-group>
-  </main>
+            </div>
+          </form>
+        </ng-container>
 
-  <div *ngIf="!isLoading && !currentUser" class="error-state">
-    <mat-card class="app-card error-card">
-      <mat-card-content>
-        <mat-icon color="warn">error</mat-icon>
-        <h3>Impossible de charger le profil</h3>
-        <p>Veuillez vous reconnecter ou contacter le support technique.</p>
-        <button mat-raised-button color="primary" (click)="loadUserProfile()">
-          <mat-icon>refresh</mat-icon>
-          Réessayer
-        </button>
-      </mat-card-content>
-    </mat-card>
+      </main>
+
+      <!-- SIDEBAR -->
+      <aside class="pm-sidebar">
+
+        <!-- Compte info -->
+        <div class="pm-account-card">
+          <p class="pm-account-card__label">Mon compte</p>
+          <div class="pm-account-card__row">
+            <mat-icon>person_outline</mat-icon>
+            <span>{{ currentUser.prenom }} {{ currentUser.nom }}</span>
+          </div>
+          <div class="pm-account-card__row">
+            <mat-icon>mail_outline</mat-icon>
+            <span>{{ currentUser.email }}</span>
+          </div>
+          <div class="pm-account-card__row">
+            <mat-icon>badge</mat-icon>
+            <span class="pm-role-pill">{{ currentUser.role }}</span>
+          </div>
+        </div>
+
+        <!-- Settings -->
+        <ul class="pm-settings">
+          <li class="pm-settings__item" (click)="selectedTabIndex = 1">
+            <span class="pm-settings__ico"><mat-icon>lock_outline</mat-icon></span>
+            <span class="pm-settings__label">Mot de passe & sécurité</span>
+            <mat-icon class="pm-settings__arrow">chevron_right</mat-icon>
+          </li>
+          <li class="pm-settings__item">
+            <span class="pm-settings__ico"><mat-icon>account_balance_wallet</mat-icon></span>
+            <span class="pm-settings__label">Coordonnées bancaires</span>
+            <mat-icon class="pm-settings__arrow">chevron_right</mat-icon>
+          </li>
+          <li class="pm-settings__item">
+            <span class="pm-settings__ico"><mat-icon>notifications_none</mat-icon></span>
+            <span class="pm-settings__label">Notifications</span>
+            <mat-icon class="pm-settings__arrow">chevron_right</mat-icon>
+          </li>
+          <li class="pm-settings__item">
+            <span class="pm-settings__ico"><mat-icon>help_outline</mat-icon></span>
+            <span class="pm-settings__label">Aide & support</span>
+            <mat-icon class="pm-settings__arrow">chevron_right</mat-icon>
+          </li>
+          <li class="pm-settings__item pm-settings__item--danger">
+            <span class="pm-settings__ico"><mat-icon>logout</mat-icon></span>
+            <span class="pm-settings__label">Se déconnecter</span>
+            <mat-icon class="pm-settings__arrow">chevron_right</mat-icon>
+          </li>
+        </ul>
+
+      </aside>
+    </div>
+
   </div>
 </div>

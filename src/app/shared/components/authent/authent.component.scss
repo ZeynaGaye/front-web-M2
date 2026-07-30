@@ -288,32 +288,45 @@ $input-bg: #f8f9fa;
 
   .social-login {
     display: flex;
-    justify-content: center;
-    gap: 14px;
+    flex-direction: column;
+    gap: 10px;
     margin-bottom: 8px;
 
     .social-btn {
-      width: 42px;
-      height: 42px;
-      border-radius: 50%;
-      border: 1.5px solid $border;
-      background: $bg;
-      color: $dark;
-      font-size: 0.95rem;
-      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: border-color 0.2s, box-shadow 0.2s;
+      gap: 10px;
+      width: 100%;
+      padding: 10px 16px;
+      border-radius: 10px;
+      border: 1.5px solid $border;
+      background: $bg;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: .82rem;
+      font-weight: 600;
+      color: #1a1a1a;
+      transition: background .15s ease, border-color .15s ease, box-shadow .15s ease, transform .12s ease;
 
-      &:hover {
-        border-color: $primary;
-        box-shadow: 0 2px 8px rgba(245, 163, 147, 0.25);
+      svg {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
       }
 
-      &.google  { color: #db4437; }
-      &.facebook { color: #4267B2; }
-      &.instagram { color: #E1306C; }
+      span { flex: 1; text-align: left; }
+
+      &:hover:not(:disabled) {
+        border-color: rgba(0,0,0,.18);
+        box-shadow: 0 2px 8px rgba(0,0,0,.08);
+        transform: translateY(-1px);
+      }
+      &:active:not(:disabled) { transform: scale(.98); }
+
+      &--google:hover:not(:disabled)    { border-color: #4285F4; background: #f8fbff; }
+      &--facebook:hover:not(:disabled)  { border-color: #1877F2; background: #f0f4ff; }
+      &--instagram:hover:not(:disabled) { border-color: #D6249F; background: #fff0f8; }
     }
   }
 }

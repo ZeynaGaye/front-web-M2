@@ -1,196 +1,299 @@
-<div class="service-dialog">
-  <div class="dialog-header">
-    <h2>
-      <mat-icon>{{ isEditMode ? 'edit' : 'add_business' }}</mat-icon>
-      {{ isEditMode ? 'Modifier le service' : 'Ajouter un service' }}
-    </h2>
-    <button type="button" class="close-button" (click)="onCancel()">
-      <mat-icon>close</mat-icon>
-    </button>
+<div class="asd">
+
+  <!-- ── Header ──────────────────────────────────────────── -->
+  <div class="asd-header">
+    <div class="asd-header__left">
+      <button class="asd-back" type="button" (click)="onCancel()">
+        <mat-icon>arrow_back</mat-icon> Retour aux services
+      </button>
+      <h1>{{ isEditMode ? 'Modifier le service' : 'Nouveau service' }}</h1>
+      <p>Choisissez une prestation pour votre salon.</p>
+    </div>
+    <div class="asd-header__actions">
+      <button class="asd-btn asd-btn--ghost" type="button" (click)="onCancel()">Annuler</button>
+      <button class="asd-btn asd-btn--dark" type="button"
+              [disabled]="!isFormValid() || enCoursCreation"
+              (click)="onSubmit()">
+        <mat-spinner diameter="14" *ngIf="enCoursCreation"></mat-spinner>
+        <mat-icon *ngIf="!enCoursCreation">check</mat-icon>
+        {{ isEditMode ? 'Enregistrer' : 'Publier le service' }}
+      </button>
+    </div>
   </div>
 
-  <form [formGroup]="serviceForm" (ngSubmit)="onSubmit()" class="service-form-compact">
-
-    <!-- ✅ SÉLECTION SERVICE COMPACT -->
-    <div class="step-section" *ngIf="!estFormulaireDemande">
-      <div class="step-header">
-        <mat-icon>business</mat-icon>
-        <span>1. Choisir un service</span>
-      </div>
-      
-      <div class="service-selection-compact">
-        <mat-form-field appearance="outline" class="select-field">
-          <mat-label>Service prédéfini</mat-label>
-          <mat-select formControlName="servicePredefini" (selectionChange)="onServicePredefiniSelected($event)">
-            <mat-option value="">-- Choisir un service --</mat-option>
-            <mat-optgroup *ngFor="let groupe of servicesGroupes" [label]="groupe.categorie">
-              <mat-option *ngFor="let service of groupe.services" [value]="service.id">
-                {{service.nom}}
-              </mat-option>
-            </mat-optgroup>
-          </mat-select>
-        </mat-form-field>
+  <!-- ── Confirmation service similaire ──────────────────── -->
+  <div class="asd-confirm" *ngIf="enAttenteConfirmation && suggestionService">
+    <div class="asd-confirm__icon"><mat-icon>lightbulb</mat-icon></div>
+    <div class="asd-confirm__body">
+      <h4>Service similaire trouvé</h4>
+      <p>Votre saisie : <strong>{{ nomOriginal }}</strong></p>
+      <p>Suggéré : <strong>{{ suggestionService.nom }}</strong>
+         <span *ngIf="suggestionService.categorie"> · {{ suggestionService.categorie }}</span>
+      </p>
+      <div class="asd-confirm__btns">
+        <button class="asd-btn asd-btn--dark" type="button" (click)="utiliserSuggestion()">
+          Utiliser "{{ suggestionService.nom }}"
+        </button>
+        <button class="asd-btn asd-btn--ghost" type="button" (click)="annulerSuggestion()">
+          <mat-icon>arrow_back</mat-icon> Retour
+        </button>
       </div>
     </div>
+  </div>
 
-
-    <!-- ✅ SECTION CONFIRMATION - MODIFIÉE -->
-    <div class="confirmation-section" *ngIf="enAttenteConfirmation && suggestionService">
-      <h3 class="section-title">
-        <mat-icon>help_outline</mat-icon>
-        Suggestion de service
-      </h3>
-      <mat-card class="suggestion-card">
-        <mat-card-content>
-          <p>Il semblerait que vous vouliez ajouter : <strong>"{{ nomOriginal }}"</strong></p>
-          <p>Ne serait-ce pas plutôt :</p>
-          <div class="suggested-service">
-            <strong>{{ suggestionService.nom }}</strong> 
-            <span class="category">({{ suggestionService.categorie }})</span>
-            <p *ngIf="suggestionService.description">{{ suggestionService.description }}</p>
-          </div>
-        </mat-card-content>
-        <!-- ✅ ACTIONS MODIFIÉES - Suppression du bouton "Créer le mien" -->
-        <mat-card-actions>
-          <button type="button" mat-raised-button color="primary" (click)="utiliserSuggestion()">
-            <mat-icon>check_circle</mat-icon>
-            Utiliser cette suggestion
-          </button>
-          <button type="button" mat-stroked-button (click)="annulerSuggestion()">
-            <mat-icon>cancel</mat-icon>
-            Annuler et recommencer
-          </button>
-        </mat-card-actions>
-      </mat-card>
+  <!-- ── Service existant ────────────────────────────────── -->
+  <div class="asd-confirm asd-confirm--warn" *ngIf="serviceExisteDeja && serviceExistantTrouve">
+    <div class="asd-confirm__icon"><mat-icon>info_outline</mat-icon></div>
+    <div class="asd-confirm__body">
+      <h4>Service déjà existant</h4>
+      <p>{{ messageServiceExistant }}</p>
+      <div class="asd-confirm__btns">
+        <button class="asd-btn asd-btn--dark" type="button" (click)="utiliserServiceExistant()">
+          Utiliser ce service
+        </button>
+        <button class="asd-btn asd-btn--ghost" type="button" (click)="retourSaisie()">
+          Modifier ma saisie
+        </button>
+      </div>
     </div>
+  </div>
 
-    <!-- ✅ NOUVEAU : SECTION INFORMATION SERVICE EXISTANT -->
-    <div class="service-exists-section" *ngIf="serviceExisteDeja && serviceExistantTrouve">
-      <h3 class="section-title">
-        <mat-icon>info</mat-icon>
-        Service déjà existant
-      </h3>
-      <mat-card class="info-card">
-        <mat-card-content>
-          <div class="info-message">
-            <mat-icon class="info-icon">warning</mat-icon>
-            <p>{{ messageServiceExistant }}</p>
-          </div>
-          <div class="existing-service">
-            <strong>{{ serviceExistantTrouve.nom }}</strong> 
-            <span class="category">({{ serviceExistantTrouve.categorie }})</span>
-            <p *ngIf="serviceExistantTrouve.description">{{ serviceExistantTrouve.description }}</p>
-          </div>
-          <div class="info-note">
-            <mat-icon>lightbulb</mat-icon>
-            <span>Pour éviter les doublons, ce service n'a pas été créé. Vous pouvez utiliser le service existant ou modifier votre saisie.</span>
-          </div>
-        </mat-card-content>
-        <mat-card-actions>
-          <button type="button" mat-raised-button color="primary" (click)="utiliserServiceExistant()">
-            <mat-icon>check_circle</mat-icon>
-            Utiliser le service existant
-          </button>
-          <button type="button" mat-stroked-button (click)="retourSaisie()">
-            <mat-icon>edit</mat-icon>
-            Modifier ma saisie
-          </button>
-        </mat-card-actions>
-      </mat-card>
-    </div>
-    
-    <!-- ✅ DESCRIPTION -->
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Description du service</mat-label>
-      <textarea 
-        matInput 
-        formControlName="description"
-        placeholder="Décrivez votre service salon en détail..."
-        maxlength="500"
-        rows="3">
-      </textarea>
-      <mat-icon matSuffix>description</mat-icon>
-      <mat-hint align="end">{{serviceForm.get('description')?.value?.length || 0}}/500</mat-hint>
-      <mat-error *ngIf="getFieldErrorMessage('description')">
-        {{getFieldErrorMessage('description')}}
-      </mat-error>
-    </mat-form-field>
+  <!-- ── Corps ───────────────────────────────────────────── -->
+  <form [formGroup]="serviceForm" (ngSubmit)="onSubmit()"
+        *ngIf="!enAttenteConfirmation && !serviceExisteDeja" class="asd-body">
 
-    <!-- ✅ PRIX ET DURÉE -->
-    <div class="form-row">
-      <mat-form-field appearance="outline" class="half-width">
-        <mat-label>Prix du service (CFA)</mat-label>
-        <input 
-          matInput 
-          type="number" 
-          formControlName="prix"
-          placeholder="20000"
-          min="1"
-          step="1000">
-        <mat-icon matSuffix>payments</mat-icon>
-        <mat-error *ngIf="getFieldErrorMessage('prix')">
-          {{getFieldErrorMessage('prix')}}
-        </mat-error>
-      </mat-form-field>
+    <!-- ═══ COLONNE PRINCIPALE ═══ -->
+    <div class="asd-main">
 
-      <mat-form-field appearance="outline" class="half-width">
-        <mat-label>Durée du service</mat-label>
-        <input 
-          matInput 
-          type="number" 
-          formControlName="dureeEnMinutes"
-          placeholder="60"
-          min="15"
-          max="480"
-          step="15">
-        <mat-icon matSuffix>schedule</mat-icon>
-        <mat-hint>Durée en minutes (15 min minimum)</mat-hint>
-        <mat-error *ngIf="getFieldErrorMessage('dureeEnMinutes')">
-          {{getFieldErrorMessage('dureeEnMinutes')}}
-        </mat-error>
-      </mat-form-field>
-    </div>
+      <!-- CARD : Choisir un service -->
+      <div class="asd-card">
 
-
-    <!-- ✅ APERÇU -->
-    <div class="preview-section" *ngIf="getPrixFormate() || getFormattedDuration()">
-      <h3 class="section-title">
-        <mat-icon>visibility</mat-icon>
-        Aperçu du service
-      </h3>
-      
-      <div class="preview-cards">
-        <div class="preview-card" *ngIf="getPrixFormate()">
-          <mat-icon>account_balance_wallet</mat-icon>
-          <span class="label">Tarif :</span>
-          <span class="value">{{getPrixFormate()}}</span>
+        <!-- Chargement -->
+        <div class="asd-svc-loading" *ngIf="chargementServices">
+          <mat-spinner diameter="28"></mat-spinner>
+          <span>Chargement des services…</span>
         </div>
-        
-        <div class="preview-card" *ngIf="getFormattedDuration()">
-          <mat-icon>access_time</mat-icon>
-          <span class="label">Durée :</span>
-          <span class="value">{{getFormattedDuration()}}</span>
+
+        <!-- === SÉLECTION PRÉDÉFINIE === -->
+        <ng-container *ngIf="!chargementServices && !estFormulaireDemande">
+          <h3 class="asd-card-title">Choisir un service</h3>
+
+          <!-- Barre de recherche -->
+          <div class="asd-search-bar" *ngIf="aServicesPredefinis">
+            <mat-icon>search</mat-icon>
+            <input type="text" [(ngModel)]="rechercheGrille" [ngModelOptions]="{standalone:true}"
+                   placeholder="Rechercher un service…" autocomplete="off">
+            <button type="button" *ngIf="rechercheGrille" (click)="rechercheGrille = ''"
+                    class="asd-search-clear"><mat-icon>close</mat-icon></button>
+          </div>
+
+          <!-- Filtres catégorie -->
+          <div class="asd-chips" *ngIf="aServicesPredefinis && !rechercheGrille">
+            <button type="button" class="asd-chip"
+                    [class.asd-chip--active]="filterCategorie === ''"
+                    (click)="setFilterCategorie('')">Tous</button>
+            <button type="button" class="asd-chip"
+                    *ngFor="let cat of categories"
+                    [class.asd-chip--active]="filterCategorie === cat"
+                    (click)="setFilterCategorie(cat)">{{ cat }}</button>
+          </div>
+
+          <!-- Grille services -->
+          <div class="asd-svc-grid" *ngIf="filteredServices.length > 0; else noServices">
+            <button type="button" class="asd-svc-card"
+                    *ngFor="let svc of filteredServices"
+                    [class.asd-svc-card--selected]="serviceSelectionne?.id === svc.id"
+                    (click)="selectPredefinedService(svc)">
+              <div class="asd-svc-card__check" *ngIf="serviceSelectionne?.id === svc.id">
+                <mat-icon>check</mat-icon>
+              </div>
+              <span class="asd-svc-card__name">{{ svc.nom }}</span>
+              <span class="asd-svc-card__cat">{{ svc.categorie }}</span>
+            </button>
+          </div>
+          <ng-template #noServices>
+            <p class="asd-empty-msg">
+              <mat-icon>search_off</mat-icon>
+              {{ rechercheGrille ? 'Aucun service ne correspond à "' + rechercheGrille + '".' : 'Aucun service dans cette catégorie.' }}
+            </p>
+          </ng-template>
+
+          <!-- Lien vers proposition -->
+          <div class="asd-not-listed" *ngIf="!modeProposition">
+            <span>Ce service n'est pas dans la liste ?</span>
+            <button type="button" class="asd-link-btn" (click)="ouvrirProposition()">
+              Proposer un service
+            </button>
+          </div>
+        </ng-container>
+
+        <!-- === PROPOSITION NOUVEAU SERVICE === -->
+        <ng-container *ngIf="!chargementServices && modeProposition">
+          <div class="asd-custom-header">
+            <button type="button" class="asd-back-inline" (click)="fermerProposition()">
+              <mat-icon>arrow_back</mat-icon> Retour à la liste
+            </button>
+            <h3 class="asd-card-title">Proposer un nouveau service</h3>
+          </div>
+          <p class="asd-info-msg">
+            <mat-icon>info_outline</mat-icon>
+            Le service sera ajouté au catalogue commun et automatiquement sélectionné.
+          </p>
+
+          <label class="asd-label">Nom du service <span class="asd-required">*</span></label>
+          <div class="asd-proposition-input-wrap">
+            <input class="asd-input" type="text" [(ngModel)]="propositionNom"
+                   [ngModelOptions]="{standalone: true}"
+                   (ngModelChange)="onPropositionNomChange()"
+                   placeholder="Ex: Tresses Twists Sénégalaises Longues"
+                   maxlength="100" autocomplete="off">
+
+            <!-- Suggestions temps réel -->
+            <div class="asd-prop-suggestions" *ngIf="suggestionsPropositon.length > 0">
+              <p class="asd-prop-suggestions__label">
+                <mat-icon>auto_awesome</mat-icon>
+                Ces services existent déjà — cliquez pour en sélectionner un :
+              </p>
+              <button type="button" class="asd-prop-suggestion-item"
+                      *ngFor="let s of suggestionsPropositon"
+                      (click)="selectionnerSuggestionProposition(s)">
+                <span class="asd-prop-suggestion-nom">{{ s.nom }}</span>
+                <span class="asd-prop-suggestion-cat">{{ s.categorie }}</span>
+              </button>
+              <p class="asd-prop-suggestions__footer">
+                Si aucun ne correspond, complétez le formulaire ci-dessous pour créer un nouveau service.
+              </p>
+            </div>
+          </div>
+
+          <label class="asd-label" style="margin-top:12px">Catégorie <span class="asd-required">*</span></label>
+          <select class="asd-input asd-select" [(ngModel)]="propositionCategorie"
+                  [ngModelOptions]="{standalone: true}">
+            <option value="">-- Choisir une catégorie --</option>
+            <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+          </select>
+
+          <p class="asd-error-msg" *ngIf="propositionErreur">
+            <mat-icon>warning_amber</mat-icon> {{ propositionErreur }}
+          </p>
+
+          <div class="asd-proposition-btns">
+            <button type="button" class="asd-btn asd-btn--dark"
+                    [disabled]="propositionEnCours"
+                    (click)="soumettrePropositon()">
+              <mat-spinner diameter="14" *ngIf="propositionEnCours"></mat-spinner>
+              <mat-icon *ngIf="!propositionEnCours">add_circle</mat-icon>
+              Valider et sélectionner
+            </button>
+            <button type="button" class="asd-btn asd-btn--ghost" (click)="fermerProposition()">
+              Annuler
+            </button>
+          </div>
+        </ng-container>
+
+      </div><!-- /asd-card choisir -->
+
+      <!-- Bannière service sélectionné -->
+      <div class="asd-selected-banner" *ngIf="serviceSelectionne && !estFormulaireDemande">
+        <mat-icon>check_circle</mat-icon>
+        <div>
+          <strong>{{ serviceSelectionne.nom }}</strong>
+          <span>{{ serviceSelectionne.categorie }}</span>
+        </div>
+        <button type="button" class="asd-selected-clear"
+                (click)="serviceSelectionne = null; serviceForm.patchValue({servicePredefini: ''})">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <!-- CARD : Description -->
+      <div class="asd-card">
+        <h3 class="asd-card-title">Description <span class="asd-optional">(optionnelle)</span></h3>
+        <textarea class="asd-input asd-textarea" formControlName="description" rows="3"
+                  placeholder="Décrivez votre service en détail…" maxlength="500"></textarea>
+        <span class="asd-char-count asd-char-count--right">
+          {{ serviceForm.get('description')?.value?.length || 0 }}/500
+        </span>
+      </div>
+
+      <!-- CARD : Prix & durée -->
+      <div class="asd-card">
+        <h3 class="asd-card-title">Prix &amp; durée</h3>
+        <div class="asd-row-2">
+          <div class="asd-field">
+            <label class="asd-label">Prix (CFA) <span class="asd-required">*</span></label>
+            <input class="asd-input" type="number" formControlName="prix"
+                   placeholder="20 000" min="1" step="500">
+            <span class="asd-input-hint"
+                  *ngIf="serviceForm.get('prix')?.touched && serviceForm.get('prix')?.hasError('required')">
+              <mat-icon>warning_amber</mat-icon> Champ obligatoire
+            </span>
+          </div>
+          <div class="asd-field">
+            <label class="asd-label">Durée</label>
+            <select class="asd-input asd-select" formControlName="dureeEnMinutes">
+              <option value="15">15 min</option>
+              <option value="30">30 min</option>
+              <option value="45">45 min</option>
+              <option value="60">1h</option>
+              <option value="90">1h30</option>
+              <option value="120">2h</option>
+              <option value="150">2h30</option>
+              <option value="180">3h</option>
+              <option value="240">4h</option>
+              <option value="300">5h</option>
+              <option value="360">6h</option>
+              <option value="480">8h</option>
+            </select>
+          </div>
+        </div>
+        <div class="asd-price-hint" *ngIf="getPrixFormate()">
+          {{ getPrixFormate() }} · {{ getFormattedDuration() }}
         </div>
       </div>
-    </div>
 
-    <!-- ✅ ACTIONS DU FORMULAIRE -->
-    <div class="form-actions">
-      <button type="button" mat-stroked-button (click)="onCancel()">
-        <mat-icon>cancel</mat-icon>
-        Annuler
-      </button>
-      
-      <button 
-        type="submit" 
-        mat-raised-button 
-        color="primary" 
-        [disabled]="!isFormValid() || enCoursCreation">
-        <mat-spinner diameter="20" *ngIf="enCoursCreation"></mat-spinner>
-        <mat-icon *ngIf="!enCoursCreation">{{ isEditMode ? 'save' : 'add' }}</mat-icon>
-        {{ isEditMode ? 'Enregistrer' : 'Ajouter le service' }}
-      </button>
-    </div>
+    </div><!-- /asd-main -->
+
+    <!-- ═══ SIDEBAR ═══ -->
+    <aside class="asd-side">
+
+      <!-- Photo de couverture -->
+      <div class="asd-card">
+        <h3 class="asd-card-title">Photo de couverture</h3>
+        <div class="asd-photo-zone">
+          <mat-icon>add_a_photo</mat-icon>
+          <span>Ajouter une photo</span>
+        </div>
+      </div>
+
+      <!-- Aperçu -->
+      <div class="asd-card">
+        <h3 class="asd-card-title">Aperçu de la carte</h3>
+        <div class="asd-preview-card">
+          <div class="asd-preview-ico"><mat-icon>content_cut</mat-icon></div>
+          <div class="asd-preview-body">
+            <span class="asd-preview-name">
+              {{ serviceSelectionne?.nom || 'Sélectionnez un service…' }}
+            </span>
+            <span class="asd-preview-price">
+              {{ getPrixFormate() || '20 000 CFA' }}
+              · {{ getFormattedDuration() || '1h' }}
+            </span>
+            <span class="asd-preview-cat">
+              {{ serviceSelectionne?.categorie || serviceForm.get('categorie')?.value || '' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Info erreur chargement -->
+      <div class="asd-card asd-card--info" *ngIf="erreurChargement && !chargementServices">
+        <mat-icon>warning_amber</mat-icon>
+        <p>Impossible de charger la liste des services. Veuillez réessayer.</p>
+      </div>
+
+    </aside>
 
   </form>
+
 </div>

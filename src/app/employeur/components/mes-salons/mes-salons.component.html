@@ -1,499 +1,398 @@
-<div class="modal-container">
-  <div class="modal-header">
-    <h2>Gérer vos Salons</h2>
-    <button mat-icon-button (click)="closeModal()">
-      <mat-icon>close</mat-icon>
+<!-- ═══════════════════════════════════════════════
+     VUE LISTE
+════════════════════════════════════════════════ -->
+<div class="ms-page" *ngIf="!selectedSalon" @pageSwitch>
+
+  <div class="ms-loading" *ngIf="isLoading">
+    <mat-spinner diameter="48"></mat-spinner>
+  </div>
+
+  <ng-container *ngIf="!isLoading">
+
+    <!-- Header -->
+    <div class="ms-header">
+      <div class="ms-header__text">
+        <h1 class="ms-title">Mes salons</h1>
+        <p class="ms-subtitle"><em>Gérez chacun de vos établissements.</em></p>
+      </div>
+      <button class="ms-add-btn" (click)="openCreateModal()">
+        <mat-icon>storefront</mat-icon>
+        Ajouter un salon
+      </button>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="ms-toolbar">
+      <div class="ms-search">
+        <mat-icon>search</mat-icon>
+        <input [(ngModel)]="searchTerm" [ngModelOptions]="{standalone: true}"
+               placeholder="Rechercher un salon...">
+      </div>
+      <div class="ms-filter-tabs">
+        <button class="ms-ftab" [class.active]="statusFilter === 'tous'" (click)="statusFilter = 'tous'">
+          Tous <span class="ms-count">{{ salons.length }}</span>
+        </button>
+        <button class="ms-ftab" [class.active]="statusFilter === 'ouverts'" (click)="statusFilter = 'ouverts'">
+          Ouverts
+        </button>
+        <button class="ms-ftab" [class.active]="statusFilter === 'fermes'" (click)="statusFilter = 'fermes'">
+          Fermés
+        </button>
+      </div>
+    </div>
+
+    <!-- Cards grid -->
+    <div class="ms-grid">
+
+      <div class="ms-card" *ngFor="let salon of filteredSalons" (click)="selectSalon(salon)" @fadeIn>
+        <div class="ms-card__photo">
+          <img [src]="getSalonPhoto(salon)" [alt]="salon.nom"
+               [attr.data-salon-id]="salon.id" (error)="onImageError($event)">
+          <span class="ms-badge ms-badge--principal" *ngIf="isPrincipal(salon)">PRINCIPAL</span>
+          <span class="ms-badge"
+                [class.ms-badge--ouvert]="isOuvert(salon)"
+                [class.ms-badge--ferme]="!isOuvert(salon)">
+            {{ isOuvert(salon) ? 'OUVERT' : 'FERMÉ' }}
+          </span>
+          <div class="ms-card__overlay">
+            <h3 class="ms-card__name">{{ salon.nom }}</h3>
+            <p class="ms-card__addr">
+              <mat-icon>place</mat-icon> {{ salon.adresse }}
+            </p>
+          </div>
+        </div>
+
+        <div class="ms-card__stats">
+          <div class="ms-stat">
+            <span class="ms-stat__val">
+              <mat-icon class="ms-star">star</mat-icon>{{ salon.note ? (salon.note | number:'1.1-1') : '—' }}
+            </span>
+            <span class="ms-stat__lbl">Note</span>
+          </div>
+          <div class="ms-stat">
+            <span class="ms-stat__val">{{ getEmployeCountForSalon(salon.id) }}</span>
+            <span class="ms-stat__lbl">Équipe</span>
+          </div>
+          <div class="ms-stat">
+            <span class="ms-stat__val">{{ getOffresCountForSalon(salon.id) }}</span>
+            <span class="ms-stat__lbl">Offres</span>
+          </div>
+        </div>
+
+        <div class="ms-card__revenue">
+          <span class="ms-rev__lbl">Revenus ce mois</span>
+          <strong class="ms-rev__val">{{ formatRevenue(getRevenueForSalon(salon.id)) }} CFA</strong>
+        </div>
+      </div>
+
+      <!-- CTA card -->
+      <div class="ms-card ms-card--cta" (click)="openCreateModal()" @fadeIn>
+        <div class="ms-cta__icon"><mat-icon>storefront</mat-icon></div>
+        <h4 class="ms-cta__title">Ouvrir un nouveau salon</h4>
+        <p class="ms-cta__sub">Étendez votre activité vers un nouvel établissement</p>
+      </div>
+
+    </div>
+  </ng-container>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+     VUE FICHE SALON
+════════════════════════════════════════════════ -->
+<div class="sd-page" *ngIf="selectedSalon as salon" @pageSwitch>
+
+  <button class="sd-back" (click)="deselectSalon()">
+    <mat-icon>arrow_back</mat-icon> Retour à Mes salons
+  </button>
+
+  <!-- Hero -->
+  <div class="sd-hero" [style.backgroundImage]="'url(' + getSalonPhoto(salon) + ')'" @heroIn>
+    <div class="sd-hero__gradient"></div>
+    <div class="sd-hero__content">
+      <h2 class="sd-hero__name">{{ salon.nom }}</h2>
+      <p class="sd-hero__addr"><mat-icon>place</mat-icon> {{ salon.adresse }}</p>
+      <span class="sd-hero__rating" *ngIf="salon.note">
+        <mat-icon>star</mat-icon> {{ salon.note | number:'1.1-1' }} ({{ salon.nombreAvis || 0 }} avis)
+      </span>
+    </div>
+    <button class="sd-hero__photo-btn" (click)="changeProfilePhoto(salon.id)"
+            [disabled]="getLoadingState('profile-photo-' + salon.id)">
+      <mat-icon>photo_camera</mat-icon> Changer la photo
     </button>
   </div>
 
-  <div class="modal-content">
-    <div *ngIf="isLoading" class="loading">
-      <mat-spinner diameter="60"></mat-spinner>
-    </div>
+  <!-- Tab bar -->
+  <div class="sd-tabs-bar">
+    <button class="sd-tab" [class.active]="activeTab[salon.id] === 'info'"
+            (click)="setActiveTab(salon.id, 'info')">
+      <mat-icon>info_outline</mat-icon> Informations
+    </button>
+    <button class="sd-tab" [class.active]="activeTab[salon.id] === 'services'"
+            (click)="setActiveTab(salon.id, 'services')">
+      <mat-icon>content_cut</mat-icon> Services
+    </button>
+    <button class="sd-tab" [class.active]="activeTab[salon.id] === 'horaires'"
+            (click)="setActiveTab(salon.id, 'horaires')">
+      <mat-icon>schedule</mat-icon> Horaires
+    </button>
+    <button class="sd-tab" [class.active]="activeTab[salon.id] === 'photos'"
+            (click)="setActiveTab(salon.id, 'photos')">
+      <mat-icon>photo_library</mat-icon> Photos
+    </button>
+    <button class="sd-tab" [class.active]="activeTab[salon.id] === 'videos'"
+            (click)="setActiveTab(salon.id, 'videos')">
+      <mat-icon>videocam</mat-icon> Vidéos
+    </button>
+  </div>
 
-    <div *ngIf="errorMessage" class="error-message">
-      <mat-icon>error</mat-icon> {{ errorMessage }}
-    </div>
+  <!-- ── Informations ── -->
+  <div class="sd-body" *ngIf="activeTab[salon.id] === 'info'" @tabAnim>
+    <div class="sd-info-layout">
 
-    <div *ngIf="!isLoading && !errorMessage">
-      <!-- Liste des salons -->
-      <div class="salon-cards" *ngIf="salons.length > 0">
-        <div class="salon-card" *ngFor="let salon of salons" [@cardAnimation]>
-          <div class="salon-main-content">
-            <div class="salon-image">
-              <img
-                [src]="
-                  salon.photoProfilUrl ||
-                  'src/assets/images/pexels-barik5ive-3355696-5282408.jpg'
-                "
-                alt="{{ salon.nom }}"
-                (error)="onImageError($event)"
-              />
-              <mat-icon (click)="changeProfilePhoto(salon.id)">edit</mat-icon>
+      <div class="sd-form-card">
+        <h4 class="sd-form-card__title">Détails du salon</h4>
+        <div class="sd-form-grid">
+          <div class="sd-field sd-field--full">
+            <label>Nom du salon</label>
+            <input [(ngModel)]="editForm.nom" [ngModelOptions]="{standalone: true}" placeholder="Nom du salon">
+          </div>
+          <div class="sd-field sd-field--full">
+            <label>Adresse complète</label>
+            <input [(ngModel)]="editForm.adresse" [ngModelOptions]="{standalone: true}" placeholder="Adresse">
+          </div>
+          <div class="sd-field">
+            <label>Téléphone</label>
+            <input [(ngModel)]="editForm.telephone" [ngModelOptions]="{standalone: true}" placeholder="Téléphone">
+          </div>
+          <div class="sd-field">
+            <label>Spécialités</label>
+            <input [(ngModel)]="editForm.specialites" [ngModelOptions]="{standalone: true}" placeholder="Spécialités">
+          </div>
+          <div class="sd-field sd-field--full">
+            <label>Description</label>
+            <textarea [(ngModel)]="editForm.description" [ngModelOptions]="{standalone: true}"
+                      rows="4" placeholder="Description du salon"></textarea>
+          </div>
+        </div>
+        <button class="sd-save-btn" (click)="saveInfo()" [disabled]="isSavingInfo">
+          <mat-icon>edit</mat-icon>
+          {{ isSavingInfo ? 'Enregistrement...' : 'Modifier les informations' }}
+        </button>
+      </div>
+
+      <div class="sd-sidebar">
+        <div class="sd-stats-card">
+          <p class="sd-stats-card__title">CE SALON EN UN COUP D'OEIL</p>
+          <div class="sd-stats-grid">
+            <div class="sd-stat-item" @statIn>
+              <span class="sd-stat-val">{{ getEmployeCountForSalon(salon.id) }}</span>
+              <span class="sd-stat-lbl">Employés</span>
             </div>
-            <div class="salon-details">
-              <h3>{{ salon.nom }}</h3>
-              <p class="address">
-                <i class="fas fa-map-marker-alt"></i> {{ salon.adresse }}
-              </p>
-              <p class="rating" *ngIf="salon.note">
-                <span class="stars">
-                  <i class="fas fa-star"></i>
-                  <i class="fas fa-star" *ngIf="salon.note >= 2"></i>
-                  <i class="fas fa-star" *ngIf="salon.note >= 3"></i>
-                  <i class="fas fa-star" *ngIf="salon.note >= 4"></i>
-                  <i
-                    class="fas fa-star-half-alt"
-                    *ngIf="(salon.note % 1) >= 0.5"
-                  ></i>
-                </span>
-                {{ salon.note }} ({{ salon.nombreAvis || 0 }} avis)
-              </p>
-              <p class="price-range">{{ salon.gammeDePrice }}</p>
-              <div class="salon-services" *ngIf="salon.services?.length">
-                <span
-                  class="service-tag"
-                  *ngFor="let service of salon.services.slice(0, 3)"
-                  >{{ service }}</span
-                >
-                <span
-                  class="service-tag more"
-                  *ngIf="salon.services.length > 3"
-                  >+{{ salon.services.length - 3 }}</span
-                >
-              </div>
+            <div class="sd-stat-item" @statIn>
+              <span class="sd-stat-val">{{ getServicesCountForSalon(salon.id) }}</span>
+              <span class="sd-stat-lbl">Services</span>
             </div>
-
-            <div class="salon-actions">
-              <button
-                mat-icon-button
-                class="action-btn"
-                matTooltip="Voir les options"
-                (click)="toggleSalonExpansion(salon.id)"
-              >
-                <mat-icon>{{
-                  expandedSalonId === salon.id
-                    ? 'keyboard_arrow_up'
-                    : 'keyboard_arrow_down'
-                }}</mat-icon>
-              </button>
+            <div class="sd-stat-item" @statIn>
+              <span class="sd-stat-val">{{ salon.note ? (salon.note | number:'1.1-1') : '—' }}</span>
+              <span class="sd-stat-lbl">Note</span>
+            </div>
+            <div class="sd-stat-item" @statIn>
+              <span class="sd-stat-val">{{ salon.nombreAvis || 0 }}</span>
+              <span class="sd-stat-lbl">Avis</span>
             </div>
           </div>
+        </div>
 
-          <!-- Contenu expansible du salon -->
-          <div
-            class="salon-expanded-content"
-            *ngIf="expandedSalonId === salon.id"
-            [@expandAnimation]
-          >
-            <div class="action-tabs">
-              <button
-                mat-button
-                [class.active-tab]="activeTab[salon.id] === 'info'"
-                (click)="setActiveTab(salon.id, 'info')"
-              >
-                <mat-icon>info</mat-icon> Informations
-              </button>
-              <button
-                mat-button
-                [class.active-tab]="activeTab[salon.id] === 'services'"
-                (click)="setActiveTab(salon.id, 'services')"
-              >
-                <mat-icon>spa</mat-icon> Services
-              </button>
-              <!-- ✅ NOUVEAU : Bouton pour l'onglet Horaires -->
-              <button
-                mat-button
-                [class.active-tab]="activeTab[salon.id] === 'horaires'"
-                (click)="setActiveTab(salon.id, 'horaires')"
-              >
-                <mat-icon>schedule</mat-icon> Horaires
-              </button>
-              <button
-                mat-button
-                [class.active-tab]="activeTab[salon.id] === 'photos'"
-                (click)="setActiveTab(salon.id, 'photos')"
-              >
-                <mat-icon>photo_library</mat-icon> Photos
-              </button>
-              <button
-                mat-button
-                [class.active-tab]="activeTab[salon.id] === 'videos'"
-                (click)="setActiveTab(salon.id, 'videos')"
-              >
-                <mat-icon>videocam</mat-icon> Vidéos
-              </button>
-              <button
-                mat-button
-                [class.active-tab]="activeTab[salon.id] === 'employes'"
-                (click)="setActiveTab(salon.id, 'employes')"
-              >
-                <mat-icon>people</mat-icon> Employés
-              </button>
+        <div class="sd-quick-links">
+          <button class="sd-ql" (click)="setActiveTab(salon.id, 'services')">
+            <mat-icon>content_cut</mat-icon>
+            <span>Gérer les services</span>
+            <mat-icon class="sd-ql__arrow">chevron_right</mat-icon>
+          </button>
+          <button class="sd-ql sd-ql--danger">
+            <mat-icon>do_not_disturb_on</mat-icon>
+            <span>Fermer ce salon</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Services ── -->
+  <div class="sd-body sd-body--full" *ngIf="activeTab[salon.id] === 'services'" @tabAnim>
+    <div *ngIf="getLoadingState('services-' + salon.id)" class="sd-loader">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+    <ng-container *ngIf="!getLoadingState('services-' + salon.id)">
+      <div class="sd-services" *ngIf="(services[salon.id] ?? []).length > 0">
+        <div class="sd-service-card" *ngFor="let service of services[salon.id]" @serviceAnimation>
+          <div class="sd-svc__left">
+            <div class="sd-svc__icon"><mat-icon>spa</mat-icon></div>
+            <div class="sd-svc__info">
+              <span class="sd-svc__name">{{ service.nom }}</span>
+              <span class="sd-svc__price">{{ service.prix | number }} CFA</span>
+              <span class="sd-svc__desc" *ngIf="service.description">{{ service.description }}</span>
             </div>
-
-            <!-- Contenu de l'onglet Informations -->
-            <div
-              class="tab-content"
-              *ngIf="activeTab[salon.id] === 'info'"
-              [@tabAnimation]
-            >
-              <div class="info-content">
-                <h4>Détails du salon</h4>
-                <div class="salon-info-details">
-                  <p><strong>Adresse complète:</strong> {{ salon.adresse }}</p>
-                  <p>
-                    <strong>Téléphone:</strong>
-                    {{ salon.telephone || 'Non renseigné' }}
-                  </p>
-                  <!-- <p> -->
-                    <!-- Display salon.horaires here if it's a simple string, otherwise it will be managed by HorairesManagerComponent -->
-                    <!-- <strong>Horaires:</strong>
-                    {{ salon.horaires || 'Non renseignés' }}
-                  </p> -->
-                  <p>
-                    <strong>Description:</strong>
-                    {{ salon.description || 'Aucune description disponible' }}
-                  </p>
-                  <p>
-                    <strong>Spécialités:</strong>
-                    {{ salon.specialites || 'Non renseignées' }}
-                  </p>
-                </div>
-                <button mat-raised-button (click)="editSalon(salon.id)">
-                  <mat-icon>edit</mat-icon> Modifier les informations
-                </button>
-              </div>
-            </div>
-
-            <!-- Contenu de l'onglet Services -->
-            <div
-              class="tab-content"
-              *ngIf="activeTab[salon.id] === 'services'"
-              [@tabAnimation]
-            >
-              <div
-                *ngIf="(services[salon.id] ?? []).length > 0"
-                class="services-container"
-              >
-                <h4>Services proposés</h4>
-
-                <div class="service-cards">
-                  <div
-                    *ngFor="let service of services[salon.id]"
-                    class="service-card"
-                    [@serviceAnimation]
-                  >
-                    <div class="sc-left">
-                      <div class="sc-icon-box">
-                        <mat-icon>spa</mat-icon>
-                      </div>
-                      <div class="sc-info">
-                        <span class="sc-name">{{ service.nom }}</span>
-                        <span class="sc-price">{{ service.prix | number }} CFA</span>
-                        <span class="sc-desc" *ngIf="service.description">{{ service.description }}</span>
-                      </div>
-                    </div>
-                    <div class="sc-actions">
-                      <button mat-icon-button class="sc-edit-btn"
-                        matTooltip="Modifier"
-                        (click)="editService(service.id, salon.id)"
-                        [disabled]="getLoadingState('update-service-' + service.id)">
-                        <mat-icon>edit</mat-icon>
-                      </button>
-                      <button mat-icon-button class="sc-delete-btn"
-                        matTooltip="Supprimer"
-                        (click)="deleteService(service.id, salon.id)">
-                        <mat-icon>delete</mat-icon>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                <button class="add-service-btn"
-                  (click)="addService(salon.id)"
-                  [disabled]="getLoadingState('create-service-' + salon.id)">
-                  <mat-icon>add</mat-icon> Ajouter un service
-                </button>
-              </div>
-
-              <div
-                *ngIf="
-                  (services[salon.id] ?? []).length === 0 &&
-                  !getLoadingState('services-' + salon.id)
-                "
-                class="no-data-message"
-              >
-                <p>Aucun service disponible pour ce salon.</p>
-                <button
-                  mat-raised-button
-                  color="primary"
-                  (click)="addService(salon.id)"
-                  class="add-item-btn"
-                >
-                  <mat-icon>add</mat-icon> Ajouter un service
-                </button>
-              </div>
-
-              <div
-                *ngIf="getLoadingState('services-' + salon.id)"
-                class="loading-section"
-              >
-                <mat-spinner diameter="40"></mat-spinner>
-                <p>Chargement des services...</p>
-              </div>
-            </div>
-
-            <!--  Contenu de l'onglet Horaires -->
-            <div
-              class="tab-content"
-              *ngIf="activeTab[salon.id] === 'horaires'"
-              [@tabAnimation]
-            >
-              <!-- Le composant HorairesManagerComponent gère son propre chargement et ses états -->
-              <!-- Nous passons entityId et isSalon comme inputs -->
-              <app-horaires-manager
-                [entityId]="salon.id"
-                [isSalon]="true"
-                (horaireError)="handleHorairesError(salon.id, $event)"
-              ></app-horaires-manager>
-
-              <!-- Affichage d'une erreur remontée par le composant enfant -->
-              <div
-                *ngIf="horairesErrors[salon.id]"
-                class="error-message mt-3"
-              >
-                <mat-icon>error</mat-icon>
-                {{ horairesErrors[salon.id] }}
-              </div>
-            </div>
-
-            <!-- Contenu de l'onglet Photos -->
-            <div
-              class="tab-content"
-              *ngIf="activeTab[salon.id] === 'photos'"
-              [@tabAnimation]
-            >
-              <div
-                *ngIf="arePhotosLoading(salon.id)"
-                class="loading-section"
-              >
-                <mat-spinner diameter="40"></mat-spinner>
-                <p>Chargement des photos...</p>
-              </div>
-
-              <div
-                *ngIf="
-                  !arePhotosLoading(salon.id) && hasPhotosError(salon.id)
-                "
-                class="error-message"
-              >
-                <mat-icon>error</mat-icon>
-                {{ getPhotosError(salon.id) }}
-                <button
-                  mat-button
-                  color="accent"
-                  (click)="reloadPhotos(salon.id)"
-                >
-                  Réessayer
-                </button>
-              </div>
-
-              <div
-                *ngIf="
-                  !arePhotosLoading(salon.id) &&
-                  hasPhotosLoaded(salon.id) &&
-                  getPhotosCount(salon.id) > 0
-                "
-                class="photos-gallery"
-              >
-                <h4>Galerie Photos ({{ getPhotosCount(salon.id) }})</h4>
-                <div class="photos-grid">
-                  <div
-                    class="photo-item"
-                    *ngFor="let photo of salonPhotos[salon.id]"
-                    [@photoAnimation]
-                  >
-                    <img
-                      [src]="photo.url"
-                      alt="Photo du salon"
-                      (error)="onImageError($event)"
-                    />
-                    <div class="photo-actions">
-                      <button
-                        mat-icon-button
-                        matTooltip="Supprimer cette photo"
-                        color="warn"
-                        (click)="deletePhoto(photo.id, salon.id)"
-                        [disabled]="getLoadingState('delete-photo-' + photo.id)"
-                      >
-                        <mat-icon>delete</mat-icon>
-                        <mat-spinner
-                          *ngIf="getLoadingState('delete-photo-' + photo.id)"
-                          diameter="20"
-                        ></mat-spinner>
-                      </button>
-                      <button
-                        mat-icon-button
-                        matTooltip="Définir comme photo de profil"
-                        (click)="setAsProfilePhoto(photo.url, salon.id)"
-                        [disabled]="getLoadingState('set-profile-' + salon.id)"
-                      >
-                        <mat-icon>account_circle</mat-icon>
-                        <mat-spinner
-                          *ngIf="getLoadingState('set-profile-' + salon.id)"
-                          diameter="20"
-                        ></mat-spinner>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                <button
-                  mat-raised-button
-                  color="primary"
-                  (click)="openFileSelector(salon.id)"
-                  class="add-item-btn"
-                  [disabled]="getLoadingState('upload-photos-' + salon.id)"
-                >
-                  <mat-icon>add_photo_alternate</mat-icon> Ajouter des photos
-                  <mat-spinner
-                    *ngIf="getLoadingState('upload-photos-' + salon.id)"
-                    diameter="20"
-                  ></mat-spinner>
-                </button>
-              </div>
-
-              <div
-                *ngIf="
-                  !arePhotosLoading(salon.id) &&
-                  hasPhotosLoaded(salon.id) &&
-                  getPhotosCount(salon.id) === 0 &&
-                  !hasPhotosError(salon.id)
-                "
-                class="no-data-message"
-              >
-                <p>Aucune photo disponible pour ce salon.</p>
-                <button
-                  mat-raised-button
-                  color="primary"
-                  (click)="openFileSelector(salon.id)"
-                  class="add-item-btn"
-                >
-                  <mat-icon>add_photo_alternate</mat-icon> Ajouter des photos
-                </button>
-              </div>
-            </div>
-            <!-- Contenu de l'onglet Vidéos -->
-            <div class="tab-content" *ngIf="activeTab[salon.id] === 'videos'" [@tabAnimation]>
-
-              <div *ngIf="areVideosLoading(salon.id)" class="loading-section">
-                <mat-spinner diameter="40"></mat-spinner>
-                <p>Chargement des vidéos...</p>
-              </div>
-
-              <div *ngIf="!areVideosLoading(salon.id) && hasVideosError(salon.id)" class="error-message">
-                <mat-icon>error</mat-icon> {{ getVideosError(salon.id) }}
-                <button mat-button (click)="reloadVideos(salon.id)">Réessayer</button>
-              </div>
-
-              <ng-container *ngIf="!areVideosLoading(salon.id) && hasVideosLoaded(salon.id)">
-
-                <!-- Formulaire ajout -->
-                <div class="video-add-form" *ngIf="showAddVideoForm[salon.id]">
-                  <input class="video-form-input" placeholder="Titre (optionnel)"
-                    [(ngModel)]="newVideoTitre[salon.id]" [ngModelOptions]="{standalone: true}" />
-                  <textarea class="video-form-textarea" placeholder="Description (optionnel)" rows="2"
-                    [(ngModel)]="newVideoDescription[salon.id]" [ngModelOptions]="{standalone: true}"></textarea>
-                  <div class="video-form-actions">
-                    <button class="video-form-btn-cancel" (click)="toggleAddVideoForm(salon.id)">Annuler</button>
-                    <button class="video-form-btn-file" (click)="openVideoSelector(salon.id)"
-                      [disabled]="getLoadingState('upload-video-' + salon.id)">
-                      <mat-icon>attach_file</mat-icon>
-                      {{ getLoadingState('upload-video-' + salon.id) ? 'Upload...' : 'Choisir un fichier' }}
-                      <mat-spinner *ngIf="getLoadingState('upload-video-' + salon.id)" diameter="16"></mat-spinner>
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Grille vidéos -->
-                <div class="videos-grid" *ngIf="getVideosCount(salon.id) > 0">
-                  <div class="video-card" *ngFor="let video of salonVideos[salon.id]">
-
-                    <!-- Mode lecture -->
-                    <ng-container *ngIf="editingVideoId !== video.id">
-                      <video [src]="'http://localhost:8081/uploads/' + video.url"
-                        controls preload="metadata" class="video-card-player"></video>
-                      <div class="video-card-footer">
-                        <div class="video-card-info">
-                          <span class="video-card-title">{{ video.titre || 'Sans titre' }}</span>
-                          <span class="video-card-desc" *ngIf="video.description">{{ video.description }}</span>
-                        </div>
-                        <div class="video-card-actions">
-                          <button mat-icon-button matTooltip="Modifier" (click)="startEditVideo(video)">
-                            <mat-icon>edit</mat-icon>
-                          </button>
-                          <button mat-icon-button matTooltip="Supprimer" color="warn"
-                            (click)="deleteVideo(video.id, salon.id)"
-                            [disabled]="getLoadingState('delete-video-' + video.id)">
-                            <mat-icon>delete</mat-icon>
-                          </button>
-                        </div>
-                      </div>
-                    </ng-container>
-
-                    <!-- Mode édition inline -->
-                    <ng-container *ngIf="editingVideoId === video.id">
-                      <div class="video-edit-form">
-                        <input class="video-form-input" placeholder="Titre"
-                          [(ngModel)]="editTitre" [ngModelOptions]="{standalone: true}" />
-                        <textarea class="video-form-textarea" placeholder="Description" rows="2"
-                          [(ngModel)]="editDescription" [ngModelOptions]="{standalone: true}"></textarea>
-                        <div class="video-form-actions">
-                          <button class="video-form-btn-cancel" (click)="cancelEditVideo()">Annuler</button>
-                          <button class="video-form-btn-save" (click)="saveVideoEdit(video.id, salon.id)"
-                            [disabled]="getLoadingState('edit-video-' + video.id)">
-                            <mat-spinner *ngIf="getLoadingState('edit-video-' + video.id)" diameter="16"></mat-spinner>
-                            Enregistrer
-                          </button>
-                        </div>
-                      </div>
-                    </ng-container>
-
-                  </div>
-                </div>
-
-                <!-- Vide -->
-                <p class="video-empty" *ngIf="getVideosCount(salon.id) === 0 && !showAddVideoForm[salon.id]">
-                  Aucune vidéo pour ce salon.
-                </p>
-
-                <!-- Bouton ajouter -->
-                <button *ngIf="!showAddVideoForm[salon.id]" class="add-video-btn"
-                  (click)="toggleAddVideoForm(salon.id)"
-                  [disabled]="getVideosCount(salon.id) >= 5">
-                  <mat-icon>video_call</mat-icon>
-                  {{ getVideosCount(salon.id) >= 5 ? 'Limite atteinte (5/5)' : 'Ajouter une vidéo' }}
-                </button>
-
-              </ng-container>
-            </div>
-
-          <div
-            class="tab-content"
-            *ngIf="activeTab[salon.id] === 'employes'"
-            [@tabAnimation]
-          >
-            <app-employe-list [salonId]="salon.id"></app-employe-list>
           </div>
-
-          
+          <div class="sd-svc__actions">
+            <button mat-icon-button matTooltip="Modifier"
+                    (click)="editService(service.id, salon.id)"
+                    [disabled]="getLoadingState('update-service-' + service.id)">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button matTooltip="Supprimer" (click)="deleteService(service.id, salon.id)">
+              <mat-icon>delete</mat-icon>
+            </button>
           </div>
         </div>
       </div>
+      <div class="sd-empty" *ngIf="(services[salon.id] ?? []).length === 0">
+        <mat-icon>spa</mat-icon>
+        <p>Aucun service pour ce salon.</p>
+      </div>
+      <!-- Inline service form expansion -->
+      <div class="sd-svc-expand" *ngIf="showServiceForm && serviceFormSalonId === salon.id" @expandDown>
+        <app-add-service-salon-dialog
+          [modalData]="{ service: serviceFormEditData, salonId: salon.id }"
+          (serviceCreated)="onServiceFormCreated($event, salon.id)"
+          (serviceUpdated)="onServiceFormUpdated($event, salon.id)"
+          (closeModalEvent)="closeServiceForm()">
+        </app-add-service-salon-dialog>
+      </div>
+
+      <button class="sd-add-btn"
+              [class.sd-add-btn--open]="showServiceForm && serviceFormSalonId === salon.id"
+              (click)="showServiceForm && serviceFormSalonId === salon.id ? closeServiceForm() : addService(salon.id)">
+        <mat-icon>{{ showServiceForm && serviceFormSalonId === salon.id ? 'close' : 'add' }}</mat-icon>
+        {{ showServiceForm && serviceFormSalonId === salon.id ? 'Fermer' : 'Ajouter un service' }}
+      </button>
+    </ng-container>
+  </div>
+
+  <!-- ── Horaires ── -->
+  <div class="sd-body sd-body--full" *ngIf="activeTab[salon.id] === 'horaires'" @tabAnim>
+    <app-horaires-manager [entityId]="salon.id" [isSalon]="true"
+                          (horaireError)="handleHorairesError(salon.id, $event)">
+    </app-horaires-manager>
+    <div class="sd-error" *ngIf="horairesErrors[salon.id]">
+      <mat-icon>error</mat-icon> {{ horairesErrors[salon.id] }}
     </div>
   </div>
+
+  <!-- ── Photos ── -->
+  <div class="sd-body sd-body--full" *ngIf="activeTab[salon.id] === 'photos'" @tabAnim>
+    <div *ngIf="arePhotosLoading(salon.id)" class="sd-loader"><mat-spinner diameter="40"></mat-spinner></div>
+    <div *ngIf="!arePhotosLoading(salon.id) && hasPhotosError(salon.id)" class="sd-error">
+      <mat-icon>error</mat-icon> {{ getPhotosError(salon.id) }}
+      <button mat-button (click)="reloadPhotos(salon.id)">Réessayer</button>
+    </div>
+    <ng-container *ngIf="!arePhotosLoading(salon.id) && hasPhotosLoaded(salon.id) && !hasPhotosError(salon.id)">
+      <div *ngIf="getPhotosCount(salon.id) > 0">
+        <h4 class="sd-section-title">Galerie Photos ({{ getPhotosCount(salon.id) }})</h4>
+        <div class="sd-photos-grid">
+          <div class="sd-photo-item" *ngFor="let photo of salonPhotos[salon.id]" @photoAnimation>
+            <img [src]="photo.url" alt="Photo" (error)="onImageError($event)">
+            <div class="sd-photo-actions">
+              <button mat-icon-button color="warn" (click)="deletePhoto(photo.id, salon.id)"
+                      [disabled]="getLoadingState('delete-photo-' + photo.id)">
+                <mat-icon>delete</mat-icon>
+              </button>
+              <button mat-icon-button (click)="setAsProfilePhoto(photo.url, salon.id)"
+                      [disabled]="getLoadingState('set-profile-' + salon.id)">
+                <mat-icon>account_circle</mat-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div *ngIf="getPhotosCount(salon.id) === 0" class="sd-empty">
+        <mat-icon>photo_library</mat-icon><p>Aucune photo pour ce salon.</p>
+      </div>
+      <button class="sd-add-btn" (click)="openFileSelector(salon.id)"
+              [disabled]="getLoadingState('upload-photos-' + salon.id)">
+        <mat-icon>add_photo_alternate</mat-icon>
+        {{ getLoadingState('upload-photos-' + salon.id) ? 'Upload...' : 'Ajouter des photos' }}
+      </button>
+    </ng-container>
+  </div>
+
+  <!-- ── Vidéos ── -->
+  <div class="sd-body sd-body--full" *ngIf="activeTab[salon.id] === 'videos'" @tabAnim>
+    <div *ngIf="areVideosLoading(salon.id)" class="sd-loader"><mat-spinner diameter="40"></mat-spinner></div>
+    <div *ngIf="!areVideosLoading(salon.id) && hasVideosError(salon.id)" class="sd-error">
+      <mat-icon>error</mat-icon> {{ getVideosError(salon.id) }}
+      <button mat-button (click)="reloadVideos(salon.id)">Réessayer</button>
+    </div>
+    <ng-container *ngIf="!areVideosLoading(salon.id) && hasVideosLoaded(salon.id)">
+      <div class="sd-video-form" *ngIf="showAddVideoForm[salon.id]">
+        <input placeholder="Titre (optionnel)" [(ngModel)]="newVideoTitre[salon.id]"
+               [ngModelOptions]="{standalone: true}">
+        <textarea placeholder="Description (optionnel)" rows="2"
+                  [(ngModel)]="newVideoDescription[salon.id]"
+                  [ngModelOptions]="{standalone: true}"></textarea>
+        <div class="sd-video-form__actions">
+          <button class="sd-btn-cancel" (click)="toggleAddVideoForm(salon.id)">Annuler</button>
+          <button class="sd-add-btn" (click)="openVideoSelector(salon.id)"
+                  [disabled]="getLoadingState('upload-video-' + salon.id)">
+            <mat-icon>attach_file</mat-icon>
+            {{ getLoadingState('upload-video-' + salon.id) ? 'Upload...' : 'Choisir un fichier' }}
+          </button>
+        </div>
+      </div>
+      <div class="sd-videos-grid" *ngIf="getVideosCount(salon.id) > 0">
+        <div class="sd-video-card" *ngFor="let video of salonVideos[salon.id]">
+          <ng-container *ngIf="editingVideoId !== video.id">
+            <video [src]="'http://localhost:8081/uploads/' + video.url"
+                   controls preload="metadata" class="sd-video-card__player"></video>
+            <div class="sd-video-card__footer">
+              <div class="sd-video-card__info">
+                <span>{{ video.titre || 'Sans titre' }}</span>
+                <span class="sd-video-card__desc" *ngIf="video.description">{{ video.description }}</span>
+              </div>
+              <div>
+                <button mat-icon-button (click)="startEditVideo(video)"><mat-icon>edit</mat-icon></button>
+                <button mat-icon-button color="warn" (click)="deleteVideo(video.id, salon.id)"
+                        [disabled]="getLoadingState('delete-video-' + video.id)">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </div>
+          </ng-container>
+          <ng-container *ngIf="editingVideoId === video.id">
+            <div class="sd-video-form">
+              <input placeholder="Titre" [(ngModel)]="editTitre" [ngModelOptions]="{standalone: true}">
+              <textarea placeholder="Description" rows="2"
+                        [(ngModel)]="editDescription" [ngModelOptions]="{standalone: true}"></textarea>
+              <div class="sd-video-form__actions">
+                <button class="sd-btn-cancel" (click)="cancelEditVideo()">Annuler</button>
+                <button class="sd-add-btn" (click)="saveVideoEdit(video.id, salon.id)"
+                        [disabled]="getLoadingState('edit-video-' + video.id)">Enregistrer</button>
+              </div>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+      <p class="sd-empty-text" *ngIf="getVideosCount(salon.id) === 0 && !showAddVideoForm[salon.id]">
+        Aucune vidéo pour ce salon.
+      </p>
+      <button *ngIf="!showAddVideoForm[salon.id]" class="sd-add-btn"
+              (click)="toggleAddVideoForm(salon.id)"
+              [disabled]="getVideosCount(salon.id) >= 5">
+        <mat-icon>video_call</mat-icon>
+        {{ getVideosCount(salon.id) >= 5 ? 'Limite atteinte (5/5)' : 'Ajouter une vidéo' }}
+      </button>
+    </ng-container>
+  </div>
+
+
 </div>
 
-<!-- ✅ MODAL D'ÉDITION/CRÉATION SALON -->
+
+<!-- ═══════════════════════════════════════════════
+     MODAL SALON (création / édition)
+════════════════════════════════════════════════ -->
 <app-salon
   *ngIf="showModal"
   [salonToEdit]="salonToEdit"

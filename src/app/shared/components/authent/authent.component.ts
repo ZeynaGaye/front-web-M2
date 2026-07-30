@@ -111,6 +111,10 @@ export class AuthentComponent implements OnInit {
 
   }
   
+  loginWithSocial(provider: 'google' | 'facebook' | 'instagram'): void {
+    this.authService.loginWithSocial(provider);
+  }
+
   // Fermer le modal
   closeModal(): void {
     this.close.emit();

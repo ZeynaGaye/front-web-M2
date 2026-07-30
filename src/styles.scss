@@ -57,15 +57,59 @@ body { margin: 0; font-family:'Times New Roman', Times, serif}
 
 /* ── Panel dialog transparent (pas de fond blanc natif) ── */
 .clean-dialog-panel {
-  .mat-mdc-dialog-container,
-  .mdc-dialog__container,
+  overflow: visible !important;
+
+  .mat-mdc-dialog-container {
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  .mdc-dialog__container {
+    background: transparent !important;
+    overflow: visible !important;
+    align-items: center !important;
+  }
+
   .mdc-dialog__surface {
     background: transparent !important;
     box-shadow: none !important;
     padding: 0 !important;
     overflow: visible !important;
     border-radius: 20px !important;
+    max-height: none !important;
   }
+}
+
+/* ── Rating modal dialog ── */
+.rm-dialog-panel {
+  .mat-mdc-dialog-container { padding: 0 !important; overflow: hidden !important; }
+  .mdc-dialog__container    { align-items: center !important; }
+  .mdc-dialog__surface      { padding: 0 !important; overflow: hidden !important; border-radius: 16px !important; }
+  .mat-mdc-dialog-content   { padding: 0 !important; margin: 0 !important; max-height: unset !important; }
+  .mat-mdc-dialog-actions   { padding: 0 !important; margin: 0 !important; min-height: unset !important; }
+}
+
+/* ── Force add-service dialog content to render visibly ── */
+.cdk-overlay-pane .service-dialog {
+  background: #ffffff !important;
+  border-radius: 20px !important;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.18) !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* ── Entrée animée des dialogs propres ── */
+.clean-dialog-panel mat-dialog-container,
+.clean-dialog-panel .mat-mdc-dialog-container {
+  animation: dialogSpringIn 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) both !important;
+}
+
+@keyframes dialogSpringIn {
+  from { transform: scale(0.92) translateY(20px); opacity: 0; }
+  to   { transform: scale(1)    translateY(0);    opacity: 1; }
 }
 
 /* Marqueurs Leaflet custom (hors composant Angular) */

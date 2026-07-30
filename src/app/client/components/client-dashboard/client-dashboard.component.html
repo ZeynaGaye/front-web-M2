@@ -31,7 +31,7 @@
         <mat-icon>favorite_border</mat-icon>
         <span>Favoris</span>
       </a>
-      <a class="nav-item" (click)="openNotifications()">
+      <a class="nav-item" [matMenuTriggerFor]="notifMenu">
         <mat-icon>chat_bubble_outline</mat-icon>
         <span>Messages</span>
         <span class="nav-badge" *ngIf="unreadNotifications > 0">{{ unreadNotifications }}</span>
@@ -74,10 +74,20 @@
         </button>
       </div>
       <div class="topbar-right">
-        <button class="topbar-notif" (click)="openNotifications()">
+        <button class="topbar-notif" [matMenuTriggerFor]="notifMenu">
           <mat-icon>notifications_none</mat-icon>
           <span class="notif-dot" *ngIf="unreadNotifications > 0"></span>
         </button>
+
+        <mat-menu #notifMenu="matMenu" class="notification-menu" xPosition="before">
+          <div (click)="$event.stopPropagation()">
+            <app-notification-list
+              [notifications]="notifications"
+              [userRole]="'client'"
+              (notificationRead)="onNotificationRead()">
+            </app-notification-list>
+          </div>
+        </mat-menu>
         <div class="topbar-user" *ngIf="currentUser" [matMenuTriggerFor]="userMenu">
           <div class="user-avatar">{{ (currentUser.prenom||'U')[0] }}{{ (currentUser.nom||'')[0] }}</div>
           <div class="user-meta">
@@ -249,7 +259,8 @@
             <mat-tab [label]="'À venir (' + upcomingReservations.length + ')'">
               <div class="tab-body">
                 <ng-container *ngIf="upcomingReservations.length > 0; else emptyUpcoming">
-                  <div class="resa-item" *ngFor="let r of upcomingReservations">
+                  <div class="resa-item" *ngFor="let r of upcomingReservations"
+                       [class.resa-item--pastdue]="canCompleteReservation(r)">
                     <div class="resa-item-top">
                       <div class="resa-ico"><mat-icon>{{ getProviderIcon(r) }}</mat-icon></div>
                       <div class="resa-info">
@@ -260,7 +271,8 @@
                         <span class="resa-badge status-{{ r.status?.toLowerCase() }}">
                           {{ formatStatus(r.status) }}
                         </span>
-                        <button class="cancel-mini-btn" (click)="cancelReservation(r)">
+                        <button class="cancel-mini-btn" (click)="cancelReservation(r)"
+                                *ngIf="!canCompleteReservation(r)">
                           <mat-icon>cancel</mat-icon> Annuler
                         </button>
                       </div>
@@ -269,6 +281,17 @@
                       <span><mat-icon>today</mat-icon>{{ formatDate(r.datePrestation) }}</span>
                       <span><mat-icon>access_time</mat-icon>{{ formatTime(r.datePrestation) }}</span>
                       <span><mat-icon>payments</mat-icon>{{ getFormattedServicePrice(r) }}</span>
+                    </div>
+                    <!-- Bouton Terminer : visible uniquement si la date est passée -->
+                    <div class="resa-complete-row" *ngIf="canCompleteReservation(r)">
+                      <span class="resa-complete-hint">
+                        <mat-icon>info_outline</mat-icon>
+                        Votre prestation est terminée ?
+                      </span>
+                      <button class="complete-btn" (click)="completeReservation(r)">
+                        <mat-icon>check_circle</mat-icon>
+                        Terminer &amp; noter
+                      </button>
                     </div>
                   </div>
                 </ng-container>
@@ -301,6 +324,25 @@
                       <span><mat-icon>today</mat-icon>{{ formatDate(r.datePrestation) }}</span>
                       <span><mat-icon>payments</mat-icon>{{ getFormattedServicePrice(r) }}</span>
                     </div>
+                    <!-- Bouton noter si terminée et pas encore notée -->
+                    <div class="resa-complete-row" *ngIf="canRateReservation(r) && !r.avis">
+                      <span class="resa-complete-hint">
+                        <mat-icon>star_outline</mat-icon>
+                        Vous n'avez pas encore noté cette prestation
+                      </span>
+                      <button class="complete-btn" (click)="openRatingDialog(r)">
+                        <mat-icon>star</mat-icon>
+                        Laisser un avis
+                      </button>
+                    </div>
+                    <!-- Avis déjà déposé -->
+                    <div class="resa-rated-row" *ngIf="r.avis">
+                      <mat-icon>star</mat-icon>
+                      <span>{{ r.avis.note }}/5 · {{ r.avis.commentaire || 'Avis déposé' }}</span>
+                      <button class="rate-edit-btn" (click)="openRatingDialog(r)">
+                        <mat-icon>edit</mat-icon>
+                      </button>
+                    </div>
                   </div>
                 </ng-container>
                 <ng-template #emptyHistory>
@@ -312,14 +354,27 @@
             <!-- Mes avis -->
             <mat-tab label="Mes avis">
               <div class="tab-body">
-                <div class="rate-alert" *ngIf="reservationsToRate.length > 0">
-                  <mat-icon>star</mat-icon>
-                  <div>
-                    <strong>{{ reservationsToRate.length }} service{{ reservationsToRate.length > 1 ? 's' : '' }} à noter</strong>
-                    <p>Votre avis aide la communauté !</p>
+                <ng-container *ngIf="reservationsToRate.length > 0">
+                  <div class="rate-alert">
+                    <mat-icon>star</mat-icon>
+                    <div>
+                      <strong>{{ reservationsToRate.length }} service{{ reservationsToRate.length > 1 ? 's' : '' }} à noter</strong>
+                      <p>Votre avis aide la communauté !</p>
+                    </div>
                   </div>
-                  <button (click)="openRatingDialog(reservationsToRate[0])">Noter</button>
-                </div>
+                  <div class="to-rate-list">
+                    <div class="to-rate-item" *ngFor="let r of reservationsToRate">
+                      <div class="to-rate-info">
+                        <span class="to-rate-service">{{ getServiceName(r) }}</span>
+                        <span class="to-rate-provider">{{ getProviderName(r) }}</span>
+                        <span class="to-rate-date">{{ formatDate(r.datePrestation) }}</span>
+                      </div>
+                      <button class="complete-btn" (click)="openRatingDialog(r)">
+                        <mat-icon>star</mat-icon> Noter
+                      </button>
+                    </div>
+                  </div>
+                </ng-container>
                 <ng-container *ngIf="recentAvis.length > 0; else emptyAvis">
                   <div class="avis-item" *ngFor="let a of recentAvis">
                     <div class="avis-item-top">

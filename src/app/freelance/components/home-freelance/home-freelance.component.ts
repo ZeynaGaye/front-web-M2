@@ -15,6 +15,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog } from '@angular/material/dialog';
 import { Subscription, forkJoin, of } from 'rxjs';
 
@@ -24,7 +25,6 @@ import { OpportunitesEmploiComponent } from '../opportunites-emploi/opportunites
 import { MesServicesFreelanceComponent } from '../mes-service-freelance/mes-service-freelance.component';
 import { HorairesManagerComponent } from '../../../shared/components/horaires-manager/horaires-manager.component';
 import { ReservationsComponent } from '../../../shared/components/reservations/reservations.component';
-import { AvisRecusComponent } from '../../../shared/components/avis-recus/avis-recus.component';
 import { NotificationService, Notification } from '../../../shared/services/notification/notification.service';
 import { NotificationListComponent } from '../../../shared/components/notification-list/notification-list.component';
 import { ReservationService } from '../../../shared/services/reservation/reservation.service';
@@ -32,6 +32,8 @@ import { PortfolioService } from '../../services/portfolio.service';
 import { catchError, map } from 'rxjs/operators';
 import { AuthService } from '../../../core/servces/auth.service';
 import { ProfileManagementComponent } from "../../../shared/components/profile-management/profile-management.component";
+import { ProfileManagementService } from '../../../shared/services/profile/profile-management.service';
+import { OffreEmploi, OffreEmploisService } from '../../../employeur/services/OffreEmploisService/offre-emplois-service.service';
 
 
 @Component({
@@ -42,7 +44,7 @@ import { ProfileManagementComponent } from "../../../shared/components/profile-m
     MatSidenavModule, MatToolbarModule, MatIconModule,
     MatListModule, MatButtonModule, MatCardModule,
     MatInputModule, MatFormFieldModule, MatMenuModule, MatDividerModule,
-    MatProgressSpinnerModule, MatChipsModule, MatBadgeModule, MatTabsModule,
+    MatProgressSpinnerModule, MatChipsModule, MatBadgeModule, MatTabsModule, MatTooltipModule,
     PortfolioComponent,
     OpportunitesEmploiComponent,
     MesServicesFreelanceComponent,
@@ -50,7 +52,6 @@ import { ProfileManagementComponent } from "../../../shared/components/profile-m
     ReservationsComponent,
     NotificationListComponent,
     ProfileManagementComponent,
-    AvisRecusComponent
 ],
   templateUrl: './home-freelance.component.html',
   styleUrls: ['./home-freelance.component.scss']
@@ -95,6 +96,13 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
   //  Activités récentes
   recentActivities: any[] = [];
 
+  // Nouvelles propriétés pour le redesign
+  portfolioItems: any[] = [];
+  loyalClients: any[] = [];
+  totalClientsCount = 0;
+  latestOffre: OffreEmploi | null = null;
+  totalOffres = 0;
+
   //  Gestion des subscriptions
   private subscriptions = new Subscription();
 
@@ -106,6 +114,8 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
   private notificationService = inject(NotificationService);
   private reservationService = inject(ReservationService);
   private portfolioService = inject(PortfolioService);
+  private profileService = inject(ProfileManagementService);
+  private offreService = inject(OffreEmploisService);
   private platformId = inject(PLATFORM_ID);
 
   //  Propriété pour vérifier si on est côté browser
@@ -116,11 +126,11 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.loadUserData();
     this.subscribeToUserChanges();
-    this.loadNotifications();
-    this.loadDashboardData();
-    
-    //  Seulement côté browser
+
+    //  Seulement côté browser (SSR n'a pas de token Keycloak)
     if (this.isBrowser) {
+      this.loadNotifications();
+      this.loadDashboardData();
       this.setupModalManagement();
       
       // Ajout des fonctions de debug au window (développement seulement)
@@ -149,15 +159,41 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
   loadUserData(): void {
     this.currentUser = this.authService.getCurrentUser() as any;
     this.updateUsername();
+    this.loadProfilePhoto();
+  }
+
+  private loadProfilePhoto(): void {
+    if (!this.currentUser?.id) return;
+    this.subscriptions.add(
+      this.profileService.getCurrentUserProfile().pipe(
+        catchError(() => of(null))
+      ).subscribe((profile: any) => {
+        const photoUrl = profile?.photoProfile || profile?.profileImage;
+        if (photoUrl && this.currentUser) {
+          this.currentUser = { ...this.currentUser, photoProfile: photoUrl };
+          // Persist back to AuthService so token refreshes don't erase the photo
+          this.authService.setCurrentUser(this.currentUser);
+        }
+      })
+    );
   }
 
   //  Écouter les changements d'authentification
   subscribeToUserChanges(): void {
     const userSub = this.authService.currentUser$.subscribe((user: any) => {
-      this.currentUser = user as any;
+      if (user) {
+        const existingPhoto = this.currentUser?.photoProfile;
+        this.currentUser = user as any;
+        // Preserve photo if the incoming user object doesn't carry it yet
+        if (!this.currentUser.photoProfile && existingPhoto) {
+          this.currentUser = { ...this.currentUser, photoProfile: existingPhoto };
+        }
+      } else {
+        this.currentUser = null;
+      }
       this.updateUsername();
     });
-    
+
     this.subscriptions.add(userSub);
   }
 
@@ -189,14 +225,21 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
     return this.currentUser?.role || '';
   }
 
+  get isHomeView(): boolean {
+    return !this.showPortfolio && !this.showOpportunities && !this.showServices &&
+           !this.showProfile && !this.showAvailability && !this.showReservations && !this.showNotifications;
+  }
+
+  get userInitials(): string {
+    const p = this.currentUser?.prenom || '';
+    const n = this.currentUser?.nom || '';
+    return `${p.charAt(0)}${n.charAt(0)}`.toUpperCase();
+  }
+
   get userPhotoUrl(): string {
-    if (this.currentUser?.photoProfile) {
-      // Si c'est une URL complète, l'utiliser directement
-      if (this.currentUser.photoProfile.startsWith('http')) {
-        return this.currentUser.photoProfile;
-      }
-      // Sinon, construire l'URL avec le serveur backend
-      return `http://localhost:8081${this.currentUser.photoProfile}`;
+    const photo = this.currentUser?.photoProfile || this.currentUser?.profileImage;
+    if (photo) {
+      return photo.startsWith('http') ? photo : `http://localhost:8081${photo}`;
     }
     return '';
   }
@@ -215,9 +258,8 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error(' Erreur chargement notifications freelance:', error);
-          // Utiliser des notifications de test en cas d'échec de l'API
-          this.notifications = this.getMockNotifications();
-          this.unreadNotifications = this.notifications.filter(n => !n.vue).length;
+          this.notifications = [];
+          this.unreadNotifications = 0;
 
         }
       })
@@ -339,6 +381,8 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
     this.loadUpcomingAppointments();
     this.loadPortfolioStats();
     this.loadRecentActivities();
+    this.loadLoyalClients();
+    this.loadLatestOpportunity();
   }
 
   //  Charger les statistiques du freelance
@@ -392,7 +436,6 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
       ).subscribe({
         next: (reservations: any[]) => {
 
-          
           const today = new Date();
           const weekAgo = new Date();
           weekAgo.setDate(today.getDate() - 7);
@@ -406,13 +449,25 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
             return prestationDate >= weekAgo && prestationDate <= today;
           });
           
-          // Réservations de ce mois pour le revenu
+          // Réservations de ce mois pour le revenu (terminées + confirmées)
           const monthlyReservations = reservations.filter(r => {
             const prestationDate = new Date(r.datePrestation || r.dateReservation);
-            return prestationDate >= monthAgo && prestationDate <= today && r.status === 'TERMINEE';
+            const statut = (r.status || r.statut || '').toUpperCase();
+            return prestationDate >= monthAgo && prestationDate <= today
+              && (statut === 'TERMINEE' || statut === 'COMPLETED'
+                  || statut === 'CONFIRMEE' || statut === 'CONFIRMED');
           });
-          
-          const totalRevenue = monthlyReservations.reduce((sum, r) => sum + (r.prixTotal || 0), 0);
+
+          const totalRevenue = monthlyReservations.reduce((sum, r) => {
+            const prix = r.prixTotal
+              ?? r.servicePrixMax
+              ?? r.servicePrixMin
+              ?? r.servicePrix
+              ?? r.prix
+              ?? r.montant
+              ?? 0;
+            return sum + prix;
+          }, 0);
           
           this.dashboardStats = {
             weeklyAppointments: Math.max(weeklyReservations.length, reservations.length), // Afficher au moins le nombre total si aucune cette semaine
@@ -524,8 +579,6 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
   private loadPortfolioStats(): void {
     if (!this.currentUser?.id) return;
 
-
-    
     this.subscriptions.add(
       this.portfolioService.getFreelancePortfolio(this.currentUser.id).pipe(
         catchError((error: any) => {
@@ -534,9 +587,65 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
         })
       ).subscribe({
         next: (items: any[]) => {
-          const photoCount = items?.length || 0;
+          this.portfolioItems = items || [];
+          this.dashboardStats.portfolioPhotos = items?.length || 0;
+        }
+      })
+    );
+  }
 
-          this.dashboardStats.portfolioPhotos = photoCount;
+  getPortfolioImageUrl(item: any): string {
+    // PortfolioItem stores images in item.images[0].url
+    const raw = item?.images?.[0]?.url
+      || item?.photoUrl || item?.imageUrl || item?.url
+      || item?.photo || item?.fichier || '';
+    if (!raw) return '';
+    if (raw.startsWith('http')) return raw;
+    const path = raw.startsWith('/') ? raw : `/${raw}`;
+    return `http://localhost:8081${path}`;
+  }
+
+  private loadLatestOpportunity(): void {
+    this.subscriptions.add(
+      this.offreService.getAllOffresEmplois().pipe(
+        catchError(() => of([]))
+      ).subscribe((offres: OffreEmploi[]) => {
+        const ouvertes = offres.filter(o => o.status === 'OUVERT' || o.status === 'ACTIVE' || !o.status);
+        this.totalOffres = ouvertes.length;
+        this.latestOffre = ouvertes.sort((a, b) =>
+          new Date(b.datePublication || b.dateCreation || 0).getTime() -
+          new Date(a.datePublication || a.dateCreation || 0).getTime()
+        )[0] || null;
+      })
+    );
+  }
+
+  private loadLoyalClients(): void {
+    this.subscriptions.add(
+      this.reservationService.getFreelanceReservations().pipe(
+        catchError(() => of([]))
+      ).subscribe({
+        next: (reservations: any[]) => {
+          const clientMap = new Map<string, any>();
+          reservations.forEach((r: any) => {
+            const name = (r.clientFullName || `${r.clientPrenom || ''} ${r.clientNom || ''}`.trim() || 'Client').trim();
+            if (!clientMap.has(name)) {
+              clientMap.set(name, {
+                name,
+                initials: name.split(' ').map((n: string) => n.charAt(0)).join('').slice(0, 2).toUpperCase(),
+                count: 0,
+                rating: 5.0,
+                isFavorite: false
+              });
+            }
+            const c = clientMap.get(name)!;
+            c.count++;
+            if (c.count >= 2) c.isFavorite = true;
+          });
+          this.totalClientsCount = clientMap.size;
+          this.loyalClients = Array.from(clientMap.values())
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 3);
         }
       })
     );
@@ -715,6 +824,10 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
 
   forceLogin(): void {
     this.login();
+  }
+
+  goToMainPage(): void {
+    this.router.navigate(['/']);
   }
 
   logout(): void {
@@ -923,26 +1036,18 @@ export class HomeFreelanceComponent implements OnInit, OnDestroy {
   // ==========================================
 
   onProfilePhotoUploaded(photoUrl: string): void {
-
-    
-    // Mettre à jour les données utilisateur localement
     if (this.currentUser) {
-      this.currentUser.photoProfile = photoUrl;
+      this.currentUser = { ...this.currentUser, photoProfile: photoUrl };
+      this.authService.setCurrentUser(this.currentUser);
     }
-    
-    // Optionnel: Recharger les données utilisateur depuis le serveur
     this.loadUserData();
   }
 
   onProfilePhotoDeleted(): void {
-
-    
-    // Mettre à jour les données utilisateur localement
     if (this.currentUser) {
-      this.currentUser.photoProfile = null;
+      this.currentUser = { ...this.currentUser, photoProfile: null };
+      this.authService.setCurrentUser(this.currentUser);
     }
-    
-    // Optionnel: Recharger les données utilisateur depuis le serveur
     this.loadUserData();
   }
 

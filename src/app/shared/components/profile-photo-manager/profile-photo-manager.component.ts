@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, inject, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, OnInit, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -36,6 +36,7 @@ export class ProfilePhotoManagerComponent implements OnInit {
   private profileService = inject(ProfileManagementService);
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
+  private ngZone = inject(NgZone);
 
   // États
   isUploading = false;
@@ -114,20 +115,24 @@ export class ProfilePhotoManagerComponent implements OnInit {
         this.showSuccess('Photo de profil mise à jour avec succès');
       },
       error: (error) => {
-        console.error(' Erreur upload photo:', error);
+        console.error('Erreur upload photo:', error);
         this.isUploading = false;
-        this.showError(error.message || 'Erreur lors de l\'upload de la photo');
+        const msg = error.status === 400
+          ? 'Format ou taille invalide. Utilisez JPG/PNG/WEBP ≤ 5 MB.'
+          : error.status === 413
+          ? 'Fichier trop volumineux pour le serveur.'
+          : error.message || 'Erreur lors de l\'upload de la photo';
+        this.showError(msg);
       }
     });
   }
 
   //  Suppression de la photo
   onDeletePhoto(): void {
-    if (!this.currentPhotoUrl) {
+    if (!this.currentPhotoUrl || this.isDeleting) {
       return;
     }
 
-    // Confirmation
     const confirmed = confirm('Êtes-vous sûr de vouloir supprimer votre photo de profil ?');
     if (!confirmed) {
       return;
@@ -143,9 +148,16 @@ export class ProfilePhotoManagerComponent implements OnInit {
         this.showSuccess('Photo de profil supprimée avec succès');
       },
       error: (error) => {
-        console.error(' Erreur suppression photo:', error);
         this.isDeleting = false;
-        this.showError(error.message || 'Erreur lors de la suppression de la photo');
+        // 400 = la photo n'existe plus côté serveur → nettoyer l'état local
+        if (error.status === 400 || error.status === 404) {
+          this.currentPhotoUrl = null;
+          this.photoDeleted.emit();
+          this.showSuccess('Photo supprimée');
+        } else {
+          console.error('Erreur suppression photo:', error);
+          this.showError(error.message || 'Erreur lors de la suppression de la photo');
+        }
       }
     });
   }
@@ -197,7 +209,8 @@ export class ProfilePhotoManagerComponent implements OnInit {
     fileInput.type = 'file';
     fileInput.accept = this.ACCEPTED_TYPES.join(',');
     fileInput.addEventListener('change', (event) => {
-      this.onFileSelected(event);
+      // Ré-entrer dans la zone Angular pour que le change detection fonctionne
+      this.ngZone.run(() => this.onFileSelected(event));
     });
     fileInput.click();
   }

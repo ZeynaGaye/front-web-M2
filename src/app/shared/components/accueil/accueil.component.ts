@@ -64,7 +64,9 @@ export class AccueilComponent implements OnInit, OnDestroy, AfterViewInit {
   ngAfterViewInit(): void {
     if (!isPlatformBrowser(this.platformId)) return;
 
-    import('motion').then(({ animate }) => {
+    import('motion').catch(() => null).then((mod) => {
+      if (!mod) return;
+      const { animate } = mod;
       const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
 
       const observer = new IntersectionObserver((entries) => {

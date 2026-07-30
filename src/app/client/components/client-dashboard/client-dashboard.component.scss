@@ -427,6 +427,22 @@ $topbar:  64px;
   scrollbar-width: thin; scrollbar-color: $border transparent;
 }
 
+/* ── Notification popup ── */
+::ng-deep .notification-menu {
+  .mat-mdc-menu-panel {
+    min-width: 340px !important;
+    max-width: 340px !important;
+    border-radius: 18px !important;
+    overflow: visible !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+  .mat-mdc-menu-content {
+    padding: 0 !important;
+    background: transparent !important;
+  }
+}
+
 /* Reservation item */
 .resa-item {
   background: $bg; border-radius: 11px; padding: 14px;
@@ -621,6 +637,79 @@ $topbar:  64px;
   mat-icon { font-size: 13px; width: 13px; height: 13px; }
   &:hover { background: rgba($error, .08); border-color: $error; }
 }
+
+/* ── Terminer & noter ─────────────────────────────────────── */
+.resa-item--pastdue {
+  border: 1.5px solid rgba(#D4735A, .25);
+  background: rgba(#D4735A, .025);
+}
+
+.resa-complete-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(#D4735A, .25);
+}
+
+.resa-complete-hint {
+  display: flex; align-items: center; gap: 5px;
+  font-size: .74rem; color: #9a7060; font-weight: 500;
+  mat-icon { font-size: 14px; width: 14px; height: 14px; color: #D4735A; }
+}
+
+.complete-btn {
+  display: flex; align-items: center; gap: 5px;
+  font-size: .77rem; font-weight: 700;
+  background: #D4735A; color: #fff;
+  border: none; border-radius: 8px;
+  padding: 6px 14px; cursor: pointer;
+  transition: background .15s, transform .12s;
+  white-space: nowrap;
+  mat-icon { font-size: 15px; width: 15px; height: 15px; }
+  &:hover { background: #c0654d; transform: translateY(-1px); }
+  &:active { transform: scale(.97); }
+}
+
+/* Ligne "avis déjà déposé" dans l'historique */
+.resa-rated-row {
+  display: flex; align-items: center; gap: 8px;
+  margin-top: 10px; padding-top: 10px;
+  border-top: 1px solid rgba(0,0,0,.06);
+  font-size: .76rem; color: #9a7060;
+  mat-icon { font-size: 14px; width: 14px; height: 14px; color: #D4735A; flex-shrink: 0; }
+  span { flex: 1; font-weight: 500; }
+}
+
+.rate-edit-btn {
+  background: none; border: none; cursor: pointer;
+  color: #9a7060; padding: 3px; border-radius: 5px;
+  display: flex; transition: color .15s, background .15s;
+  mat-icon { font-size: 14px; width: 14px; height: 14px; }
+  &:hover { color: #D4735A; background: rgba(212,115,90,.08); }
+}
+
+/* Liste des réservations à noter dans l'onglet "Mes avis" */
+.to-rate-list {
+  display: flex; flex-direction: column; gap: 8px;
+  margin-bottom: 16px;
+}
+
+.to-rate-item {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; padding: 12px 14px;
+  background: $white; border: 1.5px solid rgba(212,115,90,.2);
+  border-radius: 10px;
+}
+
+.to-rate-info {
+  display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0;
+}
+.to-rate-service  { font-size: .83rem; font-weight: 600; color: $text; }
+.to-rate-provider { font-size: .76rem; color: $text-2; }
+.to-rate-date     { font-size: .72rem; color: $text-2; }
 
 /* ── Calendrier extras ───────────────────────────────────── */
 .cal-tab-body {

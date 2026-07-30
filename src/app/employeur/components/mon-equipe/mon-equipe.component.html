@@ -1,0 +1,403 @@
+<div class="me-page" @fadeIn>
+
+  <!-- HEADER -->
+  <div class="me-header">
+    <div class="me-header__left">
+      <button class="me-back" (click)="goBack()"><mat-icon>arrow_back</mat-icon></button>
+      <div>
+        <h1 class="me-title">Mon équipe</h1>
+        <p class="me-sub">Les talents qui font vivre vos salons.</p>
+      </div>
+    </div>
+    <button class="me-invite-btn" (click)="openInviter()">
+      <mat-icon>person_add</mat-icon>Inviter un talent
+    </button>
+  </div>
+
+  <!-- SEARCH + TABS -->
+  <div class="me-controls">
+    <div class="me-search">
+      <mat-icon class="me-search__icon">search</mat-icon>
+      <input class="me-search__input" type="text" placeholder="Rechercher un talent..." [(ngModel)]="searchTerm"/>
+    </div>
+    <nav class="me-tabs">
+      <button class="me-tab" [class.me-tab--active]="activeTab === 'all'" (click)="setTab('all')">
+        Tous les salons <span class="me-tab__count">{{ totalCount }}</span>
+      </button>
+      <button *ngFor="let s of salons" class="me-tab" [class.me-tab--active]="activeTab === s.id" (click)="setTab(s.id)">
+        {{ s.nom }} <span class="me-tab__count">{{ countBySalon(s.id) }}</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- LOADING -->
+  <div class="me-loading" *ngIf="loading">
+    <div class="me-spinner"></div><span>Chargement de l'équipe...</span>
+  </div>
+
+  <!-- TABLE -->
+  <div class="me-table-wrap" *ngIf="!loading">
+    <div class="me-empty" *ngIf="filteredEmployes.length === 0">
+      <mat-icon>people_outline</mat-icon>
+      <p>Aucun talent trouvé.</p>
+      <button class="me-invite-btn me-invite-btn--outline" (click)="openInviter()">Inviter un nouveau talent</button>
+    </div>
+
+    <div class="me-list" [@listAnim]="filteredEmployes.length" *ngIf="filteredEmployes.length > 0">
+      <div class="me-row me-row--head">
+        <span class="me-col me-col--name">Talent</span>
+        <span class="me-col me-col--role">Spécialité</span>
+        <span class="me-col me-col--salon">Salon</span>
+        <span class="me-col me-col--rating">Note</span>
+        <span class="me-col me-col--status">Statut</span>
+        <span class="me-col me-col--actions"></span>
+      </div>
+
+      <div class="me-row" *ngFor="let emp of filteredEmployes" [class.me-row--active]="selectedRow?.id === emp.id">
+        <div class="me-col me-col--name">
+          <div class="me-avatar" [style.background]="avatarColor(emp)">{{ emp.initials }}</div>
+          <div class="me-name-block">
+            <span class="me-name">{{ emp.nomComplet }}</span>
+            <span class="me-email">{{ emp.email }}</span>
+          </div>
+        </div>
+        <div class="me-col me-col--role">{{ emp.specialite }}</div>
+        <div class="me-col me-col--salon"><mat-icon class="me-salon-icon">store</mat-icon>{{ emp.salonNom }}</div>
+        <div class="me-col me-col--rating"><mat-icon class="me-star">star</mat-icon>{{ emp.rating }}</div>
+        <div class="me-col me-col--status">
+          <span class="me-badge {{ statusClass(emp.statut) }}">{{ statusLabel(emp.statut) }}</span>
+        </div>
+        <div class="me-col me-col--actions">
+          <button class="me-fiche-btn" (click)="openFiche(emp)"><mat-icon>badge</mat-icon>Fiche</button>
+          <button class="me-more-btn" [matMenuTriggerFor]="rowMenu"><mat-icon>more_vert</mat-icon></button>
+          <mat-menu #rowMenu="matMenu">
+            <button mat-menu-item (click)="openFiche(emp)"><mat-icon>badge</mat-icon>Voir la fiche</button>
+            <button mat-menu-item><mat-icon>beach_access</mat-icon>Mettre en congé</button>
+            <button mat-menu-item style="color:#EF4444"><mat-icon style="color:#EF4444">person_off</mat-icon>Désactiver</button>
+          </mat-menu>
+        </div>
+      </div>
+    </div>
+
+    <div class="me-footer" *ngIf="filteredEmployes.length > 0">
+      <button class="me-new-link" (click)="openInviter()">
+        <mat-icon>add_circle_outline</mat-icon>Inviter un nouveau talent
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- BACKDROP -->
+<div class="fiche-backdrop" *ngIf="drawerOpen" @backdropFade (click)="closeDrawer()"></div>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     DRAWER
+════════════════════════════════════════════════════════════════ -->
+<aside class="fiche-drawer" *ngIf="drawerOpen" @drawerSlide>
+
+
+  <!-- ══════════════════════════
+       MODE : FICHE EMPLOYÉ
+  ═══════════════════════════ -->
+  <ng-container *ngIf="drawerMode === 'fiche' && selectedRow">
+
+    <!-- HEADER -->
+    <div class="fd-header">
+      <div class="fd-header__left">
+        <div class="fd-avatar" [style.background]="avatarColor(selectedRow)">{{ selectedRow.initials }}</div>
+        <div>
+          <h2 class="fd-name">{{ ficheForm.prenom }} {{ ficheForm.nom }}</h2>
+          <p class="fd-meta">{{ selectedRow.specialite }}<ng-container *ngIf="ficheEmbauche()"> · depuis {{ ficheEmbauche() }}</ng-container></p>
+        </div>
+      </div>
+      <div class="fd-header__right">
+        <span class="me-badge fd-badge {{ statusClass(ficheForm.statut) }}">{{ statusLabel(ficheForm.statut) }}</span>
+        <button class="fd-close" (click)="closeDrawer()"><mat-icon>close</mat-icon></button>
+      </div>
+    </div>
+    <div class="fd-salon-pill"><mat-icon>store</mat-icon>{{ selectedRow.salonNom }}</div>
+
+    <!-- LOADING -->
+    <div class="me-loading fd-loading" *ngIf="loadingFiche">
+      <div class="me-spinner"></div><span>Chargement...</span>
+    </div>
+
+    <div class="fd-body" *ngIf="!loadingFiche">
+
+      <!-- ─── STEP : MAIN ─── -->
+      <ng-container *ngIf="ficheStep === 'main'">
+        <div @stepSlide>
+
+          <!-- Informations personnelles -->
+          <div class="fd-section">
+            <div class="fd-section__label"><mat-icon>person_outline</mat-icon>Informations personnelles</div>
+            <div class="fd-grid">
+              <div class="fd-field"><label class="fd-field__lbl">Prénom</label>
+                <input class="fd-input" type="text" [(ngModel)]="ficheForm.prenom" placeholder="Prénom"/></div>
+              <div class="fd-field"><label class="fd-field__lbl">Nom</label>
+                <input class="fd-input" type="text" [(ngModel)]="ficheForm.nom" placeholder="Nom"/></div>
+              <div class="fd-field"><label class="fd-field__lbl"><mat-icon>mail_outline</mat-icon>Email</label>
+                <input class="fd-input" type="email" [(ngModel)]="ficheForm.email" placeholder="email@example.com"/></div>
+              <div class="fd-field"><label class="fd-field__lbl"><mat-icon>phone</mat-icon>Téléphone</label>
+                <input class="fd-input" type="tel" [(ngModel)]="ficheForm.telephone" placeholder="+221 XX XXX XX XX"/></div>
+            </div>
+          </div>
+
+          <!-- Informations professionnelles -->
+          <div class="fd-section">
+            <div class="fd-section__label"><mat-icon>work_outline</mat-icon>Informations professionnelles</div>
+            <div class="fd-sp-label">Spécialités <span class="fd-sp-hint">(max 5)</span></div>
+            <div class="fd-chips-wrap">
+              <button *ngFor="let sp of specialiteOptions" class="fd-chip-toggle"
+                      [class.fd-chip-toggle--on]="isFicheSpOn(sp)" type="button" (click)="toggleFicheSp(sp)">
+                {{ fmt(sp) }}
+              </button>
+            </div>
+            <div class="fd-grid" style="margin-top:12px">
+              <div class="fd-field"><label class="fd-field__lbl">Contrat</label>
+                <select class="fd-select" [(ngModel)]="ficheForm.typeContrat">
+                  <option value="">— Choisir —</option>
+                  <option *ngFor="let c of typeContratOptions" [value]="c">{{ fmtContrat(c) }}</option>
+                </select>
+              </div>
+              <div class="fd-field"><label class="fd-field__lbl">Statut</label>
+                <select class="fd-select" [(ngModel)]="ficheForm.statut">
+                  <option value="">— Choisir —</option>
+                  <option *ngFor="let s of statutOptions" [value]="s">{{ fmtStatut(s) }}</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Horaires -->
+          <div class="fd-section">
+            <div class="fd-section__label"><mat-icon>schedule</mat-icon>Horaires de travail</div>
+            <div class="fd-grid">
+              <div class="fd-field"><label class="fd-field__lbl">Heure de début</label>
+                <div class="fd-time-wrap"><mat-icon class="fd-time-icon">schedule</mat-icon>
+                  <input class="fd-time" type="time" [(ngModel)]="ficheForm.horaireDebut"/></div>
+              </div>
+              <div class="fd-field"><label class="fd-field__lbl">Heure de fin</label>
+                <div class="fd-time-wrap"><mat-icon class="fd-time-icon">schedule</mat-icon>
+                  <input class="fd-time" type="time" [(ngModel)]="ficheForm.horaireFin"/></div>
+              </div>
+            </div>
+            <div class="fd-duree" *ngIf="ficheDuree"><mat-icon>info_outline</mat-icon>Durée : {{ ficheDuree }}</div>
+          </div>
+
+          <!-- Actions -->
+          <div class="fd-actions">
+            <button class="fd-save" [class.fd-save--success]="saveSuccess" [disabled]="isSaving" (click)="saveFiche()">
+              <ng-container *ngIf="isSaving"><div class="fd-spin"></div>Enregistrement...</ng-container>
+              <ng-container *ngIf="saveSuccess && !isSaving"><mat-icon>check_circle</mat-icon>Enregistré !</ng-container>
+              <ng-container *ngIf="!isSaving && !saveSuccess"><mat-icon>save</mat-icon>Enregistrer les modifications</ng-container>
+            </button>
+            <div class="fd-divider"></div>
+            <button class="fd-action fd-action--secondary" (click)="goToChangeSalon()">
+              <mat-icon>swap_horiz</mat-icon>Changer de salon
+            </button>
+            <button class="fd-action fd-action--danger" (click)="goToRetirer()">
+              <mat-icon>person_remove</mat-icon>Retirer du salon
+            </button>
+          </div>
+
+        </div>
+      </ng-container>
+
+      <!-- ─── STEP : CHANGER DE SALON ─── -->
+      <ng-container *ngIf="ficheStep === 'change-salon'">
+        <div @stepSlide>
+          <button class="fd-step-back" (click)="ficheStep = 'main'">
+            <mat-icon>arrow_back</mat-icon>Retour à la fiche
+          </button>
+
+          <div class="fd-step-head">
+            <div class="fd-step-icon fd-step-icon--blue">
+              <mat-icon>swap_horiz</mat-icon>
+            </div>
+            <div>
+              <h3 class="fd-step-title">Changer de salon</h3>
+              <p class="fd-step-sub">Sélectionnez le salon de destination pour <strong>{{ selectedRow.nomComplet }}</strong>.</p>
+            </div>
+          </div>
+
+          <!-- Salon list -->
+          <div class="fd-salon-list" *ngIf="autresSalons.length > 0; else noOtherSalon">
+            <div *ngFor="let s of autresSalons"
+                 class="fd-salon-card"
+                 [class.fd-salon-card--selected]="selectedNewSalonId === s.id"
+                 (click)="selectedNewSalonId = s.id">
+              <div class="fd-salon-card__radio">
+                <div class="fd-radio-dot" *ngIf="selectedNewSalonId === s.id"></div>
+              </div>
+              <mat-icon class="fd-salon-card__icon">storefront</mat-icon>
+              <div class="fd-salon-card__info">
+                <span class="fd-salon-card__name">{{ s.nom }}</span>
+                <span class="fd-salon-card__addr">{{ s.adresse || 'Adresse non renseignée' }}</span>
+              </div>
+              <mat-icon class="fd-salon-card__check" *ngIf="selectedNewSalonId === s.id">check_circle</mat-icon>
+            </div>
+          </div>
+
+          <ng-template #noOtherSalon>
+            <div class="fd-no-salon">
+              <mat-icon>store_mall_directory</mat-icon>
+              <p>Vous n'avez qu'un seul salon.<br>Créez un second salon d'abord.</p>
+            </div>
+          </ng-template>
+
+          <button class="fd-save" style="margin-top:20px"
+                  [disabled]="!selectedNewSalonId || isTransfering"
+                  (click)="confirmerTransfert()">
+            <ng-container *ngIf="isTransfering"><div class="fd-spin"></div>Transfert en cours...</ng-container>
+            <ng-container *ngIf="!isTransfering"><mat-icon>check</mat-icon>Confirmer le transfert</ng-container>
+          </button>
+        </div>
+      </ng-container>
+
+      <!-- ─── STEP : RETIRER DU SALON ─── -->
+      <ng-container *ngIf="ficheStep === 'retirer'">
+        <div @stepSlide>
+          <button class="fd-step-back" (click)="ficheStep = 'main'">
+            <mat-icon>arrow_back</mat-icon>Retour à la fiche
+          </button>
+
+          <div class="fd-step-head">
+            <div class="fd-step-icon fd-step-icon--red">
+              <mat-icon>warning_amber</mat-icon>
+            </div>
+            <div>
+              <h3 class="fd-step-title">Retirer du salon</h3>
+              <p class="fd-step-sub">Cette action retirera <strong>{{ selectedRow.nomComplet }}</strong> du salon <strong>{{ selectedRow.salonNom }}</strong>. Elle est irréversible.</p>
+            </div>
+          </div>
+
+          <div class="fd-retirer-card">
+            <div class="fd-avatar fd-avatar--sm" [style.background]="avatarColor(selectedRow)">
+              {{ selectedRow.initials }}
+            </div>
+            <div>
+              <p class="fd-retirer-name">{{ selectedRow.nomComplet }}</p>
+              <p class="fd-retirer-meta">{{ selectedRow.specialite }} · {{ selectedRow.salonNom }}</p>
+            </div>
+          </div>
+
+          <div class="fd-retirer-actions">
+            <button class="fd-action fd-action--secondary" (click)="ficheStep = 'main'">
+              <mat-icon>close</mat-icon>Annuler
+            </button>
+            <button class="fd-confirm-danger" [disabled]="isRetirant" (click)="confirmerRetrait()">
+              <ng-container *ngIf="isRetirant"><div class="fd-spin"></div>En cours...</ng-container>
+              <ng-container *ngIf="!isRetirant"><mat-icon>person_remove</mat-icon>Confirmer le retrait</ng-container>
+            </button>
+          </div>
+        </div>
+      </ng-container>
+
+    </div><!-- /fd-body -->
+  </ng-container>
+
+
+  <!-- ══════════════════════════
+       MODE : INVITER UN TALENT
+  ═══════════════════════════ -->
+  <ng-container *ngIf="drawerMode === 'inviter'">
+
+    <div class="fd-header">
+      <div class="fd-header__left">
+        <div class="fd-avatar" style="background:#A4B1BD">
+          <mat-icon style="color:#fff;font-size:22px">person_add</mat-icon>
+        </div>
+        <div>
+          <h2 class="fd-name">Inviter un talent</h2>
+          <p class="fd-meta">Créer un nouveau profil employé</p>
+        </div>
+      </div>
+      <button class="fd-close" (click)="closeDrawer()"><mat-icon>close</mat-icon></button>
+    </div>
+
+    <!-- Success state -->
+    <div class="fd-create-success" *ngIf="createSuccess">
+      <mat-icon>check_circle</mat-icon>
+      <p>Employé créé avec succès !</p>
+      <span>Fermeture automatique...</span>
+    </div>
+
+    <div class="fd-body" *ngIf="!createSuccess">
+
+      <!-- Infos personnelles -->
+      <div class="fd-section">
+        <div class="fd-section__label"><mat-icon>person_outline</mat-icon>Informations personnelles</div>
+        <div class="fd-grid">
+          <div class="fd-field"><label class="fd-field__lbl">Prénom *</label>
+            <input class="fd-input" type="text" [(ngModel)]="inviterForm.prenom" placeholder="Prénom"/></div>
+          <div class="fd-field"><label class="fd-field__lbl">Nom *</label>
+            <input class="fd-input" type="text" [(ngModel)]="inviterForm.nom" placeholder="Nom"/></div>
+          <div class="fd-field"><label class="fd-field__lbl"><mat-icon>mail_outline</mat-icon>Email *</label>
+            <input class="fd-input" type="email" [(ngModel)]="inviterForm.email" placeholder="email@example.com"/></div>
+          <div class="fd-field"><label class="fd-field__lbl"><mat-icon>phone</mat-icon>Téléphone</label>
+            <input class="fd-input" type="tel" [(ngModel)]="inviterForm.telephone" placeholder="+221 XX XXX XX XX"/></div>
+        </div>
+      </div>
+
+      <!-- Infos pro -->
+      <div class="fd-section">
+        <div class="fd-section__label"><mat-icon>work_outline</mat-icon>Informations professionnelles</div>
+        <div class="fd-sp-label">Spécialités <span class="fd-sp-hint">(max 5)</span></div>
+        <div class="fd-chips-wrap">
+          <button *ngFor="let sp of specialiteOptions" class="fd-chip-toggle"
+                  [class.fd-chip-toggle--on]="isInviterSpOn(sp)" type="button" (click)="toggleInviterSp(sp)">
+            {{ fmt(sp) }}
+          </button>
+        </div>
+        <div class="fd-grid" style="margin-top:12px">
+          <div class="fd-field"><label class="fd-field__lbl">Contrat *</label>
+            <select class="fd-select" [(ngModel)]="inviterForm.typeContrat">
+              <option value="">— Choisir —</option>
+              <option *ngFor="let c of typeContratOptions" [value]="c">{{ fmtContrat(c) }}</option>
+            </select>
+          </div>
+          <div class="fd-field"><label class="fd-field__lbl">Salon *</label>
+            <select class="fd-select" [(ngModel)]="inviterForm.salonId">
+              <option [value]="null">— Choisir —</option>
+              <option *ngFor="let s of salons" [value]="s.id">{{ s.nom }}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Horaires -->
+      <div class="fd-section">
+        <div class="fd-section__label"><mat-icon>schedule</mat-icon>Horaires de travail</div>
+        <div class="fd-grid">
+          <div class="fd-field"><label class="fd-field__lbl">Heure de début</label>
+            <div class="fd-time-wrap"><mat-icon class="fd-time-icon">schedule</mat-icon>
+              <input class="fd-time" type="time" [(ngModel)]="inviterForm.horaireDebut"/></div>
+          </div>
+          <div class="fd-field"><label class="fd-field__lbl">Heure de fin</label>
+            <div class="fd-time-wrap"><mat-icon class="fd-time-icon">schedule</mat-icon>
+              <input class="fd-time" type="time" [(ngModel)]="inviterForm.horaireFin"/></div>
+          </div>
+        </div>
+        <div class="fd-duree" *ngIf="inviterDuree"><mat-icon>info_outline</mat-icon>Durée : {{ inviterDuree }}</div>
+      </div>
+
+      <!-- Error -->
+      <div class="fd-error" *ngIf="createError">
+        <mat-icon>error_outline</mat-icon>{{ createError }}
+      </div>
+
+      <!-- Create button -->
+      <div class="fd-actions">
+        <button class="fd-save" [disabled]="!inviterFormValid || isCreating" (click)="creerEmploye()">
+          <ng-container *ngIf="isCreating"><div class="fd-spin"></div>Création en cours...</ng-container>
+          <ng-container *ngIf="!isCreating"><mat-icon>person_add</mat-icon>Créer l'employé</ng-container>
+        </button>
+      </div>
+
+    </div><!-- /fd-body -->
+  </ng-container>
+
+</aside>

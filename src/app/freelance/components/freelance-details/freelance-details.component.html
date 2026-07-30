@@ -7,41 +7,23 @@
 
   <div class="dialog-content" *ngIf="freelance; else loading" (click)="$event.stopPropagation()">
     <div class="freelance-hero" @fadeIn>
-      <div class="freelance-cover">
-        <div class="freelance-avatar">
-          <img [src]="freelance.profileImage || 'assets/images/freelance-avatar.jpg'"
-               [alt]="freelance.prenom + ' ' + freelance.nom"
-               (error)="onProfileImageError($event)">
+      <div class="freelance-cover"
+           [style.background-image]="'url(' + (freelance.profileImage || 'assets/images/placeholders/freelance-tresses.jpg') + ')'">
+        <div class="rating-badge" *ngIf="getAverageRating() > 0">
+          <i class="fas fa-star"></i>
+          <span class="badge-value">{{ getAverageRating() }}</span>
+          <span class="badge-count">({{ getTotalReviews() }} avis)</span>
         </div>
-        <div class="freelance-info-overlay">
+        <div class="cover-bottom">
           <div class="freelance-name-section">
             <h2 class="freelance-name">{{ freelance.prenom }} {{ freelance.nom }}</h2>
             <p class="freelance-specialty">{{ freelance.profession }}</p>
           </div>
-
-          <div class="freelance-rating" *ngIf="getAverageRating() > 0">
-            <span class="stars">
-              <i class="fas fa-star" *ngFor="let star of getStarArray(getAverageRating())"></i>
-              <i class="fas fa-star-half-alt" *ngIf="hasHalfStar(getAverageRating())"></i>
-            </span>
-            <span class="rating-value">{{ getAverageRating() }}</span>
-            <span class="review-count">({{ getTotalReviews() }} avis)</span>
-          </div>
-
-          <div class="freelance-meta">
-            <p class="freelance-location">
-              <mat-icon>location_on</mat-icon>
-              {{ freelance.ville || freelance.adresse }}
-            </p>
-            </div>
         </div>
       </div>
-
-      <div class="quick-actions">
-        <!-- <button mat-raised-button color="primary" class="contact-btn" (click)="contactFreelance()">
-          <mat-icon>message</mat-icon>
-          Contacter
-        </button> -->
+      <div class="freelance-location-bar" *ngIf="freelance.ville || freelance.adresse">
+        <mat-icon>location_on</mat-icon>
+        <span>{{ freelance.ville || freelance.adresse }}</span>
       </div>
     </div>
 
@@ -196,6 +178,7 @@
       <div *ngIf="activeTab === 'portfolio'" class="portfolio-tab">
         <app-portfolio
           [clientMode]="true"
+          [hideHeader]="true"
           [freelanceId]="freelanceId">
         </app-portfolio>
       </div>

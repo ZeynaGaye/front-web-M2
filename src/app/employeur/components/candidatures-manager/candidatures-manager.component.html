@@ -1,0 +1,295 @@
+
+<!-- ═══════════════════════════════════════════
+     VUE LISTE
+════════════════════════════════════════════ -->
+<div class="cm-page" *ngIf="!selectedCandidate">
+
+  <div class="cm-header">
+    <h1 class="cm-title">Candidatures</h1>
+    <p class="cm-sub"><em>Trouvez le bon talent pour chaque salon.</em></p>
+  </div>
+
+  <div class="cm-filters-bar">
+    <div class="cm-tabs">
+      <button class="cm-tab" [class.active]="activeFilter === 'all'" (click)="setFilter('all')">
+        Toutes <span class="tc" *ngIf="countByFilter('all') > 0">{{ countByFilter('all') }}</span>
+      </button>
+      <button class="cm-tab" [class.active]="activeFilter === 'nouveau'" (click)="setFilter('nouveau')">
+        Nouvelles <span class="tc" *ngIf="countByFilter('nouveau') > 0">{{ countByFilter('nouveau') }}</span>
+      </button>
+      <button class="cm-tab" [class.active]="activeFilter === 'entretien'" (click)="setFilter('entretien')">
+        Entretien planifié <span class="tc" *ngIf="countByFilter('entretien') > 0">{{ countByFilter('entretien') }}</span>
+      </button>
+      <button class="cm-tab" [class.active]="activeFilter === 'acceptee'" (click)="setFilter('acceptee')">Acceptées</button>
+      <button class="cm-tab" [class.active]="activeFilter === 'refusee'" (click)="setFilter('refusee')">Refusées</button>
+    </div>
+
+    <button class="cm-offre-btn" [matMenuTriggerFor]="offreMenu">
+      <mat-icon>work_outline</mat-icon>
+      <span>{{ offreFilter ? getOffreLabel(offreFilter) : 'Toutes les offres' }}</span>
+      <mat-icon>keyboard_arrow_down</mat-icon>
+    </button>
+    <mat-menu #offreMenu="matMenu">
+      <button mat-menu-item (click)="offreFilter = null">Toutes les offres</button>
+      <mat-divider></mat-divider>
+      <button mat-menu-item *ngFor="let o of offres" (click)="offreFilter = o.id ?? null">{{ o.titre }}</button>
+    </mat-menu>
+  </div>
+
+  <div *ngIf="isLoading" class="cm-loading">
+    <mat-progress-spinner mode="indeterminate" diameter="44"></mat-progress-spinner>
+    <p>Chargement...</p>
+  </div>
+
+  <div class="cm-list" *ngIf="!isLoading">
+    <ng-container *ngIf="getFiltered().length > 0; else emptyTpl">
+      <div class="cm-card"
+           *ngFor="let c of getFiltered(); let i = index"
+           [class.cm-card--faded]="isRefusee(c)"
+           [class.cm-card--entretien]="isEntretien(c)">
+
+        <div class="cm-avatar" [style.background]="getAvatarColor(i)">{{ getInitials(c) }}</div>
+
+        <div class="cm-body">
+          <div class="cm-name-row">
+            <span class="cm-name">{{ getName(c) }}</span>
+            <ng-container *ngIf="getRating(c) as r">
+              <span class="cm-rating"><mat-icon class="cm-star">star</mat-icon>{{ r }}</span>
+            </ng-container>
+          </div>
+          <div class="cm-meta">
+            <span *ngIf="c.offreTitre">Candidate pour <strong>{{ c.offreTitre }}</strong></span>
+            <ng-container *ngIf="c.offreSalonNom || c.offreLieu">
+              <span class="cm-sep">·</span>
+              <span class="cm-chip"><mat-icon>store</mat-icon>{{ c.offreSalonNom || c.offreLieu }}</span>
+            </ng-container>
+            <ng-container *ngIf="!isEntretien(c) && getExperience(c)">
+              <span class="cm-sep">·</span>
+              <span class="cm-chip"><mat-icon>schedule</mat-icon>{{ getExperience(c) }}</span>
+            </ng-container>
+            <ng-container *ngIf="isEntretien(c) && c.disponibilite">
+              <span class="cm-sep">·</span>
+              <span class="cm-chip cm-chip--blue">
+                <mat-icon>event</mat-icon>Entretien {{ c.disponibilite | date:'EEE d MMM., HH:mm' : '' : 'fr' }}
+              </span>
+            </ng-container>
+          </div>
+        </div>
+
+        <div class="cm-right">
+          <span class="cm-badge" [ngClass]="getCssBadge(c.status)">{{ getLabelStatus(c.status) }}</span>
+
+          <ng-container *ngIf="!isRefusee(c)">
+            <button class="cm-btn-profil" (click)="openProfile(c, i)">Profil</button>
+
+            <ng-container *ngIf="isNouveau(c)">
+              <button class="cm-btn-entretien" (click)="updateStatus(c, 'ENTRETIEN')">
+                <mat-icon>event</mat-icon> Entretien
+              </button>
+              <button class="cm-btn-x" (click)="updateStatus(c, 'REFUSE')" title="Refuser">
+                <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+              </button>
+            </ng-container>
+
+            <ng-container *ngIf="isEntretien(c)">
+              <button class="cm-btn-recruter" (click)="updateStatus(c, 'EMBAUCHE')">
+                <mat-icon>check</mat-icon> Recruter
+              </button>
+            </ng-container>
+          </ng-container>
+        </div>
+
+      </div>
+    </ng-container>
+
+    <ng-template #emptyTpl>
+      <div class="cm-empty">
+        <mat-icon>people_outline</mat-icon>
+        <h3>Aucune candidature</h3>
+        <p *ngIf="activeFilter !== 'all'">
+          Aucune candidature ici.
+          <button class="cm-link-btn" (click)="setFilter('all')">Voir toutes</button>
+        </p>
+        <p *ngIf="activeFilter === 'all'">Vos offres n'ont pas encore reçu de candidatures.</p>
+      </div>
+    </ng-template>
+  </div>
+
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     VUE PROFIL CANDIDAT (inline, pas popup)
+════════════════════════════════════════════ -->
+<div class="cp-page" *ngIf="selectedCandidate as c">
+
+  <!-- Retour -->
+  <button class="cp-back" (click)="backToList()">
+    <mat-icon>arrow_back</mat-icon> Retour aux candidatures
+  </button>
+
+  <!-- Hero -->
+  <div class="cp-hero">
+    <div class="cp-hero__tag">
+      CANDIDATE
+      <span *ngIf="c.offreTypeContrat"> · {{ c.offreTypeContrat | uppercase }}</span>
+      <span *ngIf="c.offreTitre"> · {{ c.offreTitre | uppercase }}</span>
+    </div>
+
+    <div class="cp-hero__main">
+      <!-- Avatar : photo réelle ou initiales -->
+      <div class="cp-hero__avatar-wrap">
+        <img [hidden]="!dp.photoUrl"
+             [attr.src]="dp.photoUrl"
+             class="cp-hero__avatar-img"
+             [alt]="dp.name"
+             (error)="onAvatarError($event, selectedCandidateIndex)">
+        <div class="cp-hero__avatar"
+             [hidden]="!!dp.photoUrl"
+             [style.background]="getAvatarColor(selectedCandidateIndex)">
+          {{ dp.initials }}
+        </div>
+      </div>
+
+      <div class="cp-hero__info">
+        <h2 class="cp-hero__name">{{ dp.name }}</h2>
+        <p class="cp-hero__sub" *ngIf="dp.specialty || dp.location">
+          <em>{{ dp.specialty }}<span *ngIf="dp.specialty && dp.location"> · </span>{{ dp.location }}</em>
+        </p>
+        <div class="cp-hero__badges">
+          <!-- Note -->
+          <span class="cp-hero-badge" *ngIf="dp.rating">
+            <mat-icon class="hero-star">star</mat-icon>
+            {{ dp.rating | number:'1.1-1' }}
+            <span class="hero-badge-sub" *ngIf="dp.avisCount > 0">({{ dp.avisCount }} avis)</span>
+          </span>
+          <!-- Identité vérifiée -->
+          <span class="cp-hero-badge cp-hero-badge--green" *ngIf="dp.verified">
+            <mat-icon>verified</mat-icon>Identité vérifiée
+          </span>
+          <!-- Expérience -->
+          <span class="cp-hero-badge" *ngIf="dp.experience">
+            <mat-icon>work_history</mat-icon>{{ dp.experience }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Corps 2 colonnes -->
+  <div class="cp-body">
+
+    <!-- Colonne gauche -->
+    <div class="cp-left">
+
+      <!-- Offre candidate -->
+      <div class="cp-card cp-card--offre">
+        <div class="cp-offre-row">
+          <mat-icon class="cp-offre-icon">work_outline</mat-icon>
+          <div>
+            <p class="cp-offre-titre" *ngIf="c.offreTitre">
+              Candidate pour <strong>{{ c.offreTitre }}
+              <span *ngIf="c.offreTypeContrat"> — {{ c.offreTypeContrat }}</span></strong>
+            </p>
+            <p class="cp-offre-meta">
+              <span *ngIf="c.offreSalonNom"><mat-icon>store</mat-icon>{{ c.offreSalonNom }}</span>
+              <span *ngIf="c.offreLieu"> — {{ c.offreLieu }}</span>
+              <span *ngIf="getCandidatureDate(c)"> · Candidature reçue le {{ getCandidatureDate(c) | date:'d MMMM' : '' : 'fr' }}</span>
+            </p>
+          </div>
+          <span class="cm-badge" [ngClass]="getCssBadge(c.status)">{{ getLabelStatus(c.status) }}</span>
+        </div>
+      </div>
+
+      <!-- À propos -->
+      <div class="cp-card" [hidden]="!dp.message">
+        <h3 class="cp-section-title">À propos</h3>
+        <p class="cp-text">{{ dp.message }}</p>
+      </div>
+
+      <!-- Compétences -->
+      <div class="cp-card" [hidden]="!dp.competences">
+        <h3 class="cp-section-title">Compétences</h3>
+        <p class="cp-text">{{ dp.competences }}</p>
+      </div>
+
+      <!-- Expérience -->
+      <div class="cp-card" [hidden]="!dp.experience">
+        <h3 class="cp-section-title">Expérience</h3>
+        <p class="cp-text">{{ dp.experience }}</p>
+      </div>
+
+      <!-- Portfolio -->
+      <div class="cp-card cp-card--portfolio" *ngIf="dp.freelanceId">
+        <h3 class="cp-section-title">Portfolio</h3>
+        <app-portfolio [freelanceId]="dp.freelanceId" [clientMode]="true" [hideHeader]="true"></app-portfolio>
+      </div>
+
+    </div>
+
+    <!-- Colonne droite (sidebar) -->
+    <div class="cp-right">
+
+      <!-- Stats BeautyHub -->
+      <div class="cp-card cp-card--stats" [hidden]="!(dp.prestationsCount > 0 || dp.rating)">
+        <p class="cp-stats-label">SUR BEAUTYHUB</p>
+        <div class="cp-stats-row">
+          <div class="cp-stat" [hidden]="dp.prestationsCount === 0">
+            <span class="cp-stat-num">{{ dp.prestationsCount }}</span>
+            <span class="cp-stat-lbl">Prestations</span>
+          </div>
+          <div class="cp-stat" [hidden]="!dp.rating">
+            <span class="cp-stat-num">{{ dp.rating | number:'1.1-1' }}</span>
+            <span class="cp-stat-lbl">Note moyenne</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Coordonnées -->
+      <div class="cp-card" [hidden]="!(dp.email || dp.phone || dp.location || c.disponibilite || c.tarifPropose)">
+        <h3 class="cp-section-title">Coordonnées</h3>
+        <ul class="cp-coords">
+          <li [hidden]="!dp.email">
+            <mat-icon style="font-size:18px;width:18px;height:18px;min-width:18px;flex-shrink:0;color:#6B7280;">email</mat-icon>
+            {{ dp.email }}
+          </li>
+          <li [hidden]="!dp.phone">
+            <mat-icon style="font-size:18px;width:18px;height:18px;min-width:18px;flex-shrink:0;color:#6B7280;">phone</mat-icon>
+            {{ dp.phone }}
+          </li>
+          <li [hidden]="!dp.location">
+            <mat-icon style="font-size:18px;width:18px;height:18px;min-width:18px;flex-shrink:0;color:#6B7280;">location_on</mat-icon>
+            {{ dp.location }}
+          </li>
+          <li [hidden]="!c.disponibilite">
+            <mat-icon style="font-size:18px;width:18px;height:18px;min-width:18px;flex-shrink:0;color:#6B7280;">calendar_today</mat-icon>
+            Disponible : {{ c.disponibilite }}
+          </li>
+          <li [hidden]="!c.tarifPropose">
+            <mat-icon style="font-size:18px;width:18px;height:18px;min-width:18px;flex-shrink:0;color:#6B7280;">payments</mat-icon>
+            {{ c.tarifPropose | number:'1.0-0' }} CFA proposé
+          </li>
+        </ul>
+      </div>
+
+      <!-- Actions -->
+      <div class="cp-actions">
+        <button class="cp-btn-dark" (click)="updateStatus(c, 'ENTRETIEN')" *ngIf="isNouveau(c)">
+          <mat-icon style="font-size:18px;width:18px;height:18px;">event</mat-icon> Planifier un entretien
+        </button>
+        <button class="cp-btn-dark" (click)="updateStatus(c, 'EMBAUCHE')" *ngIf="isEntretien(c)">
+          <mat-icon style="font-size:18px;width:18px;height:18px;">check</mat-icon> Recruter
+        </button>
+        <button class="cp-btn-outline" (click)="contactCandidate(c)">
+          <mat-icon style="font-size:18px;width:18px;height:18px;">mail_outline</mat-icon> Message
+        </button>
+        <button class="cp-btn-refuse" (click)="refuseAndBack(c)" *ngIf="!isRefusee(c)">
+          <svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px;flex-shrink:0;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+          Refuser
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</div>

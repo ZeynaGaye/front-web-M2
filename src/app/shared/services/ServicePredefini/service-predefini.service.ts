@@ -151,6 +151,21 @@ export class ServicePredefiniService {
   }
 
   /**
+   * Proposer un nouveau service absent de la liste.
+   * Le backend normalise le nom, vérifie les doublons et crée l'entrée si vraiment nouveau.
+   */
+  proposerNouveauService(nom: string, categorie: string): Observable<{ service: ServicePredefiniDto; estNouveau: boolean; message: string }> {
+    return this.http.post<any>(`${this.API_URL}/proposer`, { nom, categorie })
+      .pipe(
+        map((response: any) => ({
+          service: response.service as ServicePredefiniDto,
+          estNouveau: response.estNouveau as boolean,
+          message: response.message as string
+        }))
+      );
+  }
+
+  /**
    *  Récupérer les statistiques
    */
   getStatistiques(): Observable<any> {

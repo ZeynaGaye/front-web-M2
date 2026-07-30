@@ -122,13 +122,15 @@ export class FreelanceDetailsComponent implements OnInit {
 
     this.freelanceService.getFreelanceById(this.freelanceId).subscribe({
       next: (freelance: Freelance) => {
+        if (freelance?.profileImage) {
+          const img = freelance.profileImage;
+          freelance.profileImage = img.startsWith('http') ? img
+            : img.startsWith('/') ? `http://localhost:8081${img}`
+            : `http://localhost:8081/uploads/${img}`;
+        }
 
         this.freelance = freelance;
         if (freelance) {
-
-          // Mettre à jour les noms de propriétés pour correspondre au DTO Java si nécessaire
-          // Ex: this.freelance.note = freelance.rating;
-          // Ex: this.freelance.nombreAvis = freelance.reviews;
         } else {
           this.errorMessage = 'Freelance non trouvé';
         }
@@ -207,7 +209,7 @@ export class FreelanceDetailsComponent implements OnInit {
 
   //  Nouveau : gestionnaire d'erreur pour l'image de profil
   onProfileImageError(event: Event): void {
-    (event.target as HTMLImageElement).src = 'assets/images/freelance-avatar.jpg';
+    (event.target as HTMLImageElement).src = 'assets/images/placeholders/freelance-tresses.jpg';
   }
 
   closeDialog(): void {

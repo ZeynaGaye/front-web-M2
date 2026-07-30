@@ -1,354 +1,396 @@
-$primary:     #F5A393;
-$primary-dark: darken(#F5A393, 10%);
-$secondary:   #A4B1BD;
-$text:        #1a1a2e;
-$muted:       #6b7280;
-$border:      #e5e7eb;
-$bg:          #f9fafb;
-$white:       #ffffff;
-$error:       #ef4444;
-$success:     #22c55e;
+// ── Tokens ────────────────────────────────────────────────
+$coral:       #D4735A;
+$coral-light: rgba(212, 115, 90, 0.08);
+$black:       #1A1A1A;
+$muted:       #6B6B6B;
+$faint:       #9B8EA0;
+$border:      #E8E4E0;
+$border-soft: #F0EDE9;
+$bg:          #F7F5F2;
+$white:       #FFFFFF;
 
-/* ── Neutralise le mat-dialog-container natif ─────── */
-::ng-deep {
-  .mat-mdc-dialog-container .mdc-dialog__surface {
-    background: transparent !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-    border-radius: 20px !important;
-    overflow: visible !important;
-  }
+$radius-card: 12px;
+$radius-btn:  8px;
+$radius-pill: 24px;
 
-  .mat-mdc-dialog-container {
-    padding: 0 !important;
-    overflow: visible !important;
-  }
-}
+$shadow-card: 0 1px 4px rgba(0,0,0,0.06), 0 0 0 1px $border-soft;
 
-/* ── Dialog container ─────────────────────────────── */
-.service-dialog {
-  width: 520px;
-  max-width: 95vw;
-  background: $white;
-  border-radius: 20px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
+// ── Host ──────────────────────────────────────────────────
+:host { display: block; }
 
-/* ── Header ───────────────────────────────────────── */
-.dialog-header {
-  background: linear-gradient(135deg, $secondary, $primary-dark);
-  padding: 20px 24px;
+.asd { background: $bg; font-family: inherit; }
+
+// ── Header ────────────────────────────────────────────────
+.asd-header {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  padding: 20px 28px 16px;
+  background: $white;
+  border-bottom: 1px solid $border;
+}
+
+.asd-header__left { display: flex; flex-direction: column; gap: 2px; }
+
+.asd-back {
+  display: inline-flex;
   align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: $muted;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 6px;
+  font-family: inherit;
+  transition: color 0.15s;
 
-  h2 {
-    margin: 0;
-    color: $white;
-    font-size: 1.15rem;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  mat-icon { font-size: 16px !important; width: 16px !important; height: 16px !important; line-height: 1 !important; }
+  &:hover { color: $black; }
+}
 
-    mat-icon {
-      font-size: 22px !important;
-      width: 22px !important;
-      height: 22px !important;
-      color: $white !important;
-    }
+.asd-header__left h1 {
+  font-size: 24px; font-weight: 700; color: $black;
+  margin: 0 0 2px; letter-spacing: -0.02em;
+}
+.asd-header__left p { font-size: 13px; font-style: italic; color: $faint; margin: 0; }
+
+.asd-header__actions {
+  display: flex; align-items: center; gap: 10px;
+  flex-shrink: 0; padding-top: 28px;
+}
+
+// ── Boutons ───────────────────────────────────────────────
+.asd-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 18px; border-radius: $radius-btn;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  border: none; transition: all 0.15s ease; white-space: nowrap;
+  font-family: inherit;
+
+  mat-icon { font-size: 16px !important; width: 16px !important; height: 16px !important; line-height: 1 !important; }
+
+  &--ghost {
+    background: $white; border: 1.5px solid $border; color: $black;
+    &:hover { background: $bg; }
   }
-
-  .close-button {
-    background: rgba(255,255,255,0.15);
-    border: none;
-    border-radius: 8px;
-    color: $white;
-    width: 34px;
-    height: 34px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background 0.2s;
-
-    &:hover { background: rgba(255,255,255,0.25); }
-
-    mat-icon { font-size: 18px !important; width: 18px !important; height: 18px !important; color: $white !important; }
+  &--dark {
+    background: $black; color: $white;
+    &:hover { background: #2D2D2D; }
+    &:disabled { opacity: 0.42; cursor: not-allowed; }
   }
 }
 
-/* ── Form body ────────────────────────────────────── */
-.service-form-compact {
-  padding: 24px;
+// ── Confirmation / Avertissement ──────────────────────────
+.asd-confirm {
+  display: flex; align-items: flex-start; gap: 16px;
+  margin: 20px 28px; padding: 20px;
+  background: $white; border: 1.5px solid $border; border-radius: $radius-card;
+
+  &--warn {
+    background: rgba(212,115,90,.04);
+    border-color: rgba(212,115,90,.25);
+  }
+
+  &__icon mat-icon {
+    color: $coral; font-size: 28px !important; width: 28px !important; height: 28px !important;
+  }
+  &__body h4 { font-size: 15px; font-weight: 600; color: $black; margin: 0 0 8px; }
+  &__body p { font-size: 13px; color: $muted; margin: 0 0 4px; strong { color: $black; } }
+  &__btns { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+}
+
+// ── Body 2 colonnes ───────────────────────────────────────
+.asd-body {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 20px;
+  padding: 20px 28px 28px;
+  align-items: start;
+
+  @media (max-width: 800px) { grid-template-columns: 1fr; }
+}
+
+// ── Carte ─────────────────────────────────────────────────
+.asd-card {
+  background: $white; border-radius: $radius-card;
+  padding: 20px 22px; box-shadow: $shadow-card; margin-bottom: 14px;
+  &:last-child { margin-bottom: 0; }
+
+  &--info {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 14px 16px;
+    background: rgba(212,115,90,.05);
+    border: 1.5px solid rgba(212,115,90,.2);
+    mat-icon { color: $coral; font-size: 18px !important; flex-shrink: 0; margin-top: 1px; }
+    p { font-size: 12px; color: $muted; margin: 0; line-height: 1.5; }
+  }
+}
+
+.asd-card-title {
+  font-size: 13px; font-weight: 600; color: $black; margin: 0 0 16px;
+}
+
+// ── Chargement ────────────────────────────────────────────
+.asd-svc-loading {
+  display: flex; align-items: center; gap: 12px; padding: 8px 0;
+  color: $muted; font-size: 13px;
+}
+
+// ── Chips / Filtres ───────────────────────────────────────
+.asd-chips {
+  display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 16px;
+}
+
+.asd-chip {
+  padding: 7px 15px; border-radius: $radius-pill;
+  font-size: 12.5px; font-weight: 500;
+  border: 1.5px solid $border; background: $white;
+  cursor: pointer; color: $black; font-family: inherit;
+  transition: all 0.14s ease;
+  &:hover { border-color: $black; }
+  &--active { background: $black; border-color: $black; color: $white; }
+}
+
+// ── Grille services ───────────────────────────────────────
+.asd-svc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+  max-height: 280px;
   overflow-y: auto;
-  scrollbar-width: none;
-  &::-webkit-scrollbar { display: none; }
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  padding-right: 4px;
+  margin-bottom: 16px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,0,0,.12) transparent;
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-thumb { background: rgba(0,0,0,.12); border-radius: 2px; }
 }
 
-/* ── Step section (choix service) ─────────────────── */
-.step-section {
-  .step-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 12px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid $border;
+.asd-svc-card {
+  position: relative;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 3px;
+  padding: 12px 12px 10px; border-radius: 10px;
+  border: 1.5px solid $border; background: $white;
+  cursor: pointer; text-align: left; font-family: inherit;
+  transition: all 0.14s ease;
 
-    mat-icon { font-size: 18px !important; width: 18px !important; height: 18px !important; color: $primary !important; }
-    span { font-size: 0.88rem; font-weight: 600; color: $text; }
+  &:hover { border-color: $coral; background: rgba(212,115,90,.04); }
+  &--selected { border-color: $coral; background: rgba(212,115,90,.07); }
+
+  &__check {
+    position: absolute; top: 8px; right: 8px;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: $coral; display: flex; align-items: center; justify-content: center;
+    mat-icon { font-size: 12px !important; width: 12px !important; height: 12px !important; line-height: 1 !important; color: $white; }
   }
-
-  .service-selection-compact mat-form-field { width: 100%; }
+  &__name { font-size: 12.5px; font-weight: 600; color: $black; line-height: 1.3; padding-right: 20px; }
+  &__cat  { font-size: 11px; color: $muted; }
 }
 
-/* ── Form fields global ───────────────────────────── */
-.full-width { width: 100%; }
-.half-width { flex: 1; min-width: 0; }
+.asd-empty-msg { font-size: 13px; color: $muted; padding: 16px 0; text-align: center; }
 
-.form-row {
-  display: flex;
-  gap: 16px;
-
-  @media (max-width: 600px) { flex-direction: column; }
+// ── Lien "non listé" ──────────────────────────────────────
+.asd-not-listed {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  padding-top: 10px; border-top: 1px solid $border-soft;
+  font-size: 12.5px; color: $muted;
 }
 
-/* ── Override mat-form-field : style inputs custom ── */
-::ng-deep .service-dialog {
-
-  .mat-mdc-form-field {
-    width: 100%;
-
-    .mat-mdc-text-field-wrapper {
-      background: #f8f9fa !important;
-      border-radius: 10px !important;
-      border: 1.5px solid #e5e7eb !important;
-      padding: 0 14px !important;
-      transition: border-color 0.2s, box-shadow 0.2s !important;
-
-      &:hover {
-        border-color: $secondary !important;
-      }
-    }
-
-    &.mat-focused .mat-mdc-text-field-wrapper {
-      border-color: $primary !important;
-      box-shadow: 0 0 0 3px rgba(245, 163, 147, 0.15) !important;
-      background: #fff !important;
-    }
-
-    // Supprimer la ligne du bas native MDC
-    .mdc-line-ripple,
-    .mdc-text-field--filled .mdc-line-ripple::before,
-    .mdc-text-field--filled .mdc-line-ripple::after {
-      display: none !important;
-    }
-
-    // Outline natif invisible
-    .mdc-notched-outline__leading,
-    .mdc-notched-outline__notch,
-    .mdc-notched-outline__trailing {
-      border: none !important;
-    }
-
-    // Label
-    .mat-mdc-floating-label {
-      color: #9ca3af !important;
-      font-size: 0.9rem !important;
-    }
-    &.mat-focused .mat-mdc-floating-label,
-    .mat-mdc-floating-label.mdc-floating-label--float-above {
-      color: $secondary !important;
-    }
-
-    // Input text
-    input.mat-mdc-input-element,
-    textarea.mat-mdc-input-element {
-      color: #1a1a2e !important;
-      font-size: 0.92rem !important;
-      caret-color: $secondary !important;
-    }
-
-    // Suffix icon
-    .mat-mdc-form-field-icon-suffix mat-icon {
-      color: #9ca3af !important;
-      font-size: 18px !important;
-      width: 18px !important;
-      height: 18px !important;
-    }
-
-    // Hint & error
-    .mat-mdc-form-field-hint { color: $secondary !important; font-size: 0.72rem !important; }
-    .mat-mdc-form-field-error { color: $error !important; font-size: 0.72rem !important; }
-  }
-
-  // Select arrow
-  .mat-mdc-select-arrow { color: #9ca3af !important; }
-  &.mat-focused .mat-mdc-select-arrow { color: $primary !important; }
+.asd-link-btn {
+  background: none; border: none; color: $coral;
+  font-size: 12.5px; font-weight: 600; cursor: pointer;
+  padding: 0; font-family: inherit;
+  text-decoration: underline; text-underline-offset: 2px;
+  transition: opacity 0.15s;
+  &:hover { opacity: 0.75; }
 }
 
-/* ── Suggestion / info cards ──────────────────────── */
-.confirmation-section,
-.service-exists-section {
-  background: $bg;
-  border: 1px solid $border;
-  border-radius: 12px;
-  padding: 16px;
+// ── Mode saisie libre ─────────────────────────────────────
+.asd-custom-header {
+  display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px;
+}
 
-  .section-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 0 0 12px;
-    font-size: 0.88rem;
-    font-weight: 700;
-    color: $text;
+.asd-back-inline {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: none; border: none; color: $muted;
+  font-size: 12px; font-weight: 500; cursor: pointer;
+  padding: 0; font-family: inherit; transition: color 0.15s;
+  mat-icon { font-size: 14px !important; width: 14px !important; height: 14px !important; line-height: 1 !important; }
+  &:hover { color: $black; }
+}
 
-    mat-icon { font-size: 18px !important; width: 18px !important; height: 18px !important; color: $secondary !important; }
-  }
+// ── Inputs / Labels ───────────────────────────────────────
+.asd-label {
+  display: block; font-size: 11px; font-weight: 500;
+  color: $muted; margin-bottom: 5px; letter-spacing: 0.01em;
+}
 
-  .suggestion-card,
-  .info-card {
-    border: 1px solid rgba($secondary, 0.2) !important;
-    border-radius: 10px !important;
-    background: $white !important;
+.asd-input {
+  width: 100%; padding: 9px 12px;
+  border: 1.5px solid $border; border-radius: 8px;
+  font-size: 13px; color: $black; background: $white;
+  outline: none; transition: border-color 0.15s, box-shadow 0.15s;
+  box-sizing: border-box; margin-bottom: 14px; font-family: inherit;
 
-    mat-card-content { padding: 14px !important; }
+  &:focus { border-color: $coral; box-shadow: 0 0 0 3px rgba(212,115,90,.12); }
+  &::placeholder { color: #C4BCBA; }
+  &.asd-textarea { resize: vertical; min-height: 76px; line-height: 1.5; }
+  &.asd-select { cursor: pointer; appearance: auto; }
+}
 
-    p { font-size: 0.85rem; color: $muted; margin: 0 0 6px; }
+.asd-field { display: flex; flex-direction: column; }
 
-    .suggested-service,
-    .existing-service {
-      background: rgba($primary, 0.07);
-      border-radius: 8px;
-      padding: 10px 12px;
-      margin: 8px 0;
-      strong { color: $text; font-size: 0.9rem; }
-      .category { font-size: 0.78rem; color: $muted; margin-left: 4px; }
-      p { margin: 4px 0 0; font-size: 0.8rem; color: $muted; }
-    }
+.asd-required { color: $coral; margin-left: 2px; }
+.asd-optional { font-size: 11px; color: $muted; font-weight: 400; margin-left: 4px; }
 
-    .info-message {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      margin-bottom: 10px;
-      mat-icon { color: #f59e0b !important; font-size: 18px !important; width: 18px !important; height: 18px !important; flex-shrink: 0; }
-      p { font-size: 0.83rem; color: $muted; margin: 0; }
-    }
+.asd-input-meta {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: -10px; margin-bottom: 12px;
+}
 
-    .info-note {
-      display: flex;
-      align-items: flex-start;
-      gap: 6px;
-      margin-top: 8px;
-      padding: 8px 10px;
-      background: rgba($primary, 0.06);
-      border-radius: 8px;
-      mat-icon { font-size: 16px !important; width: 16px !important; height: 16px !important; color: $primary !important; flex-shrink: 0; margin-top: 1px; }
-      span { font-size: 0.78rem; color: $muted; line-height: 1.4; }
-    }
+.asd-input-hint {
+  display: flex; align-items: center; gap: 3px; font-size: 11.5px; color: #E07055;
+  mat-icon { font-size: 13px !important; width: 13px !important; height: 13px !important; line-height: 1 !important; }
+}
 
-    mat-card-actions {
-      padding: 12px 14px !important;
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      border-top: 1px solid $border;
-      background: $bg;
-    }
+.asd-char-count {
+  font-size: 11px; color: $muted; margin-left: auto;
+  &--right { display: block; text-align: right; margin-top: -10px; margin-bottom: 4px; }
+}
+
+// ── Suggestions temps réel ────────────────────────────────
+.asd-suggestions {
+  background: $bg; border: 1.5px solid $border;
+  border-radius: 10px; padding: 12px; margin-bottom: 14px;
+  margin-top: -8px;
+
+  &__label { font-size: 11px; color: $muted; font-weight: 500; margin: 0 0 8px; }
+}
+
+.asd-suggestion-item {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  padding: 7px 10px; border-radius: 8px;
+  border: none; background: $white; cursor: pointer; font-family: inherit;
+  text-align: left; transition: all 0.14s;
+  margin-bottom: 4px;
+
+  mat-icon { font-size: 14px !important; width: 14px !important; height: 14px !important; color: $coral; flex-shrink: 0; }
+  span { font-size: 13px; font-weight: 500; color: $black; flex: 1; }
+  small { font-size: 11px; color: $muted; }
+
+  &:hover { background: rgba(212,115,90,.06); }
+  &:last-child { margin-bottom: 0; }
+}
+
+// ── Bannière service sélectionné ──────────────────────────
+.asd-selected-banner {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px;
+  background: rgba(212,115,90,.08);
+  border: 1.5px solid rgba(212,115,90,.3);
+  border-radius: 10px; margin-bottom: 14px;
+
+  > mat-icon { color: $coral; font-size: 20px !important; width: 20px !important; height: 20px !important; flex-shrink: 0; }
+  > div { flex: 1; display: flex; flex-direction: column; gap: 1px;
+    strong { font-size: 13.5px; color: $black; }
+    span   { font-size: 11.5px; color: $muted; }
   }
 }
 
-/* ── Preview section ──────────────────────────────── */
-.preview-section {
-  .section-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 0 0 10px;
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: $text;
-    mat-icon { font-size: 16px !important; width: 16px !important; height: 16px !important; color: $primary !important; }
-  }
-
-  .preview-cards {
-    display: flex;
-    gap: 12px;
-
-    .preview-card {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 14px 16px;
-      background: linear-gradient(135deg, $primary, $primary-dark);
-      border-radius: 12px;
-      color: $white;
-
-      mat-icon { font-size: 20px !important; width: 20px !important; height: 20px !important; color: $white !important; opacity: 0.85; }
-      .label { font-size: 0.78rem; opacity: 0.85; }
-      .value { font-size: 1rem; font-weight: 700; margin-left: auto; }
-    }
-  }
+.asd-selected-clear {
+  background: none; border: none; cursor: pointer;
+  padding: 4px; border-radius: 50%; display: flex; color: $muted;
+  transition: all 0.14s; flex-shrink: 0;
+  mat-icon { font-size: 16px !important; width: 16px !important; height: 16px !important; line-height: 1 !important; }
+  &:hover { background: rgba(0,0,0,.07); color: $black; }
 }
 
-/* ── Buttons ──────────────────────────────────────── */
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  padding-top: 8px;
-  border-top: 1px solid $border;
-  margin-top: 4px;
+// ── Prix & durée (2 colonnes) ─────────────────────────────
+.asd-row-2 {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 4px;
+  @media (max-width: 500px) { grid-template-columns: 1fr; }
 }
 
-// Override Angular Material button colors
-::ng-deep .service-dialog {
-  .mat-mdc-raised-button.mat-primary,
-  button[mat-raised-button][color="primary"] {
-    --mdc-protected-button-container-color: #{$secondary} !important;
-    --mdc-protected-button-label-text-color: white !important;
-    background-color: $primary !important;
-    color: white !important;
-    border-radius: 10px !important;
+.asd-price-hint { font-size: 12px; color: $faint; font-style: italic; margin-top: -6px; }
 
-    &:hover { background-color: $primary-dark !important; }
+// ── Sidebar ───────────────────────────────────────────────
+.asd-side .asd-card { margin-bottom: 14px; }
 
-    mat-icon { color: white !important; font-size: 18px !important; width: 18px !important; height: 18px !important; }
-  }
-
-  button[mat-stroked-button] {
-    border-color: $border !important;
-    color: $muted !important;
-    border-radius: 10px !important;
-
-    &:hover { background: $bg !important; color: $text !important; }
-  }
-
-  // Form field colors
-  .mat-mdc-form-field {
-    --mdc-outlined-text-field-focus-outline-color: #{$primary};
-    --mdc-outlined-text-field-focus-label-text-color: #{$primary};
-    --mdc-outlined-text-field-hover-outline-color: #{$primary};
-    --mdc-outlined-text-field-caret-color: #{$primary};
-  }
-
-  .mat-mdc-select-panel .mat-mdc-option.mat-mdc-option-active,
-  .mat-mdc-select-panel .mat-mdc-option.mat-mdc-option-selected {
-    color: $primary !important;
-    background: rgba($primary, 0.1) !important;
-  }
+.asd-photo-zone {
+  border: 1.5px dashed $border; border-radius: 10px;
+  padding: 32px 20px; display: flex; flex-direction: column;
+  align-items: center; gap: 8px; cursor: pointer; transition: border-color 0.15s;
+  mat-icon { font-size: 28px !important; width: 28px !important; height: 28px !important; color: #C4BCBA; }
+  span { font-size: 12px; color: $faint; }
+  &:hover { border-color: $coral; }
 }
 
-@media (max-width: 600px) {
-  .service-form-compact { padding: 16px; }
-  .preview-section .preview-cards { flex-direction: column; }
+.asd-preview-card {
+  border: 1px solid $border-soft; border-radius: 10px;
+  padding: 12px; background: #FDFCFB;
+  display: flex; align-items: center; gap: 10px;
+}
+
+.asd-preview-ico {
+  width: 34px; height: 34px; border-radius: 8px;
+  background: rgba(212,115,90,.1); display: flex; align-items: center;
+  justify-content: center; flex-shrink: 0;
+  mat-icon { font-size: 16px !important; width: 16px !important; height: 16px !important; line-height: 1 !important; color: $coral; }
+}
+
+.asd-preview-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.asd-preview-name { font-size: 13px; font-weight: 600; color: $black; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.asd-preview-price { font-size: 11.5px; color: $muted; }
+.asd-preview-cat   { font-size: 11px; color: $coral; font-weight: 500; }
+
+// Proposition nouveau service
+.asd-not-listed { display: flex; align-items: center; gap: 8px; padding: 12px 0 4px; font-size: 12.5px; color: $muted; border-top: 1px solid $border; margin-top: 12px; }
+.asd-link-btn { background: none; border: none; color: $coral; font-size: 12.5px; font-weight: 600; cursor: pointer; text-decoration: underline; padding: 0; &:hover { color: darken(#D4735A, 10%); } }
+.asd-info-msg { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #555; background: #f0f4f8; border-radius: 6px; padding: 8px 10px; margin: 8px 0 14px; mat-icon { font-size: 15px; width: 15px; height: 15px; color: #5a8ab8; } }
+.asd-error-msg { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #c0392b; margin-top: 8px; mat-icon { font-size: 15px; width: 15px; height: 15px; } }
+.asd-proposition-btns { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+
+// Barre de recherche grille
+.asd-search-bar {
+  display: flex !important; align-items: center; gap: 8px;
+  background: #f5f5f5 !important; border: 1px solid $border !important; border-radius: 8px !important;
+  padding: 7px 12px !important; margin-bottom: 10px;
+  mat-icon { color: $muted !important; font-size: 18px !important; width: 18px !important; height: 18px !important; flex-shrink: 0; }
+  > input {
+    flex: 1; border: none !important; background: none !important; outline: none !important;
+    box-shadow: none !important; font-size: 13.5px; color: $black; padding: 0 !important;
+    margin: 0 !important; border-radius: 0 !important; min-width: 0;
+    &::placeholder { color: #aaa; }
+    &:focus { border: none !important; box-shadow: none !important; outline: none !important; }
+  }
+  .asd-search-clear { background: none !important; border: none !important; cursor: pointer; color: $muted; padding: 0; display: flex; align-items: center;
+    mat-icon { font-size: 16px !important; width: 16px !important; height: 16px !important; } &:hover { color: $coral; } }
+}
+
+// Bloc suggestions dans la proposition
+.asd-proposition-input-wrap { position: relative; }
+.asd-prop-suggestions {
+  background: #fff; border: 1px solid $border; border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.10); margin-top: 6px; overflow: hidden;
+  .asd-prop-suggestions__label {
+    display: flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600;
+    color: #555; padding: 8px 12px; background: #f8f8f8; border-bottom: 1px solid $border;
+    mat-icon { font-size: 14px; width: 14px; color: $coral; }
+  }
+  .asd-prop-suggestion-item {
+    width: 100%; display: flex; justify-content: space-between; align-items: center;
+    gap: 8px; padding: 9px 14px; background: none; border: none; border-bottom: 1px solid $border;
+    cursor: pointer; text-align: left; transition: background .15s;
+    &:last-of-type { border-bottom: none; }
+    &:hover { background: #fdf3f0; }
+    .asd-prop-suggestion-nom { font-size: 13px; font-weight: 500; color: $black; }
+    .asd-prop-suggestion-cat { font-size: 10.5px; color: $coral; font-weight: 600;
+      background: #fdeee9; padding: 2px 7px; border-radius: 20px; white-space: nowrap; }
+  }
+  .asd-prop-suggestions__footer {
+    font-size: 11px; color: $muted; padding: 7px 12px; background: #fafafa; font-style: italic;
+  }
 }

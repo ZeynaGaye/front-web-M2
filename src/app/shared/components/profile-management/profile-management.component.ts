@@ -89,7 +89,7 @@ export class ProfileManagementComponent implements OnInit, OnDestroy {
       nom: ['', [Validators.required, Validators.minLength(2)]],
       prenom: ['', [Validators.required, Validators.minLength(2)]],
       email: ['', [Validators.required, Validators.email]],
-      telephone: ['', [Validators.pattern(/^(\+33|0)[1-9](?:[0-9]{8})$/)]],
+      telephone: ['', [Validators.pattern(/^\+?[0-9\s\-().]{7,20}$/)]],
       adresse: [''],
       ville: [''],
       sexe: [''],
@@ -128,11 +128,13 @@ export class ProfileManagementComponent implements OnInit, OnDestroy {
   //  Charger le profil utilisateur
   loadUserProfile(): void {
     this.isLoading = true;
-    
+
     this.subscriptions.add(
       this.profileService.getCurrentUserProfile().subscribe({
         next: (profile) => {
-          this.currentUser = profile;
+          // Préserver la photo si le backend ne la renvoie pas
+          const storedPhoto = this.authService.getCurrentUser()?.photoProfile;
+          this.currentUser = { ...profile, photoProfile: profile.photoProfile ?? storedPhoto };
           this.populateForm(profile);
           this.isLoading = false;
         },
@@ -167,7 +169,8 @@ export class ProfileManagementComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.profileService.profileChanges$.subscribe(profile => {
         if (profile) {
-          this.currentUser = profile;
+          const existingPhoto = this.currentUser?.photoProfile;
+          this.currentUser = { ...profile, photoProfile: profile.photoProfile ?? existingPhoto };
         }
       })
     );
@@ -195,20 +198,21 @@ export class ProfileManagementComponent implements OnInit, OnDestroy {
     };
 
     // Ajouter les champs spécifiques selon le rôle
-    if (this.currentUser?.role === 'FREELANCE') {
-      profileData.competences = formValue.competences ? 
-        formValue.competences.split(',').map((c: string) => c.trim()) : [];
+    const role = this.currentUser?.role?.toUpperCase();
+    if (role === 'FREELANCE') {
+      profileData.competences = formValue.competences || null;
       profileData.experiences = formValue.experiences || null;
-    } else if (this.currentUser?.role === 'CLIENT') {
+    } else if (role === 'CLIENT') {
       profileData.preferences = formValue.preferences || null;
-    } else if (this.currentUser?.role === 'EMPLOYEUR') {
+    } else if (role === 'EMPLOYEUR') {
       profileData.description = formValue.description || null;
     }
 
     this.subscriptions.add(
       this.profileService.updateProfile(profileData).subscribe({
         next: (updatedProfile) => {
-          this.currentUser = updatedProfile;
+          const existingPhoto = this.currentUser?.photoProfile;
+          this.currentUser = { ...updatedProfile, photoProfile: updatedProfile.photoProfile ?? existingPhoto };
           this.isSaving = false;
           this.showSuccess('Profil mis à jour avec succès');
         },

@@ -176,12 +176,28 @@
             Recherche libre
           </button>
         </div>
-        <div class="main-search-input">
+        <div class="main-search-input" style="position:relative">
           <input
             type="text"
             [(ngModel)]="searchTerm"
             [placeholder]="getSearchPlaceholder()"
-            (keyup.enter)="searchSalonsAdvanced()"/>
+            (input)="onSearchTermInput()"
+            (keyup.enter)="searchSalonsAdvanced(); showSearchSuggestions = false"
+            (blur)="hideSearchSuggestions()"
+            autocomplete="off"/>
+
+          <!-- Suggestions temps réel -->
+          <div class="search-suggestions-dropdown" *ngIf="showSearchSuggestions && searchSuggestions.length > 0">
+            <div class="ssd-header">
+              <i class="fas fa-magic"></i> Services correspondants
+            </div>
+            <button type="button" class="ssd-item"
+                    *ngFor="let s of searchSuggestions"
+                    (mousedown)="selectSearchSuggestion(s)">
+              <span class="ssd-item__name">{{ s.nom }}</span>
+              <span class="ssd-item__cat">{{ s.categorie }}</span>
+            </button>
+          </div>
            <div class="photo-upload-inline" *ngIf="searchMode === 'photo'">
             <input type="file" id="photo-upload" accept="image/*" (change)="handlePhotoUpload($event)" hidden/>
             <label for="photo-upload" class="photo-upload-btn" [class.has-photo]="uploadedPhoto">
@@ -192,15 +208,14 @@
 
             <div class="mini-preview" *ngIf="uploadedPhoto">
               <img [src]="uploadedPhotoPreview" alt="Aperçu" />
-              <button class="remove-photo" (click)="removePhoto($event)">×</button>
-              
-              <!-- Seulement l'indicateur de chargement -->
-              <div class="analysis-overlay" *ngIf="isAnalyzingPhoto">
-                <div class="analysis-spinner">
-                  <i class="fas fa-brain fa-spin"></i>
-                </div>
-                <span class="analysis-text">Recherche de prestataires...</span>
+              <div class="analysis-badge" *ngIf="isAnalyzingPhoto">
+                <i class="fas fa-brain fa-spin"></i>
               </div>
+              <button class="remove-photo" (click)="removePhoto($event)" *ngIf="!isAnalyzingPhoto">×</button>
+            </div>
+            <div class="analysis-loading" *ngIf="isAnalyzingPhoto && uploadedPhoto">
+              <i class="fas fa-magic"></i>
+              <span>Analyse en cours...</span>
             </div>
             <!-- Seulement en cas d'erreur -->
             <div class="analysis-error" *ngIf="photoAnalysisError">
@@ -229,111 +244,86 @@
       </div>
 
       <div class="advanced-search-panel" *ngIf="showAdvancedSearch">
-        <div class="search-option">
-          <label>Budget maximum</label>
-          <div class="budget-slider">
-            <input type="range" [(ngModel)]="budgetRange" min="2000" max="100000" step="500" />
-            <span>{{budgetRange}} CFA</span>
+
+        <!-- Budget -->
+        <div class="asp-section">
+          <div class="asp-section__header">
+            <span class="asp-section__label">Budget maximum</span>
+            <span class="asp-section__value">{{ budgetRange | number:'1.0-0' }} CFA</span>
+          </div>
+          <div class="asp-slider-wrap">
+            <input type="range" class="asp-slider" [(ngModel)]="budgetRange"
+                   min="2000" max="100000" step="500" />
           </div>
         </div>
 
-        <div class="search-option">
-          <label>Date et heure</label>
-          <div class="datetime-picker">
-            <input type="date" [(ngModel)]="selectedDate" [min]="minDate" />
-            <input type="time" [(ngModel)]="selectedTime" />
+        <!-- Date & heure -->
+        <div class="asp-section">
+          <span class="asp-section__label">Date et heure</span>
+          <div class="asp-datetime">
+            <input class="asp-input asp-input--pill" type="date"
+                   [(ngModel)]="selectedDate" [min]="minDate" />
+            <input class="asp-input asp-input--pill" type="time"
+                   [(ngModel)]="selectedTime" />
           </div>
-        </div>
-
-        <div class="search-option" *ngIf="!userLocation">
-          <label>Localisation</label>
-          <button class="location-btn" (click)="getUserLocation()">
-            <i class="fas fa-map-marker-alt"></i> Utiliser ma position
-          </button>
-          <input type="text" [(ngModel)]="locationInput" placeholder="Quartier, ville..." />
-        </div>
-
-        <div class="search-option" *ngIf="userLocation">
-          <label>Localisation</label>
-          <div class="location-display">
-            <i class="fas fa-map-marker-alt"></i>
-            <span>{{userLocation}}</span>
-            <button class="change-location" (click)="clearLocation()">Modifier</button>
-          </div>
-        </div>
-
-        <div class="freelance-criteria" *ngIf="showFreelanceCriteria()">
-          <div class="criteria-header">
-            <h4><i class="fas fa-user-tie"></i> Critères Freelances</h4>
-            <button class="clear-freelance-btn" (click)="clearOnlyFreelanceCriteria()"
-                    *ngIf="hasFreelanceCriteria()">
-              Effacer
+          <div class="asp-toggles">
+            <button class="asp-toggle" [class.asp-toggle--on]="disponibleSoir"
+                    (click)="disponibleSoir = !disponibleSoir">
+              Soirée
+            </button>
+            <button class="asp-toggle" [class.asp-toggle--on]="disponibleWeekend"
+                    (click)="disponibleWeekend = !disponibleWeekend">
+              Weekend
             </button>
           </div>
-
-          <div class="criteria-toggles">
-            <label class="toggle-option">
-              <input type="checkbox" [(ngModel)]="disponibleWeekend" />
-              <span class="toggle-text">
-                <i class="fas fa-calendar-weekend"></i>
-                Disponible weekend
-              </span>
-            </label>
-
-            <label class="toggle-option">
-              <input type="checkbox" [(ngModel)]="disponibleSoir" />
-              <span class="toggle-text">
-                <i class="fas fa-moon"></i>
-                Disponible soirée
-              </span>
-            </label>
-          </div>
-
-          <div class="search-option">
-            <label>Expérience minimum</label>
-            <select [(ngModel)]="experienceMin">
-              <option [value]="undefined">Peu importe</option>
-              <option [value]="1">1+ ans</option>
-              <option [value]="3">3+ ans</option>
-              <option [value]="5">5+ ans</option>
-              <option [value]="10">10+ ans</option>
-            </select>
-          </div>
         </div>
 
-        <div class="search-actions">
-          <button class="clear-all-btn" (click)="clearAdvancedCriteria()">
+        <!-- Localisation -->
+        <div class="asp-section">
+          <span class="asp-section__label">Localisation</span>
+          <button class="asp-location-btn" (click)="getUserLocation()" *ngIf="!userLocation">
+            <i class="fas fa-location-arrow"></i> Utiliser ma position
+          </button>
+          <div class="asp-location-display" *ngIf="userLocation">
+            <i class="fas fa-map-marker-alt"></i>
+            <span>{{ userLocation }}</span>
+            <button class="asp-location-change" (click)="clearLocation()">Modifier</button>
+          </div>
+          <input class="asp-input asp-input--pill asp-input--location" type="text"
+                 [(ngModel)]="locationInput" placeholder="Quartier, ville..."
+                 *ngIf="!userLocation" />
+        </div>
+
+        <!-- Critères freelance -->
+        <div class="asp-freelance" *ngIf="showFreelanceCriteria()">
+          <div class="asp-freelance__header">
+            <span>Critères freelance</span>
+            <button class="asp-freelance__clear" (click)="clearOnlyFreelanceCriteria()"
+                    *ngIf="hasFreelanceCriteria()">Effacer</button>
+          </div>
+          <select class="asp-input asp-input--pill" [(ngModel)]="experienceMin">
+            <option [value]="undefined">Expérience — Peu importe</option>
+            <option [value]="1">1+ ans</option>
+            <option [value]="3">3+ ans</option>
+            <option [value]="5">5+ ans</option>
+            <option [value]="10">10+ ans</option>
+          </select>
+        </div>
+
+        <!-- Actions -->
+        <div class="asp-actions">
+          <button class="asp-btn asp-btn--ghost" (click)="clearAdvancedCriteria()">
             Tout effacer
           </button>
-          <button class="search-advanced-btn" (click)="searchSalonsAdvanced()">
-            <i class="fas fa-search"></i>
+          <button class="asp-btn asp-btn--dark" (click)="searchSalonsAdvanced()">
             Rechercher
           </button>
         </div>
+
       </div>
     </div>
     <div class="right-section">
       <div class="hero-visual-wrapper">
-
-        <!-- Miniatures flottantes -->
-        <div class="floating-thumb thumb-1">
-          <div class="thumb-img-wrap">
-            <img src="assets/images/photos-charmantes-coiffeurs-africains-talentueux_640251-73688.avif" alt="Coiffeurs BeautyHub" />
-          </div>
-          <div class="thumb-label">
-            <i class="fas fa-scissors"></i>
-            Coiffure
-          </div>
-        </div>
-        <div class="floating-thumb thumb-2">
-          <div class="thumb-img-wrap">
-            <img src="assets/images/pexels-rdne-7755238.jpg" alt="Soins beauté BeautyHub" />
-          </div>
-          <div class="thumb-label">
-            <i class="fas fa-spa"></i>
-            Soins
-          </div>
-        </div>
 
         <!-- Image hero -->
         <div class="hero-image">
@@ -575,38 +565,6 @@
           <p class="address-text">{{ provider.adresse }}</p>
         </div>
 
-
-        <!-- Info freelance redesignées -->
-        <div class="freelance-section" *ngIf="provider.type === 'freelance'">
-          <div class="freelance-header">Informations Freelance</div>
-          
-          <div class="freelance-details">
-            <div class="detail-item" *ngIf="provider.experience || provider.anneesExperience">
-              <i class="fas fa-clock"></i>
-              <span>{{ provider.experience || provider.anneesExperience }} ans d'expérience</span>
-            </div>
-            <div class="detail-item" *ngIf="provider.profession">
-              <i class="fas fa-briefcase"></i>
-              <span>{{ provider.profession }}</span>
-            </div>
-            <div class="detail-item" *ngIf="provider.competences">
-              <i class="fas fa-tools"></i>
-              <span>{{ provider.competences }}</span>
-            </div>
-          </div>
-
-          <div class="freelance-badges" *ngIf="provider.disponibleWeekend || provider.disponibleSoir || provider.deplacementInclus">
-            <span class="badge weekend" *ngIf="provider.disponibleWeekend">
-              <i class="fas fa-calendar-weekend"></i> Weekend
-            </span>
-            <span class="badge evening" *ngIf="provider.disponibleSoir">
-              <i class="fas fa-moon"></i> Soirée
-            </span>
-            <span class="badge transport" *ngIf="provider.deplacementInclus">
-              <i class="fas fa-car"></i> Déplacement inclus
-            </span>
-          </div>
-        </div>
 
         <button class="voir-salon-btn" (click)="openDetailDialog(provider)">
           {{ provider.type === 'freelance' ? 'Voir le profil' : 'Voir le salon' }}

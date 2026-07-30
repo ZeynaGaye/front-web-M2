@@ -1,26 +1,18 @@
-// horaires-manager.component.ts
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
-import { CommonModule, NgIf, NgFor, DatePipe } from '@angular/common';
-import { FormGroup, FormBuilder, Validators, FormControl, ReactiveFormsModule, FormsModule } from '@angular/forms';
-import { HttpClientModule } from '@angular/common/http';
-
-// Modules Angular Material
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { MatIconModule } from '@angular/material/icon';
 import { HorairesService } from '../../services/horaires/horaires.service';
+import { AuthService } from '../../../core/servces/auth.service';
 
-// Interfaces pour la structure de vos données (MISES À JOUR pour correspondre au backend)
 export interface HoraireJour {
   id?: number;
   jourSemaine: string;
   jourSemaineLibelle?: string;
   estOuvert: boolean;
-  heureOuverture: string | null; // Autorise null
-  heureFermeture: string | null; // Autorise null
-  dureeCreneauMinutes: number | null; // Autorise null (ou 0 si le backend attend un int primitif)
+  heureOuverture: string | null;
+  heureFermeture: string | null;
+  dureeCreneauMinutes: number | null;
   pauseEntreCreneauxMinutes?: number;
   salonId?: number;
   freelanceId?: number;
@@ -28,390 +20,282 @@ export interface HoraireJour {
 
 export interface Conge {
   id?: number;
-  dateDebut: string; // Format 'YYYY-MM-DD'
-  dateFin: string;   // Format 'YYYY-MM-DD'
+  dateDebut: string;
+  dateFin: string;
   motif?: string;
 }
 
 export interface Creneau {
-  heureDebut: string; // 'YYYY-MM-DDTHH:MM:SS'
-  heureFin: string;   // 'YYYY-MM-DDTHH:MM:SS'
-  // La disponibilité est implicite si le créneau est retourné par le backend
+  heureDebut: string;
+  heureFin: string;
+}
+
+interface DaySchedule {
+  code: string;
+  label: string;
+  open: boolean;
+  start: string;
+  end: string;
+  dureeMinutes: number;
+  editing: boolean;
+  tempStart: string;
+  tempEnd: string;
 }
 
 @Component({
   selector: 'app-horaires-manager',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
-    HttpClientModule,
-    MatSlideToggleModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    MatFormFieldModule,
-    MatInputModule,
-    DatePipe
-  ],
+  imports: [CommonModule, FormsModule, MatIconModule],
   templateUrl: './horaires-manager.component.html',
   styleUrls: ['./horaires-manager.component.scss']
 })
 export class HorairesManagerComponent implements OnInit {
 
-  @Input() entityId!: number; // L'ID du salon ou du freelance
-  @Input() isSalon!: boolean; // Vrai si c'est un salon, Faux si c'est un freelance
-
+  @Input() entityId!: number;
+  @Input() isSalon!: boolean;
+  @Input() entityName?: string;
+  @Input() entityAddress?: string;
   @Output() horaireError = new EventEmitter<string>();
 
-  activeTab: string = 'horaires';
-
-  // --- Section Horaires ---
-  horairesFormGroup!: FormGroup;
- joursSemaine = [
-    { code: 'LUNDI', libelle: 'Lundi' }, // CHANGÉ ICI
-    { code: 'MARDI', libelle: 'Mardi' }, // CHANGÉ ICI
-    { code: 'MERCREDI', libelle: 'Mercredi' }, // CHANGÉ ICI
-    { code: 'JEUDI', libelle: 'Jeudi' }, // CHANGÉ ICI
-    { code: 'VENDREDI', libelle: 'Vendredi' }, // CHANGÉ ICI
-    { code: 'SAMEDI', libelle: 'Samedi' }, // CHANGÉ ICI
-    { code: 'DIMANCHE', libelle: 'Dimanche' }, // CHANGÉ ICI
+  readonly JOURS: { code: string; label: string }[] = [
+    { code: 'LUNDI',    label: 'Lundi'    },
+    { code: 'MARDI',    label: 'Mardi'    },
+    { code: 'MERCREDI', label: 'Mercredi' },
+    { code: 'JEUDI',    label: 'Jeudi'    },
+    { code: 'VENDREDI', label: 'Vendredi' },
+    { code: 'SAMEDI',   label: 'Samedi'   },
+    { code: 'DIMANCHE', label: 'Dimanche' },
   ];
 
-  // --- Section Planning ---
-  selectedPlanningDate: Date = new Date();
-  calendarDays: any[] = [];
-  creneauxJour: Creneau[] = [];
+  schedule: DaySchedule[] = this.JOURS.map(j => ({
+    code: j.code, label: j.label, open: j.code !== 'DIMANCHE',
+    start: '09:00', end: '18:00', dureeMinutes: 30,
+    editing: false, tempStart: '09:00', tempEnd: '18:00'
+  }));
 
-  // --- Section Congés ---
-  newConge: Conge = { dateDebut: '', dateFin: '', motif: '' };
+  acceptesReservations = true;
+  saving = false;
+
+  // Congés
   congesList: Conge[] = [];
+  showAddConge = false;
+  addingConge = false;
+  newConge: Conge = { dateDebut: '', dateFin: '', motif: '' };
+  readonly todayStr = new Date().toISOString().split('T')[0];
+
+  // Next slot (computed after loading planning)
+  nextSlotDay = 'Aujourd\'hui';
+  nextSlotTime = '—';
+  nextSlotNote = '';
+
+  // Toast
+  toast: { type: 'success' | 'error'; msg: string } | null = null;
+  private toastTimer: any;
 
   constructor(
-    private fb: FormBuilder,
-    private horairesService: HorairesService
+    private horairesService: HorairesService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
-    this.initHorairesForm();
     this.chargerHoraires();
-    this.genererCalendrier(); // Ceci appellera chargerPlanning()
     this.chargerConges();
+    this.chargerNextSlot();
   }
 
-  private patchHorairesForm(horaires: HoraireJour[]): void {
-    horaires.forEach(horaire => {
-      // Utilisez le code du jourSemaine pour accéder au FormGroup
-      if (this.horairesFormGroup.get(horaire.jourSemaine)) {
-        this.horairesFormGroup.get(horaire.jourSemaine)?.patchValue({
-          estOuvert: horaire.estOuvert,
-          heureOuverture: horaire.heureOuverture,
-          heureFermeture: horaire.heureFermeture,
-          dureeCreneauMinutes: horaire.dureeCreneauMinutes
-          // pauseEntreCreneauxMinutes n'est pas directement dans le formulaire pour le moment
-        });
-        // Appeler onEstOuvertChange pour gérer l'état enabled/disabled des champs
-        this.onEstOuvertChange(horaire.jourSemaine, { checked: horaire.estOuvert });
-      }
-    });
+  // ── Labels selon contexte ─────────────────────────────
+
+  get pageTitle(): string {
+    return this.isSalon ? 'Horaires du salon' : 'Mes disponibilités';
   }
 
-  setActiveTab(tab: string): void {
-    this.activeTab = tab;
-    if (tab === 'planning') {
-      this.chargerPlanning();
-    } else if (tab === 'conges') {
-      this.chargerConges();
-    }
+  get pageSubtitle(): string {
+    return this.isSalon
+      ? 'Définissez quand votre salon est ouvert aux réservations.'
+      : 'Dites à vos clientes quand vous réserver.';
   }
 
-  // --- Méthodes pour la Section Horaires ---
-  private initHorairesForm(): void {
-    const group: { [key: string]: FormGroup } = {};
-    this.joursSemaine.forEach(jour => {
-      group[jour.code] = this.fb.group({
-        estOuvert: [true],
-        heureOuverture: ['09:00', Validators.required],
-        heureFermeture: ['18:00', Validators.required],
-        dureeCreneauMinutes: [30, [Validators.required, Validators.min(15), Validators.max(120)]]
-      });
-
-      // Gère l'activation/désactivation des champs en fonction de 'estOuvert'
-      group[jour.code].get('estOuvert')?.valueChanges.subscribe(estOuvert => {
-        if (estOuvert) {
-          group[jour.code].get('heureOuverture')?.enable();
-          group[jour.code].get('heureFermeture')?.enable();
-          group[jour.code].get('dureeCreneauMinutes')?.enable();
-        } else {
-          group[jour.code].get('heureOuverture')?.disable();
-          group[jour.code].get('heureFermeture')?.disable();
-          group[jour.code].get('dureeCreneauMinutes')?.disable();
-        }
-      });
-    });
-    this.horairesFormGroup = this.fb.group(group);
+  get toggleLabel(): string {
+    return this.isSalon ? 'Le salon est ouvert aux réservations' : 'Je prends des réservations';
   }
 
-  onEstOuvertChange(jourCode: string, event: any): void {
-    const estOuvert = event.checked;
-    const jourForm = this.horairesFormGroup.get(jourCode) as FormGroup;
-    if (jourForm) {
-      if (estOuvert) {
-        jourForm.get('heureOuverture')?.enable();
-        jourForm.get('heureFermeture')?.enable();
-        jourForm.get('dureeCreneauMinutes')?.enable();
-      } else {
-        jourForm.get('heureOuverture')?.disable();
-        jourForm.get('heureFermeture')?.disable();
-        jourForm.get('dureeCreneauMinutes')?.disable();
-      }
-    }
+  get toggleSub(): string {
+    return this.isSalon
+      ? 'Votre salon est visible et réservable par les clientes.'
+      : 'Votre profil est visible et réservable par les clientes.';
   }
+
+  get displayName(): string {
+    if (this.entityName) return this.entityName;
+    const u = this.authService.getCurrentUser();
+    return u ? `${u.prenom || ''} ${u.nom || ''}`.trim() : '';
+  }
+
+  get displayAddress(): string {
+    if (this.entityAddress) return this.entityAddress;
+    const u = this.authService.getCurrentUser();
+    return u?.adresse || u?.ville || 'Dakar, Sénégal';
+  }
+
+  // ── Toast ─────────────────────────────────────────────
+
+  private showToast(type: 'success' | 'error', msg: string): void {
+    clearTimeout(this.toastTimer);
+    this.toast = { type, msg };
+    this.toastTimer = setTimeout(() => this.toast = null, 3500);
+  }
+
+  // ── Horaires ──────────────────────────────────────────
 
   chargerHoraires(): void {
     this.horairesService.getHoraires(this.entityId, this.isSalon).subscribe({
       next: (data: HoraireJour[]) => {
-        this.patchHorairesForm(data);
-      },
-      error: (err: any) => {
-        console.error('Erreur lors du chargement des horaires', err);
-        this.horaireError.emit('Erreur lors du chargement des horaires: ' + (err.message || ''));
-      }
-    });
-  }
-
-  sauvegarderHoraires(): void {
-    if (this.horairesFormGroup.valid) {
-      const horairesToSave: HoraireJour[] = [];
-      this.joursSemaine.forEach(jour => {
-        const jourForm = this.horairesFormGroup.get(jour.code)?.value;
-        horairesToSave.push({
-          jourSemaine: jour.code, // Utilise le code 'MONDAY'
-          // Le backend utilise le jourSemaineLibelle pour le PUT, mais le service le construit déjà
-          estOuvert: jourForm.estOuvert,
-          heureOuverture: jourForm.heureOuverture,
-          heureFermeture: jourForm.heureFermeture,
-          dureeCreneauMinutes: jourForm.dureeCreneauMinutes
+        data.forEach(h => {
+          const day = this.schedule.find(d => d.code === h.jourSemaine);
+          if (day) {
+            day.open  = h.estOuvert;
+            day.start = h.heureOuverture || '09:00';
+            day.end   = h.heureFermeture || '18:00';
+            day.dureeMinutes = h.dureeCreneauMinutes || 30;
+          }
         });
-      });
-
-      this.horairesService.saveHoraires(this.entityId, this.isSalon, horairesToSave).subscribe({
-        next: () => {
-          alert('Horaires sauvegardés avec succès !');
-          this.chargerPlanning(); // Recharger le planning après sauvegarde des horaires
-        },
-        error: (err: any) => {
-          console.error('Erreur lors de la sauvegarde des horaires', err);
-          this.horaireError.emit('Erreur lors de la sauvegarde des horaires: ' + (err.message || ''));
-        }
-      });
-    } else {
-      alert('Veuillez corriger les erreurs dans le formulaire des horaires.');
-      this.horairesFormGroup.markAllAsTouched();
-      this.horaireError.emit('Formulaire des horaires invalide.');
-    }
-  }
-
-  copierHoraires(): void {
-    alert('Fonctionnalité "Copier un jour" à implémenter.');
-  }
-
-  resetHoraires(): void {
-    // Recharger les horaires par défaut du backend
-    this.horairesService.createDefaultHoraires(this.entityId, this.isSalon).subscribe({
-      next: () => {
-        alert('Horaires réinitialisés aux valeurs par défaut !');
-        this.chargerHoraires(); // Recharger les horaires après la réinitialisation
-        this.chargerPlanning(); // Recharger le planning
       },
-      error: (err: any) => {
-        console.error('Erreur lors de la réinitialisation des horaires par défaut', err);
-        this.horaireError.emit('Erreur lors de la réinitialisation des horaires par défaut: ' + (err.message || ''));
-      }
+      error: () => this.showToast('error', 'Impossible de charger les horaires.')
     });
   }
 
-  // --- Méthodes pour la Section Planning ---
-  genererCalendrier(): void {
-    this.calendarDays = [];
-    const today = new Date();
-    // Début de la semaine (dimanche) de la date sélectionnée
-    const startOfWeek = new Date(this.selectedPlanningDate);
-    startOfWeek.setDate(this.selectedPlanningDate.getDate() - this.selectedPlanningDate.getDay());
-
-    for (let i = 0; i < 7; i++) {
-      const currentDay = new Date(startOfWeek);
-      currentDay.setDate(startOfWeek.getDate() + i);
-      this.calendarDays.push({
-        date: currentDay,
-        dayOfMonth: currentDay.getDate(),
-        dayOfWeekShort: currentDay.toLocaleDateString('fr-FR', { weekday: 'short' }),
-        isToday: currentDay.toDateString() === today.toDateString(),
-        isAvailable: true, // Ceci sera mis à jour par chargerPlanning
-        creneauxCount: 0 // Ceci sera mis à jour par chargerPlanning
-      });
-    }
-    this.chargerPlanning(); // Charge le planning pour la semaine initialisée
+  toggleDay(day: DaySchedule): void {
+    day.open = !day.open;
+    if (!day.open) day.editing = false;
   }
 
-  chargerPlanning(): void {
-    const dateStr = this.selectedPlanningDate.toISOString().split('T')[0];
-    this.horairesService.getPlanning(this.entityId, this.isSalon, dateStr).subscribe({
-      next: (data: Creneau[]) => {
-        this.creneauxJour = data;
-        // La disponibilité est déterminée par la présence de créneaux
-        this.updateCalendarDayStatus(dateStr, data.length > 0, data.length);
-      },
-      error: (err: any) => {
-        console.error('Erreur lors du chargement du planning', err);
-        this.creneauxJour = [];
-        this.updateCalendarDayStatus(dateStr, false, 0); // Marquer comme non disponible en cas d'erreur
-        this.horaireError.emit('Erreur lors du chargement du planning: ' + (err.message || ''));
-      }
+  startEdit(day: DaySchedule): void {
+    day.tempStart = day.start;
+    day.tempEnd   = day.end;
+    day.editing   = true;
+  }
+
+  confirmSlot(day: DaySchedule): void {
+    if (!day.tempStart || !day.tempEnd) return;
+    day.start   = day.tempStart;
+    day.end     = day.tempEnd;
+    day.open    = true;
+    day.editing = false;
+  }
+
+  cancelEdit(day: DaySchedule): void {
+    day.editing = false;
+  }
+
+  removeSlot(day: DaySchedule): void {
+    day.open    = false;
+    day.editing = false;
+  }
+
+  sauvegarder(): void {
+    this.saving = true;
+    const payload: HoraireJour[] = this.schedule.map(d => ({
+      jourSemaine: d.code,
+      estOuvert: d.open,
+      heureOuverture: d.open ? d.start : null,
+      heureFermeture: d.open ? d.end   : null,
+      dureeCreneauMinutes: d.dureeMinutes
+    }));
+    this.horairesService.saveHoraires(this.entityId, this.isSalon, payload).subscribe({
+      next: () => { this.saving = false; this.showToast('success', 'Horaires enregistrés.'); },
+      error: () => { this.saving = false; this.showToast('error', 'Erreur lors de la sauvegarde.'); }
     });
   }
 
-  updateCalendarDayStatus(dateStr: string, hasCreneaux: boolean, creneauxCount: number): void {
-    const index = this.calendarDays.findIndex(d => d.date.toISOString().split('T')[0] === dateStr);
-    if (index !== -1) {
-      this.calendarDays[index].isAvailable = hasCreneaux;
-      this.calendarDays[index].creneauxCount = creneauxCount;
-    }
-  }
+  // ── Congés ────────────────────────────────────────────
 
-  selectCalendarDay(date: Date): void {
-    this.selectedPlanningDate = date;
-    this.chargerPlanning();
-  }
-
-  // --- Méthodes pour la Section Congés ---
   chargerConges(): void {
     this.horairesService.getConges(this.entityId, this.isSalon).subscribe({
-      next: (data: Conge[]) => this.congesList = data,
-      error: (err: any) => {
-        console.error('Erreur lors du chargement des congés', err);
-        this.horaireError.emit('Erreur lors du chargement des congés: ' + (err.message || ''));
-      }
+      next: (data: Conge[]) =>
+        this.congesList = data.sort((a, b) => a.dateDebut.localeCompare(b.dateDebut)),
+      error: () => {}
+    });
+  }
+
+  get upcomingConges(): Conge[] {
+    return this.congesList.filter(c => c.dateFin >= this.todayStr);
+  }
+
+  openAddConge(): void {
+    this.newConge = { dateDebut: '', dateFin: '', motif: '' };
+    this.showAddConge = true;
+  }
+
+  fermerAujourdhui(): void {
+    const c: Conge = { dateDebut: this.todayStr, dateFin: this.todayStr, motif: 'Fermeture exceptionnelle' };
+    this.horairesService.addConge(this.entityId, this.isSalon, c).subscribe({
+      next: () => { this.showToast('success', "Aujourd'hui marqué comme fermé."); this.chargerConges(); },
+      error: () => this.showToast('error', 'Erreur lors de la fermeture.')
     });
   }
 
   ajouterConge(): void {
-    // Validation des dates
     if (!this.newConge.dateDebut || !this.newConge.dateFin) {
-      alert('Veuillez saisir les dates de début et de fin du congé.');
-      this.horaireError.emit('Dates de congé manquantes.');
+      this.showToast('error', 'Renseignez les dates de début et de fin.');
       return;
     }
-    if (new Date(this.newConge.dateDebut) > new Date(this.newConge.dateFin)) {
-      alert('La date de début ne peut pas être postérieure à la date de fin.');
-      this.horaireError.emit('Date de début de congé invalide.');
+    if (this.newConge.dateDebut > this.newConge.dateFin) {
+      this.showToast('error', 'La date de début doit être avant la date de fin.');
       return;
     }
-
+    this.addingConge = true;
     this.horairesService.addConge(this.entityId, this.isSalon, this.newConge).subscribe({
       next: () => {
-        alert('Congé ajouté avec succès !');
-        this.newConge = { dateDebut: '', dateFin: '', motif: '' };
+        this.addingConge = false;
+        this.showAddConge = false;
+        this.showToast('success', 'Indisponibilité ajoutée.');
         this.chargerConges();
-        this.chargerPlanning(); // Recharger le planning pour refléter le congé [Previous suggestion implemented]
       },
-      error: (err: any) => {
-        console.error('Erreur lors de l\'ajout du congé', err);
-        this.horaireError.emit('Erreur lors de l\'ajout du congé: ' + (err.message || ''));
-      }
+      error: () => { this.addingConge = false; this.showToast('error', "Erreur lors de l'ajout."); }
     });
   }
 
-  supprimerConge(congeId?: number): void {
-    if (congeId) {
-      if (confirm('Êtes-vous sûr de vouloir supprimer ce congé ?')) {
-        this.horairesService.deleteConge(this.entityId, this.isSalon, congeId).subscribe({
-          next: () => {
-            alert('Congé supprimé avec succès !');
-            this.chargerConges();
-            this.chargerPlanning(); // Recharger le planning pour refléter la suppression [Previous suggestion implemented]
-          },
-          error: (err: any) => {
-            console.error('Erreur lors de la suppression du congé', err);
-            this.horaireError.emit('Erreur lors de la suppression du congé: ' + (err.message || ''));
-          }
-        });
-      }
-    }
+  supprimerConge(c: Conge): void {
+    if (!c.id) return;
+    this.horairesService.deleteConge(this.entityId, this.isSalon, c.id).subscribe({
+      next: () => { this.showToast('success', 'Supprimé.'); this.chargerConges(); },
+      error: () => this.showToast('error', 'Erreur lors de la suppression.')
+    });
   }
 
-  fermerAujourdhui(): void {
-    const today = new Date().toISOString().split('T')[0];
-    const congeToday: Conge = { dateDebut: today, dateFin: today, motif: 'Fermeture exceptionnelle' };
-    this.horairesService.addConge(this.entityId, this.isSalon, congeToday).subscribe({
-      next: () => {
-        alert('Journée marquée comme fermée !');
-        this.chargerConges();
-        this.chargerPlanning(); // Recharger le planning après fermeture exceptionnelle
+  congeLabel(c: Conge): string {
+    if (c.dateDebut === c.dateFin) return this.formatDate(c.dateDebut);
+    return `${this.formatDate(c.dateDebut)} – ${this.formatDate(c.dateFin)}`;
+  }
+
+  congeNbJours(c: Conge): number {
+    return Math.floor((new Date(c.dateFin).getTime() - new Date(c.dateDebut).getTime()) / 86400000) + 1;
+  }
+
+  formatDate(iso: string): string {
+    return new Date(iso + 'T00:00:00').toLocaleDateString('fr-FR', {
+      day: 'numeric', month: 'short', year: 'numeric'
+    });
+  }
+
+  // ── Next slot ─────────────────────────────────────────
+
+  private chargerNextSlot(): void {
+    const dateStr = new Date().toISOString().split('T')[0];
+    this.horairesService.getPlanning(this.entityId, this.isSalon, dateStr).subscribe({
+      next: (data: Creneau[]) => {
+        if (data.length > 0) {
+          const first = data[0];
+          const start = new Date(first.heureDebut).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+          const end   = new Date(first.heureFin).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+          this.nextSlotTime = `${start} – ${end}`;
+          this.nextSlotNote = `${data.length} créneau${data.length > 1 ? 'x' : ''} disponible${data.length > 1 ? 's' : ''} aujourd'hui.`;
+        } else {
+          this.nextSlotTime = 'Aucun créneau';
+          this.nextSlotNote = 'Journée fermée ou entièrement réservée.';
+        }
       },
-      error: (err: any) => {
-        console.error('Erreur lors de la fermeture du jour', err);
-        this.horaireError.emit('Erreur lors de la fermeture du jour: ' + (err.message || ''));
-      }
+      error: () => { this.nextSlotTime = '—'; }
     });
-  }
-
-  // --- Méthodes pour la Section Actions Rapides ---
-  appliquerHoraires(type: 'bureau' | 'flexible'): void {
-    const defaultHours = {
-      bureau: { heureOuverture: '09:00', heureFermeture: '18:00', dureeCreneauMinutes: 60 },
-      flexible: { heureOuverture: '08:00', heureFermeture: '20:00', dureeCreneauMinutes: 30 }
-    };
-    const selectedHours = defaultHours[type];
-
-    this.joursSemaine.forEach(jour => {
-      const jourForm = this.horairesFormGroup.get(jour.code);
-      if (jourForm) {
-        jourForm.patchValue({
-          estOuvert: true,
-          heureOuverture: selectedHours.heureOuverture,
-          heureFermeture: selectedHours.heureFermeture,
-          dureeCreneauMinutes: selectedHours.dureeCreneauMinutes
-        });
-        this.onEstOuvertChange(jour.code, { checked: true });
-      }
-    });
-    alert(`Horaires "${type}" appliqués.`);
-    this.sauvegarderHoraires();
-  }
-
-  ouvrirWeekend(): void {
-    ['SATURDAY', 'SUNDAY'].forEach(jourCode => { // Utilise les codes d'énumération
-      const jourForm = this.horairesFormGroup.get(jourCode);
-      if (jourForm) {
-        jourForm.patchValue({ estOuvert: true, heureOuverture: '10:00', heureFermeture: '17:00', dureeCreneauMinutes: 60 });
-        this.onEstOuvertChange(jourCode, { checked: true });
-      }
-    });
-    alert('Weekend ouvert avec des horaires par défaut.');
-    this.sauvegarderHoraires();
-  }
-
-  fermerWeekend(): void {
-    ['SATURDAY', 'SUNDAY'].forEach(jourCode => { // Utilise les codes d'énumération
-      const jourForm = this.horairesFormGroup.get(jourCode);
-      if (jourForm) {
-        jourForm.patchValue({ estOuvert: false });
-        this.onEstOuvertChange(jourCode, { checked: false });
-      }
-    });
-    alert('Weekend fermé.');
-    this.sauvegarderHoraires();
-  }
-
-  changerDureeCreneaux(duree: number): void {
-    this.joursSemaine.forEach(jour => {
-      const jourForm = this.horairesFormGroup.get(jour.code);
-      if (jourForm && jourForm.get('estOuvert')?.value) {
-        jourForm.get('dureeCreneauMinutes')?.setValue(duree);
-      }
-    });
-    alert(`Durée des créneaux changée à ${duree} minutes pour les jours ouverts.`);
-    this.sauvegarderHoraires();
   }
 }

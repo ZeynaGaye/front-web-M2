@@ -70,6 +70,7 @@ interface LoyaltyProgram {
     MatMenuModule,
     FormsModule,
     ProfileManagementComponent,
+    NotificationListComponent,
   ],
   templateUrl: './client-dashboard.component.html',
   styleUrl: './client-dashboard.component.scss'
@@ -631,14 +632,15 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
       }
 
       const dialogRef = this.dialog.open(module.RatingModalComponent, {
-        width: '600px',
-        maxWidth: '90vw',
+        width: '480px',
+        maxWidth: '94vw',
+        panelClass: 'rm-dialog-panel',
         disableClose: false,
         data: {
           reservation: reservation,
           serviceNom: this.getServiceName(reservation),
           prestataire: this.getProviderName(reservation),
-          type: prestataireType, // Envoi du type de prestataire à la modale
+          type: prestataireType,
           existingRating: reservation.avis ? {
             note: reservation.avis.note,
             commentaire: reservation.avis.commentaire
@@ -668,8 +670,9 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
         (avis.typePrestataire === 'salon' || avis.salonId) ? 'salon' : 'freelance';
 
       const dialogRef = this.dialog.open(module.RatingModalComponent, {
-        width: '600px',
-        maxWidth: '90vw',
+        width: '480px',
+        maxWidth: '94vw',
+        panelClass: 'rm-dialog-panel',
         disableClose: false,
         data: {
           reservation: {
@@ -735,8 +738,10 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     } else {
       this.dialog.open(FreelanceDetailsComponent, {
         data: { freelanceId: id },
-        width: '90vw',
-        maxWidth: '800px',
+        width: '95vw',
+        height: '90vh',
+        maxWidth: '1200px',
+        maxHeight: '800px',
         panelClass: ['dialog-responsive', 'freelance-details-dialog']
       });
     }

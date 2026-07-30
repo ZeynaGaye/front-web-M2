@@ -1,6 +1,6 @@
-import { Component, Inject, OnInit, OnDestroy, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Inject, OnInit, OnDestroy, Input, Output, EventEmitter, Optional } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -29,7 +29,7 @@ export interface ServiceSalonRequestDto {
   selector: 'app-add-service-salon-dialog',
   standalone: true,
   imports: [
-    CommonModule, ReactiveFormsModule,
+    CommonModule, ReactiveFormsModule, FormsModule,
     MatFormFieldModule, MatInputModule, MatSelectModule, MatCheckboxModule,
     MatButtonModule, MatIconModule,
     MatProgressSpinnerModule,
@@ -78,6 +78,17 @@ export class AddServiceDialogComponent implements OnInit, OnDestroy {
   afficherSuggestionsTempsReel = false;
   rechercheEnCours = false;
 
+  //  PROPOSITION NOUVEAU SERVICE
+  modeProposition = false;
+  propositionNom = '';
+  propositionCategorie = '';
+  propositionEnCours = false;
+  propositionErreur = '';
+  suggestionsPropositon: ServicePredefiniDto[] = [];
+
+  //  RECHERCHE DANS LA GRILLE
+  rechercheGrille = '';
+
   //  INFORMATION SERVICE EXISTANT
   serviceExisteDeja = false;
   messageServiceExistant = '';
@@ -89,12 +100,16 @@ export class AddServiceDialogComponent implements OnInit, OnDestroy {
   //  SOUMISSION
   enCoursCreation = false;
 
+  // Catégories & filtre visuel
+  categories: string[] = ['Coiffure', 'Maquillage', 'Manucure', 'Barbier', 'Soins'];
+  filterCategorie = '';
+
   private destroy$ = new Subject<void>();
 
   constructor(
     private fb: FormBuilder,
-    public dialogRef: MatDialogRef<AddServiceDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: {
+    @Optional() public dialogRef: MatDialogRef<AddServiceDialogComponent>,
+    @Optional() @Inject(MAT_DIALOG_DATA) public data: {
       service?: ServiceSalon,
       salonId: number
     },
@@ -156,6 +171,20 @@ export class AddServiceDialogComponent implements OnInit, OnDestroy {
 
   }
 
+  serviceValidator(group: AbstractControl): ValidationErrors | null {
+    const estFormulaireDemande = group.get('estFormulaireDemande')?.value;
+    const nomPersonnalise     = (group.get('nomPersonnalise')?.value || '').trim();
+    const servicePredefini    = group.get('servicePredefini')?.value;
+
+    if (estFormulaireDemande && !nomPersonnalise) {
+      return { servicePersonnalise: { message: 'Veuillez saisir un nom de service personnalisé.' } };
+    }
+    if (!estFormulaireDemande && !servicePredefini) {
+      return { serviceRequired: { message: 'Veuillez sélectionner un service prédéfini.' } };
+    }
+    return null;
+  }
+
   private populateForm(service: ServiceSalon): void {
     this.serviceForm.patchValue({
       estFormulaireDemande: true,
@@ -181,6 +210,8 @@ export class AddServiceDialogComponent implements OnInit, OnDestroy {
           this.servicesPredefinis = services;
           this.servicesPredefinisFiltres = services;
           this.servicesGroupes = this.servicePredefiniService.grouperParCategorie(services);
+          const cats = [...new Set(services.map(s => s.categorie).filter(Boolean))];
+          if (cats.length > 0) this.categories = cats;
           this.chargementServices = false;
           this.erreurChargement = false;
         },
@@ -188,7 +219,6 @@ export class AddServiceDialogComponent implements OnInit, OnDestroy {
           console.error(' Erreur chargement services salon:', error);
           this.chargementServices = false;
           this.erreurChargement = true;
-          this.basculerVersSaisieLibre();
         }
       });
   }
@@ -415,6 +445,39 @@ export class AddServiceDialogComponent implements OnInit, OnDestroy {
    */
   basculerAffichageServices(): void {
     this.afficherTousServices = !this.afficherTousServices;
+  }
+
+  // Filtre catégorie pour la grille
+  setFilterCategorie(cat: string): void {
+    this.filterCategorie = this.filterCategorie === cat ? '' : cat;
+  }
+
+  get filteredServices(): ServicePredefiniDto[] {
+    let list = this.servicesPredefinis;
+    if (this.filterCategorie) {
+      list = list.filter(s => s.categorie === this.filterCategorie);
+    }
+    const q = this.rechercheGrille.trim().toLowerCase();
+    if (q.length >= 1) {
+      list = list.filter(s =>
+        s.nom.toLowerCase().includes(q) ||
+        s.categorie.toLowerCase().includes(q) ||
+        (s.motsCles || '').toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }
+
+  // Sélection directe depuis la grille
+  selectPredefinedService(service: ServicePredefiniDto): void {
+    this.serviceSelectionne = service;
+    this.serviceForm.patchValue({
+      servicePredefini: service.id,
+      estFormulaireDemande: false,
+      nomPersonnalise: '',
+      categorie: service.categorie,
+      description: service.description || ''
+    });
   }
 
   /**
@@ -652,24 +715,8 @@ export class AddServiceDialogComponent implements OnInit, OnDestroy {
       dureeEnMinutes: Number(formValue.dureeEnMinutes) || 60
     };
 
-    //  CAS 1 : NOUVEAU SERVICE LIBRE (saisie manuelle)
-    // On bypass l'endpoint intelligent car service_predefini_id est NOT NULL en base
-    // et les services personnalisés n'ont pas d'ID prédéfini → SQL crash
-    if (formValue.estFormulaireDemande && formValue.nomPersonnalise?.trim()) {
-      const serviceData: ServiceSalonRequestDto = {
-        nom: formValue.nomPersonnalise.trim(),
-        description: formValue.description?.trim() || '',
-        categorie: formValue.categorie || 'Autre',
-        prix: Number(formValue.prix),
-        dureeEnMinutes: Number(formValue.dureeEnMinutes) || 60
-      };
-      this.enCoursCreation = false;
-      this.emettreServiceCreee(serviceData);
-      return;
-
-
-    //  CAS 2 : SERVICE PRÉDÉFINI SÉLECTIONNÉ VIA VARIABLE
-    } else if (this.serviceSelectionne?.id) {
+    //  CAS 1 : SERVICE PRÉDÉFINI SÉLECTIONNÉ VIA VARIABLE
+    if (this.serviceSelectionne?.id) {
       requestData.servicePredefiniId = this.serviceSelectionne.id;
       requestData.nomService = this.serviceSelectionne.nom;
       requestData.categorieService = this.serviceSelectionne.categorie;
@@ -677,7 +724,7 @@ export class AddServiceDialogComponent implements OnInit, OnDestroy {
 
       this.creerAvecDetectionIntelligente(requestData);
 
-    //  CAS 3 : FALLBACK - Service prédéfini depuis le formulaire
+    //  CAS 2 : FALLBACK - Service prédéfini depuis le formulaire (select)
     } else if (formValue.servicePredefini) {
       const serviceId = parseInt(formValue.servicePredefini);
       if (serviceId && !isNaN(serviceId)) {
@@ -695,14 +742,9 @@ export class AddServiceDialogComponent implements OnInit, OnDestroy {
         this.enCoursCreation = false;
       }
 
-    //  CAS 4 : ERREUR - Aucun service sélectionné
+    //  CAS 3 : ERREUR - Aucun service sélectionné
     } else {
-      console.error(' Aucun service sélectionné pour la création');
-      console.error(' Debug - serviceSelectionne:', this.serviceSelectionne);
-      console.error(' Debug - formValue:', formValue);
-      console.error(' Debug - estFormulaireDemande:', formValue.estFormulaireDemande);
-      console.error(' Debug - nomPersonnalise:', formValue.nomPersonnalise);
-      console.error(' Debug - servicePredefini:', formValue.servicePredefini);
+      console.error(' Aucun service prédéfini sélectionné');
       this.enCoursCreation = false;
       return;
     }
@@ -875,6 +917,79 @@ export class AddServiceDialogComponent implements OnInit, OnDestroy {
       }
       this.closeModalEvent.emit();
     }
+  }
+
+  // ==========================================
+  //  PROPOSITION D'UN NOUVEAU SERVICE
+  // ==========================================
+
+  onPropositionNomChange(): void {
+    const q = this.propositionNom.trim().toLowerCase();
+    if (q.length < 1) {
+      this.suggestionsPropositon = [];
+      return;
+    }
+    this.suggestionsPropositon = this.servicesPredefinis
+      .filter(s =>
+        s.nom.toLowerCase().includes(q) ||
+        (s.motsCles || '').toLowerCase().includes(q)
+      )
+      .slice(0, 5);
+  }
+
+  selectionnerSuggestionProposition(s: ServicePredefiniDto): void {
+    this.selectPredefinedService(s);
+    this.modeProposition = false;
+    this.suggestionsPropositon = [];
+  }
+
+  ouvrirProposition(): void {
+    this.modeProposition = true;
+    this.propositionNom = '';
+    this.propositionCategorie = '';
+    this.propositionErreur = '';
+  }
+
+  fermerProposition(): void {
+    this.modeProposition = false;
+    this.propositionNom = '';
+    this.propositionCategorie = '';
+    this.propositionErreur = '';
+    this.suggestionsPropositon = [];
+  }
+
+  soumettrePropositon(): void {
+    const nom = this.propositionNom.trim();
+    if (nom.length < 3) {
+      this.propositionErreur = 'Le nom doit contenir au moins 3 caractères.';
+      return;
+    }
+    if (!this.propositionCategorie) {
+      this.propositionErreur = 'Veuillez choisir une catégorie.';
+      return;
+    }
+
+    this.propositionEnCours = true;
+    this.propositionErreur = '';
+
+    this.servicePredefiniService.proposerNouveauService(nom, this.propositionCategorie)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          this.propositionEnCours = false;
+          // Ajouter dans la liste locale si vraiment nouveau
+          if (res.estNouveau && !this.servicesPredefinis.find(s => s.id === res.service.id)) {
+            this.servicesPredefinis = [...this.servicesPredefinis, res.service];
+          }
+          // Auto-sélectionner le service retourné
+          this.selectPredefinedService(res.service);
+          this.modeProposition = false;
+        },
+        error: (err) => {
+          this.propositionEnCours = false;
+          this.propositionErreur = err?.error?.error || 'Une erreur est survenue, veuillez réessayer.';
+        }
+      });
   }
 
   /**

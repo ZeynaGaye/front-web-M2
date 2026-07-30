@@ -1,5 +1,6 @@
-import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, inject, OnInit, Output, ViewEncapsulation } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { Component, EventEmitter, Inject, inject, OnInit, Output, PLATFORM_ID, ViewEncapsulation } from '@angular/core';
+import { DomSanitizer, SafeStyle } from '@angular/platform-browser';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -19,7 +20,9 @@ import { OffreEmploisService } from '../../services/OffreEmploisService/offre-em
 import { FormsModule } from '@angular/forms';
 import { CandidatureService } from '../../../freelance/services/candidatures.service';
 import { Candidature } from '../../../freelance/interfaces/candidatures.interface';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
+import { HttpClient } from '@angular/common/http';
 import { ReservationsComponent } from '../../../shared/components/reservations/reservations.component';
 import { NotificationService, Notification } from '../../../shared/services/notification/notification.service';
 import { ReservationService } from '../../../shared/services/reservation/reservation.service';
@@ -30,8 +33,11 @@ import { MatDividerModule } from '@angular/material/divider';
 import { ProfileManagementComponent } from "../../../shared/components/profile-management/profile-management.component";
 import { NotificationListComponent } from '../../../shared/components/notification-list/notification-list.component';
 import { AuthService } from '../../../core/servces/auth.service';
+import { PlaceholderImageService } from '../../../shared/services/placeholder-image.service';
 import { OffresManagerComponent } from "../offres-manager/offres-manager.component";
+import { CandidaturesManagerComponent } from "../candidatures-manager/candidatures-manager.component";
 import { HorairesManagerComponent } from '../../../shared/components/horaires-manager/horaires-manager.component';
+import { MonEquipeComponent } from '../mon-equipe/mon-equipe.component';
 
 
 // Interface pour les salons pour le typage approprié
@@ -96,7 +102,10 @@ interface RecentOffer {
     MatDividerModule,
     ProfileManagementComponent,
     NotificationListComponent,
-    OffresManagerComponent
+    OffresManagerComponent,
+    HorairesManagerComponent,
+    CandidaturesManagerComponent,
+    MonEquipeComponent
 ],
   templateUrl: './home-employee.component.html',
   styleUrl: './home-employee.component.scss',
@@ -112,7 +121,9 @@ export class HomeEmployeeComponent implements OnInit {
   showCandidatures = false;
   showOffresManager = false;
   showReservations = false;
+  showAvis = false;
   showAvailabilityManager = false;
+  showMonEquipe = false;
   selectedSalonForAvailability: Salon | null = null;
 
   //  NOUVELLES PROPRIÉTÉS POUR L'AFFICHAGE OPTIMISÉ
@@ -141,6 +152,7 @@ export class HomeEmployeeComponent implements OnInit {
   confirmedReservationsCount = 0;
   todayReservationsCount = 0;
   totalRevenue = 0;
+  salonEmployees: any[] = [];
   
   // ===== PARAMÈTRES UI =====
   currentSection = 'dashboard';
@@ -196,24 +208,32 @@ export class HomeEmployeeComponent implements OnInit {
   isLoadingStats = false;
   recentActivities: any[] = [];
 
+  private isBrowser: boolean;
+
   constructor(
     private salonService: SalonService,
     private offreEmploisService: OffreEmploisService,
-    private candidatureService: CandidatureService, 
+    private candidatureService: CandidatureService,
     private router: Router,
     private notificationService: NotificationService,
     private authService: AuthService,
-    private reservationService: ReservationService
-  ) { } 
+    private reservationService: ReservationService,
+    private placeholderSvc: PlaceholderImageService,
+    private sanitizer: DomSanitizer,
+    private http: HttpClient,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {
+    this.isBrowser = isPlatformBrowser(this.platformId);
+  }
 
   ngOnInit(): void {
     this.loadUserProfile();
-    this.loadNotifications();
     this.initRecentActivities();
-    this.loadServices();
-    this.loadSalons(); // Cette méthode va maintenant appeler loadUpcomingAppointments()
-    // Charger les offres avec leurs candidatures
-    this.loadOffresWithCandidatures();
+    if (this.isBrowser) {
+      this.loadNotifications();
+      this.loadSalons();
+      this.loadOffresWithCandidatures();
+    }
     this.filteredOffers = [...this.recentOffers];
   }
 
@@ -227,7 +247,7 @@ export class HomeEmployeeComponent implements OnInit {
           this.userFullName = `${user.prenom} ${user.nom}`;
           this.userEmail = user.email;
           this.userRole = user.role;
-          this.userPhotoUrl = user.photoProfile;
+          this.userPhotoUrl = this.resolveUserPhotoUrl(user.photoProfile);
         } else {
           this.isAuthenticated = false;
           this.currentUser = null;
@@ -333,32 +353,49 @@ export class HomeEmployeeComponent implements OnInit {
   loadUpcomingAppointments(): void {
     // Chargement des vraies réservations de l'employeur
     this.reservationService.getEmployeurReservations().subscribe({
-      next: (reservations) => {
-        // Filtrer les réservations confirmées et à venir
+      next: (reservations: any[]) => {
         const today = new Date();
-        const upcomingReservations = reservations.filter(reservation => {
-          const reservationDate = new Date(reservation.date);
-          return reservationDate >= today && (reservation.statut === 'CONFIRME' || reservation.statut === 'EN_ATTENTE');
+        const monthAgo = new Date();
+        monthAgo.setDate(today.getDate() - 30);
+
+        // Calcul du revenu mensuel (TERMINEE + CONFIRMEE dans les 30 derniers jours)
+        this.totalRevenue = reservations
+          .filter((r: any) => {
+            const statut = (r.status || r.statut || '').toUpperCase();
+            const date = new Date(r.datePrestation || r.dateReservation || r.date);
+            return (statut === 'TERMINEE' || statut === 'CONFIRMEE') && date >= monthAgo;
+          })
+          .reduce((sum: number, r: any) => {
+            return sum + (r.prixTotal ?? r.servicePrixMax ?? r.servicePrixMin ?? 0);
+          }, 0);
+
+        // Filtrer les réservations confirmées et à venir
+        const upcomingReservations = reservations.filter((reservation: any) => {
+          const reservationDate = new Date(reservation.datePrestation || reservation.dateReservation || reservation.date);
+          const statut = (reservation.status || reservation.statut || '').toUpperCase();
+          return reservationDate >= today && (statut === 'CONFIRMEE' || statut === 'CONFIRME' || statut === 'EN_ATTENTE' || statut === 'EN_ATTENTE_PAIEMENT');
         });
 
         // Trier par date
-        upcomingReservations.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        upcomingReservations.sort((a: any, b: any) => {
+          const da = new Date(a.datePrestation || a.dateReservation || a.date).getTime();
+          const db = new Date(b.datePrestation || b.dateReservation || b.date).getTime();
+          return da - db;
+        });
 
         // Formater pour l'affichage
-        this.upcomingAppointments = upcomingReservations.map(reservation => ({
+        this.upcomingAppointments = upcomingReservations.map((reservation: any) => ({
           id: reservation.id,
-          serviceName: reservation.serviceNom || 'Service non spécifié',
+          serviceName: reservation.serviceName || reservation.serviceNom || 'Service non spécifié',
           clientName: `${reservation.clientPrenom || ''} ${reservation.clientNom || ''}`.trim() || 'Client non spécifié',
-          date: new Date(reservation.date),
-          time: reservation.heure,
-          salonName: reservation.salonNom || 'Salon non spécifié',
-          status: reservation.statut
+          date: new Date(reservation.datePrestation || reservation.dateReservation || reservation.date),
+          time: reservation.heureDebut || reservation.heure,
+          salonName: reservation.salonName || reservation.salonNom || 'Salon non spécifié',
+          status: reservation.status || reservation.statut
         }));
 
         // Mettre à jour les statistiques
         this.reservationStats = this.upcomingAppointments.length;
-
-
       },
       error: (error) => {
         console.error('Erreur lors du chargement des réservations:', error);
@@ -406,6 +443,10 @@ export class HomeEmployeeComponent implements OnInit {
     this.unreadNotifications = this.notifications.filter(n => !n.vue).length;
   }
 
+  goToMainPage(): void {
+    this.router.navigate(['/']);
+  }
+
   logout(): void {
     this.authService.logout();
     this.router.navigate(['/login']);
@@ -421,6 +462,12 @@ export class HomeEmployeeComponent implements OnInit {
     this.pageTitle = 'Réservations & Avis';
     this.showReservations = true;
 
+  }
+
+  openAvis(): void {
+    this.resetAllSections();
+    this.currentSection = 'avis';
+    this.showAvis = true;
   }
 
   closeReservations(): void {
@@ -508,17 +555,19 @@ export class HomeEmployeeComponent implements OnInit {
    *  Retourne le nom du candidat depuis les données disponibles
    */
   getCandidateName(candidature: Candidature): string {
-    // Essayer d'extraire depuis l'objet freelance
-    if (candidature.freelance) {
-      if (candidature.freelance.nom && candidature.freelance.prenom) {
-        return `${candidature.freelance.prenom} ${candidature.freelance.nom}`;
-      }
-      if (candidature.freelance.nom) {
-        return candidature.freelance.nom;
-      }
+    // Champs plats (format le plus courant depuis l'API)
+    if (candidature.freelancePrenom || candidature.freelanceNom) {
+      return [candidature.freelancePrenom, candidature.freelanceNom].filter(Boolean).join(' ');
     }
-    
-    // Nom générique avec ID
+    // Objet imbriqué freelance
+    if (candidature.freelance) {
+      const p = candidature.freelance.prenom || '';
+      const n = candidature.freelance.nom || '';
+      if (p || n) return `${p} ${n}`.trim();
+    }
+    // Champ générique nomCandidat
+    if (candidature.nomCandidat) return candidature.nomCandidat;
+
     return `Candidat #${candidature.id || 'X'}`;
   }
 
@@ -526,12 +575,10 @@ export class HomeEmployeeComponent implements OnInit {
    *  Retourne l'email du candidat depuis les données disponibles
    */
   getCandidateEmail(candidature: Candidature): string {
-    // Essayer d'extraire depuis l'objet freelance
-    if (candidature.freelance && candidature.freelance.email) {
-      return candidature.freelance.email;
-    }
-    
-    return 'Email non disponible';
+    return candidature.freelanceEmail
+      || candidature.freelance?.email
+      || candidature.emailCandidat
+      || '';
   }
 
   /**
@@ -956,9 +1003,11 @@ export class HomeEmployeeComponent implements OnInit {
     this.showCandidatures = false;
     this.showOffresManager = false;
     this.showReservations = false;
+    this.showAvis = false;
     this.showServicesList = false;
     this.showCandidaturesModal = false;
     this.showAvailabilityManager = false;
+    this.showMonEquipe = false;
     this.showProfile = false;
     this.currentSection = 'dashboard';
     this.pageTitle = 'Tableau de bord';
@@ -993,6 +1042,24 @@ export class HomeEmployeeComponent implements OnInit {
   closeSalonsList(): void {
     this.navigateTo('dashboard');
     this.loadSalons();
+  }
+
+  preSelectEmployeeId: number | null = null;
+
+  openMonEquipe(): void {
+    this.resetAllSections();
+    this.currentSection = 'equipe';
+    this.pageTitle = 'Mon équipe';
+    this.showMonEquipe = true;
+  }
+
+  openEquipeForEmployee(employee: any): void {
+    this.preSelectEmployeeId = employee.id ?? null;
+    this.openMonEquipe();
+  }
+
+  closeMonEquipe(): void {
+    this.navigateTo('dashboard');
   }
 
   openCreationForm(): void {
@@ -1033,27 +1100,61 @@ export class HomeEmployeeComponent implements OnInit {
       .subscribe({
         next: (data: any[]) => {
           this.salons = data.map(salon => this.processSalonData(salon));
-          // Charger les rendez-vous APRÈS avoir chargé les salons
           this.loadUpcomingAppointments();
+          this.loadSalonEmployees();
         },
         error: (err: any) => {
           console.error('Erreur lors du chargement des salons', err);
           this.salons = [];
-          // Même en cas d'erreur, essayer de charger les rendez-vous
           this.loadUpcomingAppointments();
         }
       });
   }
 
+  private loadSalonEmployees(): void {
+    if (!this.salons.length) return;
+
+    const calls = this.salons.map(salon =>
+      this.http.get<any>(`http://localhost:8081/api/employes/salon/${salon.id}/actifs`).pipe(
+        map((page: any) =>
+          (page.content || []).map((e: any) => ({
+            id: e.id,
+            name: e.nomComplet || `${e.prenom || ''} ${e.nom || ''}`.trim(),
+            initials: (e.nomComplet || `${e.prenom || ''} ${e.nom || ''}`)
+              .split(' ').filter(Boolean).map((p: string) => p[0]).join('').toUpperCase().slice(0, 2),
+            specialty: e.specialites?.length
+              ? [...e.specialites][0].toString().toLowerCase().replace(/_/g, ' ')
+              : '',
+            salon: salon.nom,
+            rating: 4.5,
+            status: e.statut === 'ACTIF' ? 'EN SERVICE' : (e.statut || 'EN SERVICE')
+          }))
+        ),
+        catchError(() => of([]))
+      )
+    );
+
+    forkJoin(calls).pipe(catchError(() => of([]))).subscribe((results: any[][]) => {
+      this.salonEmployees = results.flat();
+    });
+  }
+
   processSalonData(salon: any): Salon {
     return {
+      ...salon,
       id: salon.id || 0,
       nom: salon.nom || salon.name || 'Salon sans nom',
-      imageUrl: salon.imageUrl || salon.photo || 'assets/images/salon-placeholder.jpg',
+      imageUrl: salon.imageUrl || salon.photoProfilUrl || salon.photo || '',
       adresse: salon.adresse || salon.address || 'Adresse non définie',
       rating: salon.rating || salon.note || 0,
       reviewCount: salon.reviewCount || salon.nombreAvis || 0
     };
+  }
+
+  onSalonImgError(event: Event, salon: Salon): void {
+    const img = event.target as HTMLImageElement;
+    img.onerror = null;
+    img.src = this.placeholderSvc.getPlaceholder(salon.id, 'salon');
   }
   
   getOfferStatus(offre: OffreEmploi): string {
@@ -1186,6 +1287,7 @@ export class HomeEmployeeComponent implements OnInit {
   // ===== AVAILABILITY MANAGEMENT METHODS =====
   
   openAvailabilityManager(): void {
+    this.resetAllSections();
     this.showAvailabilityManager = true;
   }
 
@@ -1202,6 +1304,122 @@ export class HomeEmployeeComponent implements OnInit {
 
     // Pour l'instant, naviguer vers la section réservations pour voir tous les détails
     this.openReservations();
+  }
+
+  // ===== GETTERS DASHBOARD =====
+
+  private resolveUserPhotoUrl(photo: string): string {
+    if (!photo) return '';
+    if (photo.startsWith('http')) return photo;
+    if (photo.startsWith('/uploads/')) return `http://localhost:8081${photo}`;
+    if (photo.startsWith('assets/')) return photo;
+    return `http://localhost:8081/uploads/${photo}`;
+  }
+
+  get heroStyle(): SafeStyle {
+    if (this.userPhotoUrl) {
+      return this.sanitizer.bypassSecurityTrustStyle(
+        `background-image: linear-gradient(to right, rgba(20,32,42,0.88) 35%, rgba(20,32,42,0.35) 100%), url(${this.userPhotoUrl}); background-size: cover; background-position: center top;`
+      );
+    }
+    return this.sanitizer.bypassSecurityTrustStyle(
+      `background: linear-gradient(135deg, #1C2B35 0%, #2D4050 100%);`
+    );
+  }
+
+  get userInitials(): string {
+    const p = this.currentUser?.prenom || '';
+    const n = this.currentUser?.nom || '';
+    return `${p.charAt(0)}${n.charAt(0)}`.toUpperCase();
+  }
+
+  get flatCandidatures(): Candidature[] {
+    const all: Candidature[] = [];
+    for (const id of Object.keys(this.candidatures)) {
+      all.push(...this.candidatures[+id]);
+    }
+    return all.slice(0, 3);
+  }
+
+  get totalCandidaturesCount(): number {
+    return Object.values(this.candidatures).reduce((s, arr) => s + arr.length, 0);
+  }
+
+  get formattedRevenue(): string {
+    const r = this.totalRevenue || 0;
+    return r >= 1000 ? `${Math.round(r / 1000)}K` : `${r}`;
+  }
+
+  get todayAppointments(): any[] {
+    const today = new Date().toDateString();
+    return this.upcomingAppointments
+      .filter(a => new Date(a.date).toDateString() === today)
+      .slice(0, 4);
+  }
+
+  get teamMembersDisplay(): any[] {
+    // Priorité : vrais employés de la table employes
+    if (this.salonEmployees.length > 0) {
+      return this.salonEmployees.slice(0, 5);
+    }
+    // Fallback : candidatures acceptées/embauchées
+    const members: any[] = [];
+    for (const id of Object.keys(this.candidatures)) {
+      for (const c of this.candidatures[+id]) {
+        const st = ((c as any).status || (c as any).statut || '').toUpperCase();
+        if (/ACCEPTEE|ACCEPTE|ACTIF|EMBAUCHE/.test(st)) {
+          const offre = this.offresEmploi.find(o => o.id === +id);
+          members.push({
+            name: this.getCandidateName(c),
+            initials: this.getCandidateInitials(c),
+            specialty: (c as any).specialite || offre?.titre || '',
+            salon: this.salons[0]?.nom || '',
+            rating: 4.5,
+            status: 'EN SERVICE'
+          });
+        }
+      }
+    }
+    return members.slice(0, 5);
+  }
+
+  get offresPubTruncated(): OffreEmploi[] {
+    return this.offresEmploi.filter(o => !o.estFermee).slice(0, 3);
+  }
+
+  // ===== MÉTHODES SALON / CANDIDATURE =====
+
+  getSalonImage(salon: Salon): string {
+    return this.placeholderSvc.resolveImage(salon, 'salon');
+  }
+
+  getSalonMembersCount(salon: Salon): number {
+    return (salon as any).membresCount || (salon as any).teamSize || (salon as any).nombreMembres || 0;
+  }
+
+  getSalonOffresCount(salon: Salon): number {
+    return this.offresEmploi.filter(o =>
+      (o as any).salonId === salon.id ||
+      (o.lieu || '').toLowerCase().includes((salon.adresse || '').toLowerCase().split(',')[0])
+    ).length;
+  }
+
+  getCandidatureOffre(c: Candidature): string {
+    for (const id of Object.keys(this.candidatures)) {
+      if (this.candidatures[+id].some(x => x.id === c.id)) {
+        return this.offresEmploi.find(o => o.id === +id)?.titre || '';
+      }
+    }
+    return '';
+  }
+
+  getCandidatureExperience(c: Candidature): string {
+    const exp = (c as any).anneesExperience || (c as any).experience || (c.freelance as any)?.anneesExperience;
+    return exp ? `${exp}ans d'exp.` : '';
+  }
+
+  getCandidatureSpecialty(c: Candidature): string {
+    return (c as any).specialite || (c.freelance as any)?.specialite || (c.freelance as any)?.metier || '';
   }
 
 }

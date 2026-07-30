@@ -8,6 +8,7 @@ import { takeUntil } from 'rxjs/operators';
 import { HomepageRecommendations, RecommendationData, RecommendationService } from '../../services/recommendation.service';
 import { SalonDetailsComponent } from '../salon-details/salon-details.component';
 import { FreelanceDetailsComponent } from '../../../freelance/components/freelance-details/freelance-details.component';
+import { PlaceholderImageService } from '../../services/placeholder-image.service';
 
 @Component({
   selector: 'app-recommendations',
@@ -74,6 +75,8 @@ export class RecommendationsComponent implements OnInit, AfterViewInit, OnDestro
 
   // ==================== CONSTRUCTEUR ====================
 
+  private placeholderSvc = inject(PlaceholderImageService);
+
   constructor(@Inject(PLATFORM_ID) platformId: Object) {
     this.isBrowser = isPlatformBrowser(platformId);
   }
@@ -105,8 +108,8 @@ export class RecommendationsComponent implements OnInit, AfterViewInit, OnDestro
       this.loadFavorites();
     }
 
-    // Charger automatiquement si demandé
-    if (this.autoLoad) {
+    // Charger automatiquement si demandé (seulement côté navigateur, pas SSR)
+    if (this.autoLoad && this.isBrowser) {
       setTimeout(() => {
         // Essayer d'obtenir la géolocalisation automatiquement en arrière-plan
         this.tryAutoGeolocation();
@@ -835,125 +838,18 @@ export class RecommendationsComponent implements OnInit, AfterViewInit, OnDestro
    *  Obtenir l'URL de l'image d'un salon - CORRIGÉ avec logique du HeaderComponent
    */
   getSalonImage(salon: RecommendationData): string {
-    if (!salon) {
-      return 'assets/images/salon-placeholder.jpg';
-    }
-
-    // Utiliser la même logique que dans HeaderComponent
-    const imageUrl = this.getValidImageUrl(salon);
-
-    return imageUrl;
+    if (!salon) return this.placeholderSvc.getPlaceholder(0, 'salon');
+    const type = (salon as any).type === 'freelance' ? 'freelance' : 'salon';
+    return this.placeholderSvc.resolveImage(salon, type);
   }
 
-  /**
-   * COPIÉE DU HEADERCOMPONENT - Récupération d'URL d'image valide avec toutes les variantes
-   */
-  private getValidImageUrl(item: any): string {
-    // Ordre de priorité pour les champs d'image (élargi)
-    const imageFields = [
-      'imageUrl',
-      'photoProfilUrl',
-      'photoProfil',
-      'photo',
-      'image',
-      'picture',
-      'avatar',
-      'url'
-    ];
-
-    for (const field of imageFields) {
-      const imageValue = item[field];
-      if (imageValue && typeof imageValue === 'string' && imageValue.trim()) {
-        let processedUrl = this.processImageUrl(imageValue.trim());
-        return processedUrl;
-      }
-    }
-
-    // Vérifier dans les objets imbriqués si ils existent
-    if (item.photos && Array.isArray(item.photos) && item.photos.length > 0) {
-      const firstPhoto = item.photos[0];
-      if (firstPhoto && firstPhoto.url) {
-        const processedUrl = this.processImageUrl(firstPhoto.url);
-        return processedUrl;
-      }
-    }
-
-    // Image par défaut selon le type
-    const defaultImage = item.type === 'freelance'
-      ? 'assets/images/freelance-placeholder.jpg'
-      : 'assets/images/salon-placeholder.jpg';
-
-    return defaultImage;
-  }
-
-  /**
-   * COPIÉE DU HEADERCOMPONENT - Traitement d'URL d'image
-   */
-  private processImageUrl(imageUrl: string): string {
-    // Si c'est déjà une URL complète, la retourner
-    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-      return imageUrl;
-    }
-
-    // Si c'est un chemin relatif commençant par /uploads
-    if (imageUrl.startsWith('/uploads/')) {
-      const fullUrl = `http://localhost:8081${imageUrl}`;
-      return fullUrl;
-    }
-
-    // Si c'est juste un nom de fichier, construire l'URL complète
-    if (!imageUrl.startsWith('/') && !imageUrl.includes('/')) {
-      const fullUrl = `http://localhost:8081/uploads/${imageUrl}`;
-      return fullUrl;
-    }
-
-    // Si c'est un chemin assets, le retourner tel quel
-    if (imageUrl.startsWith('/assets/') || imageUrl.startsWith('assets/')) {
-      return imageUrl;
-    }
-
-    // Si c'est un chemin qui commence par /api, construire l'URL complète
-    if (imageUrl.startsWith('/api/')) {
-      const fullUrl = `http://localhost:8081${imageUrl}`;
-      return fullUrl;
-    }
-
-    // Par défaut, essayer de construire l'URL
-    const fallbackUrl = `http://localhost:8081/uploads/${imageUrl}`;
-    return fallbackUrl;
-  }
-
-  /**
-   * COPIÉE DU HEADERCOMPONENT - Gestion d'erreur d'image améliorée
-   */
   onImageError(event: any): void {
-    const img = event.target;
-
-    // Éviter les boucles infinies
-    if (img.dataset.retryCount) {
-      const retryCount = parseInt(img.dataset.retryCount);
-      if (retryCount >= 3) {
-        this.createImagePlaceholder(img);
-        return;
-      }
-      img.dataset.retryCount = (retryCount + 1).toString();
-    } else {
-      img.dataset.retryCount = '1';
-    }
-
-    // Images de fallback
-    const fallbackImages = [
-      'assets/images/salon-placeholder.jpg',
-      'assets/images/default-salon.jpg',
-      'assets/images/store-placeholder.jpg'
-    ];
-
-    const currentRetry = parseInt(img.dataset.retryCount) - 1;
-    if (currentRetry < fallbackImages.length) {
-      img.src = fallbackImages[currentRetry];
-    } else {
-      this.createImagePlaceholder(img);
-    }
+    const img = event.target as HTMLImageElement;
+    if (img.dataset['fallback']) return; // already showing a placeholder
+    img.dataset['fallback'] = '1';
+    const type: 'salon' | 'freelance' = img.dataset['entityType'] === 'freelance' ? 'freelance' : 'salon';
+    const id = parseInt(img.dataset['entityId'] ?? '0', 10);
+    img.src = this.placeholderSvc.getPlaceholder(id, type);
   }
 
   /**

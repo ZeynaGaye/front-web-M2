@@ -1,512 +1,316 @@
 
-<div class="offres-manager-container">
-  
-  <!-- 📋 HEADER -->
-  <div class="header">
-    <h1>Gestion des Offres d'Emploi</h1>
-    <button mat-raised-button (click)="openOffreEmploiForm()" aria-label="Créer une nouvelle offre d'emploi">
-      <mat-icon>add_circle</mat-icon>
-      <span>Nouvelle Offre</span>
+<div class="om-container">
+
+  <!-- HEADER -->
+  <div class="om-header">
+    <div class="om-header__left">
+      <h1 class="om-header__title">Offres d'emploi</h1>
+      <p class="om-header__sub"><em>Gérez vos offres et suivez vos candidatures en temps réel.</em></p>
+    </div>
+    <button class="om-publish-btn" (click)="openOffreEmploiForm()">
+      + Publier une offre
     </button>
   </div>
 
-  <!-- 📊 SECTION PRINCIPALE -->
-  <div class="table-container">
-    
-    <!-- 📈 BARRE DE PROGRESSION -->
-    <mat-spinner 
-      *ngIf="isLoading" 
-      mode="indeterminate"
-      class="loading-bar"
-      color="primary">
-    </mat-spinner>
-
-    <!-- 🎯 STATISTIQUES -->
-    <div class="stats-overview" *ngIf="!isLoading && offres.length > 0">
-      <div class="stat-card">
-        <div class="stat-icon">
-          <mat-icon>work_outline</mat-icon>
-        </div>
-        <div class="stat-content">
-          <span class="stat-number">{{ offres.length }}</span>
-          <span class="stat-label">Offre{{ offres.length > 1 ? 's' : '' }} totale{{ offres.length > 1 ? 's' : '' }}</span>
-        </div>
-      </div>
-      
-      <div class="stat-card">
-        <div class="stat-icon active">
-          <mat-icon>trending_up</mat-icon>
-        </div>
-        <div class="stat-content">
-          <span class="stat-number">{{ getActiveOffresCount() }}</span>
-          <span class="stat-label">Active{{ getActiveOffresCount() > 1 ? 's' : '' }}</span>
-        </div>
-      </div>
-      
-      <div class="stat-card">
-        <div class="stat-icon candidates">
-          <mat-icon>people</mat-icon>
-        </div>
-        <div class="stat-content">
-          <span class="stat-number">{{ getTotalCandidatures() }}</span>
-          <span class="stat-label">Candidature{{ getTotalCandidatures() > 1 ? 's' : '' }}</span>
-        </div>
-      </div>
+  <!-- FILTER TABS -->
+  <div class="om-filters">
+    <div class="om-tabs">
+      <button class="om-tab" [class.active]="activeFilter === 'all'" (click)="setFilter('all')">
+        Toutes <span class="tab-count">{{ offres.length }}</span>
+      </button>
+      <button class="om-tab" [class.active]="activeFilter === 'active'" (click)="setFilter('active')">
+        Actives <span class="tab-count">{{ getActiveOffresCount() }}</span>
+      </button>
+      <button class="om-tab" [class.active]="activeFilter === 'pause'" (click)="setFilter('pause')">
+        En pause
+        <span class="tab-count" *ngIf="getPauseCount() > 0">{{ getPauseCount() }}</span>
+      </button>
+      <button class="om-tab" [class.active]="activeFilter === 'closed'" (click)="setFilter('closed')">
+        Clôturées
+        <span class="tab-count" *ngIf="getClosedCount() > 0">{{ getClosedCount() }}</span>
+      </button>
     </div>
+  </div>
 
-    <!-- 🃏 GRILLE DES OFFRES -->
-    <div class="job-grid" *ngIf="!isLoading && offres.length > 0">
-      <div class="job-card" 
-           *ngFor="let offre of paginatedOffres; trackBy: trackByOffreId"
-           [attr.data-status]="offre.status">
+  <!-- LOADING -->
+  <div *ngIf="isLoading" class="om-loading">
+    <mat-progress-spinner mode="indeterminate" diameter="44"></mat-progress-spinner>
+    <p>Chargement de vos offres...</p>
+  </div>
 
-        <!-- 📋 HEADER DE CARTE -->
-        <div class="job-card-header">
-          <div class="job-icon">
-            <mat-icon>{{ getJobIcon(offre.typeContrat) }}</mat-icon>
-          </div>
-          <h2 class="job-title" [title]="offre.titre">{{ offre.titre }}</h2>
+  <!-- CARDS LIST -->
+  <div class="om-cards" *ngIf="!isLoading && getFilteredOffres().length > 0">
+
+    <div class="om-card" *ngFor="let offre of getFilteredOffres(); trackBy: trackByOffreId">
+
+      <!-- Icône -->
+      <div class="om-card__icon">
+        <mat-icon>{{ getJobIcon(offre.typeContrat) }}</mat-icon>
+      </div>
+
+      <!-- Corps : titre + méta -->
+      <div class="om-card__body">
+        <div class="om-card__title-row">
+          <h3 class="om-card__title">{{ offre.titre }}</h3>
+          <span class="om-badge" [ngClass]="'badge-' + (offre.status || 'ouvert').toLowerCase()">
+            {{ getStatusDisplayName(offre.status) }}
+          </span>
         </div>
-
-        <!-- 📊 INFOS -->
-        <div class="job-info-container">
-          <div class="job-info-item">
-            <div class="info-label"><mat-icon>business_center</mat-icon>Type de Contrat</div>
-            <div class="info-value">{{ offre.typeContrat || 'Non spécifié' }}</div>
-          </div>
-
-          <div class="job-info-item">
-            <div class="info-label"><mat-icon>location_on</mat-icon>Lieu</div>
-            <div class="info-value">{{ offre.lieu || 'Non spécifié' }}</div>
-          </div>
-
-          <div class="job-info-item">
-            <div class="info-label"><mat-icon>event</mat-icon>Date Limite</div>
-            <div class="info-value" [class.expired]="isExpired(offre.dateLimite)">
-              {{ formatDate(offre.dateLimite) }}
-              <span *ngIf="isExpired(offre.dateLimite)" class="expired-badge">
-                <mat-icon>warning</mat-icon> Expirée
-              </span>
-            </div>
-          </div>
-
-          <div class="job-info-item">
-            <div class="info-label"><mat-icon>schedule</mat-icon>Publié le</div>
-            <div class="info-value">{{ formatDate(offre.datePublication) }}</div>
-          </div>
-
-          <!-- Informations du salon -->
-          <div class="job-info-item salon-info" *ngIf="offre.salonNom">
-            <div class="info-label"><mat-icon>store</mat-icon>Salon</div>
-            <div class="info-value salon-details">
-              <div class="salon-name">{{ offre.salonNom }}</div>
-              <div class="salon-address" *ngIf="offre.salonAdresse">{{ offre.salonAdresse }}</div>
-            </div>
-          </div>
-
-          <!-- ✅ CANDIDATURES COUNT -->
-          <div class="job-info-item candidates-info">
-            <div class="info-label"><mat-icon>people</mat-icon>Candidatures</div>
-            <div class="info-value">
-              <span class="candidates-count">{{ offre.candidaturesCount || 0 }}</span>
-              <span class="candidates-label">candidature{{ (offre.candidaturesCount || 0) > 1 ? 's' : '' }}</span>
-            </div>
-          </div>
+        <div class="om-card__meta">
+          <span class="meta-item" *ngIf="offre.salonNom">
+            <mat-icon>store</mat-icon>
+            {{ offre.salonNom }}{{ offre.lieu ? ' — ' + offre.lieu : '' }}
+          </span>
+          <span class="meta-item">
+            <mat-icon>description</mat-icon>
+            {{ offre.typeContrat || 'Contrat' }}
+          </span>
+          <span class="meta-item" *ngIf="offre.salaire">
+            <mat-icon>paid</mat-icon>
+            {{ offre.salaire }}
+          </span>
+          <span class="meta-item" *ngIf="offre.datePublication">
+            <mat-icon>schedule</mat-icon>
+            Publiée {{ getTimeAgo(offre.datePublication) }}
+          </span>
         </div>
+      </div>
 
-        <!-- ⚡ ACTIONS -->
-        <div class="job-actions">
-          <div class="status-section">
-            <span class="status-badge" [ngClass]="offre.status.toLowerCase()">
-              {{ getStatusDisplayName(offre.status) }}
-            </span>
-          </div>
-
-          <div class="action-buttons">
-            <!-- ✅ BOUTON CANDIDATURES CORRIGÉ -->
-            <button mat-icon-button 
-                    class="candidates-button"
-                    aria-label="Voir les candidatures"
-                    (click)="viewCandidates(offre.id ?? 0)">
-              <mat-icon>people</mat-icon>
-              <span class="candidates-count">{{ offre.candidaturesCount || 0 }}</span>
-            </button>
-
-            <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Actions">
-              <mat-icon>settings</mat-icon>
-            </button>
-          </div>
+      <!-- Droite : candidatures + bouton + menu -->
+      <div class="om-card__right">
+        <div class="om-card__count">
+          <span class="count-num">{{ offre.candidaturesCount || 0 }}</span>
+          <span class="count-lbl">Candidatures</span>
         </div>
-
-        <!-- 📝 MENU -->
-        <mat-menu #menu="matMenu" class="job-actions-menu">
-          <button mat-menu-item (click)="updateOffreStatus(offre.id!, 'ACTIVE')" *ngIf="offre.status !== 'ACTIVE'">
-            <mat-icon color="primary">play_circle</mat-icon>
-            <span>Activer</span>
+        <button class="om-cand-btn" (click)="viewCandidates(offre.id ?? 0)">
+          Voir les candidatures
+        </button>
+        <button class="om-more-btn" [matMenuTriggerFor]="offreMenu">
+          <mat-icon>more_horiz</mat-icon>
+        </button>
+        <mat-menu #offreMenu="matMenu">
+          <button mat-menu-item (click)="updateOffreStatus(offre.id!, 'ACTIVE')"
+                  *ngIf="offre.status !== 'ACTIVE' && offre.status !== 'OUVERT'">
+            <mat-icon>play_circle</mat-icon> <span>Activer</span>
           </button>
-          <button mat-menu-item (click)="updateOffreStatus(offre.id!, 'FERMÉE')" *ngIf="offre.status !== 'FERMÉE'">
-            <mat-icon color="accent">pause_circle</mat-icon>
-            <span>Fermer</span>
+          <button mat-menu-item (click)="updateOffreStatus(offre.id!, 'FERMÉE')"
+                  *ngIf="offre.status !== 'FERMÉE'">
+            <mat-icon>pause_circle</mat-icon> <span>Clôturer</span>
           </button>
           <button mat-menu-item (click)="duplicateOffre(offre)">
-            <mat-icon>content_copy</mat-icon>
-            <span>Dupliquer</span>
+            <mat-icon>content_copy</mat-icon> <span>Dupliquer</span>
           </button>
           <mat-divider></mat-divider>
-          <button mat-menu-item (click)="deleteOffre(offre.id ?? 0)" class="delete-action">
-            <mat-icon color="warn">delete</mat-icon>
-            <span>Supprimer</span>
+          <button mat-menu-item (click)="deleteOffre(offre.id ?? 0)" class="om-menu-delete">
+            <mat-icon>delete_outline</mat-icon> <span>Supprimer</span>
           </button>
         </mat-menu>
       </div>
-    </div>
 
-    <!-- 📭 ÉTAT VIDE -->
-    <div *ngIf="!isLoading && offres.length === 0" class="no-data">
-      <div class="no-data-animation"><mat-icon>work_off</mat-icon></div>
-      <h3>Aucune offre d'emploi</h3>
-      <p>Vous n'avez pas encore publié d'offres. Créez votre première offre pour commencer !</p>
-      <button mat-raised-button color="primary" (click)="openOffreEmploiForm()" class="cta-button">
-        <mat-icon>add_circle</mat-icon>
-        <span>Publier ma première offre</span>
-      </button>
-    </div>
-
-    <!-- 📄 PAGINATION -->
-    <div class="pagination-controls" *ngIf="totalPages > 1">
-      <button mat-mini-fab (click)="previousPage()" [disabled]="currentPage === 0" aria-label="Page précédente">
-        <mat-icon>chevron_left</mat-icon>
-      </button>
-      <div class="page-info">
-        Page <strong>{{ currentPage + 1 }}</strong> sur <strong>{{ totalPages }}</strong>
-        ({{ paginatedOffres.length }} sur {{ offres.length }})
-      </div>
-      <button mat-mini-fab (click)="nextPage()" [disabled]="currentPage === totalPages - 1" aria-label="Page suivante">
-        <mat-icon>chevron_right</mat-icon>
-      </button>
     </div>
   </div>
+
+  <!-- EMPTY — filtre actif mais 0 résultats -->
+  <div *ngIf="!isLoading && getFilteredOffres().length === 0 && offres.length > 0" class="om-empty">
+    <mat-icon>filter_list_off</mat-icon>
+    <p>Aucune offre dans cette catégorie.</p>
+    <button class="om-empty-link" (click)="setFilter('all')">Voir toutes les offres</button>
+  </div>
+
+  <!-- EMPTY — aucune offre -->
+  <div *ngIf="!isLoading && offres.length === 0" class="om-empty">
+    <mat-icon>work_off</mat-icon>
+    <h3>Aucune offre publiée</h3>
+    <p>Publiez votre première offre pour commencer à recevoir des candidatures.</p>
+    <button class="om-publish-btn" style="margin-top:8px" (click)="openOffreEmploiForm()">
+      + Publier une offre
+    </button>
+  </div>
+
 </div>
 
-<!-- ✅ DIALOGUE CANDIDATURES CORRIGÉ -->
+<!-- DIALOG : liste des candidatures -->
 <ng-template #candidatesDialog>
-  <div class="candidates-dialog-header">
-    <h2 mat-dialog-title><mat-icon>people</mat-icon> Candidatures reçues</h2>
+  <div class="om-dialog-header">
+    <h2 mat-dialog-title>Candidatures reçues</h2>
     <button mat-icon-button mat-dialog-close><mat-icon>close</mat-icon></button>
   </div>
-  
-  <div mat-dialog-content class="candidates-dialog-content">
-    <!-- Loading -->
-    <div *ngIf="isLoadingCandidatures" class="loading-candidates">
-      <mat-progress-spinner diameter="40"></mat-progress-spinner>
-      <p>Chargement des candidatures...</p>
+
+  <div mat-dialog-content class="om-dialog-content">
+    <div *ngIf="isLoadingCandidatures" class="om-loading">
+      <mat-progress-spinner diameter="40" mode="indeterminate"></mat-progress-spinner>
+      <p>Chargement...</p>
     </div>
 
-    <!-- Candidatures -->
     <div *ngIf="!isLoadingCandidatures && selectedOffreCandidatures.length > 0">
-      <div class="candidates-header">
-        <p class="candidates-count-info">
-          {{ selectedOffreCandidatures.length }} candidature{{ selectedOffreCandidatures.length > 1 ? 's' : '' }} reçue{{ selectedOffreCandidatures.length > 1 ? 's' : '' }}
-        </p>
-      </div>
-      
+      <p class="om-cand-total">
+        {{ selectedOffreCandidatures.length }}
+        candidature{{ selectedOffreCandidatures.length > 1 ? 's' : '' }} reçue{{ selectedOffreCandidatures.length > 1 ? 's' : '' }}
+      </p>
+
       <div *ngFor="let candidature of selectedOffreCandidatures; let i = index">
-        <div class="candidate-item-enhanced">
-          <div class="candidate-avatar">
-            <div class="avatar-circle">
-              <span>{{ (candidature.freelanceNom || candidature.freelancePrenom || candidature.freelance?.nom || candidature.freelance?.prenom || 'C')[0].toUpperCase() }}</span>
-            </div>
+        <div class="om-cand-row">
+          <div class="om-cand-avatar">
+            {{ (candidature.freelanceNom || candidature.freelance?.nom || candidature.freelancePrenom || candidature.freelance?.prenom || 'C')[0].toUpperCase() }}
           </div>
-          
-          <div class="candidate-main-info">
-            <div class="candidate-header">
-              <span class="candidate-name">{{ (candidature.freelancePrenom || candidature.freelance?.prenom || '') + ' ' + (candidature.freelanceNom || candidature.freelance?.nom || '') || 'Nom non disponible' }}</span>
-            </div>
-            
-            <div class="candidate-details">
-              <div class="contact-details-row">
-                <div class="detail-item">
-                  <mat-icon>email</mat-icon>
-                  <span>{{ candidature.freelanceEmail || candidature.freelance?.email || 'Email non disponible' }}</span>
-                </div>
-                
-                <div class="detail-item">
-                  <mat-icon>phone</mat-icon>
-                  <span>{{ candidature['freelanceTelephone'] || candidature.telCandidat || 'non disponible' }}</span>
-                </div>
-              </div>
-              
-              <!-- <div class="detail-item" *ngIf="candidature.dateCandidature">
-                <mat-icon>schedule</mat-icon>
-                <span>{{ candidature.dateCandidature | date:'dd/MM/yyyy à HH:mm' }}</span>
-              </div>
-              
-              <div class="detail-item" *ngIf="candidature.tarifPropose">
-                <mat-icon>attach_money</mat-icon>
-                <span>{{ candidature.tarifPropose }} CFA</span>
-              </div> -->
-            </div>
+          <div class="om-cand-info">
+            <span class="om-cand-name">
+              {{ (candidature.freelancePrenom || candidature.freelance?.prenom || '') + ' ' + (candidature.freelanceNom || candidature.freelance?.nom || '') }}
+            </span>
+            <span class="om-cand-email">
+              {{ candidature.freelanceEmail || candidature.freelance?.email || 'Email non disponible' }}
+            </span>
           </div>
-          
-          <div class="candidate-actions-section">
-            <!-- Statut du candidat -->
-            <div class="candidate-status-container">
-              <span class="candidate-status" [ngClass]="candidature.status?.toLowerCase() || 'nouveau'">
-                {{ candidature.status || 'NOUVEAU' }}
-              </span>
-            </div>
-            
-            <!-- Actions avec icônes -->
-            <div class="candidate-actions-icons">
-              <button mat-mini-fab 
-                      (click)="viewCandidatureDetails(candidature)"
-                      title="Voir les détails complets"
-                      class="action-details-icon">
-                <mat-icon>visibility</mat-icon>
-              </button>
-              
-              <button mat-mini-fab 
-                      (click)="contactCandidate(candidature)"
-                      title="Contacter ce candidat"
-                      class="action-contact-icon"
-                      [disabled]="!(candidature.freelance?.email || candidature.freelanceEmail) || (candidature.freelance?.email === 'Email non disponible' || candidature.freelanceEmail === 'Email non disponible')">
-                <mat-icon>send</mat-icon>
-              </button>
-              
-              <button mat-mini-fab 
-                      *ngIf="candidature.status !== 'ACCEPTEE'"
-                      (click)="updateCandidatureStatus(candidature, 'ACCEPTEE')"
-                      title="Accepter cette candidature"
-                      class="action-accept-icon"
-                      [class.pulse]="candidature.status === 'NOUVEAU'">
-                <mat-icon>done</mat-icon>
-              </button>
-              
-              <button mat-mini-fab 
-                      *ngIf="candidature.status !== 'REFUSEE'"
-                      (click)="updateCandidatureStatus(candidature, 'REFUSEE')"
-                      title="Refuser cette candidature"
-                      class="action-refuse-icon">
-                <mat-icon>close</mat-icon>
-              </button>
-            </div>
+          <div class="om-cand-status">
+            <span class="om-badge" [ngClass]="'badge-' + (candidature.status || 'nouveau').toLowerCase()">
+              {{ candidature.status || 'NOUVEAU' }}
+            </span>
+          </div>
+          <div class="om-cand-actions">
+            <button mat-icon-button (click)="viewCandidatureDetails(candidature)" title="Voir le profil">
+              <mat-icon>visibility</mat-icon>
+            </button>
+            <button mat-icon-button (click)="contactCandidate(candidature)" title="Contacter"
+                    [disabled]="!(candidature.freelance?.email || candidature.freelanceEmail)">
+              <mat-icon>send</mat-icon>
+            </button>
+            <button mat-icon-button (click)="updateCandidatureStatus(candidature, 'ACCEPTEE')"
+                    *ngIf="candidature.status !== 'ACCEPTEE'" title="Accepter" class="om-accept-btn">
+              <mat-icon>check_circle</mat-icon>
+            </button>
+            <button mat-icon-button (click)="updateCandidatureStatus(candidature, 'REFUSEE')"
+                    *ngIf="candidature.status !== 'REFUSEE'" title="Refuser" class="om-refuse-btn">
+              <mat-icon>cancel</mat-icon>
+            </button>
           </div>
         </div>
-        
         <mat-divider *ngIf="i < selectedOffreCandidatures.length - 1"></mat-divider>
       </div>
     </div>
 
-    <!-- Aucune candidature -->
-    <div *ngIf="!isLoadingCandidatures && selectedOffreCandidatures.length === 0" class="no-candidates">
-      <div class="no-candidates-animation">
-        <mat-icon>person_off</mat-icon>
-      </div>
-      <h4>Aucune candidature</h4>
-      <p>Cette offre n'a pas encore reçu de candidatures.</p>
+    <div *ngIf="!isLoadingCandidatures && selectedOffreCandidatures.length === 0" class="om-empty">
+      <mat-icon>person_off</mat-icon>
+      <p>Aucune candidature pour cette offre.</p>
     </div>
   </div>
-  
-  <div mat-dialog-actions align="end" class="candidates-dialog-actions">
-    <button mat-button mat-dialog-close>
-      <mat-icon>close</mat-icon> Fermer
-    </button>
+
+  <div mat-dialog-actions align="end">
+    <button mat-button mat-dialog-close>Fermer</button>
   </div>
 </ng-template>
 
-<!-- 📝 FORMULAIRE OFFRE -->
-<app-offre-emplois 
-  *ngIf="showOffreEmploiForm" 
-  (closeModalEvent)="closeOffreEmploiForm()"
-  class="offre-creation-modal">
-</app-offre-emplois>
-
-<!-- ✅ MODAL DÉTAILS COMPLETS DU CANDIDAT -->
+<!-- MODAL : détails candidat -->
 <ng-template #candidateDetailsTemplate let-data>
-  <div class="candidate-details-header">
+  <div class="om-dialog-header">
     <h2 mat-dialog-title>
-      <mat-icon>person_pin</mat-icon> 
-      Détails complets - {{ (data?.freelancePrenom || data?.freelance?.prenom || '') + ' ' + (data?.freelanceNom || data?.freelance?.nom || '') || 'Nom non disponible' }}
+      {{ (data?.freelancePrenom || data?.freelance?.prenom || '') + ' ' + (data?.freelanceNom || data?.freelance?.nom || '') || 'Candidat' }}
     </h2>
     <button mat-icon-button mat-dialog-close><mat-icon>close</mat-icon></button>
   </div>
-  
-  <div mat-dialog-content class="candidate-details-content">
-    
-    <!-- PROFIL CANDIDAT -->
+
+  <div mat-dialog-content class="om-dialog-content">
+
     <mat-card class="info-section profile-section">
       <mat-card-header>
         <mat-icon mat-card-avatar>account_circle</mat-icon>
         <mat-card-title>Profil du candidat</mat-card-title>
       </mat-card-header>
       <mat-card-content>
-        <div class="profile-info">
-          <div class="profile-main">
-            <h3 class="candidate-name">
-              {{ (data?.freelancePrenom || data?.freelance?.prenom || '') + ' ' + (data?.freelanceNom || data?.freelance?.nom || '') || 'Nom non disponible' }}
-            </h3>
-            <div class="profile-contacts">
-              <div class="contact-item">
-                <mat-icon>email</mat-icon>
-                <span>{{ data?.freelanceEmail || data?.freelance?.email || 'Email non disponible' }}</span>
-              </div>
-              <div class="contact-item">
-                <mat-icon>phone</mat-icon>
-                <span>{{ data?.['freelanceTelephone'] || data?.telCandidat || data?.freelance?.telephone || 'non disponible' }}</span>
-              </div>
-              <div class="contact-item" *ngIf="data?.freelanceAdresse || data?.freelance?.adresse">
-                <mat-icon>location_on</mat-icon>
-                <span>{{ data?.freelanceAdresse || data?.freelance?.adresse }}</span>
-              </div>
-            </div>
+        <h3 class="candidate-name">
+          {{ (data?.freelancePrenom || data?.freelance?.prenom || '') + ' ' + (data?.freelanceNom || data?.freelance?.nom || '') || 'Nom non disponible' }}
+        </h3>
+        <div class="profile-contacts">
+          <div class="contact-item">
+            <mat-icon>email</mat-icon>
+            <span>{{ data?.freelanceEmail || data?.freelance?.email || 'Email non disponible' }}</span>
+          </div>
+          <div class="contact-item">
+            <mat-icon>phone</mat-icon>
+            <span>{{ data?.['freelanceTelephone'] || data?.telCandidat || data?.freelance?.telephone || 'Non disponible' }}</span>
+          </div>
+          <div class="contact-item" *ngIf="data?.freelanceAdresse || data?.freelance?.adresse">
+            <mat-icon>location_on</mat-icon>
+            <span>{{ data?.freelanceAdresse || data?.freelance?.adresse }}</span>
           </div>
         </div>
       </mat-card-content>
     </mat-card>
 
-    <!-- COMPÉTENCES -->
     <mat-card class="info-section" *ngIf="data?.['freelanceCompetences']">
       <mat-card-header>
         <mat-icon mat-card-avatar>psychology</mat-icon>
         <mat-card-title>Compétences</mat-card-title>
       </mat-card-header>
       <mat-card-content>
-        <div class="competences-text">
-          <p>{{ data?.['freelanceCompetences'] }}</p>
-        </div>
+        <p>{{ data?.['freelanceCompetences'] }}</p>
       </mat-card-content>
     </mat-card>
 
-    <!-- PORTFOLIO DU FREELANCE - SECTION COLLAPSIBLE -->
     <mat-card class="info-section portfolio-section" *ngIf="getFreelanceId(data)">
       <mat-card-header class="portfolio-header-clickable" (click)="togglePortfolio()">
         <mat-icon mat-card-avatar>collections</mat-icon>
         <mat-card-title>Portfolio & Réalisations</mat-card-title>
-        <div class="header-actions">
-
-          
-          <mat-icon class="expand-icon" [class.expanded]="isPortfolioExpanded">
-            {{ isPortfolioExpanded ? 'expand_less' : 'expand_more' }}
-          </mat-icon>
-        </div>
+        <mat-icon class="expand-icon" [class.expanded]="isPortfolioExpanded">
+          {{ isPortfolioExpanded ? 'expand_less' : 'expand_more' }}
+        </mat-icon>
       </mat-card-header>
-      
       <div class="portfolio-collapsible" [class.expanded]="isPortfolioExpanded">
-        <mat-card-content class="portfolio-content">
-          <app-portfolio 
-            [freelanceId]="getFreelanceId(data)" 
-            [clientMode]="true">
-          </app-portfolio>
+        <mat-card-content>
+          <app-portfolio [freelanceId]="getFreelanceId(data)" [clientMode]="true"></app-portfolio>
         </mat-card-content>
       </div>
     </mat-card>
 
-    <!-- EXPÉRIENCE -->
-    <mat-card class="info-section" *ngIf="data?.['freelanceExperience']">
-      <mat-card-header>
-        <mat-icon mat-card-avatar>work_history</mat-icon>
-        <mat-card-title>Expérience professionnelle</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="experience-text">
-          <p>{{ data?.['freelanceExperience'] }}</p>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <!-- INFORMATIONS PROFESSIONNELLES -->
-    <mat-card class="info-section" *ngIf="data?.freelance?.specialite || data?.freelance?.experience">
-      <mat-card-header>
-        <mat-icon mat-card-avatar>work</mat-icon>
-        <mat-card-title>Autres informations professionnelles</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="info-grid" *ngIf="data?.freelance?.specialite">
-          <div class="info-item">
-            <label>Spécialité :</label>
-            <span>{{ data?.freelance?.specialite }}</span>
-          </div>
-        </div>
-        <div *ngIf="data?.freelance?.experience">
-          <label>Expérience :</label>
-          <p>{{ data?.freelance?.experience }}</p>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <!-- DÉTAILS DE LA CANDIDATURE - VERSION COMPACTE -->
     <mat-card class="info-section candidature-details-compact">
       <mat-card-header>
         <mat-icon mat-card-avatar>assignment</mat-icon>
         <mat-card-title>Détails de la candidature</mat-card-title>
       </mat-card-header>
       <mat-card-content>
-        <!-- Informations sous forme de badges compacts -->
         <div class="candidature-badges">
-          <div class="badge-item status-item">
+          <div class="badge-item">
             <mat-icon>info</mat-icon>
-            <span class="status-badge" [ngClass]="data?.status?.toLowerCase()">
-              {{ data?.status }}
+            <span class="om-badge" [ngClass]="'badge-' + (data?.status || 'nouveau').toLowerCase()">
+              {{ data?.status || 'NOUVEAU' }}
             </span>
           </div>
-
-          <div class="badge-item date-item">
+          <div class="badge-item">
             <mat-icon>schedule</mat-icon>
-            <div class="badge-content">
-              <span class="badge-label">Candidature</span>
-              <span class="badge-value">{{ data?.dateCandidature | date:'dd/MM/yyyy' }}</span>
-            </div>
+            <span>{{ data?.dateCandidature | date:'dd/MM/yyyy' }}</span>
           </div>
-
-          <div class="badge-item tarif-item" *ngIf="data?.tarifPropose">
+          <div class="badge-item" *ngIf="data?.tarifPropose">
             <mat-icon>payments</mat-icon>
-            <div class="badge-content">
-              <span class="badge-label">Tarif proposé</span>
-              <span class="badge-value">{{ data?.tarifPropose | number:'1.0-0' }} CFA</span>
-            </div>
+            <span>{{ data?.tarifPropose | number:'1.0-0' }} CFA</span>
           </div>
-
-          <div class="badge-item disponibilite-item" *ngIf="data?.disponibilite">
+          <div class="badge-item" *ngIf="data?.disponibilite">
             <mat-icon>calendar_today</mat-icon>
-            <div class="badge-content">
-              <span class="badge-label">Disponible le</span>
-              <span class="badge-value">{{ data?.disponibilite | date:'dd/MM/yyyy' }}</span>
-            </div>
+            <span>Dispo : {{ data?.disponibilite | date:'dd/MM/yyyy' }}</span>
           </div>
         </div>
-        
-        <!-- Message du candidat - format original -->
         <div class="message-section" *ngIf="data?.message">
-          <label>Message du candidat :</label>
+          <label>Message :</label>
           <p class="candidate-message">{{ data?.message }}</p>
         </div>
       </mat-card-content>
     </mat-card>
 
   </div>
-  
+
   <div mat-dialog-actions align="end" class="details-dialog-actions">
-    <button mat-stroked-button mat-dialog-close class="btn-close">
-      <mat-icon>close</mat-icon> 
-      <span>Fermer</span>
+    <button mat-stroked-button mat-dialog-close>Fermer</button>
+    <button mat-flat-button color="primary" (click)="contactCandidate(data)">
+      <mat-icon>send</mat-icon> Envoyer un message
     </button>
-    <button mat-flat-button color="primary" (click)="contactCandidate(data)" class="btn-contact">
-      <mat-icon>send</mat-icon> 
-      <span>Envoyer un message</span>
-    </button>
-    <button mat-mini-fab color="accent" (click)="updateCandidatureStatus(data, 'ACCEPTEE')" 
-            *ngIf="data?.status !== 'ACCEPTEE'" 
-            class="btn-accept-fab" 
-            title="Accepter cette candidature">
+    <button mat-mini-fab color="accent" (click)="updateCandidatureStatus(data, 'ACCEPTEE')"
+            *ngIf="data?.status !== 'ACCEPTEE'" title="Accepter">
       <mat-icon>done</mat-icon>
     </button>
   </div>
 </ng-template>
 
-<!-- 🔄 OVERLAY DE CHARGEMENT -->
-<div class="global-loading-overlay" *ngIf="isLoading">
-  <div class="loading-content">
-    <mat-progress-spinner mode="indeterminate" diameter="60" color="primary"></mat-progress-spinner>
-    <p>Chargement de vos offres...</p>
-  </div>
-</div>
+<!-- FORMULAIRE création offre -->
+<app-offre-emplois
+  *ngIf="showOffreEmploiForm"
+  (closeModalEvent)="closeOffreEmploiForm()"
+  class="offre-creation-modal">
+</app-offre-emplois>

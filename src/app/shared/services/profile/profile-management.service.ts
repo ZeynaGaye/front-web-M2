@@ -92,11 +92,12 @@ export class ProfileManagementService {
     
     return this.http.put<UserProfile>(`${this.apiUrl}${endpoint}`, profileData).pipe(
       tap(updatedProfile => {
-        this.profileUpdated$.next(updatedProfile);
-        // Mettre à jour les données dans AuthService
-        this.authService.setCurrentUser(updatedProfile);
-        
-        // Synchroniser avec Keycloak si nécessaire (nom, prénom, email)
+        // Préserver la photo si le backend ne la renvoie pas dans la réponse PUT
+        const currentPhoto = this.authService.getCurrentUser()?.photoProfile;
+        const merged = { ...updatedProfile, photoProfile: updatedProfile.photoProfile ?? currentPhoto };
+        this.profileUpdated$.next(merged);
+        this.authService.setCurrentUser(merged);
+
         if (profileData.nom || profileData.prenom || profileData.email) {
           this.syncWithKeycloak(profileData).subscribe();
         }
@@ -297,7 +298,7 @@ export class ProfileManagementService {
   }
 
   private handleError = (error: any): Observable<never> => {
-    console.error(' Erreur ProfileManagementService:', error);
+    console.error('Erreur ProfileManagementService [status=%d]:', error.status, error.error || error.message);
     let errorMessage = 'Une erreur est survenue';
     
     if (error.error?.message) {
@@ -324,7 +325,9 @@ export class ProfileManagementService {
       }
     }
     
-    return throwError(() => new Error(errorMessage));
+    const err: any = new Error(errorMessage);
+    err.status = error.status;
+    return throwError(() => err);
   };
 
   //  Méthodes de validation côté client

@@ -1,2527 +1,474 @@
+/* =============================================
+   OFFRES MANAGER — design carte horizontale
+============================================= */
 
+$coral:   #D4735A;
+$coral-bg:#FDE8E3;
+$slate:   #A4B1BD;
+$slate-dk:#7E8F9A;
+$dark:    #111111;
+$bg:      #F4F4F5;
+$white:   #FFFFFF;
+$text:    #111111;
+$muted:   #6B7280;
+$border:  #E5E7EB;
+$green:   #16A34A;
+$green-bg:#DCFCE7;
+$amber:   #D97706;
+$amber-bg:#FEF3C7;
+$red:     #DC2626;
+$red-bg:  #FEE2E2;
+$blue:    #2563EB;
+$blue-bg: #DBEAFE;
 
-
-
-
-
-
-
-
-
-
-/* ===============================================
-   💼 OFFRES MANAGER - DESIGN MODERNE CORRIGÉ
-=============================================== */
-
-@use 'sass:color';
-
-// Variables de couleurs
-$primary-color: #f5a393;
-$secondary-color: #A4B1BD;
-$white: #ffffff;
-$text-dark: #333333;
-$text-light: #666666;
-$bg-light: #f8fafc;
-$border-light: #e8e8e8;
-$shadow-light: rgba(0, 0, 0, 0.08);
-$shadow-medium: rgba(0, 0, 0, 0.12);
-$shadow-strong: rgba(0, 0, 0, 0.15);
-
-// Gradients corrigés avec la nouvelle syntaxe
-$gradient-primary: linear-gradient(135deg, $primary-color 0%, color.adjust($primary-color, $lightness: 10%) 100%);
-$gradient-secondary: linear-gradient(135deg, $secondary-color 0%, color.adjust($secondary-color, $lightness: 10%) 100%);
-$gradient-card: linear-gradient(135deg, $secondary-color 0%, $primary-color 100%);
-
-/* ===============================================
-   🚀 CONTAINER PRINCIPAL SIMPLIFIÉ
-=============================================== */
-.offres-manager-container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 20px;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #fafafa 0%, #f0f0f0 100%);
-
-  @media (max-width: 768px) {
-    padding: 15px;
-  }
-
-  @media (max-width: 480px) {
-    padding: 10px;
-  }
+// ── Page ──────────────────────────────────
+.om-container {
+  padding: 32px 40px;
+  background: $bg;
+  min-height: 100%;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  box-sizing: border-box;
 }
 
-/* ===============================================
-   📋 HEADER MODERNISÉ
-=============================================== */
-.header {
-  background: rgba($white, 0.95);
-  backdrop-filter: blur(15px);
-  border-radius: 20px;
-  padding: 2rem;
-  margin-bottom: 2rem;
-  box-shadow: 0 8px 30px $shadow-light;
-  border: 1px solid rgba($border-light, 0.5);
+// ── Header ────────────────────────────────
+.om-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  position: relative;
-  overflow: hidden;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  gap: 16px;
+}
 
-  // Effet décoratif
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: $gradient-primary;
-  }
+.om-header__title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: $dark;
+  margin: 0 0 4px;
+  letter-spacing: -0.3px;
+}
 
-  h1 {
-    margin: 0;
-    font-weight: 700;
-    font-size: 2.2rem;
-    background: $gradient-card;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    display: flex;
-    align-items: center;
-    gap: 15px;
+.om-header__sub {
+  margin: 0;
+  color: $muted;
+  font-size: 0.875rem;
+}
 
-    &::before {
-      content: '💼';
-      font-size: 2rem;
-      background: none;
-      -webkit-text-fill-color: initial;
-    }
+.om-publish-btn {
+  background: $slate;
+  color: $white;
+  border: none;
+  border-radius: 999px;
+  padding: 11px 24px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+  flex-shrink: 0;
 
-    @media (max-width: 768px) {
-      font-size: 1.8rem;
-    }
+  &:hover { background: $slate-dk; }
+}
 
-    @media (max-width: 480px) {
-      font-size: 1.5rem;
-      flex-direction: column;
-      gap: 8px;
-    }
-  }
+// ── Filter tabs ───────────────────────────
+.om-filters { margin-bottom: 20px; }
 
-  button {
-    background: $gradient-secondary;
-    color: $white;
-    border: none;
-    padding: 14px 28px;
-    border-radius: 25px;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+.om-tabs {
+  display: flex;
+  gap: 2px;
+  background: $white;
+  border-radius: 12px;
+  padding: 4px;
+  width: fit-content;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+  border: 1px solid $border;
+}
+
+.om-tab {
+  border: none;
+  background: transparent;
+  border-radius: 9px;
+  padding: 7px 16px;
+  font-size: 0.83rem;
+  font-weight: 500;
+  color: $muted;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.15s, color 0.15s;
+
+  .tab-count {
+    background: $border;
+    color: $muted;
+    border-radius: 999px;
+    padding: 1px 7px;
+    font-size: 0.72rem;
     font-weight: 600;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    box-shadow: 0 6px 20px rgba($secondary-color, 0.3);
-    position: relative;
-    overflow: hidden;
-
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba($white, 0.3), transparent);
-      transition: left 0.5s;
-    }
-
-    &:hover {
-      transform: translateY(-3px) scale(1.02);
-      box-shadow: 0 10px 30px rgba($secondary-color, 0.4);
-
-      &::before {
-        left: 100%;
-      }
-    }
-
-    &:active {
-      transform: translateY(-1px);
-    }
-
-    @media (max-width: 480px) {
-      padding: 12px 20px;
-      font-size: 0.9rem;
-    }
-  }
-
-  @media (max-width: 768px) {
-    flex-direction: column;
-    gap: 20px;
+    min-width: 18px;
     text-align: center;
-    padding: 1.5rem;
-  }
-}
-
-/* ===============================================
-   🎠 CAROUSEL DE BANNIÈRES AMÉLIORÉ
-=============================================== */
-.banner-carousel {
-  margin-bottom: 2.5rem;
-
-  .carousel-container {
-    position: relative;
-    width: 100%;
-    height: 280px;
-    overflow: hidden;
-    border-radius: 20px;
-    box-shadow: 0 15px 40px $shadow-medium;
-    border: 3px solid $white;
-
-    @media (max-width: 768px) {
-      height: 220px;
-      border-radius: 15px;
-    }
-
-    @media (max-width: 480px) {
-      height: 180px;
-      border-radius: 12px;
-    }
-
-    .banner-image {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-
-      &:hover {
-        transform: scale(1.05);
-      }
-    }
-
-    .carousel-indicators {
-      position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 8px;
-      z-index: 3;
-
-      @media (max-width: 480px) {
-        bottom: 15px;
-        gap: 6px;
-      }
-
-      .indicator-dot {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        border: 2px solid rgba($white, 0.7);
-        background: transparent;
-        cursor: pointer;
-        transition: all 0.3s ease;
-
-        &.active {
-          background: $white;
-          transform: scale(1.2);
-          box-shadow: 0 0 10px rgba($white, 0.5);
-        }
-
-        &:hover:not(.active) {
-          background: rgba($white, 0.5);
-          transform: scale(1.1);
-        }
-
-        @media (max-width: 480px) {
-          width: 10px;
-          height: 10px;
-        }
-      }
-    }
-
-    .carousel-controls {
-      position: absolute;
-      bottom: 20px;
-      right: 20px;
-      display: flex;
-      gap: 12px;
-
-      @media (max-width: 480px) {
-        bottom: 15px;
-        right: 15px;
-        gap: 8px;
-      }
-
-      button {
-        background: rgba($white, 0.9);
-        backdrop-filter: blur(10px);
-        color: $secondary-color;
-        border: 2px solid rgba($white, 0.5);
-        width: 45px;
-        height: 45px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-
-        @media (max-width: 480px) {
-          width: 38px;
-          height: 38px;
-        }
-
-        mat-icon {
-          font-size: 22px;
-          font-weight: bold;
-
-          @media (max-width: 480px) {
-            font-size: 18px;
-          }
-        }
-
-        &:hover {
-          background: $white;
-          color: $primary-color;
-          transform: translateY(-2px) scale(1.05);
-          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-        }
-      }
-    }
-  }
-}
-
-/* ===============================================
-   📊 CONTAINER TABLE AMÉLIORÉ
-=============================================== */
-.table-container {
-  background: rgba($white, 0.7);
-  backdrop-filter: blur(15px);
-  border-radius: 20px;
-  padding: 2rem;
-  box-shadow: 0 8px 30px $shadow-light;
-  border: 1px solid rgba($border-light, 0.5);
-
-  @media (max-width: 768px) {
-    padding: 1.5rem;
-    border-radius: 15px;
+    transition: background 0.15s, color 0.15s;
   }
 
-  @media (max-width: 480px) {
-    padding: 1rem;
-    border-radius: 12px;
-  }
-}
+  &.active {
+    background: $dark;
+    color: $white;
 
-/* ===============================================
-   📈 BARRE DE PROGRESSION
-=============================================== */
-.loading-bar {
-  border-radius: 10px;
-  margin-bottom: 1.5rem;
-  height: 6px;
-
-  ::ng-deep .mat-progress-bar-fill::after {
-    background: $gradient-primary;
-  }
-
-  ::ng-deep .mat-progress-bar-buffer {
-    background: rgba($primary-color, 0.1);
-  }
-}
-
-/* ===============================================
-   📊 STATISTIQUES RAPIDES
-=============================================== */
-.stats-overview {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2.5rem;
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-
-  .stat-card {
-    background: rgba($white, 0.9);
-    backdrop-filter: blur(15px);
-    border-radius: 15px;
-    padding: 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    box-shadow: 0 4px 15px $shadow-light;
-    border: 1px solid rgba($border-light, 0.5);
-    transition: all 0.3s ease;
-
-    &:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 25px $shadow-medium;
-    }
-
-    .stat-icon {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: $gradient-secondary;
+    .tab-count {
+      background: rgba(255,255,255,.2);
       color: $white;
-      box-shadow: 0 4px 15px rgba($secondary-color, 0.3);
-
-      &.active {
-        background: linear-gradient(135deg, #52c41a, #73d13d);
-        box-shadow: 0 4px 15px rgba(#52c41a, 0.3);
-      }
-
-      &.candidates {
-        background: $gradient-primary;
-        box-shadow: 0 4px 15px rgba($primary-color, 0.3);
-      }
-
-      mat-icon {
-        font-size: 24px;
-      }
-    }
-
-    .stat-content {
-      flex: 1;
-
-      .stat-number {
-        display: block;
-        font-size: 1.8rem;
-        font-weight: 700;
-        color: $text-dark;
-        line-height: 1;
-      }
-
-      .stat-label {
-        display: block;
-        font-size: 0.875rem;
-        color: $text-light;
-        margin-top: 0.25rem;
-        font-weight: 500;
-      }
     }
   }
+
+  &:hover:not(.active) { background: $bg; color: $text; }
 }
 
-/* ===============================================
-   🃏 GRILLE DES OFFRES D'EMPLOI
-=============================================== */
-.job-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2.5rem;
-  max-width: 1200px; // Limiter la largeur totale
-  margin-left: auto;
-  margin-right: auto;
-
-  @media (min-width: 1400px) {
-    grid-template-columns: repeat(3, 1fr); // Max 3 colonnes sur très grands écrans
-  }
-
-  @media (max-width: 992px) {
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1.2rem;
-  }
-
-  @media (max-width: 768px) {
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1.25rem;
-  }
-
-  @media (max-width: 480px) {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
+// ── Cards list ───────────────────────────
+.om-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-/* ===============================================
-   💼 CARTES D'EMPLOI MODERNISÉES
-=============================================== */
-.job-card {
-  background: rgba($white, 0.95);
-  backdrop-filter: blur(15px);
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 0 8px 25px $shadow-light;
-  border: 1px solid rgba($border-light, 0.5);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, rgba($primary-color, 0.05) 0%, transparent 100%);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
+// ── Card ─────────────────────────────────
+.om-card {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  background: $white;
+  border-radius: 16px;
+  padding: 18px 22px;
+  border: 1px solid $border;
+  box-shadow: 0 1px 3px rgba(0,0,0,.04);
+  transition: box-shadow 0.15s, transform 0.12s;
 
   &:hover {
-    transform: translateY(-8px) scale(1.02);
-    box-shadow: 0 20px 40px $shadow-medium;
-
-    &::before {
-      opacity: 1;
-    }
-
-    .job-card-header {
-      background: $gradient-card;
-    }
-  }
-
-  // Animation d'apparition
-  animation: slideInUp 0.6s ease-out;
-
-  @for $i from 1 through 6 {
-    &:nth-child(#{$i}) {
-      animation-delay: #{$i * 0.1}s;
-    }
-  }
-
-  @media (max-width: 480px) {
-    border-radius: 15px;
+    box-shadow: 0 4px 14px rgba(0,0,0,.09);
+    transform: translateY(-1px);
   }
 }
 
-/* ===============================================
-   📋 HEADER DE CARTE
-=============================================== */
-.job-card-header {
-  background: $gradient-secondary;
-  color: $white;
-  padding: 1.5rem;
+// Icône à gauche
+.om-card__icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: $coral-bg;
   display: flex;
   align-items: center;
-  transition: background 0.3s ease;
-  position: relative;
-  overflow: hidden;
-
-  &::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: -50px;
-    width: 100px;
-    height: 100%;
-    background: linear-gradient(45deg, transparent, rgba($white, 0.1), transparent);
-    transform: skewX(-15deg);
-  }
-
-  .job-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba($white, 0.2);
-    backdrop-filter: blur(10px);
-    border: 2px solid rgba($white, 0.3);
-    border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    margin-right: 1rem;
-    transition: all 0.3s ease;
-
-    mat-icon {
-      font-size: 24px;
-      font-weight: bold;
-    }
-  }
-
-  .job-title {
-    margin: 0;
-    font-size: 1.25rem;
-    font-weight: 600;
-    line-height: 1.3;
-    flex: 1;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-
-    @media (max-width: 480px) {
-      font-size: 1.1rem;
-    }
-  }
-
-  @media (max-width: 480px) {
-    padding: 1.25rem;
-  }
-}
-
-/* ===============================================
-   📊 CONTAINER INFO EMPLOI
-=============================================== */
-.job-info-container {
-  padding: 1.5rem;
-
-  @media (max-width: 480px) {
-    padding: 1.25rem;
-  }
-
-  .job-info-item {
-    margin-bottom: 1rem;
-    padding: 0.75rem;
-    background: rgba($primary-color, 0.05);
-    border-radius: 10px;
-    border-left: 3px solid $primary-color;
-    transition: all 0.3s ease;
-
-    &:hover {
-      background: rgba($primary-color, 0.08);
-      transform: translateX(3px);
-    }
-
-    &:last-child {
-      margin-bottom: 0;
-    }
-
-    .info-label {
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      color: $text-light;
-      margin-bottom: 0.25rem;
-      letter-spacing: 0.5px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-
-      mat-icon {
-        font-size: 16px;
-        color: $primary-color;
-      }
-    }
-
-    .info-value {
-      font-weight: 600;
-      font-size: 0.95rem;
-      color: $text-dark;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-
-      &.expired {
-        color: #ff4d4f;
-        font-weight: 700;
-      }
-    }
-  }
-
-  // Styles spécifiques pour les informations du salon
-  .salon-info {
-    background: rgba($primary-color, 0.08);
-    border-left-color: $primary-color;
-
-    .salon-details {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-
-      .salon-name {
-        font-weight: 700;
-        color: $text-dark;
-        font-size: 0.95rem;
-      }
-
-      .salon-address {
-        font-size: 0.8rem;
-        color: $text-light;
-        font-weight: 500;
-        font-style: italic;
-      }
-    }
-  }
-
-  // Styles pour les candidatures
-  .candidates-info {
-    background: rgba($secondary-color, 0.08);
-    border-left-color: $secondary-color;
-
-    .candidates-count {
-      background: $secondary-color;
-      color: $white;
-      padding: 0.2rem 0.5rem;
-      border-radius: 12px;
-      font-size: 0.8rem;
-      font-weight: 700;
-      min-width: 20px;
-      text-align: center;
-    }
-
-    .candidates-label {
-      font-size: 0.85rem;
-      color: $text-light;
-    }
-  }
-}
-
-/* ===============================================
-   ⚡ ACTIONS DE CARTE
-=============================================== */
-.job-actions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 1.5rem;
-  border-top: 1px solid rgba($border-light, 0.6);
-  background: rgba($white, 0.5);
-
-  @media (max-width: 480px) {
-    padding: 1rem 1.25rem;
-  }
-
-  .status-section {
-    flex: 1;
-  }
-
-  .action-buttons {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-  }
-
-  .action-button {
-    background: rgba($secondary-color, 0.1);
-    color: $secondary-color;
-    border: 2px solid rgba($secondary-color, 0.2);
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-
-    &:hover {
-      background: $secondary-color;
-      color: $white;
-      transform: scale(1.1);
-      box-shadow: 0 4px 15px rgba($secondary-color, 0.3);
-    }
-  }
-
-  .candidates-button {
-    position: relative;
-    background: rgba($primary-color, 0.1);
-    color: $primary-color;
-    border: 2px solid rgba($primary-color, 0.2);
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-
-    &:hover {
-      background: $primary-color;
-      color: $white;
-      transform: scale(1.1);
-      box-shadow: 0 4px 15px rgba($primary-color, 0.3);
-    }
-
-    .candidates-count {
-      position: absolute;
-      top: -3px;
-      right: -3px;
-      background: #ff4d4f;
-      color: $white;
-      border-radius: 50%;
-      width: 20px;
-      height: 20px;
-      font-size: 0.7rem;
-      font-weight: bold;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 2px 8px rgba(#ff4d4f, 0.4);
-      animation: pulse 2s infinite;
-    }
-  }
-}
-
-/* ===============================================
-   🏷️ BADGES DE STATUT
-=============================================== */
-.status-badge {
-  padding: 0.375rem 0.75rem;
-  border-radius: 15px;
-  font-weight: 600;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-
-  &.active, &.ouvert {
-    background: linear-gradient(135deg, #52c41a, #73d13d);
-    color: $white;
-    box-shadow: 0 2px 8px rgba(#52c41a, 0.3);
-
-    &::before {
-      content: '●';
-      color: $white;
-    }
-  }
-
-  &.fermée, &.fermé {
-    background: linear-gradient(135deg, #faad14, #ffc53d);
-    color: $white;
-    box-shadow: 0 2px 8px rgba(#faad14, 0.3);
-
-    &::before {
-      content: '⏸';
-      color: $white;
-    }
-  }
-
-  &.archivée {
-    background: linear-gradient(135deg, #d9d9d9, #f0f0f0);
-    color: rgba(0, 0, 0, 0.65);
-    box-shadow: 0 2px 8px rgba(#d9d9d9, 0.3);
-
-    &::before {
-      content: '📦';
-    }
-  }
-}
-
-.expired-badge {
-  background: linear-gradient(135deg, #ff4d4f, #ff7875);
-  color: $white;
-  padding: 0.25rem 0.5rem;
-  border-radius: 10px;
-  font-size: 0.7rem;
-  font-weight: bold;
-  margin-left: 0.5rem;
-  box-shadow: 0 2px 8px rgba(#ff4d4f, 0.3);
-  animation: blink 1.5s infinite;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
+  justify-content: center;
+  flex-shrink: 0;
 
   mat-icon {
-    font-size: 0.8rem;
+    color: $coral;
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
   }
 }
 
-/* ===============================================
-   📝 MENU D'ACTIONS
-=============================================== */
-.job-actions-menu {
-  ::ng-deep .mat-menu-panel {
-    border-radius: 12px;
-    box-shadow: 0 8px 25px $shadow-medium;
-    border: 1px solid rgba($border-light, 0.5);
-    backdrop-filter: blur(15px);
-  }
-
-  .delete-action {
-    color: #ff4d4f;
-
-    mat-icon {
-      color: #ff4d4f;
-    }
-
-    &:hover {
-      background: rgba(#ff4d4f, 0.1);
-    }
-  }
-}
-
-/* ===============================================
-   📄 PAGINATION STYLÉE
-=============================================== */
-.pagination-controls {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 2rem;
-  gap: 1.5rem;
-  padding: 1rem;
-  background: rgba($white, 0.7);
-  backdrop-filter: blur(10px);
-  border-radius: 15px;
-  border: 1px solid rgba($border-light, 0.5);
-
-  @media (max-width: 480px) {
-    gap: 1rem;
-    padding: 0.75rem;
-  }
-
-  .pagination-btn {
-    background: $gradient-secondary;
-    color: $white;
-    border: 2px solid rgba($white, 0.2);
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba($secondary-color, 0.3);
-
-    @media (max-width: 480px) {
-      width: 40px;
-      height: 40px;
-    }
-
-    &:hover:not(:disabled) {
-      background: $gradient-primary;
-      transform: translateY(-2px) scale(1.05);
-      box-shadow: 0 6px 20px rgba($secondary-color, 0.4);
-    }
-
-    &:disabled {
-      background: #d9d9d9;
-      color: #aaa;
-      border-color: transparent;
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
-    }
-
-    mat-icon {
-      font-size: 20px;
-    }
-  }
-
-  .page-info {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.25rem;
-
-    .page-indicator {
-      font-size: 1rem;
-      font-weight: 600;
-      color: $text-dark;
-
-      strong {
-        color: $primary-color;
-      }
-    }
-
-    .items-info {
-      font-size: 0.8rem;
-      color: $text-light;
-    }
-
-    @media (max-width: 480px) {
-      .page-indicator {
-        font-size: 0.9rem;
-      }
-
-      .items-info {
-        font-size: 0.75rem;
-      }
-    }
-  }
-}
-
-/* ===============================================
-   📭 ÉTAT VIDE AMÉLIORÉ
-=============================================== */
-.no-data {
-  text-align: center;
-  padding: 4rem 2rem;
-  background: rgba($white, 0.8);
-  border-radius: 20px;
-  border: 2px dashed rgba($primary-color, 0.3);
-
-  .no-data-animation {
-    margin-bottom: 1.5rem;
-
-    mat-icon {
-      font-size: 5rem !important;
-      width: 5rem !important;
-      height: 5rem !important;
-      color: $secondary-color;
-      animation: bounce 2s ease-in-out infinite;
-    }
-  }
-
-  h3 {
-    font-size: 1.5rem;
-    margin: 0 0 1rem 0;
-    color: $text-dark;
-    font-weight: 600;
-  }
-
-  p {
-    margin-bottom: 1.5rem;
-    color: $text-light;
-    font-size: 1.1rem;
-    line-height: 1.5;
-  }
-
-  .cta-button {
-    background: $gradient-primary;
-    color: $white;
-    border: none;
-    padding: 1rem 2rem;
-    border-radius: 25px;
-    font-weight: 600;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 6px 20px rgba($primary-color, 0.3);
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin: 1.5rem auto 0;
-
-    mat-icon {
-      font-size: 1.2rem !important;
-      width: auto !important;
-      height: auto !important;
-      animation: none !important;
-    }
-
-    &:hover {
-      transform: translateY(-3px) scale(1.02);
-      box-shadow: 0 10px 30px rgba($primary-color, 0.4);
-    }
-  }
-
-  @media (max-width: 480px) {
-    padding: 3rem 1.5rem;
-
-    p {
-      font-size: 1rem;
-    }
-
-    .cta-button {
-      padding: 0.875rem 1.5rem;
-      font-size: 0.9rem;
-    }
-  }
-}
-
-/* ===============================================
-   💬 DIALOGUE DES CANDIDATURES AMÉLIORÉ
-=============================================== */
-.candidates-dialog-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.5rem;
-  border-bottom: 1px solid rgba($border-light, 0.5);
-  background: $gradient-secondary;
-  color: $white;
-
-  h2 {
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-
-    mat-icon {
-      font-size: 1.5rem;
-    }
-  }
-
-  .close-dialog-btn {
-    color: $white;
-    background: rgba($white, 0.2);
-    border: 1px solid rgba($white, 0.3);
-
-    &:hover {
-      background: rgba($white, 0.3);
-    }
-  }
-}
-
-.candidates-dialog-content {
-  padding: 0;
-
-  .candidates-header {
-    padding: 1rem 1.5rem;
-    background: rgba($primary-color, 0.05);
-    border-bottom: 1px solid rgba($border-light, 0.5);
-
-    .candidates-count-info {
-      font-weight: 600;
-      color: $text-dark;
-      font-size: 0.95rem;
-    }
-  }
-
-  .candidate-item {
-    padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid rgba($border-light, 0.3);
-    display: flex;
-    align-items: center;
-    transition: all 0.3s ease;
-    cursor: pointer;
-
-    &:hover {
-      background: rgba($primary-color, 0.05);
-      transform: translateX(5px);
-      box-shadow: 0 4px 15px $shadow-light;
-    }
-
-    &:last-child {
-      border-bottom: none;
-    }
-
-    .candidate-avatar {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      width: 45px;
-      height: 45px;
-      background: $gradient-secondary;
-      border-radius: 50%;
-      margin-right: 1rem;
-      box-shadow: 0 4px 15px rgba($secondary-color, 0.3);
-
-      mat-icon {
-        color: $white;
-        font-size: 22px;
-      }
-    }
-
-    .candidate-info {
-      flex: 1;
-
-      .candidate-name {
-        margin: 0 0 0.5rem 0;
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: $text-dark;
-      }
-
-      .candidate-email,
-      .candidate-date {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        margin: 0.25rem 0;
-        font-size: 0.875rem;
-
-        mat-icon {
-          font-size: 16px;
-          color: $secondary-color;
-        }
-      }
-
-      .candidate-status {
-        margin-top: 0.5rem;
-
-        .status-indicator {
-          padding: 0.25rem 0.5rem;
-          border-radius: 10px;
-          font-size: 0.75rem;
-          font-weight: 600;
-          text-transform: uppercase;
-
-          &.nouvelle {
-            background: rgba(#52c41a, 0.1);
-            color: #52c41a;
-            border: 1px solid rgba(#52c41a, 0.2);
-          }
-
-          &.consultée {
-            background: rgba($secondary-color, 0.1);
-            color: $secondary-color;
-            border: 1px solid rgba($secondary-color, 0.2);
-          }
-        }
-      }
-    }
-
-    .candidate-actions {
-      button {
-        background: rgba($primary-color, 0.1);
-        color: $primary-color;
-        border: 2px solid rgba($primary-color, 0.2);
-        border-radius: 50%;
-        width: 35px;
-        height: 35px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.3s ease;
-        margin-left: 0.5rem;
-
-        &:hover {
-          background: $primary-color;
-          color: $white;
-          transform: scale(1.1);
-          box-shadow: 0 4px 15px rgba($primary-color, 0.3);
-        }
-
-        mat-icon {
-          font-size: 18px;
-        }
-      }
-    }
-  }
-}
-
-.no-candidates {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 3rem 2rem;
-  color: $text-light;
-  background: rgba($secondary-color, 0.05);
-  border-radius: 15px;
-  border: 2px dashed rgba($secondary-color, 0.2);
-
-  .no-candidates-animation {
-    margin-bottom: 1.5rem;
-
-    mat-icon {
-      font-size: 4rem !important;
-      width: 4rem !important;
-      height: 4rem !important;
-      color: $secondary-color;
-      animation: float 3s ease-in-out infinite;
-    }
-  }
-
-  h4 {
-    font-size: 1.3rem;
-    margin: 0 0 0.75rem 0;
-    color: $text-dark;
-  }
-
-  p {
-    font-size: 1.1rem;
-    margin: 0;
-    font-weight: 500;
-    line-height: 1.5;
-  }
-}
-
-.candidates-dialog-actions {
-  padding: 1rem 1.5rem;
-  border-top: 1px solid rgba($border-light, 0.5);
-  background: rgba($bg-light, 0.5);
-
-  button {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-}
-
-/* ===============================================
-   📝 MODAL DE CRÉATION
-=============================================== */
-.offre-creation-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(8px);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-  animation: modalFadeIn 0.3s ease-out;
-}
-
-/* ===============================================
-   🎭 OVERLAY DE CHARGEMENT GLOBAL
-=============================================== */
-.global-loading-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba($white, 0.9);
-  backdrop-filter: blur(10px);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 999;
-  animation: fadeIn 0.3s ease-out;
-
-  .loading-content {
-    text-align: center;
-
-    p {
-      margin-top: 1rem;
-      font-size: 1.1rem;
-      color: $text-dark;
-      font-weight: 500;
-    }
-  }
-}
-
-/* ===============================================
-   🎭 ANIMATIONS
-=============================================== */
-@keyframes slideInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes modalFadeIn {
-  from {
-    opacity: 0;
-    backdrop-filter: blur(0px);
-  }
-  to {
-    opacity: 1;
-    backdrop-filter: blur(8px);
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-@keyframes bounce {
-  0%, 20%, 50%, 80%, 100% {
-    transform: translateY(0);
-  }
-  40% {
-    transform: translateY(-10px);
-  }
-  60% {
-    transform: translateY(-5px);
-  }
-}
-
-@keyframes pulse {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-}
-
-@keyframes blink {
-  0%, 50% {
-    opacity: 1;
-  }
-  51%, 100% {
-    opacity: 0.7;
-  }
-}
-
-/* ===============================================
-   ♿ ACCESSIBILITÉ
-=============================================== */
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
-/* Focus states */
-button:focus,
-.job-card:focus {
-  outline: 2px solid $primary-color;
-  outline-offset: 2px;
-}
-
-/* ===============================================
-   📱 RESPONSIVE FINAL
-=============================================== */
-@media (max-width: 320px) {
-  .offres-manager-container {
-    padding: 8px;
-  }
-
-  .header {
-    padding: 1rem;
-
-    h1 {
-      font-size: 1.3rem;
-    }
-
-    button {
-      padding: 10px 16px;
-      font-size: 0.85rem;
-    }
-  }
-
-  .banner-carousel .carousel-container {
-    height: 150px;
-  }
-
-  .table-container {
-    padding: 0.75rem;
-  }
-
-  .job-grid {
-    gap: 0.75rem;
-  }
-}
-
-/* ===============================================
-   👥 MODAL CANDIDATURES AMÉLIORÉ
-=============================================== */
-
-.candidates-dialog-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid #e0e0e0;
-
-  h2 {
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: $text-dark;
-    font-weight: 600;
-  }
-}
-
-.candidates-dialog-content {
-  max-height: 60vh;
-  overflow-y: auto;
-  padding: 1rem;
-}
-
-.loading-candidates {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  
-  p {
-    margin-top: 1rem;
-    color: $text-light;
-  }
-}
-
-.candidates-header {
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #e0e0e0;
-  margin-bottom: 1rem;
-
-  .candidates-count-info {
-    font-weight: 500;
-    color: $text-dark;
-    font-size: 0.9rem;
-  }
-}
-
-.candidate-item-enhanced {
-  display: flex;
-  gap: 1rem;
-  padding: 1rem;
-  border-radius: 8px;
-  background: $white;
-  border: 1px solid #e0e0e0;
-  margin-bottom: 1rem;
-  transition: all 0.2s ease;
-
-  &:hover {
-    box-shadow: 0 2px 8px $shadow-light;
-    border-color: $primary-color;
-  }
-}
-
-.candidate-avatar {
-  .avatar-circle {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: $gradient-primary;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: 600;
-    font-size: 1.2rem;
-    flex-shrink: 0;
-  }
-}
-
-.candidate-main-info {
+// Corps central
+.om-card__body {
   flex: 1;
   min-width: 0;
 }
 
-.candidate-header {
+.om-card__title-row {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.5rem;
+  gap: 10px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.om-card__title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: $text;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// Méta row
+.om-card__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: $muted;
+  white-space: nowrap;
+
+  mat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    color: $muted;
+  }
+}
+
+// Partie droite
+.om-card__right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+
+.om-card__count {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 52px;
+}
+
+.count-num {
+  font-size: 2rem;
+  font-weight: 800;
+  color: $text;
+  line-height: 1;
+}
+
+.count-lbl {
+  font-size: 0.7rem;
+  color: $muted;
+  text-align: center;
+  margin-top: 2px;
+}
+
+.om-cand-btn {
+  background: $slate;
+  color: $white;
+  border: none;
+  border-radius: 999px;
+  padding: 12px 20px;
+  font-size: 0.83rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+
+  &:hover { background: $slate-dk; }
+}
+
+.om-more-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  color: $muted;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s;
+
+  mat-icon { font-size: 20px; width: 20px; height: 20px; }
+  &:hover { background: $bg; }
+}
+
+// Menu delete
+.om-menu-delete mat-icon { color: $red !important; }
+.om-menu-delete span { color: $red; }
+
+// ── Badges statut ─────────────────────────
+.om-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+
+  &.badge-active,
+  &.badge-ouvert   { background: $green-bg;  color: $green; }
+  &.badge-brouillon{ background: $amber-bg;  color: $amber; }
+  &.badge-fermée,
+  &.badge-fermé,
+  &.badge-archivée { background: $red-bg;    color: $red;   }
+  &.badge-nouveau  { background: $blue-bg;   color: $blue;  }
+  &.badge-acceptee { background: $green-bg;  color: $green; }
+  &.badge-refusee  { background: $red-bg;    color: $red;   }
+}
+
+// ── Loading ───────────────────────────────
+.om-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 60px 20px;
+  color: $muted;
+  font-size: 0.9rem;
+}
+
+// ── Empty ─────────────────────────────────
+.om-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 64px 20px;
+  text-align: center;
+
+  mat-icon { font-size: 52px; width: 52px; height: 52px; color: darken($border, 10%); }
+  h3 { color: $text; font-size: 1.1rem; margin: 0; }
+  p  { color: $muted; font-size: 0.9rem; margin: 0; }
+}
+
+.om-empty-link {
+  background: none;
+  border: none;
+  color: $coral;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+// ── Dialogs ───────────────────────────────
+.om-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 0;
+
+  h2 { margin: 0; font-size: 1.05rem; font-weight: 700; color: $dark; }
+}
+
+.om-dialog-content {
+  padding: 16px 24px 20px;
+  min-height: 180px;
+}
+
+.om-cand-total {
+  color: $muted;
+  font-size: 0.85rem;
+  margin: 0 0 14px;
+}
+
+.om-cand-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+}
+
+.om-cand-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: $coral;
+  color: $white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+
+.om-cand-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.om-cand-name  { font-size: 0.9rem; font-weight: 600; color: $text; }
+.om-cand-email { font-size: 0.8rem; color: $muted; }
+.om-cand-status { flex-shrink: 0; }
+
+.om-cand-actions { display: flex; gap: 4px; }
+.om-accept-btn mat-icon { color: $green !important; }
+.om-refuse-btn  mat-icon { color: $red   !important; }
+
+// ── Détails candidat ─────────────────────
+.info-section {
+  margin-bottom: 12px;
+  border-radius: 12px !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,.05) !important;
+}
+
+.profile-contacts {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: $muted;
+
+  mat-icon { font-size: 16px; width: 16px; height: 16px; }
+}
+
+.candidature-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.badge-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: $muted;
+
+  mat-icon { font-size: 16px; width: 16px; height: 16px; }
+}
+
+.message-section {
+  label { font-size: 0.78rem; font-weight: 600; color: $muted; display: block; margin-bottom: 4px; }
+}
+
+.candidate-message {
+  background: $bg;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.875rem;
+  color: $text;
+  line-height: 1.5;
+  margin: 0;
 }
 
 .candidate-name {
-  font-weight: 600;
-  color: $text-dark;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: $dark;
+  margin: 0 0 6px;
 }
 
-.candidate-status {
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
+.portfolio-header-clickable { cursor: pointer; user-select: none; }
 
-  &.nouveau {
-    background: #e3f2fd;
-    color: #1976d2;
-  }
-
-  &.acceptee {
-    background: #e8f5e8;
-    color: #2e7d32;
-  }
-
-  &.refusee {
-    background: #ffebee;
-    color: #c62828;
-  }
-
-  &.en_attente {
-    background: #fff3e0;
-    color: #ef6c00;
-  }
+.expand-icon {
+  margin-left: auto;
+  transition: transform 0.2s;
+  &.expanded { transform: rotate(180deg); }
 }
 
-.candidate-details {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-
-  .contact-details-row {
-    display: flex;
-    gap: 1.5rem;
-    flex-wrap: wrap;
-    align-items: center;
-
-    @media (max-width: 768px) {
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    .detail-item {
-      flex: 1;
-      min-width: 200px;
-    }
-  }
-}
-
-.detail-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: $text-light;
-  font-size: 0.85rem;
-
-  mat-icon {
-    font-size: 16px;
-    width: 16px;
-    height: 16px;
-    color: $secondary-color;
-  }
-
-  .message-preview {
-    line-height: 1.4;
-    color: $text-dark;
-  }
-}
-
-/* ===============================================
-   🎯 SECTION ACTIONS AVEC STATUT
-=============================================== */
-.candidate-actions-section {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-  margin-top: 0.75rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid rgba(226, 232, 240, 0.6);
-
-  .candidate-status-container {
-    flex-shrink: 0;
-
-    .candidate-status {
-      padding: 0.4rem 0.8rem;
-      border-radius: 20px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      transition: all 0.2s ease;
-
-      &.nouveau {
-        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-        color: #1d4ed8;
-        border: 1px solid #93c5fd;
-      }
-
-      &.acceptee {
-        background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
-        color: #15803d;
-        border: 1px solid #86efac;
-      }
-
-      &.refusee {
-        background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%);
-        color: #dc2626;
-        border: 1px solid #fca5a5;
-      }
-
-      &.en_attente {
-        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-        color: #d97706;
-        border: 1px solid #fcd34d;
-      }
-    }
-  }
-}
-
-/* ===============================================
-   🎯 ACTIONS ICÔNES SIMPLIFIÉES 
-=============================================== */
-.candidate-actions-icons {
-  display: flex;
-  gap: 0.75rem;
-  align-items: center;
-  justify-content: flex-end;
-  flex-shrink: 0;
-  margin-top: 0.5rem;
-
-  button {
-    width: 40px;
-    height: 40px;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    position: relative;
-    overflow: hidden;
-
-    mat-icon {
-      font-size: 20px;
-      width: 20px;
-      height: 20px;
-    }
-
-    // Effet de tooltip au survol amélioré
-    &[title]:hover::after {
-      content: attr(title);
-      position: absolute;
-      bottom: 120%;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.9);
-      color: white;
-      padding: 0.5rem 0.75rem;
-      border-radius: 6px;
-      font-size: 0.75rem;
-      white-space: nowrap;
-      z-index: 1000;
-      animation: tooltip-fade-in 0.2s ease;
-      pointer-events: none;
-    }
-
-    &[title]:hover::before {
-      content: '';
-      position: absolute;
-      bottom: 110%;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 0;
-      height: 0;
-      border-left: 5px solid transparent;
-      border-right: 5px solid transparent;
-      border-top: 5px solid rgba(0, 0, 0, 0.9);
-      z-index: 1000;
-      animation: tooltip-fade-in 0.2s ease;
-    }
-
-    &.action-details-icon {
-      background: linear-gradient(135deg, rgba($secondary-color, 0.15) 0%, rgba($secondary-color, 0.25) 100%);
-      color: color.adjust($secondary-color, $lightness: -20%);
-      box-shadow: 0 3px 12px rgba($secondary-color, 0.2);
-
-      &:hover {
-        background: linear-gradient(135deg, rgba($secondary-color, 0.25) 0%, rgba($secondary-color, 0.35) 100%);
-        transform: translateY(-2px) scale(1.05);
-        box-shadow: 0 6px 20px rgba($secondary-color, 0.3);
-      }
-    }
-
-    &.action-contact-icon {
-      background: linear-gradient(135deg, rgba($primary-color, 0.15) 0%, rgba($primary-color, 0.25) 100%);
-      color: color.adjust($primary-color, $lightness: -25%);
-      box-shadow: 0 3px 12px rgba($primary-color, 0.2);
-
-      &:hover:not(:disabled) {
-        background: linear-gradient(135deg, rgba($primary-color, 0.25) 0%, rgba($primary-color, 0.35) 100%);
-        transform: translateY(-2px) scale(1.05);
-        box-shadow: 0 6px 20px rgba($primary-color, 0.3);
-      }
-
-      &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-        transform: none !important;
-        box-shadow: 0 3px 12px rgba($primary-color, 0.1) !important;
-      }
-    }
-
-    &.action-accept-icon {
-      background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
-      color: white;
-      box-shadow: 0 3px 12px rgba(76, 175, 80, 0.3);
-
-      &:hover {
-        background: linear-gradient(135deg, #45a049 0%, #5eb85e 100%);
-        transform: translateY(-2px) scale(1.05);
-        box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
-      }
-
-      &.pulse {
-        animation: pulse-accept 2s infinite;
-      }
-    }
-
-    &.action-refuse-icon {
-      background: linear-gradient(135deg, #f44336 0%, #ef5350 100%);
-      color: white;
-      box-shadow: 0 3px 12px rgba(244, 67, 54, 0.3);
-
-      &:hover {
-        background: linear-gradient(135deg, #e53935 0%, #e53935 100%);
-        transform: translateY(-2px) scale(1.05);
-        box-shadow: 0 6px 20px rgba(244, 67, 54, 0.4);
-      }
-    }
-  }
-}
-
-@keyframes tooltip-fade-in {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(5px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-}
-
-@keyframes pulse-accept {
-  0% { 
-    transform: scale(1); 
-    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
-  }
-  50% { 
-    transform: scale(1.05); 
-    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.5);
-  }
-  100% { 
-    transform: scale(1); 
-    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
-  }
-}
-
-// Styles pour les anciens sélecteurs (compatibilité)
-.action-details, .action-contact {
-  min-width: 110px;
-  font-size: 0.8rem;
-
-  mat-icon {
-    font-size: 16px;
-    width: 16px;
-    height: 16px;
-    margin-right: 0.25rem;
-  }
-}
-
-.status-actions {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-
-  button {
-    width: 32px;
-    height: 32px;
-    
-    mat-icon {
-      font-size: 16px;
-    }
-  }
-}
-
-.no-candidates {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 3rem 2rem;
-  text-align: center;
-
-  .no-candidates-animation {
-    margin-bottom: 1rem;
-    
-    mat-icon {
-      font-size: 4rem;
-      width: 4rem;
-      height: 4rem;
-      color: $text-light;
-      opacity: 0.5;
-    }
-  }
-
-  h4 {
-    color: $text-dark;
-    margin: 0 0 0.5rem 0;
-    font-weight: 600;
-  }
-
-  p {
-    color: $text-light;
-    margin: 0;
-    font-size: 0.9rem;
-    line-height: 1.5;
-  }
-}
-
-.candidates-dialog-actions {
-  padding: 1rem 1.5rem;
-  border-top: 1px solid #e0e0e0;
-  
-  button {
-    min-width: 100px;
-  }
-}
-
-/* Responsive pour le modal candidatures */
-@media (max-width: 768px) {
-  .candidate-item-enhanced {
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .candidate-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-  }
-
-  .candidate-actions-icons {
-    gap: 0.5rem;
-    justify-content: center;
-
-    button {
-      width: 36px;
-      height: 36px;
-
-      mat-icon {
-        font-size: 18px;
-        width: 18px;
-        height: 18px;
-      }
-
-      // Tooltips plus petits sur mobile
-      &[title]:hover::after {
-        font-size: 0.7rem;
-        padding: 0.25rem 0.5rem;
-        bottom: 110%;
-      }
-
-      &[title]:hover::before {
-        bottom: 105%;
-      }
-    }
-  }
-
-  // Compatibilité avec l'ancien système
-  .candidate-actions-enhanced {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    gap: 0.5rem;
-
-    .main-actions {
-      flex-direction: column;
-      gap: 0.25rem;
-
-      .action-btn {
-        min-width: 90px;
-        height: 32px;
-        font-size: 0.75rem;
-
-        .action-icon {
-          font-size: 16px;
-          width: 16px;
-          height: 16px;
-        }
-      }
-    }
-
-    .status-actions-improved {
-      gap: 0.5rem;
-
-      button {
-        width: 36px;
-        height: 36px;
-
-        .status-icon {
-          font-size: 18px;
-          width: 18px;
-          height: 18px;
-        }
-      }
-    }
-  }
-
-  .status-actions {
-    margin-top: 0;
-  }
-
-  .action-details, .action-contact {
-    min-width: 90px;
-    font-size: 0.75rem;
-  }
-
-  // Modal responsivité améliorée
-  .candidate-details-content {
-    padding: 1rem;
-    
-    .info-section {
-      mat-card-header {
-        padding: 0.75rem 1rem;
-        
-        .mat-mdc-card-avatar {
-          width: 32px;
-          height: 32px;
-          
-          mat-icon {
-            font-size: 16px;
-          }
-        }
-      }
-      
-      mat-card-content {
-        padding: 1rem;
-        
-        .info-grid {
-          grid-template-columns: 1fr;
-          gap: 0.75rem;
-          
-          .info-item {
-            padding: 0.75rem;
-          }
-        }
-      }
-    }
-  }
-
-  .details-dialog-actions {
-    padding: 1rem;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-    justify-content: center;
-
-    .btn-close, .btn-contact {
-      min-width: 140px;
-      height: 36px;
-      font-size: 0.85rem;
-    }
-
-    .btn-accept-fab {
-      width: 40px;
-      height: 40px;
-      
-      mat-icon {
-        font-size: 18px;
-      }
-    }
-  }
-}
-
-/* ===============================================
-   🎨 MODAL DE DÉTAILS CANDIDATURE - DESIGN AMÉLIORÉ
-=============================================== */
-
-// Configuration globale du modal
-::ng-deep .candidate-details-modal {
-  .mat-mdc-dialog-container {
-    border-radius: 16px !important;
-    overflow: hidden;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15) !important;
-  }
-
-  .mat-mdc-dialog-surface {
-    border-radius: 16px !important;
-  }
-}
-
-.candidate-details-header {
-  background: $gradient-card;
-  color: white;
-  padding: 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: relative;
+.portfolio-collapsible {
+  max-height: 0;
   overflow: hidden;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="%23ffffff" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="%23ffffff" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-    opacity: 0.3;
-  }
-
-  h2 {
-    margin: 0;
-    font-size: 1.5rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    position: relative;
-    z-index: 1;
-
-    mat-icon {
-      font-size: 28px;
-      width: 28px;
-      height: 28px;
-      color: #ffd700;
-    }
-  }
-
-  button {
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    transition: all 0.3s ease;
-    position: relative;
-    z-index: 1;
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.3);
-      border-color: rgba(255, 255, 255, 0.5);
-      transform: scale(1.05);
-    }
-  }
+  transition: max-height 0.3s ease;
+  &.expanded { max-height: 1200px; }
 }
 
-.candidate-details-content {
-  padding: 2rem;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  max-height: 70vh;
-  overflow-y: auto;
-
-  .info-section {
-    margin-bottom: 1.5rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-    background: white;
-    border: 1px solid rgba(226, 232, 240, 0.5);
-    transition: all 0.3s ease;
-
-    &:hover {
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-      transform: translateY(-2px);
-    }
-
-    mat-card-header {
-      background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-      border-radius: 12px 12px 0 0;
-      padding: 1rem 1.5rem;
-
-      mat-card-title {
-        color: #334155;
-        font-weight: 600;
-        font-size: 1.1rem;
-      }
-
-      .mat-mdc-card-avatar {
-        background: $gradient-primary;
-        color: white;
-        width: 40px;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-
-        mat-icon {
-          font-size: 20px;
-        }
-      }
-    }
-
-    mat-card-content {
-      padding: 1.5rem;
-
-      .info-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1rem;
-
-        .info-item {
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
-          padding: 1rem;
-          background: rgba(241, 245, 249, 0.5);
-          border-radius: 8px;
-          border: 1px solid rgba(226, 232, 240, 0.8);
-          transition: all 0.2s ease;
-
-          &:hover {
-            background: rgba(241, 245, 249, 0.8);
-            border-color: #cbd5e1;
-          }
-
-          label {
-            font-weight: 600;
-            color: #475569;
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-          }
-
-          span {
-            color: #1e293b;
-            font-size: 1rem;
-            word-break: break-word;
-          }
-        }
-      }
-
-      .competences-text, .experience-text {
-        background: rgba(241, 245, 249, 0.5);
-        padding: 1rem;
-        border-radius: 8px;
-        border-left: 4px solid $primary-color;
-
-        p {
-          margin: 0;
-          color: #334155;
-          line-height: 1.6;
-        }
-      }
-
-      .message-section {
-        margin-top: 1rem;
-        
-        label {
-          display: block;
-          font-weight: 600;
-          color: #475569;
-          font-size: 0.85rem;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          margin-bottom: 0.5rem;
-        }
-
-        .candidate-message {
-          background: linear-gradient(135deg, rgba($primary-color, 0.1) 0%, rgba($primary-color, 0.05) 100%);
-          padding: 1rem;
-          border-radius: 8px;
-          border-left: 4px solid $primary-color;
-          color: #1e293b;
-          line-height: 1.6;
-          font-style: italic;
-          margin: 0;
-        }
-      }
-
-      .status-badge {
-        padding: 0.4rem 0.8rem;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-
-        &.nouveau {
-          background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-          color: #1d4ed8;
-        }
-
-        &.acceptee {
-          background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
-          color: #15803d;
-        }
-
-        &.refusee {
-          background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%);
-          color: #dc2626;
-        }
-      }
-    }
-
-    // Section candidature compacte
-    &.candidature-details-compact {
-      .candidature-badges {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1rem;
-        margin-bottom: 1.5rem;
-        justify-content: flex-start;
-        align-items: stretch;
-
-        .badge-item {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          padding: 0.75rem;
-          background: rgba($secondary-color, 0.05);
-          border-radius: 8px;
-          border-left: 3px solid;
-          transition: all 0.2s ease;
-          flex: 1;
-          min-width: 180px;
-          max-width: 220px;
-
-          &:hover {
-            background: rgba($secondary-color, 0.1);
-            transform: translateY(-1px);
-          }
-
-          mat-icon {
-            font-size: 20px;
-            width: 20px;
-            height: 20px;
-          }
-
-          &.status-item {
-            border-left-color: $primary-color;
-            
-            mat-icon {
-              color: $primary-color;
-            }
-
-            .status-badge {
-              margin: 0;
-              padding: 0.25rem 0.6rem;
-              font-size: 0.75rem;
-            }
-          }
-
-          &.date-item {
-            border-left-color: #3b82f6;
-
-            mat-icon {
-              color: #3b82f6;
-            }
-          }
-
-          &.tarif-item {
-            border-left-color: #10b981;
-
-            mat-icon {
-              color: #10b981;
-            }
-          }
-
-          &.disponibilite-item {
-            border-left-color: #f59e0b;
-
-            mat-icon {
-              color: #f59e0b;
-            }
-          }
-
-          .badge-content {
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-
-            .badge-label {
-              font-size: 0.75rem;
-              color: $text-light;
-              font-weight: 500;
-            }
-
-            .badge-value {
-              font-size: 0.9rem;
-              color: $text-dark;
-              font-weight: 600;
-            }
-          }
-        }
-      }
-
-      .message-section-compact {
-        .message-header {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          margin-bottom: 0.75rem;
-
-          mat-icon {
-            color: $primary-color;
-            font-size: 18px;
-            width: 18px;
-            height: 18px;
-          }
-
-          .message-title {
-            font-weight: 600;
-            color: $text-dark;
-            font-size: 0.9rem;
-          }
-        }
-
-        .candidate-message-compact {
-          background: linear-gradient(135deg, rgba($primary-color, 0.08) 0%, rgba($primary-color, 0.03) 100%);
-          padding: 1rem;
-          border-radius: 8px;
-          border-left: 3px solid $primary-color;
-          color: $text-dark;
-          line-height: 1.5;
-          font-size: 0.9rem;
-          margin: 0;
-          font-style: italic;
-        }
-      }
-    }
-
-    // Section profil candidat
-    &.profile-section {
-      .profile-info {
-        .profile-main {
-          .candidate-name {
-            margin: 0 0 1rem 0;
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: $text-dark;
-            background: $gradient-primary;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-          }
-
-          .profile-contacts {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-
-            .contact-item {
-              display: flex;
-              align-items: center;
-              gap: 0.75rem;
-              padding: 0.5rem;
-              background: rgba($primary-color, 0.05);
-              border-radius: 8px;
-              border-left: 3px solid $primary-color;
-
-              mat-icon {
-                color: $primary-color;
-                font-size: 20px;
-                width: 20px;
-                height: 20px;
-              }
-
-              span {
-                font-size: 0.95rem;
-                color: $text-dark;
-                font-weight: 500;
-              }
-            }
-          }
-        }
-      }
-    }
-
-    // Section portfolio - collapsible
-    &.portfolio-section {
-      .portfolio-header-clickable {
-        cursor: pointer;
-        transition: all 0.2s ease;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        user-select: none;
-
-        &:hover {
-          background: rgba($primary-color, 0.05);
-        }
-
-        .header-actions {
-          display: flex;
-          align-items: center;
-
-          .expand-icon {
-            color: $primary-color;
-            transition: transform 0.3s ease;
-            font-size: 24px;
-
-            &.expanded {
-              transform: rotate(180deg);
-            }
-          }
-        }
-      }
-
-      .portfolio-collapsible {
-        max-height: 0;
-        overflow: hidden;
-        transition: max-height 0.4s ease-in-out;
-
-        &.expanded {
-          max-height: 2000px; // Grande valeur pour permettre l'expansion complète
-        }
-
-        .portfolio-content {
-          padding: 0 1.5rem 1.5rem 1.5rem;
-
-          ::ng-deep app-portfolio {
-            .portfolio-container {
-              .portfolio-header.client-header {
-                display: none; // Masquer le header du composant car on a déjà le header de la mat-card
-              }
-              
-              .filters {
-                margin-top: 0;
-                margin-bottom: 1rem;
-              }
-
-              .portfolio-grid {
-                animation: fadeInUp 0.3s ease;
-              }
-            }
-          }
-        }
-      }
-    }
-
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-  }
-}
-
-.details-dialog-actions {
-  padding: 1.5rem 2rem;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  border-top: 1px solid rgba(226, 232, 240, 0.8);
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-  justify-content: flex-end;
-
-  .btn-close {
-    min-width: 120px;
-    height: 42px;
-    border-radius: 21px;
-    font-weight: 500;
-    background: transparent;
-    color: #6b7280;
-    border: 2px solid #e5e7eb;
-    transition: all 0.3s ease;
-
-    &:hover {
-      background: #f3f4f6;
-      border-color: #d1d5db;
-      transform: translateY(-1px);
-    }
-
-    mat-icon {
-      font-size: 18px;
-      width: 18px;
-      height: 18px;
-      margin-right: 0.5rem;
-    }
-  }
-
-  .btn-contact {
-    min-width: 180px;
-    height: 42px;
-    border-radius: 21px;
-    font-weight: 600;
-    background: $gradient-primary;
-    color: white;
-    border: none;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba($primary-color, 0.3);
-
-    &:hover {
-      background: linear-gradient(135deg, color.adjust($primary-color, $lightness: -5%) 0%, color.adjust($primary-color, $lightness: 5%) 100%);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba($primary-color, 0.4);
-    }
-
-    mat-icon {
-      font-size: 18px;
-      width: 18px;
-      height: 18px;
-      margin-right: 0.5rem;
-    }
-  }
-
-  .btn-accept-fab {
-    width: 48px;
-    height: 48px;
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-
-    &:hover {
-      transform: translateY(-3px) scale(1.05);
-      box-shadow: 0 8px 25px rgba(16, 185, 129, 0.5);
-    }
-
-    mat-icon {
-      font-size: 22px;
-      width: 22px;
-      height: 22px;
-    }
-  }
-}
+.details-dialog-actions { gap: 8px; }

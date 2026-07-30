@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { tap } from 'rxjs/operators';
+import { WebSocketService } from '../websocket/websocket.service';
 
 export interface Notification {
   id: number;
@@ -28,9 +29,27 @@ export interface NotificationCount {
 export class NotificationService {
   private apiUrl = 'http://localhost:8081/api/notifications';
   private unreadCountSubject = new BehaviorSubject<number>(0);
+  private notificationsSubject = new BehaviorSubject<Notification[]>([]);
+
   public unreadCount$ = this.unreadCountSubject.asObservable();
 
-  constructor(private http: HttpClient) {}
+  get liveNotification$() {
+    return this.wsService.notification$;
+  }
+
+  constructor(private http: HttpClient, private wsService: WebSocketService) {}
+
+  connectWebSocket(userId: string, token: string): void {
+    this.wsService.connect(userId, token);
+    // Chaque notif reçue en temps réel incrémente le compteur
+    this.wsService.notification$.subscribe(() => {
+      this.unreadCountSubject.next(this.unreadCountSubject.value + 1);
+    });
+  }
+
+  disconnectWebSocket(): void {
+    this.wsService.disconnect();
+  }
 
   getNotifications(): Observable<Notification[]> {
     // Les notifications sont filtrées côté backend selon l'utilisateur authentifié

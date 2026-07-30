@@ -57,7 +57,10 @@
             (click)="openItemDetail(salon)">
 
           <div class="card-image">
-            <img [src]="getSalonImage(salon)" [alt]="salon.nom" (error)="onImageError($event)" (load)="onImageLoad($event)">
+            <img [src]="getSalonImage(salon)" [alt]="salon.nom"
+     [attr.data-entity-id]="salon.id"
+     [attr.data-entity-type]="isFreelance(salon) ? 'freelance' : 'salon'"
+     (error)="onImageError($event)" (load)="onImageLoad($event)">
             <div class="image-overlay"></div>
 
             <!-- Top : type + favori -->
@@ -98,18 +101,6 @@
               <span class="more-count" *ngIf="salon.services.length > 2">
                 +{{ salon.services.length - 2 }}
               </span>
-            </div>
-
-            <!-- Spécialité et expérience pour les freelances  -->
-            <div class="freelance-meta" *ngIf="isFreelance(salon)">
-              <div class="freelance-meta-item" *ngIf="salon.specialite">
-                <i class="fas fa-cut"></i>
-                <span>{{ salon.specialite }}</span>
-              </div>
-              <div class="freelance-meta-item" *ngIf="salon.experience">
-                <i class="fas fa-briefcase"></i>
-                <span>{{ salon.experience }}</span>
-              </div>
             </div>
 
             <button class="popular-reserve-btn" (click)="bookNow(salon, $event)">
@@ -158,7 +149,7 @@
           </div>
           <div class="header-text">
             <h3>Proche de vous</h3>
-            <p>À quelques minutes de vous</p>
+            <p>{{ nearbyTotalCount }} prestataire{{ nearbyTotalCount > 1 ? 's' : '' }} dans votre zone</p>
           </div>
         </div>
         <div class="nearby-filters">
@@ -215,7 +206,10 @@
               (click)="openItemDetail(salon)"
               (mouseenter)="highlightOnMap(salon)">
               <div class="nearby-image">
-                <img [src]="getSalonImage(salon)" [alt]="salon.nom" (error)="onImageError($event)" (load)="onImageLoad($event)">
+                <img [src]="getSalonImage(salon)" [alt]="salon.nom"
+     [attr.data-entity-id]="salon.id"
+     [attr.data-entity-type]="isFreelance(salon) ? 'freelance' : 'salon'"
+     (error)="onImageError($event)" (load)="onImageLoad($event)">
                 <div class="distance-badge-main" *ngIf="salon.distance && salon.distance > 0">
                   <i class="fas fa-location-dot"></i>
                   <span>{{ formatDistance(salon.distance) }}</span>

@@ -1,0 +1,452 @@
+<div class="cal-page">
+
+  <!-- ════ HEADER ════ -->
+  <div class="cal-header">
+    <div class="cal-header__text">
+      <h1 class="cal-header__title">Calendrier</h1>
+      <p class="cal-header__sub">Votre semaine en un coup d'œil.</p>
+    </div>
+    <div class="cal-header__actions">
+      <div class="cal-view-switch">
+        <button [class.active]="viewMode === 'jour'"    (click)="setViewMode('jour')">Jour</button>
+        <button [class.active]="viewMode === 'semaine'" (click)="setViewMode('semaine')">Semaine</button>
+        <button [class.active]="viewMode === 'mois'"   (click)="setViewMode('mois')">Mois</button>
+      </div>
+      <button class="cal-new-btn" *ngIf="!isFreelance" (click)="openNewRdvModal()">
+        <mat-icon>add</mat-icon> Nouveau RDV
+      </button>
+    </div>
+  </div>
+
+  <!-- ════ NAVIGATION ════ -->
+
+  <!-- Week nav -->
+  <div class="cal-nav" *ngIf="viewMode === 'semaine'">
+    <button class="cal-nav__arr" (click)="navigateWeek(-1)">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+    <button class="cal-nav__arr" (click)="navigateWeek(1)">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+    <span class="cal-nav__label">{{ weekLabel }}</span>
+    <button class="cal-nav__today" (click)="goToToday()">Aujourd'hui</button>
+  </div>
+
+  <!-- Day nav -->
+  <div class="cal-nav" *ngIf="viewMode === 'jour'">
+    <button class="cal-nav__arr" (click)="navigateDay(-1)">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+    <button class="cal-nav__arr" (click)="navigateDay(1)">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+    <span class="cal-nav__label">{{ dayLabel }}</span>
+    <button class="cal-nav__today" (click)="goToToday()">Aujourd'hui</button>
+  </div>
+
+  <!-- Month nav -->
+  <div class="cal-nav" *ngIf="viewMode === 'mois'">
+    <button class="cal-nav__arr" (click)="navigateMonth(-1)">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+    <button class="cal-nav__arr" (click)="navigateMonth(1)">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+    <span class="cal-nav__label">{{ monthLabel }}</span>
+    <button class="cal-nav__today" (click)="goToToday()">Aujourd'hui</button>
+  </div>
+
+  <!-- ════ BODY ════ -->
+  <div class="cal-body">
+
+    <!-- ─── GRID ─── -->
+    <div class="cal-grid-wrap">
+      <div class="cal-grid">
+
+        <!-- ══ SEMAINE ══ -->
+        <ng-container *ngIf="viewMode === 'semaine'">
+
+          <!-- Day headers -->
+          <div class="cal-grid__head">
+            <div class="cal-th-time"></div>
+            <div class="cal-th-day"
+                 *ngFor="let day of weekDays"
+                 [class.today]="isToday(day)">
+              <span class="cal-th-abbr">{{ getDayAbbr(day) }}</span>
+              <span class="cal-th-num" [class.today-circle]="isToday(day)">
+                {{ day.getDate() }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Body -->
+          <div class="cal-grid__body" [style.height.px]="gridHeight">
+            <div class="cal-time-col">
+              <div class="cal-ts" *ngFor="let h of timeSlots">
+                {{ h.toString().padStart(2,'0') }}:00
+              </div>
+            </div>
+
+            <div class="cal-day-col"
+                 *ngFor="let day of weekDays"
+                 [class.today-col]="isToday(day)"
+                 [class.rest-col]="isRestDay(day)">
+              <div class="cal-line" *ngFor="let h of timeSlots"></div>
+
+              <!-- Unavailabilities -->
+              <ng-container *ngFor="let u of getUnavailabilitiesForDay(day)">
+                <div class="cal-event cal-event--indispo" [ngStyle]="getUnavailStyle(u)">
+                  <span class="cal-event__time"><mat-icon>block</mat-icon> Indisponible</span>
+                  <span class="cal-event__title">{{ u.motif || 'Perso' }}</span>
+                </div>
+              </ng-container>
+
+              <!-- Reservations -->
+              <ng-container *ngFor="let r of getEventsForDay(day)">
+                <div class="cal-event"
+                     [class.cal-event--confirmee]="r.statut === 'confirmee'"
+                     [class.cal-event--attente]="r.statut === 'en_attente'"
+                     [ngStyle]="getEventStyle(r)"
+                     (click)="openReservation.emit(r)">
+                  <span class="cal-event__time">
+                    {{ getEventTimeLabel(r) }}
+                    <span class="cal-event__status-tag" *ngIf="r.statut === 'en_attente'">en attente</span>
+                  </span>
+                  <span class="cal-event__title">{{ getServiceName(r) }}</span>
+                  <span class="cal-event__client" *ngIf="showClientOnEvent(r)">
+                    {{ getClientName(r) }}
+                  </span>
+                  <span class="cal-event__dur" *ngIf="showDurationOnEvent(r)">
+                    · {{ r.serviceDuree }} min
+                  </span>
+                </div>
+              </ng-container>
+
+              <!-- Rest label -->
+              <div class="cal-rest" *ngIf="isRestDay(day) && getEventsForDay(day).length === 0">
+                Repos
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- ══ JOUR ══ -->
+        <ng-container *ngIf="viewMode === 'jour'">
+
+          <!-- Day header -->
+          <div class="cal-grid__head cal-grid__head--day">
+            <div class="cal-th-time"></div>
+            <div class="cal-th-day cal-th-day--full"
+                 [class.today]="isToday(currentDay)">
+              <span class="cal-th-abbr">{{ getDayAbbr(currentDay) }}</span>
+              <span class="cal-th-num" [class.today-circle]="isToday(currentDay)">
+                {{ currentDay.getDate() }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Body -->
+          <div class="cal-grid__body cal-grid__body--day" [style.height.px]="gridHeight">
+            <div class="cal-time-col">
+              <div class="cal-ts" *ngFor="let h of timeSlots">
+                {{ h.toString().padStart(2,'0') }}:00
+              </div>
+            </div>
+
+            <div class="cal-day-col cal-day-col--full"
+                 [class.today-col]="isToday(currentDay)">
+              <div class="cal-line" *ngFor="let h of timeSlots"></div>
+
+              <!-- Unavailabilities -->
+              <ng-container *ngFor="let u of getUnavailabilitiesForDay(currentDay)">
+                <div class="cal-event cal-event--indispo" [ngStyle]="getUnavailStyle(u)">
+                  <span class="cal-event__time"><mat-icon>block</mat-icon> Indisponible</span>
+                  <span class="cal-event__title">{{ u.motif || 'Perso' }}</span>
+                </div>
+              </ng-container>
+
+              <!-- Reservations -->
+              <ng-container *ngFor="let r of getEventsForDay(currentDay)">
+                <div class="cal-event cal-event--day"
+                     [class.cal-event--confirmee]="r.statut === 'confirmee'"
+                     [class.cal-event--attente]="r.statut === 'en_attente'"
+                     [ngStyle]="getEventStyle(r)"
+                     (click)="openReservation.emit(r)">
+                  <div class="cal-event-day-row">
+                    <span class="cal-event__time">
+                      {{ getEventTimeLabel(r) }}
+                      <span class="cal-event__status-tag" *ngIf="r.statut === 'en_attente'">en attente</span>
+                    </span>
+                  </div>
+                  <span class="cal-event__title">{{ getServiceName(r) }}</span>
+                  <span class="cal-event__client">{{ getClientName(r) }}</span>
+                  <span class="cal-event__dur" *ngIf="r.serviceDuree > 30">· {{ r.serviceDuree }} min</span>
+                </div>
+              </ng-container>
+
+              <!-- Empty day -->
+              <div class="cal-empty-day"
+                   *ngIf="getEventsForDay(currentDay).length === 0 && getUnavailabilitiesForDay(currentDay).length === 0">
+                <mat-icon>event_available</mat-icon>
+                <p>Aucun rendez-vous ce jour</p>
+                <button class="cal-add-btn" *ngIf="!isFreelance" (click)="openNewRdvModal(currentDay)">
+                  <mat-icon>add</mat-icon> Ajouter un rendez-vous
+                </button>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- ══ MOIS ══ -->
+        <ng-container *ngIf="viewMode === 'mois'">
+          <div class="cal-month">
+
+            <!-- En-têtes jours -->
+            <div class="cal-month__head">
+              <div class="cal-month__dow" *ngFor="let d of ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim']">{{ d }}</div>
+            </div>
+
+            <!-- Grille des jours -->
+            <div class="cal-month__grid">
+              <div
+                *ngFor="let date of monthDays"
+                class="cal-month__cell"
+                [class.cal-month__cell--empty]="!date"
+                [class.cal-month__cell--today]="date && isToday(date)"
+                [class.cal-month__cell--other]="date && !isCurrentMonthDay(date)"
+                [class.cal-month__cell--weekend]="date && isRestDay(date)"
+                (click)="date && selectMonthDay(date)">
+
+                <!-- Numéro du jour -->
+                <span class="cal-month__num" *ngIf="date">{{ date.getDate() }}</span>
+
+                <!-- Chips d'événements -->
+                <ng-container *ngIf="date">
+                  <div
+                    *ngFor="let ev of getVisibleEventsForDay(date)"
+                    class="cal-month__chip"
+                    [class.cal-month__chip--confirmee]="ev.statut === 'confirmee'"
+                    [class.cal-month__chip--attente]="ev.statut === 'en_attente'"
+                    [class.cal-month__chip--terminee]="ev.statut === 'terminee'"
+                    (click)="$event.stopPropagation(); openReservation.emit(ev)">
+                    <span class="cal-month__chip-dot"></span>
+                    {{ getServiceName(ev) }}
+                  </div>
+                  <div class="cal-month__more" *ngIf="getExtraEventsCount(date) > 0"
+                       (click)="$event.stopPropagation(); selectMonthDay(date)">
+                    +{{ getExtraEventsCount(date) }} autre{{ getExtraEventsCount(date) > 1 ? 's' : '' }}
+                  </div>
+                </ng-container>
+
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+      </div>
+    </div>
+
+    <!-- ─── SIDEBAR ─── -->
+    <aside class="cal-sidebar">
+
+      <!-- Mini calendar -->
+      <div class="cal-mini">
+        <div class="cal-mini__head">
+          <span class="cal-mini__month">{{ miniCalendarLabel }}</span>
+          <div class="cal-mini__nav">
+            <button (click)="navigateMiniCalendar(-1)"><mat-icon>chevron_left</mat-icon></button>
+            <button (click)="navigateMiniCalendar(1)"><mat-icon>chevron_right</mat-icon></button>
+          </div>
+        </div>
+        <div class="cal-mini__grid">
+          <span class="cal-mini__dow" *ngFor="let d of ['L','M','M','J','V','S','D']">{{ d }}</span>
+          <div class="cal-mini__cell"
+               *ngFor="let date of miniCalendarDays"
+               [class.empty]="!date"
+               [class.today]="date && isToday(date)"
+               [class.in-week]="viewMode === 'semaine' && date && isMiniDayInCurrentWeek(date)"
+               [class.selected-day]="viewMode === 'jour' && date && dateKey(date) === dateKey(currentDay)"
+               (click)="date && selectMiniDay(date)">
+            <span *ngIf="date">{{ date.getDate() }}</span>
+            <span class="mini-dot" *ngIf="date && hasEventsOnDay(date)"
+                  [ngClass]="getMiniDotClass(date)"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Week stats -->
+      <div class="cal-stats">
+        <h3 class="cal-stats__title">Cette semaine</h3>
+        <div class="cal-stats__row">
+          <span>Prestations</span>
+          <strong>{{ weeklyCount }}</strong>
+        </div>
+        <div class="cal-stats__row">
+          <span>Heures réservées</span>
+          <strong>{{ formatHoursLabel(weeklyHours) }}</strong>
+        </div>
+        <div class="cal-stats__row">
+          <span>Revenus prévus</span>
+          <strong>{{ (weeklyRevenue / 1000) | number:'1.0-0' }}K CFA</strong>
+        </div>
+        <button class="cal-stats__btn">
+          <mat-icon>calendar_today</mat-icon> Gérer mes disponibilités
+        </button>
+      </div>
+
+      <!-- Legend -->
+      <div class="cal-legend">
+        <div class="cal-legend__item">
+          <span class="cal-legend__swatch cal-legend__swatch--confirmee"></span>
+          <span>Confirmé</span>
+        </div>
+        <div class="cal-legend__item">
+          <span class="cal-legend__swatch cal-legend__swatch--attente"></span>
+          <span>En attente</span>
+        </div>
+        <div class="cal-legend__item">
+          <span class="cal-legend__swatch cal-legend__swatch--indispo"></span>
+          <span>Indisponible</span>
+        </div>
+      </div>
+
+    </aside>
+  </div>
+</div>
+
+<!-- ════ MODAL NOUVEAU RDV ════ -->
+<div class="rdv-modal-overlay" *ngIf="showNewRdvModal && !isFreelance" (click)="closeNewRdvModal()">
+  <div class="rdv-modal-box" (click)="$event.stopPropagation()">
+
+    <div class="rdv-modal-head">
+      <h2>Nouveau rendez-vous</h2>
+      <button class="rdv-modal-close" (click)="closeNewRdvModal()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+
+    <form class="rdv-form" (ngSubmit)="submitNewRdv()">
+
+      <!-- Client -->
+      <div class="rdv-form__section">
+        <div class="rdv-form__section-title">
+          <mat-icon>person</mat-icon> Cliente
+        </div>
+        <div class="rdv-form__row">
+          <div class="rdv-form__field">
+            <label>Prénom</label>
+            <input type="text" [(ngModel)]="newRdv.clientPrenom" name="clientPrenom"
+                   placeholder="Fatou">
+          </div>
+          <div class="rdv-form__field">
+            <label>Nom <span class="req">*</span></label>
+            <input type="text" [(ngModel)]="newRdv.clientNom" name="clientNom"
+                   placeholder="Diop" required>
+          </div>
+        </div>
+        <div class="rdv-form__row">
+          <div class="rdv-form__field">
+            <label>Téléphone</label>
+            <input type="tel" [(ngModel)]="newRdv.clientTelephone" name="clientTelephone"
+                   placeholder="+221 77 000 00 00">
+          </div>
+          <div class="rdv-form__field">
+            <label>Email</label>
+            <input type="email" [(ngModel)]="newRdv.clientEmail" name="clientEmail"
+                   placeholder="email@example.com">
+          </div>
+        </div>
+      </div>
+
+      <!-- Prestation -->
+      <div class="rdv-form__section">
+        <div class="rdv-form__section-title">
+          <mat-icon>content_cut</mat-icon> Prestation
+        </div>
+        <div class="rdv-form__field">
+          <label>Nom du service <span class="req">*</span></label>
+          <ng-container *ngIf="freelanceServices.length > 0; else freeInput">
+            <select [(ngModel)]="newRdv.serviceNom" name="serviceNom"
+                    (change)="onServiceSelect(newRdv.serviceNom)" required>
+              <option value="">— Choisir un service —</option>
+              <option *ngFor="let s of freelanceServices" [value]="s.nom || s.name || s.serviceNom">
+                {{ s.nom || s.name || s.serviceNom }}
+              </option>
+            </select>
+          </ng-container>
+          <ng-template #freeInput>
+            <input type="text" [(ngModel)]="newRdv.serviceNom" name="serviceNom"
+                   placeholder="Ex: Maquillage de mariée" required>
+          </ng-template>
+        </div>
+        <div class="rdv-form__row">
+          <div class="rdv-form__field">
+            <label>Durée (min)</label>
+            <input type="number" [(ngModel)]="newRdv.serviceDuree" name="serviceDuree"
+                   min="15" step="15" placeholder="60">
+          </div>
+          <div class="rdv-form__field">
+            <label>Prix (CFA)</label>
+            <input type="number" [(ngModel)]="newRdv.servicePrix" name="servicePrix"
+                   min="0" step="500" placeholder="25000">
+          </div>
+        </div>
+      </div>
+
+      <!-- Date & heure -->
+      <div class="rdv-form__section">
+        <div class="rdv-form__section-title">
+          <mat-icon>schedule</mat-icon> Date &amp; Heure
+        </div>
+        <div class="rdv-form__row">
+          <div class="rdv-form__field">
+            <label>Date <span class="req">*</span></label>
+            <input type="date" [(ngModel)]="newRdv.datePrestation" name="datePrestation" required>
+          </div>
+          <div class="rdv-form__field">
+            <label>Heure de début <span class="req">*</span></label>
+            <input type="time" [(ngModel)]="newRdv.heureDebut" name="heureDebut" required>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="rdv-form__section">
+        <div class="rdv-form__section-title">
+          <mat-icon>description</mat-icon> Notes (facultatif)
+        </div>
+        <textarea [(ngModel)]="newRdv.notes" name="notes"
+                  placeholder="Instructions spéciales, allergie, style souhaité…"
+                  rows="3"></textarea>
+      </div>
+
+      <!-- Statut -->
+      <div class="rdv-form__section rdv-form__section--inline">
+        <div class="rdv-form__section-title"><mat-icon>flag</mat-icon> Statut initial</div>
+        <div class="rdv-form__radios">
+          <label class="rdv-radio">
+            <input type="radio" [(ngModel)]="newRdv.statut" name="statut" value="confirmee">
+            <span class="rdv-radio__dot rdv-radio__dot--confirmee"></span>
+            Confirmé
+          </label>
+          <label class="rdv-radio">
+            <input type="radio" [(ngModel)]="newRdv.statut" name="statut" value="en_attente">
+            <span class="rdv-radio__dot rdv-radio__dot--attente"></span>
+            En attente
+          </label>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="rdv-form__actions">
+        <button type="button" class="rdv-form__btn-cancel" (click)="closeNewRdvModal()">
+          Annuler
+        </button>
+        <button type="submit" class="rdv-form__btn-submit"
+                [disabled]="!newRdv.clientNom || !newRdv.serviceNom || !newRdv.datePrestation">
+          <mat-icon>check</mat-icon> Créer le rendez-vous
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
